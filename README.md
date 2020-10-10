@@ -6,16 +6,16 @@ I am no developer or programmer. If you like the idea, and can lend your technic
 
 # Intended use
 
-I am no developer, or programmer. I am dabbling in the Zettelkasten method, with using [Org-roam](https://www.orgroam.com/). I keep my notes in a repository where I keep the network notes (I guess people call them evergreen, concept, or permanent notes). 
+I am dabbling in the Zettelkasten method, with using [Org-roam](https://www.orgroam.com/). I keep my notes in a repository where my network of notes reside (I guess people call them evergreen, concept, or permanent notes). 
 
-When I start writing something long-form, I want to have a writing project separately from the notes repository, assemble relevant notes to form a basis of the long-form, and avoid having multiple copies of notes flying around.
+When I start writing something long-form, I want to have a writing project separately from my notes repository, assemble relevant notes to form a basis of the long-form material, and avoid having multiple copies of notes flying around.
 
 Transclusion should let me do this.
 
 This 10-minute show & tell on YouTube I did shows you how this library works.
 [![10-minute Show & Tell on YouTube](./resources/title.png)](https://youtu.be/Wjk-otO2xrI)
 
-One change from the video is that now you click on the link and transclude the content, the link will disappear; when you deactivate transclusion, the link will be back.
+One change from the video is that now you click on a tranclusion link and transclude the content, the link will disappear; when you deactivate transclusion, the link will be back.
 
 
 # How to use the library
@@ -45,10 +45,9 @@ Activate transclusion with `org-transclusion-activate` (it should become a buffe
 
 If the variable `org-transclusion-activate-persistent-message` is not changed, you should see a header appear on top of the buffer indicating transclusion is active.
 
+All the `ortc` links in your current buffer should transclude specified contents, and the links themselves disappear from the buffer (deleted).
 
-All the `ortc` links in your current buffer should transclude the specified contents, and the links themselves disappear from the buffer (deleted).
-
-Deactivate transclusion with `org-transclusion-deactivate`. This should remove the transcluded contents, and bring back the original link. The header should also disappears.
+Deactivate transclusion with `org-transclusion-deactivate`. This should remove the transcluded contents, and bring back the original links. The header should also disappear.
 
 ## Update and save transclusions
 Transcluded content is a copy from the transclusion sources. The only difference is that it is under an overlay to indicate that it is a transcluded content. 
