@@ -117,23 +117,23 @@ I think that the inactive state can be used as "read-only" mode, or "export" mod
   I just could not work out the way to pass the optional `savebuf` argument to `org-transclusion-update-src-at-point`. I could make a wrapper command `org-transclusion-save-src-at-point`; I was not sure if that's desirable.
 
 - [ ] Make UX/UI more writer-friendly (e.g face for the overlay)
-I didn't have enough knowledge how defining faces work. 
+  I didn't have enough knowledge how defining faces work. 
 If we also have edit and read-only mode, I think it makes sense to have different colors on the overlay to indicate they are different. 
 
-I also like the idea of using gutter (like the `git-gutter` package). 
+    I also like the idea of using gutter (like the `git-gutter` package). 
 
 - [ ] Add visual queue to the source buffer
-One of the UI/UX improvements. I think the source buffer should also visually indicate that there is an active transclusion for the buffer or element (headline). For this, using the gutter would add a subtle and yet sufficient visual indication, I think. 
+  One of the UI/UX improvements. I think the source buffer should also visually indicate that there is an active transclusion for the buffer or element (headline). For this, using the gutter would add a subtle and yet sufficient visual indication, I think. 
 
-Since the `org-transclusion--yank-source-to-target` visits the source buffer, it should be possible to do something with it.
+    Since the `org-transclusion--yank-source-to-target` visits the source buffer, it should be possible to do something with it.
 
 - [ ] Review John Kitchin's implementation
-I was not aware of John's implementation while making my own prototype for sharing on GitHub. I would like to review what he has done.
+  I was not aware of John's implementation while making my own prototype for sharing on GitHub. I would like to review what he has done.
 
-https://github.com/whacked/transclusion-minor-mode/blob/master/transcluding-org-elements.org
+    https://github.com/whacked/transclusion-minor-mode/blob/master/transcluding-org-elements.org
 
 - [ ] Other things I miss
-I'm sure there are more. I would appreciate your advice.
+  I'm sure there are more. I would appreciate your advice.
 
 # Original idea by John Kitchin
 https://github.com/alphapapa/transclusion-in-emacs#org-mode
