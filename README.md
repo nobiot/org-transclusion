@@ -54,7 +54,7 @@ Deactivate transclusion with `org-transclusion-deactivate`. This should remove t
 ## Update and save transclusions
 Transcluded content is a copy from the transclusion sources. The only difference is that it is under an overlay to indicate that it is a transcluded content. 
 
-The overlay holds the information about the providence. 
+The overlay holds the information about its provenance. 
 
 The library differentiates `update` and `save` transclusion sources. Update only insert back the edited content, while `save` does update and save the source buffer to file.
 
