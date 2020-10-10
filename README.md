@@ -127,6 +127,13 @@ One of the UI/UX improvements. I think the source buffer should also visually in
 
 Since the `org-transclusion--yank-source-to-target` visits the source buffer, it should be possible to do something with it.
 
+- [ ] Review John Kitchin's implementation
+I was not aware of John's implementation while making my own prototype for sharing on GitHub. I would like to review what he has done.
+
+https://github.com/whacked/transclusion-minor-mode/blob/master/transcluding-org-elements.org
+
+- [ ] Other things I miss
+I'm sure there are more. I would appreciate your advice.
 
 # Original idea by John Kitchin
 https://github.com/alphapapa/transclusion-in-emacs#org-mode
