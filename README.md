@@ -127,7 +127,8 @@ If we also have edit and read-only mode, I think it makes sense to have differen
     I also like the idea of using gutter (like the `git-gutter` package). 
 
 - [ ] Add visual queue to the source buffer
-  One of the UI/UX improvements. I think the source buffer should also visually indicate that there is an active transclusion for the buffer or element (headline). For this, using the gutter would add a subtle and yet sufficient visual indication, I think. 
+
+    One of the UI/UX improvements. I think the source buffer should also visually indicate that there is an active transclusion for the buffer or element (headline). For this, using the gutter would add a subtle and yet sufficient visual indication, I think. 
 
     Since the `org-transclusion--yank-source-to-target` visits the source buffer, it should be possible to do something with it.
 
