@@ -6,6 +6,16 @@ It is still **VERY experimental**. Use it with care if you would like to play wi
 
 I am no developer or programmer. If you like the idea, and can lend your technical hand, I would be grateful. Here is a [list of things](#list-of-things-to-be-done) I think needed to be done (I'm sure there are more; let me know other things, too.).
 
+I would love your involvement if you think the idea and the current implementation look worth pursuing.
+
+- Get involved in a discussion in [Org-roam forum](https://org-roam.discourse.group/t/prototype-transclusion-block-reference-with-emacs-org-mode/830) (the package is originally aimed for its users, me included)
+
+- Send in pull requests
+
+    It would be great if you can work on some items on [list of things](#list-of-things-to-be-done); or add to it (we can collectively discuss additions in the forum, or perhaps in the issue)
+
+I am writing this on 10 October 2020. I am hoping that we can have a conclusion within this year whether or not the idea and implementation are something worth pursuing collectively. Otherwise, I think it can remain my personal hobby tool. 
+
 # Intended use
 
 I am dabbling in the Zettelkasten method, with using [Org-roam](https://www.orgroam.com/). I keep my notes in a repository where my network of notes reside (I guess people call them evergreen, concept, or permanent notes). 
