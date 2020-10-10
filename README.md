@@ -1,11 +1,8 @@
 This library is an attempt to enable transclusion with Org Mode in Emacs. It is my take on the [idea by John Kitchin](#original-idea-by-john-kitchin).
 
-It is still **VERY experimental**. Use it with care if you would like to play with it. It modifies your files (notes), use it with care. The author and contributors cannot be held responsible for loss of important work.
+It is still **VERY experimental**. Use it with care if you would like to play with it. It modifies your files (notes). The author and contributors cannot be held responsible for loss of important work.
 
 I am no developer or programmer. If you like the idea, and can lend your technical hand, I would be grateful. Here is a [list of things](#list-of-things-to-be-done) I think needed to be done (I'm sure there are more; let me know other things, too.).
-
----
-
 
 # Intended use
 
