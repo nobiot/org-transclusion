@@ -40,6 +40,15 @@
 (defvar org-transclusion-link "ortc")
 (defvar org-transclusion-activate-persistent-message t)
 
+;; Faces
+(defface org-transclusion-block
+  '((((class color) (min-colors 88) (background light))
+     :background "#f0f0f0" :extend t)
+    (((class color) (min-colors 88) (background dark))
+     :background "#181a20" :extend t))
+  "Face for transcluded block.")
+
+
 ;;-----------------------------------------------------------------------------
 ;; Custom link parameter
 ;; :follow fn should be a one that can do-list for functions, where
@@ -97,7 +106,7 @@ When ID is nil, the link is for the whole beuffer and :marker is nil."
 
     (list :buf (find-file-noselect path) :marker nil)))
 
-(defun org-transclusion--yank-source-to-target (buf marker)
+(defun org-transclusion--yank-source-to-target (buf marker ov dups)
   "Retrieve and yank at point the text content specified by BUF and MARKER.
 Assume when MARKER is non-nil, it always points to the beginning of a headline."
   
@@ -107,12 +116,18 @@ Assume when MARKER is non-nil, it always points to the beginning of a headline."
   ;; treated (no text returned).
   
   (let ((marker marker)
-        (targetbuf (current-buffer)))
+        (targetbuf (current-buffer))
+        (ov ov))
     (with-current-buffer buf
       (org-with-wide-buffer
        (when marker
          (goto-char marker)
          (org-narrow-to-subtree))
+       (move-overlay ov (point-min) (point-max))
+       (overlay-put ov 'modification-hooks '(org-transclusion--text-clone--maintain)) ;;< nobiot
+       (overlay-put ov 'evaporate t)
+       (overlay-put ov 'face 'org-transclusion-block)
+       (overlay-put ov 'text-clones dups)
        (let ((tempbuf (current-buffer)))
          (set-buffer targetbuf)
          (insert-buffer-substring-as-yank tempbuf))))))
@@ -129,9 +144,11 @@ Assume the RAW-LINK is a valid tranclusion link."
     ;; If it is, then yank won't work.
     (let* ((beg (point))
            (end nil)
-           (ov nil))
+           (ov (make-overlay beg beg nil t nil))
+           (ov2 (make-overlay beg beg buf t nil))
+           (dups (list ov ov2)))
       ;;(forward-line)
-      (org-transclusion--yank-source-to-target buf marker)
+      (org-transclusion--yank-source-to-target buf marker ov2 dups)
       ;; FIXME The following is not necessary if there is no source buf.
       (setq end (point))
       (setq ov (make-overlay beg end nil t nil))
@@ -139,7 +156,15 @@ Assume the RAW-LINK is a valid tranclusion link."
       ;; ensures that the location of overlay is not shifted for the remove
       ;; function.when a new line is added back to allow space for the original
       ;; tranclusion link for the remove function.
-      (overlay-put ov 'face 'secondary-selection)
+
+      ;; >>> Adding text-clone's way of overlay
+      (overlay-put ov 'modification-hooks '(org-transclusion--text-clone--maintain)) ;;< Tobias
+      ;; (overlay-put ov 'evaporate t)
+      (overlay-put ov 'face 'org-macro)
+      (overlay-put ov 'text-clones dups)
+      ;; <<< text-clone
+      
+      ;; (overlay-put ov 'face 'secondary-selection)
       (overlay-put ov 'path path)
       (overlay-put ov 'tc-src-buf buf)
       (overlay-put ov 'tc-src-marker marker)
@@ -234,8 +259,11 @@ text."
                             (insert raw-link)
                             (forward-line)
                             (point)))
-                 (new-end (overlay-end ov)))
-            (delete-overlay ov)
+                 (new-end (overlay-end ov))
+                 (dups (overlay-get ov 'text-clones)))
+            (dolist (ol dups)
+              (delete-overlay ol))
+            ;; (delete-overlay ov)
             ;; When remove fn, delete the copied texts
             (unless detach
               (delete-region new-beg new-end)))))
@@ -384,6 +412,114 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
            (with-current-buffer buf
              (org-transclusion-update-all-src-in-buffer)) ;; update from copy to source
            (org-transclusion-remove-all-in-buffer buf))))) ;; clean up copy
+
+;;-----------------------------------------------------------------------------
+;; Text Clone 
+;; Based on StackExchange user Tobias' code; adapted by nobiot
+;; https://emacs.stackexchange.com/questions/56201/is-there-an-emacs-package-which-can-mirror-a-region/56202#56202
+(defvar text-clone--maintaining nil)
+
+(defun org-transclusion--text-clone--maintain (ol1 after beg end &optional _len)
+  "Propagate the changes made under the overlay OL1 to the other clones.
+  This is used on the `modification-hooks' property of text clones."
+  (when (and after (not undo-in-progress)
+             (not text-clone--maintaining)
+             (overlay-start ol1))
+    (let ((margin (if (overlay-get ol1 'text-clone-spreadp) 1 0)))
+      (setq beg (max beg (+ (overlay-start ol1) margin)))
+      (setq end (min end (- (overlay-end ol1) margin)))
+      (when (<= beg end)
+        (save-excursion
+          (when (overlay-get ol1 'text-clone-syntax)
+            ;; Check content of the clone's text.
+            (let ((cbeg (+ (overlay-start ol1) margin))
+                  (cend (- (overlay-end ol1) margin)))
+              (goto-char cbeg)
+              (save-match-data
+                (if (not (re-search-forward
+                          (overlay-get ol1 'text-clone-syntax) cend t))
+                    ;; Mark the overlay for deletion.
+                    (setq end cbeg)
+                  (when (< (match-end 0) cend)
+                    ;; Shrink the clone at its end.
+                    (setq end (min end (match-end 0)))
+                    (move-overlay ol1 (overlay-start ol1)
+                                  (+ (match-end 0) margin)))
+                  (when (> (match-beginning 0) cbeg)
+                    ;; Shrink the clone at its beginning.
+                    (setq beg (max (match-beginning 0) beg))
+                    (move-overlay ol1 (- (match-beginning 0) margin)
+                                  (overlay-end ol1)))))))
+          ;; Now go ahead and update the clones.
+          (let ((head (- beg (overlay-start ol1)))
+                (tail (- (overlay-end ol1) end))
+                (str (buffer-substring beg end))
+                (nothing-left t)
+                (text-clone--maintaining t))
+            (dolist (ol2 (overlay-get ol1 'text-clones))
+              (with-current-buffer (overlay-buffer ol2) ;;< Tobias
+                (let ((oe (overlay-end ol2)))
+                  (unless (or (eq ol1 ol2) (null oe))
+                    (setq nothing-left nil)
+                    (let ((mod-beg (+ (overlay-start ol2) head)))
+                      ;;(overlay-put ol2 'modification-hooks nil)
+                      (goto-char (- (overlay-end ol2) tail))
+                      (unless (> mod-beg (point))
+                        (save-excursion (insert str))
+                        (delete-region mod-beg (point)))
+                      ;;(overlay-put ol2 'modification-hooks '(text-clone--maintain))
+                      )))))
+            (if nothing-left (delete-overlay ol1))))))))
+
+(defun org-transclusion--text-clone-create (start end &optional spreadp syntax)
+  "Create a text clone of START...END at point.
+  Text clones are chunks of text that are automatically kept identical:
+  changes done to one of the clones will be immediately propagated to the other.
+
+  The buffer's content at point is assumed to be already identical to
+  the one between START and END.
+  If SYNTAX is provided it's a regexp that describes the possible text of
+  the clones; the clone will be shrunk or killed if necessary to ensure that
+  its text matches the regexp.
+  If SPREADP is non-nil it indicates that text inserted before/after the
+  clone should be incorporated in the clone."
+  ;; To deal with SPREADP we can either use an overlay with `nil t' along
+  ;; with insert-(behind|in-front-of)-hooks or use a slightly larger overlay
+  ;; (with a one-char margin at each end) with `t nil'.
+  ;; We opted for a larger overlay because it behaves better in the case
+  ;; where the clone is reduced to the empty string (we want the overlay to
+  ;; stay when the clone's content is the empty string and we want to use
+  ;; `evaporate' to make sure those overlays get deleted when needed).
+  ;;
+  (let* ((clone-buf (or (and (markerp start) (marker-buffer start))
+                        (current-buffer)))
+         (pt-end (+ (point) (- end start)))
+         (start-margin (if (or (not spreadp) (bobp) (with-current-buffer clone-buf (<= start (point-min))))
+                           0 1))
+         (end-margin (if (or (not spreadp)
+                             (>= pt-end (point-max))
+                             (with-current-buffer clone-buf (>= start (point-max))))
+                         0 1))
+         ;; FIXME: Reuse overlays at point to extend dups!
+         (ol1 (make-overlay (- start start-margin) (+ end end-margin) clone-buf t)) ;;< Tobias
+
+         (ol2 (make-overlay (- (point) start-margin) (+ pt-end end-margin) nil t))
+         (dups (list ol1 ol2)))
+    (overlay-put ol1 'modification-hooks '(org-transclusion--text-clone--maintain)) ;;< nobiot
+    (when spreadp (overlay-put ol1 'text-clone-spreadp t))
+    (when syntax (overlay-put ol1 'text-clone-syntax syntax))
+    ;;(overlay-put ol1 'face 'underline)
+    (overlay-put ol1 'evaporate t)
+    (overlay-put ol1 'face 'org-block)
+    (overlay-put ol1 'text-clones dups)
+    ;;
+    (overlay-put ol2 'modification-hooks '(org-transclusion--text-clone--maintain)) ;;< Tobias
+    (when spreadp (overlay-put ol2 'text-clone-spreadp t))
+    (when syntax (overlay-put ol2 'text-clone-syntax syntax))
+    ;;(overlay-put ol2 'face 'underline)
+    (overlay-put ol2 'evaporate t)
+    (overlay-put ol2 'face 'org-macro)    
+    (overlay-put ol2 'text-clones dups)))
 
 (provide 'org-transclusion)
 ;;; org-transclusion.el ends here
