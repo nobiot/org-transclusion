@@ -151,7 +151,7 @@ Assume the RAW-LINK is a valid tranclusion link."
       (org-transclusion--yank-source-to-target buf marker ov2 dups)
       ;; FIXME The following is not necessary if there is no source buf.
       (setq end (point))
-      (setq ov (make-overlay beg end nil t nil))
+      (move-overlay ov beg end)
       ;; It is important to flag FRONT-ADVANCE t when making an overlay.  It
       ;; ensures that the location of overlay is not shifted for the remove
       ;; function.when a new line is added back to allow space for the original
