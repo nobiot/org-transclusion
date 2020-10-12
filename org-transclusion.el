@@ -41,11 +41,18 @@
 (defvar org-transclusion-activate-persistent-message t)
 
 ;; Faces
+(defface org-transclusion-source-block
+  '((((class color) (min-colors 88) (background light))
+     :background "#fff3da" :extend t)
+    (((class color) (min-colors 88) (background dark))
+     :background "#fff3da" :extend t))
+  "Face for transcluded block.")
+
 (defface org-transclusion-block
   '((((class color) (min-colors 88) (background light))
-     :background "#f0f0f0" :extend t)
+     :background "#f3f3ff" :extend t)
     (((class color) (min-colors 88) (background dark))
-     :background "#181a20" :extend t))
+     :background "#f3f3ff" :extend t))
   "Face for transcluded block.")
 
 
@@ -126,7 +133,7 @@ Assume when MARKER is non-nil, it always points to the beginning of a headline."
        (move-overlay ov (point-min) (point-max))
        (overlay-put ov 'modification-hooks '(org-transclusion--text-clone--maintain)) ;;< nobiot
        (overlay-put ov 'evaporate t)
-       (overlay-put ov 'face 'org-transclusion-block)
+       (overlay-put ov 'face 'org-transclusion-source-block)
        (overlay-put ov 'text-clones dups)
        (let ((tempbuf (current-buffer)))
          (set-buffer targetbuf)
@@ -160,7 +167,7 @@ Assume the RAW-LINK is a valid tranclusion link."
       ;; >>> Adding text-clone's way of overlay
       (overlay-put ov 'modification-hooks '(org-transclusion--text-clone--maintain)) ;;< Tobias
       ;; (overlay-put ov 'evaporate t)
-      (overlay-put ov 'face 'org-macro)
+      (overlay-put ov 'face 'org-transclusion-block)
       (overlay-put ov 'text-clones dups)
       ;; <<< text-clone
       
@@ -215,25 +222,13 @@ only update buffer without saving it to the file."
   ;; Check POS has an tranclusion overlay
   ;; If not, get out the function with a message telling the user.
   (if-let ((ov (cdr (get-char-property-and-overlay pos 'tc-src-buf))))
-      (let ((edited-content (buffer-substring (overlay-start ov) (overlay-end ov)))
-            (src_buf (overlay-get ov 'tc-src-buf))
+      (let ((src_buf (overlay-get ov 'tc-src-buf))
             (src_marker (overlay-get ov 'tc-src-marker)))
         (with-current-buffer src_buf
-          ;;(undo-boundary)
-          (org-with-wide-buffer
-           (cond (src_marker
-                  (goto-char src_marker)
-                  (org-narrow-to-subtree))
-                 (t (goto-char (point-min))))
-           (delete-region (point-min) (point-max))
-           (let ((expecting-bol (bolp)))
-             ;; This insersion of "\n" comes from org-edit-src-exit org-edit-src-save.
-             (insert edited-content)
-             (when (and expecting-bol (not (bolp))) (insert "\n")))
-           (when savebuf
-             (unless make-backup-files (setq-local make-backup-files t))
-             (save-buffer)))))
-    (message "Nothing done. No transclusion exists here.")))
+          (when savebuf
+            (unless make-backup-files (setq-local make-backup-files t))
+            (save-buffer)))))
+    (message "Nothing done. No transclusion exists here."))
 
 (defun org-transclusion-remove-at-point (pos &optional detach)
   "Remove transclusion and the copied text around POS.
@@ -460,7 +455,7 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
               (with-current-buffer (overlay-buffer ol2) ;;< Tobias
                 (save-restriction
                   (widen)
-                  (outline-show-all)
+                  ;(outline-show-all)
                   (let ((oe (overlay-end ol2)))
                     (unless (or (eq ol1 ol2) (null oe))
                       (setq nothing-left nil)
