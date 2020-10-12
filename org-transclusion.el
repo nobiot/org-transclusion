@@ -109,25 +109,18 @@ fn should decodes STR as a link and its TC-TYPE. eg. id:uuid-1234-xxxx,
 the linked file in a buffer, and return the content and markers.
 
 
-I think the conditon check to avoid recursion should happen here.
+I think the conditon check to avoid recursion should happen here."
+  
   (cond ((cdr (get-char-property-and-overlay (point) 'tc-src-buf))
          ;; The link is within a transclusion overlay.
          ;; Do nothing to avoid recurrsive transclusion.
          nil)
         (t
-         (when-let ((link (plist-get (org-element-context) 'link)))
-           (let* ((path path)
-                  (raw-link (progn
-                              (let ((beg (plist-get link ':begin))
-                                    (end (plist-get link ':end)))
-                                (buffer-substring-no-properties beg end))))
-                  (buf_marker (org-transclusion--get-buf-and-pos-of-source path))
-                  (buf (plist-get buf_marker ':buf))
-                  (marker (plist-get buf_marker ':marker)))
-             (save-excursion
-               (org-transclusion--create-at-point path raw-link buf marker))))))
-  "
-  (org-transclusion--create-at-point str fn) ; common for all
+         (let* ((type-dot-fn (org-transclusion--get-type-and-fn))
+                (tc-type (car type-dot-fn))
+                (tc-fn (cdr type-dot-fn))
+                (str str))
+           (org-transclusion--create-at-point str tc-type tc-fn)))))
 ;;  (org-transclusion--add-at-point str))
 
 (defun org-transclusion--get-link-location ()
