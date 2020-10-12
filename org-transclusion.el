@@ -39,6 +39,7 @@
 ;; Most of these should be defcustom
 (defvar org-transclusion-link "ortc")
 (defvar org-transclusion-activate-persistent-message t)
+(defvar-local org-transclusion-original-position nil)
 
 ;; Faces
 (defface org-transclusion-source-block
@@ -258,7 +259,8 @@ text."
                  (dups (overlay-get ov 'text-clones)))
             (dolist (ol dups)
               (delete-overlay ol))
-            ;; (delete-overlay ov)
+            ;; TODO
+            ;; Also ensure to delete all the possible orphan overlays from the source 
             ;; When remove fn, delete the copied texts
             (unless detach
               (delete-region new-beg new-end)))))
@@ -288,6 +290,7 @@ is active, it will automatically bring the transclusion back."
 
 (defun org-transclusion--process-all-in-buffer-before-save ()
   "Update and remove all translusions in the current buffer `before-save-hook'."
+  (setq org-transclusion-original-position (point))
   (org-transclusion-update-all-src-in-buffer) ; no saving, just insert the new content
   (org-transclusion-remove-all-in-buffer)) ; clean up current buffer before writing to file)
 
@@ -297,19 +300,22 @@ Meant obe for `after-save-hook'.
 It adds all the transcluded copies back into the current buffer.
 And then saves all the transclusion source buffers."
   (org-transclusion-add-all-in-buffer) ; put all tranclusions back in
-  (org-transclusion-update-all-src-in-buffer t)) ; save to file
-  
+  (org-transclusion-update-all-src-in-buffer t) ; save to file
+  (goto-char org-transclusion-original-position)
+  (setq org-transclusion-original-position nil))
+
 (defun org-transclusion-update-all-src-in-buffer (&optional savebuf)
   "Update all transclusion sources from the current buffer.
 When SAVEBUF is non-nil, call `org-transclusion-update-src-at-point' with non-nil SAVEBUF.
 This saves the updated buffer to file."
 
   (interactive)
-  (save-restriction
-    (widen)
-    (outline-show-all)
-    (dolist (ov (overlays-in (point-min) (point-max)))
-      (org-transclusion-update-src-at-point (overlay-start ov) savebuf))))
+  (save-excursion
+    (save-restriction
+      (widen)
+      (outline-show-all)
+      (dolist (ov (overlays-in (point-min) (point-max)))
+        (org-transclusion-update-src-at-point (overlay-start ov) savebuf)))))
 
 (defun org-transclusion-add-all-in-buffer ()
   "Add all the transclusions in the current buffer.
@@ -323,12 +329,14 @@ infinite,check is done within each add function."
   ;; Prevent background hook (e.g. save hooks) from updating the transclusion
   ;; target buffer.
   (when (eq (current-buffer)(window-buffer (selected-window)))
+    ;; Need to add mark and go back after the loop for some reason??
     (save-excursion
       (save-restriction
         (widen)
         (outline-show-all)
         (goto-char (point-min))
         ;; eq t is needed for this while loop as if not link, fn returns a message string.
+        ;; looking-at org-link-any-re
         (while (eq t (org-next-link))
           ;; check if the link at point is tranclusion link
           (when (org-transclusion--transclusion-link-p)
