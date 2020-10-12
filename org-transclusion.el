@@ -37,10 +37,11 @@
 ;;-----------------------------------------------------------------------------
 ;; Variables
 ;; Most of these should be defcustom
-(defvar org-transclusion-link "ortc")
+(defvar org-transclusion-link "otc")
 (defvar org-transclusion-activate-persistent-message t)
 (defvar-local org-transclusion-original-position nil)
 
+;;-----------------------------------------------------------------------------
 ;; Faces
 (defface org-transclusion-source-block
   '((((class color) (min-colors 88) (background light))
@@ -56,15 +57,12 @@
      :background "#f3f3ff" :extend t))
   "Face for transcluded block.")
 
-
 ;;-----------------------------------------------------------------------------
 ;; Custom link parameter
 ;; :follow fn should be a one that can do-list for functions, where
 ;; each function support different type of links: e.g. file, ID, etc.
-(org-link-set-parameters
- org-transclusion-link
- :follow #'org-transclusion-call-tranclusions-functions
- :help-echo "Cannot edit transclusion link unless you remove the whole transclusion")
+(org-link-set-parameters org-transclusion-link
+ :follow #'org-transclusion-call-tranclusions-functions)
 
 ;;-----------------------------------------------------------------------------
 ;; Functions
@@ -72,14 +70,65 @@
 ;; - Retrive text contents of the link target buffer / element
 ;; - Check if the transclusion link has bee aleady been activated
 
-(defun org-transclusion-call-tranclusions-functions (path &rest _)
+(defun org-transclusion-call-tranclusions-functions (str &rest _prefix)
   "Call functions to insclude source text for PATH in current buffer.
 It is meant to be used as a :follow function in the custom Org Mode link type.
+
+[[ort:id:uuid]]
+[[ort:file:./path/to/file.text]]
+
+'id
+'file
+
+
+TODO
+Change to (dolist func-list) with standardized arguments as an API
 You should be able to (dolist func-list) to allow for cusutom functions.
 At the moment, I have only one function, even without a list of functions for
-the prototyping purpose."
-  
-  (org-transclusion--add-at-point path))
+the prototyping purpose.
+
+(org-transclusion-add-'fn)
+
+The fn must: 
+    1. arguments: (fn path &optional prefix)
+    2. return nil or function (fn)
+
+Fn must takes str as an argument STR, and returns plist 
+(:tc-type     := type of transclusion, buffer, org-id, org-block, etc.
+ :tc-content  := text string to be trancluded
+ :tc-beg-mkr  := marker pointing to the beginning of the content in the src buf
+ :tc-end-mkr) := marker pointing to the end of the content in the src buf
+
+
+(fn1 . fn2)
+       where fn1 (get-src-mark str) returns plist (:tc-src-marker :tc-type)
+             fn2 (get-src-content tc-src-marker tc-type) returns plist
+                 (:content-str :beg-mkr :end-mkr)
+
+fn should decodes STR as a link and its TC-TYPE. eg. id:uuid-1234-xxxx,
+the linked file in a buffer, and return the content and markers.
+
+
+I think the conditon check to avoid recursion should happen here.
+  (cond ((cdr (get-char-property-and-overlay (point) 'tc-src-buf))
+         ;; The link is within a transclusion overlay.
+         ;; Do nothing to avoid recurrsive transclusion.
+         nil)
+        (t
+         (when-let ((link (plist-get (org-element-context) 'link)))
+           (let* ((path path)
+                  (raw-link (progn
+                              (let ((beg (plist-get link ':begin))
+                                    (end (plist-get link ':end)))
+                                (buffer-substring-no-properties beg end))))
+                  (buf_marker (org-transclusion--get-buf-and-pos-of-source path))
+                  (buf (plist-get buf_marker ':buf))
+                  (marker (plist-get buf_marker ':marker)))
+             (save-excursion
+               (org-transclusion--create-at-point path raw-link buf marker))))))
+  "
+  (org-transclusion--create-at-point str fn) ; common for all
+;;  (org-transclusion--add-at-point str))
 
 (defun org-transclusion--get-link-location ()
   "Get the start and end of the link being worked on at point.
@@ -95,7 +144,7 @@ of the link.  If not link, return nil."
       location)))
 
 (defun org-transclusion--split-path-and-id (path)
-  "Chech if PATH is the form `id:uuid`.  If so, return the ID.
+  "Check if PATH is the form `id:uuid`.  If so, return the ID.
 If not return nil."
   (when (string-prefix-p "id:" path)
     (string-match "\\(id:\\)\\([[:alnum:]|-]*\\)" path)
@@ -105,7 +154,12 @@ If not return nil."
   "Return buffer and marker (beginning of headline) for PATH.
 Assume path is either a valid link to a file, or an reachable ID in Org Mode.
 Return plist in the form of '(:buf BUF :marker MARKER).
-When ID is nil, the link is for the whole beuffer and :marker is nil."
+When ID is nil, the link is for the whole beuffer and :marker is nil.
+
+TODO It should be possible to work with only the marker. And pass a type of link
+e.g. 'buffer, 'id, 'parag, 'org-block, etc. to differentiate the retrieval --
+essentially, determine the boundary of the element from which to retrieve
+the text content."
 
   (if-let ((id (org-transclusion--split-path-and-id path))
            (marker (org-id-find id 'marker))
@@ -116,12 +170,9 @@ When ID is nil, the link is for the whole beuffer and :marker is nil."
 
 (defun org-transclusion--yank-source-to-target (buf marker ov dups)
   "Retrieve and yank at point the text content specified by BUF and MARKER.
-Assume when MARKER is non-nil, it always points to the beginning of a headline."
-  
-  ;; Assume the buffer is Org file -- org-narrow-to-subtree used to narrow
-  ;; FIXME?
-  ;; This means, at the moment, the error when you cannot narrow is not properly
-  ;; treated (no text returned).
+Assume when MARKER is non-nil, it always points to the beginning of a headline.
+
+TODO really fix the arguments. OV and DUPS should not be here."
   
   (let ((marker marker)
         (targetbuf (current-buffer))
@@ -164,15 +215,11 @@ Assume the RAW-LINK is a valid tranclusion link."
       ;; ensures that the location of overlay is not shifted for the remove
       ;; function.when a new line is added back to allow space for the original
       ;; tranclusion link for the remove function.
-
-      ;; >>> Adding text-clone's way of overlay
-      (overlay-put ov 'modification-hooks '(org-transclusion--text-clone--maintain)) ;;< Tobias
-      ;; (overlay-put ov 'evaporate t)
+      (overlay-put ov
+                   'modification-hooks
+                   #'(org-transclusion--text-clone--maintain))
       (overlay-put ov 'face 'org-transclusion-block)
       (overlay-put ov 'text-clones dups)
-      ;; <<< text-clone
-      
-      ;; (overlay-put ov 'face 'secondary-selection)
       (overlay-put ov 'path path)
       (overlay-put ov 'tc-src-buf buf)
       (overlay-put ov 'tc-src-marker marker)
