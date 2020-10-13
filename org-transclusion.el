@@ -213,8 +213,8 @@ the source buffer in this session."
       (let ((src_buf (marker-buffer (overlay-get ov 'tc-beg-mkr))))
         (with-current-buffer src_buf
           (unless make-backup-files (setq-local make-backup-files t))
-          (save-buffer))))
-    (message "Nothing done. No transclusion exists here."))
+          (save-buffer)))
+    (message "Nothing done. No transclusion exists here.")))
 
 (defun org-transclusion-remove-at-point (pos &optional detach)
   "Remove transclusion and the copied text around POS.
@@ -289,10 +289,8 @@ And then saves all the transclusion source buffers."
   (goto-char org-transclusion-original-position)
   (setq org-transclusion-original-position nil))
 
-(defun org-transclusion-update-all-src-in-buffer (&optional savebuf)
-  "Update all transclusion sources from the current buffer.
-When SAVEBUF is non-nil, call `org-transclusion-update-src-at-point' with non-nil SAVEBUF.
-This saves the updated buffer to file."
+(defun org-transclusion-save-all-src-in-buffer ()
+  "Save all transclusion sources from the current buffer."
 
   (interactive)
   (save-excursion
@@ -300,7 +298,7 @@ This saves the updated buffer to file."
       (widen)
       (outline-show-all)
       (dolist (ov (overlays-in (point-min) (point-max)))
-        (org-transclusion-update-src-at-point (overlay-start ov) savebuf)))))
+        (org-transclusion-save-src-at-point (overlay-start ov))))))
 
 (defun org-transclusion-add-all-in-buffer ()
   "Add all the transclusions in the current buffer.
