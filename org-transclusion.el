@@ -404,8 +404,6 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
            (org-transclusion-add-all-in-buffer)) ;; add all back in
           (t
            (message "going from %s into %s" buf (current-buffer))
-           ;;(with-current-buffer buf
-           ;;(org-transclusion-update-all-sr-cin-buffer)) ;; update not needed
            (org-transclusion-remove-all-in-buffer buf))))) ;; remove all
 
 ;;-----------------------------------------------------------------------------
