@@ -162,8 +162,7 @@ of the link.  If not link, return nil."
       location)))
 
 (defun org-transclusion--create-at-point (tc-params)
-  "Create transclusion by unpackng TC-PARAMS.
-TODO: Need RAW-LINK somehow to bring the link back."
+  "Create transclusion by unpackng TC-PARAMS."
 
   (when-let ((link-loc (org-transclusion--get-link-location))
              (link-beg (plist-get link-loc ':begin))
@@ -171,6 +170,10 @@ TODO: Need RAW-LINK somehow to bring the link back."
              (raw-link (buffer-substring-no-properties link-beg link-end)))
     ;; Remove the link
     (delete-region link-beg link-end)
+    ;; Delete a char after the link has been removed to remove the line
+    ;; the link used to occupy. Without this, you end up moving one line
+    ;; every time add operation is called.
+    (delete-char 1)
     ;; FIXME You need to check if the link is at the bottom of buffer
     ;; If it is, then yank won't work.
 
