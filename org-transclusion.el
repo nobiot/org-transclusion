@@ -141,7 +141,7 @@ Default to deal with link otc:./path/to/file.txt
 
 I think the conditon check to avoid recursion should happen here."
   
-  (if (cdr (get-char-property-and-overlay (point) 'tc-src-buf)) nil
+  (if (cdr (get-char-property-and-overlay (point) 'tc-type)) nil
          ;; The link is within a transclusion overlay.
          ;; Do nothing to avoid recurrsive transclusion.
     (let* ((str str)
@@ -312,7 +312,9 @@ As this should be used only when the buffer is current, no argment passed.
 
 As transclusing adds text after the link, the loop needs to process from top to
 bottom one by one.  The transcluded text may contrain transclusion link.
-To avoid recursion, check is done within create-at-point function."
+
+Check is done within `org-transclusion-call-add-at-point-functions'
+to avoid recursion."
   
   (interactive)
   ;; Check the windows being worked on is in focus (selected)
@@ -403,7 +405,7 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
           (t
            (message "going from %s into %s" buf (current-buffer))
            ;;(with-current-buffer buf
-           ;;(org-transclusion-update-all-src-in-buffer)) ;; update not needed
+           ;;(org-transclusion-update-all-sr-cin-buffer)) ;; update not needed
            (org-transclusion-remove-all-in-buffer buf))))) ;; remove all
 
 ;;-----------------------------------------------------------------------------
