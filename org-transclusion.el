@@ -157,29 +157,6 @@ of the link.  If not link, return nil."
       (setq location (plist-put location ':end (plist-get link ':end)))
       location)))
 
-(defun org-transclusion--yank-source-to-target (buf marker ov dups)
-  "Retrieve and yank at point the text content specified by BUF and MARKER.
-Assume when MARKER is non-nil, it always points to the beginning of a headline.
-
-TODO really fix the arguments. OV and DUPS should not be here."
-  
-  (let ((marker marker)
-        (targetbuf (current-buffer))
-        (ov ov))
-    (with-current-buffer buf
-      (org-with-wide-buffer
-       (when marker
-         (goto-char marker)
-         (org-narrow-to-subtree))
-       (move-overlay ov (point-min) (point-max))
-       (overlay-put ov 'modification-hooks '(org-transclusion--text-clone--maintain)) ;;< nobiot
-       (overlay-put ov 'evaporate t)
-       (overlay-put ov 'face 'org-transclusion-source-block)
-       (overlay-put ov 'text-clones dups)
-       (let ((tempbuf (current-buffer)))
-         (set-buffer targetbuf)
-         (insert-buffer-substring-as-yank tempbuf))))))
-
 (defun org-transclusion--create-at-point (tc-params)
   "Create transclusion by unpackng TC-PARAMS.
 TODO: Need RAW-LINK somehow to bring the link back."
