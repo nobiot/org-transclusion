@@ -187,7 +187,7 @@ TODO: Need RAW-LINK somehow to bring the link back."
   (when-let ((link-loc (org-transclusion--get-link-location))
              (link-beg (plist-get link-loc ':begin))
              (link-end (plist-get link-loc ':end))
-             (raw-link (buffer-substring link-beg link-end)))
+             (raw-link (buffer-substring-no-properties link-beg link-end)))
     ;; Remove the link
     (delete-region link-beg link-end)
     ;; FIXME You need to check if the link is at the bottom of buffer
@@ -205,69 +205,22 @@ TODO: Need RAW-LINK somehow to bring the link back."
       (save-excursion (insert tc-content))
       (when-let
           ((dups (org-transclusion--text-clone-create tc-beg-mkr tc-end-mkr))
-           (ov (car (cdr dups))))
-        (overlay-put ov 'face 'org-transclusion-block)
+           (ov (car (cdr dups)))
+           (ov-src (car dups)))
+        ;; Put to target overlay
         (overlay-put ov 'tc-type tc-type)
         (overlay-put ov 'tc-raw-link tc-raw-link)
         (overlay-put ov 'tc-beg-mkr tc-beg-mkr)
-        (overlay-put ov 'tc-end-mkr tc-beg-mkr)
-        (overlay-put ov 'priority -50)))))
+        (overlay-put ov 'tc-end-mkr tc-end-mkr)
+        (overlay-put ov 'priority -50)
+        ;; Put to the source overlay
+        (overlay-put ov-src 'tc-by (make-marker (overlay-start ov)))))))
   
-    ;; (let* ((beg (point))
-    ;;        (end nil)
-    ;;        (ov (make-overlay beg beg nil t nil))
-    ;;        (ov2 (make-overlay beg beg buf t nil))
-    ;;        (dups (list ov ov2)))
-
-    ;;   (org-transclusion--yank-source-to-target buf marker ov2 dups)
-    ;;   ;; FIXME The following is not necessary if there is no source buf.
-    ;;   (setq end (point))
-    ;;   (move-overlay ov beg end)
-    ;;   ;; It is important to flag FRONT-ADVANCE t when making an overlay.  It
-    ;;   ;; ensures that the location of overlay is not shifted for the remove
-    ;;   ;; function.when a new line is added back to allow space for the original
-    ;;   ;; tranclusion link for the remove function.
-    ;;   (overlay-put ov
-    ;;                'modification-hooks
-    ;;                #'(org-transclusion--text-clone--maintain))
-    ;;   (overlay-put ov 'face 'org-transclusion-block)
-    ;;   (overlay-put ov 'text-clones dups)
-    ;;   (overlay-put ov 'path path)
-    ;;   (overlay-put ov 'tc-src-buf buf)
-    ;;   (overlay-put ov 'tc-src-marker marker)
-    ;;   (overlay-put ov 'tc-raw-link raw-link)
-    ;;   (overlay-put ov 'priority -50)
-    ;;   (overlay-put ov 'evaporate t)
-    ;;   (overlay-put ov 'help-echo (concat "transclusion for: " raw-link)))))
-
 (defun org-transclusion--transclusion-link-p ()
   "Check if the link at point is a tranclusion link."
   (when-let ((link (plist-get (org-element-context) 'link)))
     (when-let ((type (plist-get link ':type)))
       (string= type org-transclusion-link))))
-
-(defun org-transclusion--add-at-point (path)
-  "Add atranclusion for a PATH.
-
-It is meant to be called from an Org custom link with using :follow property.
-Assume the link is already checked to be for tranclusion."
-  
-  (cond ((cdr (get-char-property-and-overlay (point) 'tc-src-buf))
-         ;; The link is within a transclusion overlay.
-         ;; Do nothing to avoid recurrsive transclusion.
-         nil)
-        (t
-         (when-let ((link (plist-get (org-element-context) 'link)))
-           (let* ((path path)
-                  (raw-link (progn
-                              (let ((beg (plist-get link ':begin))
-                                    (end (plist-get link ':end)))
-                                (buffer-substring-no-properties beg end))))
-                  (buf_marker (org-transclusion--get-buf-and-pos-of-source path))
-                  (buf (plist-get buf_marker ':buf))
-                  (marker (plist-get buf_marker ':marker)))
-             (save-excursion
-               (org-transclusion--create-at-point path raw-link buf marker)))))))
 
 (defun org-transclusion-update-src-at-point (pos &optional savebuf)
   "Update the transclusion source buffer with the tranclusion at POS.
@@ -296,7 +249,7 @@ When DETACH is non-nil, remove the tranclusion overlay only, keeping the copied
 text."
   
   (interactive "d")
-  (if-let ((ov (cdr (get-char-property-and-overlay pos 'tc-src-buf))))
+  (if-let ((ov (cdr (get-char-property-and-overlay pos 'tc-type))))
       (save-excursion
         (save-restriction
           ;; Bring back the transclusion link.
@@ -484,7 +437,7 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
 (defun org-transclusion--text-clone--maintain (ol1 after beg end &optional _len)
   "Propagate the changes made under the overlay OL1 to the other clones.
   This is used on the `modification-hooks' property of text clones."
-  (when (and after (not undo-in-progress)
+  (when (and after ;(not undo-in-progress) ;; < nobit removed undo-in-progress
              (not text-clone--maintaining)
              (overlay-start ol1))
     (let ((margin (if (overlay-get ol1 'text-clone-spreadp) 1 0)))
@@ -575,7 +528,7 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
     (when syntax (overlay-put ol1 'text-clone-syntax syntax))
     ;;(overlay-put ol1 'face 'underline)
     (overlay-put ol1 'evaporate t)
-    (overlay-put ol1 'face 'org-block)
+    (overlay-put ol1 'face 'org-transclusion-source-block) ;; < nobiot
     (overlay-put ol1 'text-clones dups)
     ;;
     (overlay-put ol2 'modification-hooks '(org-transclusion--text-clone--maintain)) ;;< Tobias
@@ -583,7 +536,7 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
     (when syntax (overlay-put ol2 'text-clone-syntax syntax))
     ;;(overlay-put ol2 'face 'underline)
     (overlay-put ol2 'evaporate t)
-    (overlay-put ol2 'face 'org-macro)    
+    (overlay-put ol2 'face 'org-transclusion-block) ;; < nobiot
     (overlay-put ol2 'text-clones dups)
     dups)) ;; < nobiot return dups
 
