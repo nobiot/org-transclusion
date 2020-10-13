@@ -181,29 +181,37 @@ TODO really fix the arguments. OV and DUPS should not be here."
          (insert-buffer-substring-as-yank tempbuf))))))
 
 (defun org-transclusion--create-at-point (tc-params)
-  "Create transclusion for PATH, storing RAW-LINK, BUF and MARKER in overlay.
-Assume the RAW-LINK is a valid tranclusion link."
+  "Create transclusion by unpackng TC-PARAMS.
+TODO: Need RAW-LINK somehow to bring the link back."
 
-  ;; Remove the link
   (when-let ((link-loc (org-transclusion--get-link-location))
              (link-beg (plist-get link-loc ':begin))
-        (link-end (plist-get link-loc ':end)))
-    (goto-char link-beg)
-    (delete-region link-beg link-end))
+             (link-end (plist-get link-loc ':end))
+             (raw-link (buffer-substring link-beg link-end)))
+    ;; Remove the link
+    (delete-region link-beg link-end)
     ;; FIXME You need to check if the link is at the bottom of buffer
     ;; If it is, then yank won't work.
 
-  ;; Add content and overlay
-
-  (let* ((tc-type (plist-get tc-params :tc-type))
-         (tc-fn (plist-get tc-params :tc-fn))
-         (tc-path (plist-get tc-params :tc-path))
-         (tc-payload (funcall tc-fn tc-path))
-         (tc-beg-mkr (plist-get tc-payload :tc-beg-mkr))
-         (tc-end-mkr (plist-get tc-payload :tc-end-mkr))
-         (tc-content (plist-get tc-payload :tc-content)))
-    (insert tc-content)
-    (org-transclusion--text-clone-create tc-beg-mkr tc-end-mkr)))
+    ;; Add content and overlay
+    (let* ((tc-raw-link raw-link)
+           (tc-type (plist-get tc-params :tc-type))
+           (tc-fn (plist-get tc-params :tc-fn))
+           (tc-path (plist-get tc-params :tc-path))
+           (tc-payload (funcall tc-fn tc-path))
+           (tc-beg-mkr (plist-get tc-payload :tc-beg-mkr))
+           (tc-end-mkr (plist-get tc-payload :tc-end-mkr))
+           (tc-content (plist-get tc-payload :tc-content)))
+      (save-excursion (insert tc-content))
+      (when-let
+          ((dups (org-transclusion--text-clone-create tc-beg-mkr tc-end-mkr))
+           (ov (car (cdr dups))))
+        (overlay-put ov 'face 'org-transclusion-block)
+        (overlay-put ov 'tc-type tc-type)
+        (overlay-put ov 'tc-raw-link tc-raw-link)
+        (overlay-put ov 'tc-beg-mkr tc-beg-mkr)
+        (overlay-put ov 'tc-end-mkr tc-beg-mkr)
+        (overlay-put ov 'priority -50)))))
   
     ;; (let* ((beg (point))
     ;;        (end nil)
@@ -576,7 +584,8 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
     ;;(overlay-put ol2 'face 'underline)
     (overlay-put ol2 'evaporate t)
     (overlay-put ol2 'face 'org-macro)    
-    (overlay-put ol2 'text-clones dups)))
+    (overlay-put ol2 'text-clones dups)
+    dups)) ;; < nobiot return dups
 
 (provide 'org-transclusion)
 ;;; org-transclusion.el ends here
