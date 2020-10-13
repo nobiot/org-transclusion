@@ -199,25 +199,21 @@ TODO: Need RAW-LINK somehow to bring the link back."
     (when-let ((type (plist-get link ':type)))
       (string= type org-transclusion-link))))
 
-(defun org-transclusion-update-src-at-point (pos &optional savebuf)
-  "Update the transclusion source buffer with the tranclusion at POS.
+(defun org-transclusion-save-src-buffer-at-point (pos)
+  "Save the transclusion source buffer with the tranclusion at POS.
 It can be used interactively.
 
-TODO allow C-u to manually do savebuf
-
-When SAVEBUF is non-nil, save the source buffer to file.  When SAVEBUF is nil,
-only update buffer without saving it to the file."
+It will create a backup file if this is the first backup for 
+the source buffer in this session."
   
   (interactive "d")
   ;; Check POS has an tranclusion overlay
   ;; If not, get out the function with a message telling the user.
-  (if-let ((ov (cdr (get-char-property-and-overlay pos 'tc-src-buf))))
-      (let ((src_buf (overlay-get ov 'tc-src-buf))
-            (src_marker (overlay-get ov 'tc-src-marker)))
+  (if-let ((ov (cdr (get-char-property-and-overlay pos 'tc-type))))
+      (let ((src_buf (marker-buffer (overlay-get ov 'tc-beg-mkr))))
         (with-current-buffer src_buf
-          (when savebuf
-            (unless make-backup-files (setq-local make-backup-files t))
-            (save-buffer)))))
+          (unless make-backup-files (setq-local make-backup-files t))
+          (save-buffer))))
     (message "Nothing done. No transclusion exists here."))
 
 (defun org-transclusion-remove-at-point (pos &optional detach)
