@@ -25,8 +25,8 @@
 
 ;; This library is an attempt to enable transclusion with Org Mode.
 
-;; It is still VERY experimental. As it modifies your files (notes),
-;; use it with care. The author and contributors cannot be held
+;; It is still VERY experimental.  As it modifies your files (notes),
+;; use it with care.  The author and contributors cannot be held
 ;; responsible for loss of important work.
 
 ;;; Code:
@@ -37,12 +37,16 @@
 ;;-----------------------------------------------------------------------------
 ;; Variables
 ;; Most of these should be defcustom
+
+(defvar-local org-transclusion-original-position nil)
+
 (defvar org-transclusion-link "otc")
 (defvar org-transclusion-activate-persistent-message t)
-(defvar-local org-transclusion-original-position nil)
+
 
 ;;-----------------------------------------------------------------------------
 ;; Faces
+
 (defface org-transclusion-source-block
   '((((class color) (min-colors 88) (background light))
      :background "#fff3da" :extend t)
@@ -61,14 +65,14 @@
 ;; Custom link parameter
 ;; :follow fn should be a one that can do-list for functions, where
 ;; each function support different type of links: e.g. file, ID, etc.
+
 (org-link-set-parameters org-transclusion-link
- :follow #'org-transclusion-call-tranclusions-functions)
+ :follow #'org-transclusion-call-add-at-point-functions)
 
 ;;-----------------------------------------------------------------------------
-;; Functions
-;; - Deal with transclusion links
-;; - Retrive text contents of the link target buffer / element
-;; - Check if the transclusion link has bee aleady been activated
+;; Core Functions
+;; - Core operations: create-, save-, remove-, detach-at-point
+;; - Supporting functions for these core operations
 
 (defun org-transclusion--get-tc-params (str)
   "Return TC-TYPE, TC-FN and TC-PATH by parsing STR."
@@ -102,7 +106,7 @@
                  :tc-beg-mkr beg
                  :tc-end-mkr end))))))
 
-(defun org-transclusion-call-tranclusions-functions (str &rest _prefix)
+(defun org-transclusion-call-add-at-point-functions (str &rest _prefix)
   "Call functions to insclude source text for PATH in current buffer.
 It is meant to be used as a :follow function in the custom Org Mode link type.
 
@@ -118,19 +122,19 @@ You should be able to (dolist func-list) to allow for cusutom functions.
 At the moment, I have only one function, even without a list of functions for
 the prototyping purpose.
 
-(org-transclusion-add-'fn)
+   (org-transclusion-add-'fn)
 
-The fn must: 
+The fn must:
     1. arguments: (fn path &optional prefix)
     2. return nil or function (FN)
 
-FN must take argument STR, and returns plist 
-(:tc-type     := type of transclusion, buffer, org-id, org-block, etc.
+FN must take argument STR, and returns plist
+ :tc-type     := type of transclusion, buffer, org-id, org-block, etc.
  :tc-content  := text string to be trancluded
  :tc-beg-mkr  := marker pointing to the beginning of the content in the src buf
- :tc-end-mkr) := marker pointing to the end of the content in the src buf
+ :tc-end-mkr  := marker pointing to the end of the content in the src buf
 
-FN should decode STR as a link and its TC-TYPE. eg. id:uuid-1234-xxxx,
+FN should decode STR as a link and its TC-TYPE.  eg. id:uuid-1234-xxxx,
 return the content TC-CONTENT and markers TC-BG-MKR and TC-END-MKR.
 
 Default to deal with link otc:./path/to/file.txt
@@ -191,7 +195,9 @@ TODO: Need RAW-LINK somehow to bring the link back."
         (overlay-put ov 'tc-end-mkr tc-end-mkr)
         (overlay-put ov 'priority -50)
         ;; Put to the source overlay
-        (overlay-put ov-src 'tc-by (make-marker (overlay-start ov)))))))
+        (save-excursion
+          (goto-char (overlay-start ov))
+          (overlay-put ov-src 'tc-by (point-marker)))))))
   
 (defun org-transclusion--transclusion-link-p ()
   "Check if the link at point is a tranclusion link."
@@ -199,11 +205,11 @@ TODO: Need RAW-LINK somehow to bring the link back."
     (when-let ((type (plist-get link ':type)))
       (string= type org-transclusion-link))))
 
-(defun org-transclusion-save-src-buffer-at-point (pos)
+(defun org-transclusion-save-src-at-point (pos)
   "Save the transclusion source buffer with the tranclusion at POS.
 It can be used interactively.
 
-It will create a backup file if this is the first backup for 
+It will create a backup file if this is the first backup for
 the source buffer in this session."
   
   (interactive "d")
@@ -245,7 +251,7 @@ text."
             (dolist (ol dups)
               (delete-overlay ol))
             ;; TODO
-            ;; Also ensure to delete all the possible orphan overlays from the source 
+            ;; Also ensure to delete all the possible orphan overlays from the source
             ;; When remove fn, delete the copied texts
             (unless detach
               (delete-region new-beg new-end)))))
@@ -269,23 +275,20 @@ is active, it will automatically bring the transclusion back."
     (delete-char (- 0 (length type)))))
 
 ;;-----------------------------------------------------------------------------
-;; Function
-;; - For the whole buffer to iterate on all the links, etc.
-;; - Some can be used interactively
+;; Function to work with all transclusions in the buffer
 
 (defun org-transclusion--process-all-in-buffer-before-save ()
   "Update and remove all translusions in the current buffer `before-save-hook'."
   (setq org-transclusion-original-position (point))
-  (org-transclusion-update-all-src-in-buffer) ; no saving, just insert the new content
   (org-transclusion-remove-all-in-buffer)) ; clean up current buffer before writing to file)
 
 (defun org-transclusion--process-all-in-buffer-after-save ()
   "Add tranclusions back into current buffer, and save source buffers.
-Meant obe for `after-save-hook'.
+Meant to be for `after-save-hook'.
 It adds all the transcluded copies back into the current buffer.
 And then saves all the transclusion source buffers."
   (org-transclusion-add-all-in-buffer) ; put all tranclusions back in
-  (org-transclusion-update-all-src-in-buffer t) ; save to file
+  (org-transclusion-save-all-src-in-buffer) ; save to file
   (goto-char org-transclusion-original-position)
   (setq org-transclusion-original-position nil))
 
@@ -305,27 +308,28 @@ And then saves all the transclusion source buffers."
 As this should be used only when the buffer is current, no argment passed.
 
 As transclusing adds text after the link, the loop needs to process from top to
-one by one.  The transcluded text may contrain transclusion link.  To avoid
-infinite,check is done within each add function."
+bottom one by one.  The transcluded text may contrain transclusion link.
+To avoid recursion, check is done within create-at-point function."
   
   (interactive)
-  ;; Prevent background hook (e.g. save hooks) from updating the transclusion
-  ;; target buffer.
+  ;; Check the windows being worked on is in focus (selected)
+  ;; This is to prevent background hook (e.g. save hooks) from updating
+  ;; the transclusion buffer.
   (when (eq (current-buffer)(window-buffer (selected-window)))
-    ;; Need to add mark and go back after the loop for some reason??
     (save-excursion
       (save-restriction
         (widen)
         (outline-show-all)
         (goto-char (point-min))
-        ;; eq t is needed for this while loop as if not link, fn returns a message string.
-        ;; looking-at org-link-any-re
+        ;; For `org-next-link', eq t is needed for this while loop to check no
+        ;; link.  This is because fn returns a message string when there is no
+        ;; further link.
         (while (eq t (org-next-link))
           ;; check if the link at point is tranclusion link
           (when (org-transclusion--transclusion-link-p)
             (let* ((link (org-element-link-parser))
                    (path (org-element-property :path link)))
-              (org-transclusion-call-tranclusions-functions path))))))))
+              (org-transclusion-call-add-at-point-functions path))))))))
 
 (defun org-transclusion-remove-all-in-buffer (&optional buf)
   "Remove all the translusion overlay and copied text in current buffer.
@@ -389,25 +393,31 @@ The toggling is done via adding and removing all from the appropirate buffer,
 depending on whether the focus is coming in or out of the tranclusion buffer."
   (let ((buf (window-buffer win)))
     (cond ((minibufferp (current-buffer))
-           (message "going into minibuffer"))
+           (message "going into minibuffer") nil) ;; do nothing
           ((eq buf (current-buffer))
            (message "coming into %s" win)
-           (org-transclusion-add-all-in-buffer))
+           (org-transclusion-add-all-in-buffer)) ;; add all back in
           (t
            (message "going from %s into %s" buf (current-buffer))
-           (with-current-buffer buf
-             (org-transclusion-update-all-src-in-buffer)) ;; update from copy to source
-           (org-transclusion-remove-all-in-buffer buf))))) ;; clean up copy
+           ;;(with-current-buffer buf
+           ;;(org-transclusion-update-all-src-in-buffer)) ;; update not needed
+           (org-transclusion-remove-all-in-buffer buf))))) ;; remove all
 
 ;;-----------------------------------------------------------------------------
-;; Text Clone 
+;; Text Clone
 ;; Based on StackExchange user Tobias' code; adapted by nobiot
 ;; https://emacs.stackexchange.com/questions/56201/is-there-an-emacs-package-which-can-mirror-a-region/56202#56202
+;; Since I'm not using SPREADP argument (or margin), I can simplify
+;; the code much more.
+;; Not sure if I would like to keep regex (TEXT-CLONE-SYNTAX)
+;; I think this should be handled with the add functions above.
+;; that is, leaning towards removing.
+
 (defvar text-clone--maintaining nil)
 
 (defun org-transclusion--text-clone--maintain (ol1 after beg end &optional _len)
   "Propagate the changes made under the overlay OL1 to the other clones.
-  This is used on the `modification-hooks' property of text clones."
+This is used on the `modification-hooks' property of text clones."
   (when (and after ;(not undo-in-progress) ;; < nobit removed undo-in-progress
              (not text-clone--maintaining)
              (overlay-start ol1))
@@ -462,8 +472,8 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
 
 (defun org-transclusion--text-clone-create (start end &optional spreadp syntax)
   "Create a text clone of START...END at point.
-  Text clones are chunks of text that are automatically kept identical:
-  changes done to one of the clones will be immediately propagated to the other.
+Text clones are chunks of text that are automatically kept identical:
+changes done to one of the clones will be immediately propagated to the other.
 
   The buffer's content at point is assumed to be already identical to
   the one between START and END.
