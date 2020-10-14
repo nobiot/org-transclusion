@@ -35,7 +35,7 @@ One change from the video is that now you click on a transclusion link and trans
 ## Load
 Load the file (`load-file`) or open the file and evaluate the whole buffer (`eval-buffer`). It is experimental at the moment.
 
-At this stage, you use a special link type `ortc` (it's defined as a variable, so you can change it to something like `transclusion`). 
+At this stage, you use a special link type `otc` (changed in the current version from "ortc"; it's defined as a variable, so you can change it to something like `transclusion` or even `tc`). 
 
 ## Special link type
 There are two types of links you can transclude:
