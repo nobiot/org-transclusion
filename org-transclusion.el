@@ -74,23 +74,62 @@
 ;; - Core operations: create-, save-, remove-, detach-at-point
 ;; - Supporting functions for these core operations
 
+;; :tc-type can be used to generate the names
+;; org-transclusion-match-<org-id>
+;; org-transclusion-add-<org-id>
+;; so on.
+(defvar org-transclusion-add-at-point-functions
+  (list "org-id"))
+
 (defun org-transclusion--get-tc-params (str)
   "Return TC-TYPE, TC-FN and TC-PATH by parsing STR."
   ;; TODO
   ;; parameterize the regex check to make adding types easier
-  
-  ;; Check if PATH is the form `id:uuid`.  If so, return the ID.
-  ;; If not return nil.
-  ;; (if
-  ;;  ;; TODO not finished
-  ;;  ((string-prefix-p "id:" str)
-  ;;   (string-match "\\(id:\\)\\([[:alnum:]|-]*\\)" str)
-  ;;   (match-string 2 str))
-  ;;  (t
-    ;; default
-  (list :tc-type "default"
-        :tc-fn #'org-transclusion-add-default
-        :tc-path str))
+
+  ;; call matchers in the list
+  ;; if t, uses the first tc-type, and return tc-params
+  ;; if none matches, use default
+  (let ((types org-transclusion-add-at-point-functions)
+        (params nil))
+    (while (not params)
+      (let* ((type (pop types))
+             (match-fn
+              (progn (intern (concat "org-transclusion-match-" type))))
+             (add-fn
+              (progn (intern (concat "org-transclusion-add-" type)))))
+        (when (and (functionp match-fn)
+                   (funcall match-fn str)
+                   (functionp add-fn))
+          (setq params (list :tc-type type :tc-fn add-fn :tc-path str))))
+      (when (not params)
+        (setq params (list :tc-type "default"
+                           :tc-fn #'org-transclusion-add-default
+                           :tc-path str))))
+    params))
+
+(defun org-transclusion-match-org-id (path)
+  "Return t if PATH if for the link type to be transcluded.
+org-transclusion-add-<tc-type> function needs to be also defined."
+  (string-prefix-p "id:" path))
+
+(defun org-transclusion-add-org-id (path)
+  "Return the text content of the subtree identified by Org-ID.
+PATH is assumed to be in form `id:uuid-xxx-9999'."
+  (let* ((id (progn
+               (string-match "\\(id:\\)\\([[:alnum:]|-]*\\)" path)
+               (match-string 2 path)))
+         (marker (org-id-find id 'marker))
+         (buf (marker-buffer marker)))
+    (with-current-buffer buf
+      (org-with-wide-buffer
+       (goto-char marker)
+       (org-narrow-to-subtree)
+       (let ((content (buffer-string))
+             (beg (point-min-marker))
+             (end (point-max-marker)))
+         (list :tc-content content
+               :tc-beg-mkr beg
+               :tc-end-mkr end))))))
 
 (defun org-transclusion-add-default (path)
   "Use PATH to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR."
