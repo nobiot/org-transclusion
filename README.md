@@ -7,12 +7,12 @@ This 10-minute show & tell on YouTube I did shows you how this library works.
 
 The current main branch has progressed from this video demo. A couple of notable differences are:
 
-- The sync between the transclusion copy and source is real-time; the tranclusion is a text clone of the source
-- Now you add a tranclusion copy on a transclusion link, the link will disappear; when you deactivate transclusion, the link will be back
+- Real-time sync between transclusion copies and sources added; a tranclusion is a text clone of its source
+- When you add a tranclusion copy on a transclusion link, the link will disappear; when you deactivate transclusion / remove it, the link will be back
 
 It is still **VERY experimental**. Use it with care if you would like to play with it. It modifies your files (notes). The author and contributors cannot be held responsible for loss of important work.
 
-I am no developer or programmer. If you like the idea, and can lend your technical hand, I would be grateful. Here is a [list of things](#list-of-things-to-be-done) I think needed to be done (I'm sure there are more; let me know other things, too.).
+If you like the idea, and can lend your technical hand, I would be grateful. Here is a [list of things](#list-of-things-to-be-done) I think needed to be done (I'm sure there are more; let me know other things, too.).
 
 I would love your involvement if you think the idea and the current implementation look worth pursuing.
 
@@ -70,11 +70,9 @@ The overlay holds the information about its provenance.
 
 Save the current buffer when transclusion is active. The hooks will be triggered to save the sources of all the transclusions in the current buffer.
 
-When you switch to another buffer, two things should happen:
-1. Transcluded contents disappear
-2. The sources get updated (but not saved)
+When you switch to another buffer, the transcluded contents disappear (I am reconsidering this behavour now).
 
-When you come back to the transclusion buffer, the contents should come back automatically.
+When you come back to the transclusion buffer, the contents come back automatically.
 
 ## Work with transclusions at-point and all for the buffer interactively
 The following operations can be done interactively. 
