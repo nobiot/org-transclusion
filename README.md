@@ -1,6 +1,14 @@
-# Preambles
+# Introduction
 
 This library is an attempt to enable transclusion with Org Mode in Emacs. It is my take on the [idea by John Kitchin](#original-idea-by-john-kitchin).
+
+This 10-minute show & tell on YouTube I did shows you how this library works.
+[![10-minute Show & Tell on YouTube](./resources/title.png)](https://youtu.be/Wjk-otO2xrI)
+
+The current main branch has progressed from this video demo. A couple of notable differences are:
+
+- The sync between the transclusion copy and source is real-time; the tranclusion is a text clone of the source
+- Now you add a tranclusion copy on a transclusion link, the link will disappear; when you deactivate transclusion, the link will be back
 
 It is still **VERY experimental**. Use it with care if you would like to play with it. It modifies your files (notes). The author and contributors cannot be held responsible for loss of important work.
 
@@ -24,18 +32,10 @@ When I start writing something long-form, I want to have a writing project separ
 
 Transclusion should let me do this.
 
-This 10-minute show & tell on YouTube I did shows you how this library works.
-[![10-minute Show & Tell on YouTube](./resources/title.png)](https://youtu.be/Wjk-otO2xrI)
-
-One change from the video is that now you click on a transclusion link and transclude the content, the link will disappear; when you deactivate transclusion, the link will be back.
-
-
 # How to use the library
 
 ## Load
 Load the file (`load-file`) or open the file and evaluate the whole buffer (`eval-buffer`). It is experimental at the moment.
-
-At this stage, you use a special link type `otc` (changed in the current version from "ortc"; it's defined as a variable, so you can change it to something like `transclusion` or even `tc`). 
 
 ## Special link type
 There are two types of links you can transclude:
@@ -43,21 +43,23 @@ There are two types of links you can transclude:
 1. file link
 2. ID with Org-ID
 
+At this stage, you use a special link type `otc` (changed in the current version from "ortc"; it's defined as a variable, so you can change it to something like `transclusion` or even `tc`). 
+
 For files, don't use Org Mode's `file:` link type (not coded to work). Do something like this:
 
-- `ortc:path/to/note.txt`
-- `[[ortc:path/to/note.org][my note 1]]`
+- `otc:path/to/note.txt`
+- `[[otc:path/to/note.org][my note 1]]`
 
 For ID, do something like this:
 
-- `[[ortc:id:uuid-of-the-heading]]`
+- `[[otc:id:uuid-of-the-heading]]`
 
 ## Activate and deactivate
 Activate transclusion with `org-transclusion-activate` (it should become a buffer-local minor mode, but it is not at the moment). 
 
 If the variable `org-transclusion-activate-persistent-message` is not changed, you should see a header appear on top of the buffer indicating transclusion is active.
 
-All the `ortc` links in your current buffer should transclude specified contents, and the links themselves disappear from the buffer (deleted).
+All the `otc` links in your current buffer should transclude specified contents, and the links themselves disappear from the buffer (deleted).
 
 Deactivate transclusion with `org-transclusion-deactivate`. This should remove the transcluded contents, and bring back the original links. The header should also disappear.
 
