@@ -5,7 +5,7 @@
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
-;; Version: 0.0.1
+;; Version: 0.0.2
 ;; Package-Requires: ((emacs "26.3") (org "9.3")
 
 ;; This program is free software: you can redistribute it and/or modify
@@ -36,16 +36,31 @@
 
 ;;-----------------------------------------------------------------------------
 ;; Variables
-;; Most of these should be defcustom
+;; TODO Most of these should be defcustom
 
 (defvar-local org-transclusion-original-position nil)
 
 (defvar org-transclusion-link "otc")
 (defvar org-transclusion-activate-persistent-message t)
 
+;; ort-translusion-add-at-point-functions is a list of
+;; "link types" org-tranclusion supports.
+;; In addtion to a element in the list, there must be two corresponding
+;; functions with specific names
+;; 
+;; The functions must conform to take specific arguments, and to returnbvalues.
+;; 
+;; org-transclusion-match-<org-id>
+;; org-transclusion-add-<org-id>
+;;
+;; See the functions delivered within org-tranclusion for the API signatures.
+
+(defvar org-transclusion-add-at-point-functions
+  (list "org-id"))
 
 ;;-----------------------------------------------------------------------------
 ;; Faces
+;; (WIP)
 
 (defface org-transclusion-source-block
   '((((class color) (min-colors 88) (background light))
@@ -74,21 +89,16 @@
 ;; - Core operations: create-, save-, remove-, detach-at-point
 ;; - Supporting functions for these core operations
 
-;; :tc-type can be used to generate the names
-;; org-transclusion-match-<org-id>
-;; org-transclusion-add-<org-id>
-;; so on.
-(defvar org-transclusion-add-at-point-functions
-  (list "org-id"))
-
 (defun org-transclusion--get-tc-params (str)
-  "Return TC-TYPE, TC-FN and TC-PATH by parsing STR."
-  ;; TODO
-  ;; parameterize the regex check to make adding types easier
+  "Return TC-TYPE, TC-FN and TC-PATH by parsing STR.
 
-  ;; call matchers in the list
-  ;; if t, uses the first tc-type, and return tc-params
-  ;; if none matches, use default
+Call the matcher function corresponding to each link type in
+`org-transclusion-add-at-point-functions` from left to right.
+
+Use the first match (thus, the left has more priority), and then
+return its corresponding TC-FN function, TC-TYPE, and TC-PATH.
+If none of the matchers finds a match, use default."
+
   (let ((types org-transclusion-add-at-point-functions)
         (params nil))
     (while (not params)
@@ -114,7 +124,7 @@ org-transclusion-add-<tc-type> function needs to be also defined."
 
 (defun org-transclusion-add-org-id (path)
   "Return the text content of the subtree identified by Org-ID.
-PATH is assumed to be in form `id:uuid-xxx-9999'."
+PATH is assumed to be in form `id:uuid'."
   (let* ((id (progn
                (string-match "\\(id:\\)\\([[:alnum:]|-]*\\)" path)
                (match-string 2 path)))
@@ -132,9 +142,10 @@ PATH is assumed to be in form `id:uuid-xxx-9999'."
                :tc-end-mkr end))))))
 
 (defun org-transclusion-add-default (path)
-  "Use PATH to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR."
-  ;; (list :buf (find-file-noselect path) :marker nil)
-  ;; TODO need to handle when the file does not exist
+  "Use PATH to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR.
+
+TODO need to handle when the file does not exist."
+
   (let ((buf (find-file-noselect path)))
     (with-current-buffer buf
         (org-with-wide-buffer
@@ -149,56 +160,33 @@ PATH is assumed to be in form `id:uuid-xxx-9999'."
   "Call functions to insclude source text for PATH in current buffer.
 It is meant to be used as a :follow function in the custom Org Mode link type.
 
-[[ort:id:uuid]]
-[[ort:file:./path/to/file.text]]
+It is parametarized to make it easy to add support for additional link types.
+Refer to `org-transclusion-add-org-id' as a sample implementation.
 
-'id
-'file
+The FN must:
+    1. Take arguments: (str) or (str &optional prefix)
+    2. Return nil or TC-PARAMS
 
-TODO
-Change to (dolist func-list) with standardized arguments as an API
-You should be able to (dolist func-list) to allow for cusutom functions.
-At the moment, I have only one function, even without a list of functions for
-the prototyping purpose.
-
-   (org-transclusion-add-'fn)
-
-The fn must:
-    1. arguments: (fn path &optional prefix)
-    2. return nil or function (FN)
-
-FN must take argument STR, and returns plist
- :tc-type     := type of transclusion, buffer, org-id, org-block, etc.
+TC-PARAMS is a plist with the following params:
  :tc-content  := text string to be trancluded
  :tc-beg-mkr  := marker pointing to the beginning of the content in the src buf
  :tc-end-mkr  := marker pointing to the end of the content in the src buf
 
-FN should decode STR as a link and its TC-TYPE.  eg. id:uuid-1234-xxxx,
-return the content TC-CONTENT and markers TC-BG-MKR and TC-END-MKR.
+FN should decode STR as a link and determine the TC-TYPE.
+eg. id:uuid-1234-xxxx, for Org-ID.
+Return the content TC-CONTENT and markers TC-BG-MKR and TC-END-MKR.
 
 Default to deal with link otc:./path/to/file.txt
 
-I think the conditon check to avoid recursion should happen here."
+A conditon check to avoid recursion happens in this function.
+
+TODO You need to check if the link is at the bottom of buffer."
   
   (if (cdr (get-char-property-and-overlay (point) 'tc-type)) nil
          ;; The link is within a transclusion overlay.
          ;; Do nothing to avoid recurrsive transclusion.
-    (let* ((str str)
-           (tc-params (org-transclusion--get-tc-params str)))
+    (let* ((tc-params (org-transclusion--get-tc-params str)))
       (org-transclusion--create-at-point tc-params))))
-
-(defun org-transclusion--get-link-location ()
-  "Get the start and end of the link being worked on at point.
-If the current point is a translusion link, return BEGIN and END
-   plist: '(begin: BEGIN  end: END)
-of the link.  If not link, return nil."
-
-  (let ((location '())
-        (context (org-element-context)))
-    (when-let ((link (plist-get context 'link)))
-      (setq location (plist-put location ':begin (plist-get link ':begin)))
-      (setq location (plist-put location ':end (plist-get link ':end)))
-      location)))
 
 (defun org-transclusion--create-at-point (tc-params)
   "Create transclusion by unpackng TC-PARAMS."
@@ -213,7 +201,7 @@ of the link.  If not link, return nil."
     ;; the link used to occupy. Without this, you end up moving one line
     ;; every time add operation is called.
     (delete-char 1)
-    ;; FIXME You need to check if the link is at the bottom of buffer
+    ;; TODO You need to check if the link is at the bottom of buffer
     ;; If it is, then yank won't work.
 
     ;; Add content and overlay
@@ -240,12 +228,6 @@ of the link.  If not link, return nil."
         (save-excursion
           (goto-char (overlay-start ov))
           (overlay-put ov-src 'tc-by (point-marker)))))))
-  
-(defun org-transclusion--transclusion-link-p ()
-  "Check if the link at point is a tranclusion link."
-  (when-let ((link (plist-get (org-element-context) 'link)))
-    (when-let ((type (plist-get link ':type)))
-      (string= type org-transclusion-link))))
 
 (defun org-transclusion-save-src-at-point (pos)
   "Save the transclusion source buffer with the tranclusion at POS.
@@ -317,7 +299,30 @@ is active, it will automatically bring the transclusion back."
     (delete-char (- 0 (length type)))))
 
 ;;-----------------------------------------------------------------------------
-;; Function to work with all transclusions in the buffer
+;; Utility functions used in the core functions above
+
+(defun org-transclusion--get-link-location ()
+  "Get the start and end of the link being worked on at point.
+If the current point is a translusion link, return BEGIN and END
+   plist: '(begin: BEGIN  end: END)
+of the link.  If not link, return nil."
+
+  (let ((location '())
+        (context (org-element-context)))
+    (when-let ((link (plist-get context 'link)))
+      (setq location (plist-put location ':begin (plist-get link ':begin)))
+      (setq location (plist-put location ':end (plist-get link ':end)))
+      location)))
+
+(defun org-transclusion--transclusion-link-p ()
+  "Check if the link at point is a tranclusion link."
+  (when-let ((link (plist-get (org-element-context) 'link)))
+    (when-let ((type (plist-get link ':type)))
+      (string= type org-transclusion-link))))
+
+;;-----------------------------------------------------------------------------
+;; Functions to work with all transclusions in the buffer.
+;; These typically call their correspondong `at-point` function
 
 (defun org-transclusion--process-all-in-buffer-before-save ()
   "Update and remove all translusions in the current buffer `before-save-hook'."
