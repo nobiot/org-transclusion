@@ -63,14 +63,12 @@ All the `otc` links in your current buffer should transclude specified contents,
 
 Deactivate transclusion with `org-transclusion-deactivate`. This should remove the transcluded contents, and bring back the original links. The header should also disappear.
 
-## Update and save transclusions
-Transcluded content is a copy from the transclusion sources. The only difference is that it is under an overlay to indicate that it is a transcluded content. 
+## Save transclusions
+Transcluded content is a text clone of transclusion sources. The only difference is that it is under an overlay to indicate that it is a transcluded content. 
 
 The overlay holds the information about its provenance. 
 
-The library differentiates `update` and `save` transclusion sources. Update only insert back the edited content, while `save` does update and save the source buffer to file.
-
-Save the current buffer; the hooks will be triggered to save the sources of all the transclusions in the current buffer.
+Save the current buffer when transclusion is active. The hooks will be triggered to save the sources of all the transclusions in the current buffer.
 
 When you switch to another buffer, two things should happen:
 1. Transcluded contents disappear
@@ -86,8 +84,10 @@ The following operations can be done interactively.
 For at-point
 - Add (via opening the link / clicking the link)
 - Update source
-- Remove
+- Remove (*)
 - Detach
+
+(*) It looks as if it didn't work when transclusion is active. This is because immediately after hte removal, the transclusion is added back in. I will do something about it later.
 
 For the entire buffer
 - Add all
@@ -96,7 +96,7 @@ For the entire buffer
 
 Note that there is no detach function for the buffer.
 
-## Working with transclusions manually while transclusion is inactive
+## Work with transclusions manually while transclusion is inactive
 You might notice that you can do most of the operations without activating transclusion for the buffer. This is mainly because I have not thought through what I want to do when transclusion is inactive.
 
 The difference is the automatic toggle when moving the focus, and automatic save buffer at the moment.
