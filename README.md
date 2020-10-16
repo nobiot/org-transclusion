@@ -2,13 +2,12 @@
 
 This library is an attempt to enable transclusion with Org Mode in Emacs. It is my take on the [idea by John Kitchin](#original-idea-by-john-kitchin).
 
+
 This 10-minute show & tell on YouTube I did shows you how this library works.
-[![10-minute Show & Tell on YouTube](./resources/title.png)](https://youtu.be/Wjk-otO2xrI)
+[![13-minute Demo video #2: v0.0.2 real-time sync](./resources/demo2-title)](https://youtu.be/Wjk-otO2xrI)
 
-The current main branch has progressed from this video demo. A couple of notable differences are:
-
-- Real-time sync between transclusion copies and sources added; a tranclusion is a text clone of its source
-- When you add a tranclusion copy on a transclusion link, the link will disappear; when you deactivate transclusion / remove it, the link will be back
+- [How to install video for test drive v0.0.2 alpha](https://github.com/nobiot/org-transclusion)
+- [Demo video #1: prototype](https://youtu.be/Wjk-otO2xrI)
 
 It is still **VERY experimental**. Use it with care if you would like to play with it. It modifies your files (notes). The author and contributors cannot be held responsible for loss of important work.
 
