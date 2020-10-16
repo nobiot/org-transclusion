@@ -4,7 +4,7 @@ This library is an attempt to enable transclusion with Org Mode in Emacs. It is 
 
 
 This 10-minute show & tell on YouTube I did shows you how this library works.
-[![13-minute Demo video #2: v0.0.2 real-time sync](./resources/demo2-title)](https://youtu.be/Wjk-otO2xrI)
+[![13-minute Demo video #2: v0.0.2 real-time sync](./resources/demo2-title.png)](https://youtu.be/Wjk-otO2xrI)
 
 - [How to install video for test drive v0.0.2 alpha](https://github.com/nobiot/org-transclusion)
 - [Demo video #1: prototype](https://youtu.be/Wjk-otO2xrI)
