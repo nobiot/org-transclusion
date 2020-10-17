@@ -42,7 +42,7 @@ There are two types of links you can transclude:
 1. file link
 2. ID with Org-ID
 3. Org headline with `filename.org::*headline`
-4. Paragraph in Org file with using <<dedicated-target> and `filename.org::paragraph-id`
+4. Paragraph in Org file with using `<<dedicated-target>>` and `filename.org::paragraph-id`
 
 At this stage, you use a special link type `otc` (changed in the current version from "ortc"; it's defined as a variable, so you can change it to something like `transclusion` or even `tc`). 
 
@@ -56,7 +56,7 @@ For files, don't use Org Mode's `file:` link type (not coded to work). Do someth
 For ID, do something like this:
 - `[[otc:id:uuid-of-the-heading]]`
 
-For transcluding a specific paragraph, Org-transclusion relies on Org mode's [<<dedicated-target>>](https://orgmode.org/manual/Internal-Links.html#Internal-Links). The target paragraph must be identifiable by a dedicated target with a <<paragraph-id>>: e.g. 
+For transcluding a specific paragraph, Org-transclusion relies on Org mode's [dedicated-target](https://orgmode.org/manual/Internal-Links.html#Internal-Links). The target paragraph must be identifiable by a dedicated target with a `<<paragraph-id>>`: e.g. 
 
     Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
     Suspendisse ac velit fermentum, sodales nunc in, 
