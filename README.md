@@ -37,24 +37,22 @@ Transclusion should let me do this.
 Load the file (`load-file`) or open the file and evaluate the whole buffer (`eval-buffer`). It is experimental at the moment.
 
 ## Special link type
-There are two types of links you can transclude:
+There are followings types of links you can transclude:
 
 1. file link
 2. ID with Org-ID
-3. Org headline with `filename.org::*headline`
-4. Paragraph in Org file with using `<<dedicated-target>>` and `filename.org::paragraph-id`
+3. Org headline with `file:filename.org::*headline`
+4. Paragraph in Org file with using `<<dedicated-target>>` and `file:filename.org::paragraph-id`
 
 At this stage, you use a special link type `otc` (changed in the current version from "ortc"; it's defined as a variable, so you can change it to something like `transclusion` or even `tc`). 
 
-For files, don't use Org Mode's `file:` link type (not coded to work). Do something like this:
-
 - `otc:path/to/note.txt`
 - `[[otc:path/to/note.org][my note 1]]`
-- `[[otc:path/to/note.org::*headline][Headline]]`
-- `[[otc:path/to/note.org::paragraph-id]]`
-
-For ID, do something like this:
 - `[[otc:id:uuid-of-the-heading]]`
+- `[[otc:file:path/to/note.org::*headline][Headline]]`
+- `[[otc:file:path/to/note.org::paragraph-id]]`
+
+(*) for org-headline, and paragraph (in Org file), you need to have `file:` as the link type at the moment.
 
 For transcluding a specific paragraph, Org-transclusion relies on Org mode's [dedicated-target](https://orgmode.org/manual/Internal-Links.html#Internal-Links). The target paragraph must be identifiable by a dedicated target with a `<<paragraph-id>>`: e.g. 
 
