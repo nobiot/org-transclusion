@@ -58,6 +58,9 @@
 (defvar org-transclusion-add-at-point-functions
   (list "org-id"))
 
+(setq org-transclusion-add-at-point-functions
+      '("org-id" "org-headline"))
+
 ;;-----------------------------------------------------------------------------
 ;; Faces
 ;; (WIP)
@@ -101,7 +104,8 @@ If none of the matchers finds a match, use default."
 
   (let ((types org-transclusion-add-at-point-functions)
         (params nil))
-    (while (not params)
+    (while (or (not params)
+               types)
       (let* ((type (pop types))
              (match-fn
               (progn (intern (concat "org-transclusion-match-" type))))
@@ -110,13 +114,39 @@ If none of the matchers finds a match, use default."
         (when (and (functionp match-fn)
                    (funcall match-fn str)
                    (functionp add-fn))
-          (setq params (list :tc-type type :tc-fn add-fn :tc-path str))))
-      (when (not params)
-        (setq params (list :tc-type "default"
-                           :tc-fn #'org-transclusion-add-default
-                           :tc-path str))))
+          (setq params (list :tc-type type :tc-fn add-fn :tc-path str)))))
+    (when (not params)
+      (setq params (list :tc-type "default"
+                         :tc-fn #'org-transclusion-add-default
+                         :tc-path str)))
     params))
 
+(defun org-transclusion-match-org-headline (path)
+  "Return t if PATH if for the link type to be transcluded.
+org-transclusion-add-<tc-type> function needs to be also defined."
+  (and (string-prefix-p "file:" path)
+       (when (string-match "\\(.org::\\)\\(\\*.*\\)" path) t)))
+
+(defun org-transclusion-add-org-headline (path)
+  "Return the text content of the subtree of an Org headline for PATH.
+PATH is assumed to be of the form: file:path/to/file.org::*headline."
+  (let ((file-path nil)
+        (headline nil))
+    (string-match "\\(file:\\)\\(.*\\)::\\(*.*\\)" path)
+    (setq file-path (match-string-no-properties 2 path))
+    (setq headline (match-string-no-properties 3 path))
+    (when-let ((buf (find-file-noselect file-path)))
+      (with-current-buffer buf
+        (org-with-wide-buffer
+         (org-link-search headline)
+         (org-narrow-to-subtree)
+         (let ((content (buffer-string))
+               (beg (point-min-marker))
+               (end (point-max-marker)))
+           (list :tc-content content
+                 :tc-beg-mkr beg
+                 :tc-end-mkr end)))))))
+  
 (defun org-transclusion-match-org-id (path)
   "Return t if PATH if for the link type to be transcluded.
 org-transclusion-add-<tc-type> function needs to be also defined."
@@ -134,7 +164,7 @@ PATH is assumed to be in form `id:uuid'."
       (org-with-wide-buffer
        (goto-char marker)
        (org-narrow-to-subtree)
-       (let ((content (buffer-string))
+       (let ((content (buffer-string))wafwe
              (beg (point-min-marker))
              (end (point-max-marker)))
          (list :tc-content content
