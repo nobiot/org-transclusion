@@ -59,7 +59,7 @@
   (list "org-id"))
 
 (setq org-transclusion-add-at-point-functions
-      '("org-id" "org-headline"))
+      '("org-id" "org-headline" "paragraph-org-dedicated-target"))
 
 ;;-----------------------------------------------------------------------------
 ;; Faces
@@ -120,6 +120,52 @@ If none of the matchers finds a match, use default."
                          :tc-fn #'org-transclusion-add-default
                          :tc-path str)))
     params))
+
+(defun org-transclusion-match-paragraph-org-dedicated-target (path)
+  "Return t if PATH if for the link type to be transcluded.
+org-transclusion-add-<tc-type> function needs to be also defined.
+
+Note that the regex is broader than necessary. It also matches
+::*headline form as well as ::dedicated-link.
+It is assumed that match for org-headline has been done before
+this match function."
+  
+  (and (string-prefix-p "file:" path)
+       (when (string-match "\\(.org::\\)\\(\\.*\\)" path) t)))
+
+(defun org-transclusion-add-paragraph-org-dedicated-target (path)
+  "Return the text content of a paragraph in an Org file.
+
+The target paragraph must be identifiable by a dedicated link with
+a <<paragraph-id>>: e.g. 
+
+   Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+   Suspendisse ac velit fermentum, sodales nunc in, 
+   tincidunt quam. <<paragraph-id>>
+
+It is generally assumed that the paragraph-id is placed after its content,
+but it is not an absolute requirement; it cna be in the beginning (before
+the content) or in the middle of it. It uses `org-link-search' to locate
+the <<dedicated-link>> and use `mark-paragraph' to select the content. 
+
+PATH is assumed to be of the form: file:path/to/file.org::dedicted-link."
+  (let ((file-path nil)
+        (headline nil))
+    (string-match "\\(file:\\)\\(.*\\)::\\(.*\\)" path)
+    (setq file-path (match-string-no-properties 2 path))
+    (setq paragraph-id (match-string-no-properties 3 path))
+    (when-let ((buf (find-file-noselect file-path)))
+      (with-current-buffer buf
+        (org-with-wide-buffer
+         (org-link-search paragraph-id)
+         (mark-paragraph)
+         (forward-char) ;; move to the same line where the content begins
+         (let* ((beg (point-marker)) ;; it is the beginning of the paragraph
+                (end (mark-marker))
+                (content (buffer-substring beg end)))
+           (list :tc-content content
+                 :tc-beg-mkr beg
+                 :tc-end-mkr end)))))))
 
 (defun org-transclusion-match-org-headline (path)
   "Return t if PATH if for the link type to be transcluded.
