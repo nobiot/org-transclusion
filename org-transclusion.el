@@ -88,44 +88,57 @@
  :follow #'org-transclusion-call-add-at-point-functions)
 
 ;;-----------------------------------------------------------------------------
-;; Core Functions
-;; - Core operations: create-, save-, remove-, detach-at-point
-;; - Supporting functions for these core operations
+;; Functions to override org-link-open
+;; Support different link types
 
-(defun org-transclusion--get-tc-params (str)
-  "Return TC-TYPE, TC-FN and TC-PATH by parsing STR.
+(defun org-transclusion-link-open (link &optional arg)
+  "Override Org Mode's default `org-link-open' for LINK.
+Meant to be used with add-advice/remove-advice in activate/deactivate.
 
-Call the matcher function corresponding to each link type in
-`org-transclusion-add-at-point-functions` from left to right.
+If the link type is not supported by org-transclusion, or \\[universal-argument]
+is used (ARG is non-nil), then use `org-link-open'."
+  
+  (let ((tc-params nil))
+    (if (or arg
+            (not (setq tc-params (org-transclusion-tc-params-p link))))
+        nil ;; Call the original `org-link-open'
+      (org-transclusion--create-at-point tc-params)
+      t))) ;; return t so that advice-add :before-until won't call the orignal fn
 
-Use the first match (thus, the left has more priority), and then
-return its corresponding TC-FN function, TC-TYPE, and TC-PATH.
-If none of the matchers finds a match, use default."
+(defun org-transclusion-match-org-link-headline (path)
+  "Return t if PATH if for the link type to be transcluded.
+org-transclusion-add-<tc-type> function needs to be also defined."
+  
+  (let ((type (org-element-property :type path))
+        (search (org-element-property :search-option path)))
+    (and (string= type "file")
+         (string-prefix-p "*" search))))
 
-  (let ((types org-transclusion-add-at-point-functions)
-        (params nil))
-    (while (or (not params)
-               types)
-      (let* ((type (pop types))
-             (match-fn
-              (progn (intern (concat "org-transclusion-match-" type))))
-             (add-fn
-              (progn (intern (concat "org-transclusion-add-" type)))))
-        (when (and (functionp match-fn)
-                   (funcall match-fn str)
-                   (functionp add-fn))
-          (setq params (list :tc-type type :tc-fn add-fn :tc-path str)))))
-    (when (not params)
-      (setq params (list :tc-type "default"
-                         :tc-fn #'org-transclusion-add-default
-                         :tc-path str)))
-    params))
+(defun org-transclusion-add-org-link-headline (path)
+  "Return the text content of the subtree of an Org headline for PATH.
+PATH is assumed to be of the form: file:path/to/file.org::*headline."
+  (let ((file-path (org-element-property :path path))
+        (headline (org-element-property :search-option path)))
+    (when-let ((buf (find-file-noselect file-path)))
+      (with-current-buffer buf
+        (org-with-wide-buffer
+         (org-link-search headline)
+         (org-narrow-to-subtree)
+         (let ((content (buffer-string))
+               (beg (point-min-marker))
+               (end (point-max-marker)))
+           (list :tc-content content
+                 :tc-beg-mkr beg
+                 :tc-end-mkr end)))))))
+  
+;;-----------------------------------------------------------------------------
+;; Functions to support different link types
 
 (defun org-transclusion-match-paragraph-org-dedicated-target (path)
   "Return t if PATH if for the link type to be transcluded.
 org-transclusion-add-<tc-type> function needs to be also defined.
 
-Note that the regex is broader than necessary. It also matches
+Note that the regex is broader than necessary.  It also matches
 ::*headline form as well as ::dedicated-link.
 It is assumed that match for org-headline has been done before
 this match function."
@@ -137,20 +150,20 @@ this match function."
   "Return the text content of a paragraph in an Org file.
 
 The target paragraph must be identifiable by a dedicated link with
-a <<paragraph-id>>: e.g. 
+a <<paragraph-id>>: e.g.
 
-   Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-   Suspendisse ac velit fermentum, sodales nunc in, 
-   tincidunt quam. <<paragraph-id>>
+   Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+   Suspendisse ac velit fermentum, sodales nunc in,
+   tincidunt quam.  <<paragraph-id>>
 
 It is generally assumed that the paragraph-id is placed after its content,
-but it is not an absolute requirement; it cna be in the beginning (before
-the content) or in the middle of it. It uses `org-link-search' to locate
-the <<dedicated-link>> and use `mark-paragraph' to select the content. 
+but it is not an absolute requirement; it can be in the beginning (before
+the content) or in the middle of it.  It uses `org-link-search' to locate
+the <<dedicated-link>> and use `mark-paragraph' to select the content.
 
 PATH is assumed to be of the form: file:path/to/file.org::dedicted-link."
   (let ((file-path nil)
-        (headline nil))
+        (paragraph-id nil))
     (string-match "\\(file:\\)\\(.*\\)::\\(.*\\)" path)
     (setq file-path (match-string-no-properties 2 path))
     (setq paragraph-id (match-string-no-properties 3 path))
@@ -210,12 +223,52 @@ PATH is assumed to be in form `id:uuid'."
       (org-with-wide-buffer
        (goto-char marker)
        (org-narrow-to-subtree)
-       (let ((content (buffer-string))wafwe
+       (let ((content (buffer-string))
              (beg (point-min-marker))
              (end (point-max-marker)))
          (list :tc-content content
                :tc-beg-mkr beg
                :tc-end-mkr end))))))
+
+;;-----------------------------------------------------------------------------
+;; Core Functions
+;; - Core operations: create-, save-, remove-, detach-at-point
+;; - Supporting functions for these core operations
+
+
+(defun org-transclusion-tc-params-p (str)
+  "Return t if link type is supported for STR."
+    (let ((types org-transclusion-add-at-point-functions)
+        (params nil))
+    (while (and (not params)
+               types)
+      (let* ((type (pop types))
+             (match-fn
+              (progn (intern (concat "org-transclusion-match-" type))))
+             (add-fn
+              (progn (intern (concat "org-transclusion-add-" type)))))
+        (when (and (functionp match-fn)
+                   (funcall match-fn str)
+                   (functionp add-fn))
+          (setq params (list :tc-type type :tc-fn add-fn :tc-path str)))))
+    params))
+
+(defun org-transclusion--get-tc-params (str)
+  "Return TC-TYPE, TC-FN and TC-PATH by parsing STR.
+
+Call the matcher function corresponding to each link type in
+`org-transclusion-add-at-point-functions` from left to right.
+
+Use the first match (thus, the left has more priority), and then
+return its corresponding TC-FN function, TC-TYPE, and TC-PATH.
+If none of the matchers finds a match, use default."
+
+  (let ((params (org-transclusion-tc-params-p str)))
+    (when (not params)
+      (setq params (list :tc-type "default"
+                         :tc-fn #'org-transclusion-add-default
+                         :tc-path str)))
+    params))
 
 (defun org-transclusion-add-default (path)
   "Use PATH to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR.
@@ -489,6 +542,7 @@ This should be a buffer-local minior mode.  Not done yet."
                       window-selection-change-functions))
     (add-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save nil t)
     (add-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save nil t)
+    (advice-add 'org-link-open :before-until #'org-transclusion-link-open)
     (when org-transclusion-activate-persistent-message
       (setq header-line-format
 	    "Transclusion active in this buffer"))))
@@ -507,6 +561,7 @@ This should be a buffer-local minior mode.  Not done yet."
                             window-selection-change-functions))
         (remove-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save t)
         (remove-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save t)
+        (advice-remove 'org-link-open #'org-transclusion-link-open)
         (when org-transclusion-activate-persistent-message
           (setq header-line-format nil)))
     (run-with-idle-timer 0 nil 'message
