@@ -510,8 +510,10 @@ to avoid recursion."
         ;; link.  This is because fn returns a message string when there is no
         ;; further link.
         (while (eq t (org-next-link))
-          ;; check if the link at point is tranclusion link
-          (when (org-transclusion--transclusion-link-p)
+          ;; Check if the link at point is tranclusion link
+          ;; Check if the link is in the beginning of a line
+          (when (and (eq (line-beginning-position) (point))
+                     (org-transclusion--transclusion-link-p))
             (let* ((link (org-element-link-parser))
                    (path (org-element-property :path link)))
               (org-transclusion-call-add-at-point-functions path))))))))
