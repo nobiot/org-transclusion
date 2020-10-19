@@ -59,7 +59,7 @@
   (list "org-id"))
 
 (setq org-transclusion-add-at-point-functions
-      '("org-id" "org-headline" "paragraph-org-dedicated-target"))
+      '("org-link-headline" "org-id" "org-headline" "paragraph-org-dedicated-target"))
 
 ;;-----------------------------------------------------------------------------
 ;; Faces
@@ -236,12 +236,12 @@ PATH is assumed to be in form `id:uuid'."
 ;; - Supporting functions for these core operations
 
 
-(defun org-transclusion-tc-params-p (str)
-  "Return t if link type is supported for STR."
-    (let ((types org-transclusion-add-at-point-functions)
+(defun org-transclusion--custom-tc-params-p (str)
+  "Return PARAMS with TC-FN if link type is supported for STR."
+  (let ((types org-transclusion-add-at-point-functions)
         (params nil))
     (while (and (not params)
-               types)
+                types)
       (let* ((type (pop types))
              (match-fn
               (progn (intern (concat "org-transclusion-match-" type))))
@@ -252,9 +252,10 @@ PATH is assumed to be in form `id:uuid'."
                    (functionp add-fn))
           (setq params (list :tc-type type :tc-fn add-fn :tc-path str)))))
     params))
-
+  
 (defun org-transclusion--get-tc-params (str)
   "Return TC-TYPE, TC-FN and TC-PATH by parsing STR.
+Fallback to default if not supported.
 
 Call the matcher function corresponding to each link type in
 `org-transclusion-add-at-point-functions` from left to right.
@@ -263,8 +264,8 @@ Use the first match (thus, the left has more priority), and then
 return its corresponding TC-FN function, TC-TYPE, and TC-PATH.
 If none of the matchers finds a match, use default."
 
-  (let ((params (org-transclusion-tc-params-p str)))
-    (when (not params)
+  (let ((params (org-transclusion--custom-tc-params-p str)))
+    (when (not params) ;fallback to default
       (setq params (list :tc-type "default"
                          :tc-fn #'org-transclusion-add-default
                          :tc-path str)))
@@ -423,9 +424,11 @@ is active, it will automatically bring the transclusion back."
                    (progn (org-next-link t)
                           (org-element-link-parser))))
          (end (org-element-property :end link))
+         (link-type (org-element-property :type link))
          (type (concat org-transclusion-link ":")))
-    (search-forward type end t 1)
-    (delete-char (- 0 (length type)))))
+    (when (string= link-type org-transclusion-link)
+      (search-forward type end t 1)
+      (delete-char (- 0 (length type))))))
 
 ;;-----------------------------------------------------------------------------
 ;; Utility functions used in the core functions above
@@ -445,9 +448,12 @@ of the link.  If not link, return nil."
 
 (defun org-transclusion--transclusion-link-p ()
   "Check if the link at point is a tranclusion link."
+
   (when-let ((link (plist-get (org-element-context) 'link)))
-    (when-let ((type (plist-get link ':type)))
-      (string= type org-transclusion-link))))
+    (let ((type (plist-get link ':type))
+          (raw-link (plist-get link ':raw-link)))
+      (or (string= type org-transclusion-link)
+          (org-transclusion--custom-tc-params-p raw-link)))))
 
 ;;-----------------------------------------------------------------------------
 ;; Functions to work with all transclusions in the buffer.
@@ -466,7 +472,8 @@ And then saves all the transclusion source buffers."
   (org-transclusion-add-all-in-buffer) ; put all tranclusions back in
   (org-transclusion-save-all-src-in-buffer) ; save to file
   (goto-char org-transclusion-original-position)
-  (setq org-transclusion-original-position nil))
+  (setq org-transclusion-original-position nil)
+  (set-buffer-modified-p nil))
 
 (defun org-transclusion-save-all-src-in-buffer ()
   "Save all transclusion sources from the current buffer."
