@@ -172,7 +172,6 @@ PATH is assumed to be of the form: file:path/to/file.org::dedicted-link."
         (org-with-wide-buffer
          (org-link-search paragraph-id)
          (mark-paragraph)
-         (forward-char) ;; move to the same line where the content begins
          (let* ((beg (point-marker)) ;; it is the beginning of the paragraph
                 (end (mark-marker))
                 (content (buffer-substring beg end)))
