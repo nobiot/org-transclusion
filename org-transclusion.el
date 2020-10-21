@@ -175,6 +175,7 @@ PATH is assumed to be of the form: file:path/to/file.org::dedicted-link."
          (let* ((beg (point-marker)) ;; it is the beginning of the paragraph
                 (end (mark-marker))
                 (content (buffer-substring beg end)))
+           (deactivate-mark)
            (list :tc-content content
                  :tc-beg-mkr beg
                  :tc-end-mkr end)))))))
