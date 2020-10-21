@@ -55,11 +55,11 @@
 ;;
 ;; See the functions delivered within org-tranclusion for the API signatures.
 
-(defvar org-transclusion-add-at-point-functions
-  (list "org-id"))
+(defvar org-transclusion-add-org-link-at-point-functions
+  (list "org-link-headline"))
 
-(setq org-transclusion-add-at-point-functions
-      '("org-link-headline" "org-id" "org-headline" "paragraph-org-dedicated-target"))
+(defvar org-transclusion-add-at-point-functions
+  (list "org-id" "org-headline" "paragraph-org-dedicated-target"))
 
 ;;-----------------------------------------------------------------------------
 ;; Faces
@@ -109,8 +109,8 @@ is used (ARG is non-nil), then use `org-link-open'."
   "Return t if PATH if for the link type to be transcluded.
 org-transclusion-add-<tc-type> function needs to be also defined."
   
-  (let ((type (org-element-property :type path))
-        (search (org-element-property :search-option path)))
+  (let ((type (plist-get path ':type))
+        (search (plist-get path ':search-option)))
     (and (string= type "file")
          (string-prefix-p "*" search))))
 
@@ -234,6 +234,24 @@ PATH is assumed to be in form `id:uuid'."
 ;; - Core operations: create-, save-, remove-, detach-at-point
 ;; - Supporting functions for these core operations
 
+(defun org-transclusion--org-link-tc-params-p (link)
+  "Return PARAMS with TC-FN if link type is supported for LINK.
+Link type for this function is the standard Org Mode ones."
+  (let ((types org-transclusion-add-org-link-at-point-functions)
+        (params nil))
+    (while (and (not params)
+                types)
+      (let* ((type (pop types))
+             (match-fn
+              (progn (intern (concat "org-transclusion-match-" type))))
+             (add-fn
+              (progn (intern (concat "org-transclusion-add-" type))))
+             (path (plist-get link ':path )))
+        (when (and (functionp match-fn)
+                   (funcall match-fn link)
+                   (functionp add-fn))
+          (setq params (list :tc-type type :tc-fn add-fn :tc-path path)))))
+    params))
 
 (defun org-transclusion--custom-tc-params-p (str)
   "Return PARAMS with TC-FN if link type is supported for STR."
@@ -263,7 +281,10 @@ Use the first match (thus, the left has more priority), and then
 return its corresponding TC-FN function, TC-TYPE, and TC-PATH.
 If none of the matchers finds a match, use default."
 
-  (let ((params (org-transclusion--custom-tc-params-p str)))
+  (let ((params nil))
+    (setq params (org-transclusion--org-link-tc-params-p str))
+    (when (not params)
+      (setq params (org-transclusion--custom-tc-params-p str)))
     (when (not params) ;fallback to default
       (setq params (list :tc-type "default"
                          :tc-fn #'org-transclusion-add-default
@@ -445,15 +466,18 @@ of the link.  If not link, return nil."
       (setq location (plist-put location ':end (plist-get link ':end)))
       location)))
 
+(defun org-transclusion--transclusion-org-link-p ()
+  "Check if the link at point is a tranclusion link."
+
+  (when-let ((link (plist-get (org-element-context) 'link)))
+    (org-transclusion--org-link-tc-params-p link)))
+
 (defun org-transclusion--transclusion-link-p ()
   "Check if the link at point is a tranclusion link."
 
   (when-let ((link (plist-get (org-element-context) 'link)))
-    (let ((type (plist-get link ':type))
-          (raw-link (plist-get link ':raw-link)))
-      (or (string= type org-transclusion-link)
-          (org-transclusion--custom-tc-params-p raw-link)))))
-
+    (let ((type (plist-get link ':type)))
+      (string= type org-transclusion-link))))
 ;;-----------------------------------------------------------------------------
 ;; Functions to work with all transclusions in the buffer.
 ;; These typically call their correspondong `at-point` function
@@ -511,11 +535,17 @@ to avoid recursion."
         (while (eq t (org-next-link))
           ;; Check if the link at point is tranclusion link
           ;; Check if the link is in the beginning of a line
-          (when (and (eq (line-beginning-position) (point))
-                     (org-transclusion--transclusion-link-p))
-            (let* ((link (org-element-link-parser))
-                   (path (org-element-property :path link)))
-              (org-transclusion-call-add-at-point-functions path))))))))
+          (when (eq (line-beginning-position) (point))
+            (when (org-transclusion--transclusion-org-link-p)
+              ;; the tc link is for standard org mode ones
+              (let* ((link (org-element-link-parser))
+                     (raw-link (org-element-property :raw-link link)))
+                (org-transclusion-call-add-at-point-functions raw-link)))
+            (when (org-transclusion--transclusion-link-p)
+              ;; the tc link is for otc: custom ones
+              (let* ((link (org-element-link-parser))
+                     (path (org-element-property :path link)))
+                (org-transclusion-call-add-at-point-functions path)))))))))
 
 (defun org-transclusion-remove-all-in-buffer (&optional buf)
   "Remove all the translusion overlay and copied text in current buffer.
