@@ -3,9 +3,11 @@
 This library is an attempt to enable transclusion with Org Mode in Emacs. It is my take on the [idea by John Kitchin](#original-idea-by-john-kitchin).
 
 
-This 10-minute show & tell on YouTube I did shows you how this library works.
-[![13-minute Demo video #2: v0.0.2 real-time sync](./resources/demo2-title.png)](https://youtu.be/HQ0rUa7gVXA)
+This 10--20-minutes show & tell on YouTube I did shows you how this library works.
 
+[![17-minute Demo video #2: v0.0.3 Headline, paragraph, Org Mode link](./resources/demo3-title.png)](https://youtu.be/KxDrE3spAL8)
+
+- [Demo video #2: v0.0.2 real-time sync](https://youtu.be/HQ0rUa7gVXA)
 - [How to install video for test drive v0.0.2 alpha](https://youtu.be/c1aelYM3m9U)
 - [Demo video #1: prototype](https://youtu.be/Wjk-otO2xrI)
 
