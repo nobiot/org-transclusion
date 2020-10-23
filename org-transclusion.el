@@ -100,7 +100,7 @@ is used (ARG is non-nil), then use `org-link-open'."
   
   (let ((tc-params nil))
     (if (or arg
-            (not (setq tc-params (org-transclusion-tc-params-p link))))
+            (not (setq tc-params (org-transclusion--org-link-tc-params-p link))))
         nil ;; Call the original `org-link-open'
       (org-transclusion--create-at-point tc-params)
       t))) ;; return t so that advice-add :before-until won't call the orignal fn
