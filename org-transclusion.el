@@ -347,6 +347,10 @@ TODO You need to check if the link is at the bottom of buffer."
              (link-end (plist-get link-loc ':end))
              (raw-link (buffer-substring-no-properties link-beg link-end)))
     ;; Remove the link
+    ;;(remove-text-properties link-beg link-end '(invisible 'org-link))
+    
+    ;;(add-text-properties link-beg link-end '(comment t face highlight invisible t))
+    ;;(add-text-properties link-beg link-end '(invisible t))
     (delete-region link-beg link-end)
     ;; Delete a char after the link has been removed to remove the line
     ;; the link used to occupy. Without this, you end up moving one line
@@ -364,7 +368,9 @@ TODO You need to check if the link is at the bottom of buffer."
            (tc-beg-mkr (plist-get tc-payload :tc-beg-mkr))
            (tc-end-mkr (plist-get tc-payload :tc-end-mkr))
            (tc-content (plist-get tc-payload :tc-content)))
-      (save-excursion (insert tc-content))
+      (save-excursion
+        ;;(move-beginning-of-line nil)
+        (insert tc-content))
       (when-let
           ((dups (org-transclusion--text-clone-create tc-beg-mkr tc-end-mkr))
            (ov (car (cdr dups)))
@@ -375,6 +381,7 @@ TODO You need to check if the link is at the bottom of buffer."
         (overlay-put ov 'tc-beg-mkr tc-beg-mkr)
         (overlay-put ov 'tc-end-mkr tc-end-mkr)
         (overlay-put ov 'priority -50)
+        ;;(overlay-put ov 'display tc-content)
         ;; Put to the source overlay
         (save-excursion
           (goto-char (overlay-start ov))
@@ -429,7 +436,8 @@ text."
             ;; Also ensure to delete all the possible orphan overlays from the source
             ;; When remove fn, delete the copied texts
             (unless detach
-              (delete-region new-beg new-end)))))
+              (let ((inhibit-read-only t))
+                (delete-region new-beg new-end))))))
     ;; The message below is common for remove and detach
     (message "Nothing done. No transclusion exists here.")))
 
@@ -450,6 +458,18 @@ is active, it will automatically bring the transclusion back."
     (when (string= link-type org-transclusion-link)
       (search-forward type end t 1)
       (delete-char (- 0 (length type))))))
+
+(defun org-transclusion-open-edit-buffer-at-point (pos)
+  (interactive "d")
+  (if-let ((ov (cdr (get-char-property-and-overlay pos 'tc-type))))
+      (let ((mkr (overlay-get ov 'tc-beg-mkr)))
+        (with-current-buffer (marker-buffer mkr)
+          (goto-char mkr)
+          (org-narrow-to-subtree)
+          (org-tree-to-indirect-buffer)))
+;;          (switch-to-buffer org-last-indirect-buffer)
+    ;; The message below is common for remove and detach
+    (message "Nothing done. No transclusion exists here.")))
 
 ;;-----------------------------------------------------------------------------
 ;; Utility functions used in the core functions above
@@ -630,63 +650,6 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
 ;; I think this should be handled with the add functions above.
 ;; that is, leaning towards removing.
 
-(defvar text-clone--maintaining nil)
-
-(defun org-transclusion--text-clone--maintain (ol1 after beg end &optional _len)
-  "Propagate the changes made under the overlay OL1 to the other clones.
-This is used on the `modification-hooks' property of text clones."
-  (when (and after ;(not undo-in-progress) ;; < nobit removed undo-in-progress
-             (not text-clone--maintaining)
-             (overlay-start ol1))
-    (let ((margin (if (overlay-get ol1 'text-clone-spreadp) 1 0)))
-      (setq beg (max beg (+ (overlay-start ol1) margin)))
-      (setq end (min end (- (overlay-end ol1) margin)))
-      (when (<= beg end)
-        (save-excursion
-          (when (overlay-get ol1 'text-clone-syntax)
-            ;; Check content of the clone's text.
-            (let ((cbeg (+ (overlay-start ol1) margin))
-                  (cend (- (overlay-end ol1) margin)))
-              (goto-char cbeg)
-              (save-match-data
-                (if (not (re-search-forward
-                          (overlay-get ol1 'text-clone-syntax) cend t))
-                    ;; Mark the overlay for deletion.
-                    (setq end cbeg)
-                  (when (< (match-end 0) cend)
-                    ;; Shrink the clone at its end.
-                    (setq end (min end (match-end 0)))
-                    (move-overlay ol1 (overlay-start ol1)
-                                  (+ (match-end 0) margin)))
-                  (when (> (match-beginning 0) cbeg)
-                    ;; Shrink the clone at its beginning.
-                    (setq beg (max (match-beginning 0) beg))
-                    (move-overlay ol1 (- (match-beginning 0) margin)
-                                  (overlay-end ol1)))))))
-          ;; Now go ahead and update the clones.
-          (let ((head (- beg (overlay-start ol1)))
-                (tail (- (overlay-end ol1) end))
-                (str (buffer-substring beg end))
-                (nothing-left t)
-                (text-clone--maintaining t))
-            (dolist (ol2 (overlay-get ol1 'text-clones))
-              (with-current-buffer (overlay-buffer ol2) ;;< Tobias
-                (save-restriction
-                  (widen)
-                  ;(outline-show-all)
-                  (let ((oe (overlay-end ol2)))
-                    (unless (or (eq ol1 ol2) (null oe))
-                      (setq nothing-left nil)
-                      (let ((mod-beg (+ (overlay-start ol2) head)))
-                        ;;(overlay-put ol2 'modification-hooks nil)
-                        (goto-char (- (overlay-end ol2) tail))
-                        (unless (> mod-beg (point))
-                          (save-excursion (insert str))
-                          (delete-region mod-beg (point)))
-                        ;;(overlay-put ol2 'modification-hooks '(text-clone--maintain))
-                        ))))))
-            (if nothing-left (delete-overlay ol1))))))))
-
 (defun org-transclusion--text-clone-create (start end &optional spreadp syntax)
   "Create a text clone of START...END at point.
 Text clones are chunks of text that are automatically kept identical:
@@ -717,11 +680,11 @@ changes done to one of the clones will be immediately propagated to the other.
                              (with-current-buffer clone-buf (>= start (point-max))))
                          0 1))
          ;; FIXME: Reuse overlays at point to extend dups!
-         (ol1 (make-overlay (- start start-margin) (+ end end-margin) clone-buf t)) ;;< Tobias
+         (ol1 (make-overlay (- start start-margin) (+ end end-margin) clone-buf t t)) ;;< Tobia ;; added rea-advance
 
-         (ol2 (make-overlay (- (point) start-margin) (+ pt-end end-margin) nil t))
+         (ol2 (make-overlay (- (point) start-margin) (+ pt-end end-margin) nil t nil))
          (dups (list ol1 ol2)))
-    (overlay-put ol1 'modification-hooks '(org-transclusion--text-clone--maintain)) ;;< nobiot
+;;    (overlay-put ol1 'modification-hooks '(org-transclusion--text-clone--maintain)) ;;< nobiot
     (when spreadp (overlay-put ol1 'text-clone-spreadp t))
     (when syntax (overlay-put ol1 'text-clone-syntax syntax))
     ;;(overlay-put ol1 'face 'underline)
@@ -729,13 +692,14 @@ changes done to one of the clones will be immediately propagated to the other.
     (overlay-put ol1 'face 'org-transclusion-source-block) ;; < nobiot
     (overlay-put ol1 'text-clones dups)
     ;;
-    (overlay-put ol2 'modification-hooks '(org-transclusion--text-clone--maintain)) ;;< Tobias
+;;    (overlay-put ol2 'modification-hooks '(org-transclusion--text-clone--maintain)) ;;< Tobias
     (when spreadp (overlay-put ol2 'text-clone-spreadp t))
     (when syntax (overlay-put ol2 'text-clone-syntax syntax))
     ;;(overlay-put ol2 'face 'underline)
     (overlay-put ol2 'evaporate t)
     (overlay-put ol2 'face 'org-transclusion-block) ;; < nobiot
     (overlay-put ol2 'text-clones dups)
+    (add-text-properties (overlay-start ol2) (overlay-end ol2) '(read-only t))
     dups)) ;; < nobiot return dups
 
 (provide 'org-transclusion)
