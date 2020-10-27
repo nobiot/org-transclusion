@@ -91,19 +91,25 @@
 ;; Functions to override org-link-open
 ;; Support different link types
 
-(defun org-transclusion-link-open (link &optional arg)
+(defun org-transclusion-link-open (oldfn &optional link arg)
   "Override Org Mode's default `org-link-open' for LINK.
 Meant to be used with add-advice/remove-advice in activate/deactivate.
 
 If the link type is not supported by org-transclusion, or \\[universal-argument]
 is used (ARG is non-nil), then use `org-link-open'."
-  
-  (let ((tc-params nil))
-    (if (or arg
-            (not (setq tc-params (org-transclusion--org-link-tc-params-p link))))
-        nil ;; Call the original `org-link-open'
-      (org-transclusion--create-at-point tc-params)
-      t))) ;; return t so that advice-add :before-until won't call the orignal fn
+  (save-window-excursion
+    (funcall oldfn link)
+    (let* ((el (org-element-context))
+           (disp (buffer-substring
+                  (org-element-property :begin el)
+                  (org-element-property :end el))))
+      disp)))
+  ;; (let ((tc-params nil))
+  ;;   (if (or arg
+  ;;           (not (setq tc-params (org-transclusion--org-link-tc-params-p link))))
+  ;;       nil ;; Call the original `org-link-open'
+  ;;     (org-transclusion--create-at-point tc-params)
+  ;;     t))) ;; return t so that advice-add :before-until won't call the orignal fn
 
 (defun org-transclusion-match-org-link-headline (path)
   "Return t if PATH if for the link type to be transcluded.
@@ -387,6 +393,68 @@ TODO You need to check if the link is at the bottom of buffer."
           (goto-char (overlay-start ov))
           (overlay-put ov-src 'tc-by (point-marker)))))))
 
+
+(defun org-transclusion--get-org-content-from-link (open-link-fn link)
+  "Return tc-beg-mkr, tc-end-mkr, tc-content from LINK using open-link-fn."
+  (save-window-excursion
+    (funcall open-link-fn link)
+    (let* ((el (org-element-context))
+           (type (org-element-type el))
+           (beg)(end)(tc-content)(tc-beg-mkr)(tc-end-mkr))
+      (when (and (string= "target" type)
+                 (string= "paragraph" (org-element-type (org-element-property :parent el))))
+        (setq el (org-element-property :parent el)))
+      (setq beg (org-element-property :begin el))
+      (setq end (org-element-property :end el))
+      (setq tc-content (buffer-substring beg end))
+      (setq tc-beg-mkr (progn (goto-char beg) (point-marker)))
+      (setq tc-end-mkr (progn (goto-char end) (point-marker)))
+      (list :tc-content tc-content
+            :tc-beg-mkr tc-beg-mkr
+            :tc-end-mkr tc-end-mkr))))
+
+(defun org-transclusion--add-from-link (open-link-fn link &rest arg)
+  "New and simple."
+  ;; Remove the link
+  (when-let ((link-loc (org-transclusion--get-link-location))
+             (link-beg (plist-get link-loc ':begin))
+             (link-end (plist-get link-loc ':end))
+             (raw-link (buffer-substring-no-properties link-beg link-end)))
+
+    (delete-region link-beg link-end)
+    ;; Delete a char after the link has been removed to remove the line
+    ;; the link used to occupy. Without this, you end up moving one line
+    ;; every time add operation is called.
+    (delete-char 1)
+    ;; TODO You need to check if the link is at the bottom of buffer
+    ;; If it is, then yank won't work.
+
+    ;; Add content and overlay
+    (let* ((tc-raw-link raw-link)
+           (tc-type "org-link")
+           (tc-path nil)
+           (tc-payload (org-transclusion--get-org-content-from-link open-link-fn link))
+           (tc-beg-mkr (plist-get tc-payload :tc-beg-mkr))
+           (tc-end-mkr (plist-get tc-payload :tc-end-mkr))
+           (tc-content (plist-get tc-payload :tc-content)))
+      (save-excursion
+        (insert tc-content))
+      (when-let
+          ((dups (org-transclusion--text-clone-create tc-beg-mkr tc-end-mkr))
+           (ov (car (cdr dups)))
+           (ov-src (car dups)))
+        ;; Put to target overlay
+        (overlay-put ov 'tc-type tc-type)
+        (overlay-put ov 'tc-raw-link tc-raw-link)
+        (overlay-put ov 'tc-beg-mkr tc-beg-mkr)
+        (overlay-put ov 'tc-end-mkr tc-end-mkr)
+        (overlay-put ov 'priority -50)
+        ;;(overlay-put ov 'display tc-content)
+        ;; Put to the source overlay
+        (save-excursion
+          (goto-char (overlay-start ov))
+          (overlay-put ov-src 'tc-by (point-marker)))))))
+
 (defun org-transclusion-save-src-at-point (pos)
   "Save the transclusion source buffer with the tranclusion at POS.
 It can be used interactively.
@@ -601,7 +669,8 @@ This should be a buffer-local minior mode.  Not done yet."
                       window-selection-change-functions))
     (add-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save nil t)
     (add-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save nil t)
-    (advice-add 'org-link-open :before-until #'org-transclusion-link-open)
+    ;;(advice-add 'org-link-open :before-until #'org-transclusion-link-open)
+    (advice-add 'org-link-open :around #'org-transclusion--add-from-link)
     (when org-transclusion-activate-persistent-message
       (setq header-line-format
 	    "Transclusion active in this buffer"))))
@@ -620,7 +689,8 @@ This should be a buffer-local minior mode.  Not done yet."
                             window-selection-change-functions))
         (remove-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save t)
         (remove-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save t)
-        (advice-remove 'org-link-open #'org-transclusion-link-open)
+        ;;(advice-remove 'org-link-open #'org-transclusion-link-open)
+        (advice-remove 'org-link-open #'org-transclusion--add-from-link)
         (when org-transclusion-activate-persistent-message
           (setq header-line-format nil)))
     (run-with-idle-timer 0 nil 'message
