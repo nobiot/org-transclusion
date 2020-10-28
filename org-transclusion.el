@@ -553,8 +553,9 @@ is active, it will automatically bring the transclusion back."
         (with-current-buffer (marker-buffer mkr)
           (goto-char mkr)
           (org-narrow-to-subtree)
-          (org-tree-to-indirect-buffer)))
-;;          (switch-to-buffer org-last-indirect-buffer)
+          (org-tree-to-indirect-buffer)
+          (switch-to-buffer org-last-indirect-buffer)
+          (org-transclusion-edit-src-mode)))
     ;; The message below is common for remove and detach
     (message "Nothing done. No transclusion exists here.")))
 
@@ -687,13 +688,34 @@ A positive prefix argument enables the mode, any other prefix
 argument disables it.  From Lisp, argument omitted or nil enables
 the mode, `toggle' toggles the state."
   :init-value nil
-  :lighter " [T]"
+  :lighter " [OT]"
   :global nil
+  :keymap (let ((map (make-sparse-keymap)))
+            (define-key map (kbd "C-c n e")
+              'org-transclusion-open-edit-buffer-at-point)
+            map)
   (cond
    (org-transclusion-mode
     (org-transclusion-activate))
    (t
     (org-transclusion-deactivate))))
+
+(define-minor-mode org-transclusion-edit-src-mode
+  "Toggle Org-transclusion edit source mode.
+Interactively with no argument, this command toggles the mode.
+A positive prefix argument enables the mode, any other prefix
+argument disables it.  From Lisp, argument omitted or nil enables
+the mode, `toggle' toggles the state."
+  :init-value nil
+  :lighter nil
+  :global nil
+  :keymap (let ((map (make-sparse-keymap)))
+            (define-key map (kbd "C-c C-c")
+              #'org-transclusion-edit-src-commit)
+            map)
+  (setq header-line-format
+        (substitute-command-keys
+	 "When done, save and kill this buffer with `\\[org-transclusion-edit-src-commit]'")))
 
 (defun org-transclusion-activate ()
   "Activate automatic transclusions in the local buffer.
@@ -750,6 +772,13 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
           (t
            (message "going from %s into %s" buf (current-buffer))
            (org-transclusion-remove-all-in-buffer buf))))) ;; remove all
+
+(defun org-transclusion-edit-src-commit ()
+  "Save and kill the buffer.
+Meant to be used in the -edit-src-mode."
+  (interactive)
+  (save-buffer)
+  (kill-current-buffer))
 
 ;;-----------------------------------------------------------------------------
 ;; Text Clone
