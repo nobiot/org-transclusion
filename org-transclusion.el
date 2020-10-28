@@ -38,6 +38,7 @@
 ;; Variables
 ;; TODO Most of these should be defcustom
 
+(defvar-local org-transclusion-buffer-modified-p nil)
 (defvar-local org-transclusion-original-position nil)
 
 (defvar org-transclusion-link "otc")
@@ -585,7 +586,7 @@ And then saves all the transclusion source buffers."
   (org-transclusion-save-all-src-in-buffer) ; save to file
   (goto-char org-transclusion-original-position)
   (setq org-transclusion-original-position nil)
-  (set-buffer-modified-p nil))
+  (set-buffer-modified-p nil)
 
 (defun org-transclusion-save-all-src-in-buffer ()
   "Save all transclusion sources from the current buffer."
@@ -613,6 +614,7 @@ to avoid recursion."
   ;; This is to prevent background hook (e.g. save hooks) from updating
   ;; the transclusion buffer.
   (when (eq (current-buffer)(window-buffer (selected-window)))
+    (setq org-transclusion-buffer-modified-p (buffer-modified-p))
     (save-excursion
       (save-restriction
         (widen)
@@ -625,7 +627,8 @@ to avoid recursion."
           ;; Check if the link at point is tranclusion link
           ;; Check if the link is in the beginning of a line
           (when (eq (line-beginning-position)(point))
-            (org-open-at-point)))))))
+            (org-open-at-point)))))
+    (set-buffer-modified-p org-transclusion-buffer-modified-p)))
             ;; (when (org-transclusion--transclusion-org-link-p)
             ;;   ;; the tc link is for standard org mode ones
             ;;   (let* ((link (org-element-link-parser))
@@ -644,13 +647,15 @@ This feature is meant for `org-transclusion--toggle-transclusion-when-out-of-foc
   
   (interactive)
   (when buf (set-buffer buf))
+  (setq org-transclusion-buffer-modified-p (buffer-modified-p))
   (save-excursion
     (save-restriction
       (widen)
       (outline-show-all)
       (dolist (ov (overlays-in (point-min) (point-max)))
         (when-let ((pos (overlay-start ov)))
-          (org-transclusion-remove-at-point pos))))))
+          (org-transclusion-remove-at-point pos)))))
+  (set-buffer-modified-p org-transclusion-buffer-modified-p))
 
 ;;-----------------------------------------------------------------------------
 ;; Functions
