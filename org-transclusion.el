@@ -29,6 +29,10 @@
 ;; use it with care.  The author and contributors cannot be held
 ;; responsible for loss of important work.
 
+;; Org-transclusion is a buffer-local minor mode.
+;; It is suggested to set a keybinding like this to make it easy to toggle it:
+;; (define-key global-map (kbd "<f12>") #'org-transclusion-mode)
+
 ;;; Code:
 (require 'org)
 (require 'org-element)
@@ -40,6 +44,20 @@
 
 (defvar-local org-transclusion-buffer-modified-p nil)
 (defvar-local org-transclusion-original-position nil)
+
+;;;; Customization variables
+(defgroup org-transclusion nil
+  "Insert text contents by way of link references."
+  :group 'org
+  :prefix "org-translusion-"
+  :link '(url-link :tag "Github" "https://github.com/nobiot/org-translusion"))
+
+(defcustom org-transclusion-auto-add-on-activation t
+  "Define whether or not add all the transclusion contents on activation.
+If true, add text contents for all the transclusion links where possible.
+Default to true."
+  :type 'boolean
+  :group 'org-transclusion)
 
 (defvar org-transclusion-link "otc")
 (defvar org-transclusion-activate-persistent-message t)
@@ -586,7 +604,7 @@ And then saves all the transclusion source buffers."
   (org-transclusion-save-all-src-in-buffer) ; save to file
   (goto-char org-transclusion-original-position)
   (setq org-transclusion-original-position nil)
-  (set-buffer-modified-p nil)
+  (set-buffer-modified-p nil))
 
 (defun org-transclusion-save-all-src-in-buffer ()
   "Save all transclusion sources from the current buffer."
@@ -662,6 +680,21 @@ This feature is meant for `org-transclusion--toggle-transclusion-when-out-of-foc
 ;; - Activate / deactivate
 ;; - Toggle translusions when in and out of transclusion buffer
 
+(define-minor-mode org-transclusion-mode
+  "Toggle Org-transclusion minor mode.
+Interactively with no argument, this command toggles the mode.
+A positive prefix argument enables the mode, any other prefix
+argument disables it.  From Lisp, argument omitted or nil enables
+the mode, `toggle' toggles the state."
+  :init-value nil
+  :lighter " [T]"
+  :global nil
+  (cond
+   (org-transclusion-mode
+    (org-transclusion-activate))
+   (t
+    (org-transclusion-deactivate))))
+
 (defun org-transclusion-activate ()
   "Activate automatic transclusions in the local buffer.
 This should be a buffer-local minior mode.  Not done yet."
@@ -679,7 +712,9 @@ This should be a buffer-local minior mode.  Not done yet."
     (advice-add 'org-link-open :around #'org-transclusion--add-from-link)
     (when org-transclusion-activate-persistent-message
       (setq header-line-format
-	    "Transclusion active in this buffer"))))
+	    "Transclusion active in this buffer")))
+  (when org-transclusion-auto-add-on-activation
+    (org-transclusion-add-all-in-buffer)))
 
 (defun org-transclusion-deactivate ()
   "Deactivate automatic transclusions in the local buffer."
