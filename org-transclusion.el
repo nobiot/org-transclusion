@@ -84,8 +84,8 @@
 ;; :follow fn should be a one that can do-list for functions, where
 ;; each function support different type of links: e.g. file, ID, etc.
 
-(org-link-set-parameters org-transclusion-link
- :follow #'org-transclusion-call-add-at-point-functions)
+;; (org-link-set-parameters org-transclusion-link
+;;  :follow #'org-transclusion-call-add-at-point-functions)
 
 ;;-----------------------------------------------------------------------------
 ;; Functions to override org-link-open
@@ -111,287 +111,287 @@ is used (ARG is non-nil), then use `org-link-open'."
   ;;     (org-transclusion--create-at-point tc-params)
   ;;     t))) ;; return t so that advice-add :before-until won't call the orignal fn
 
-(defun org-transclusion-match-org-link-headline (path)
-  "Return t if PATH if for the link type to be transcluded.
-org-transclusion-add-<tc-type> function needs to be also defined."
+;; (defun org-transclusion-match-org-link-headline (path)
+;;   "Return t if PATH if for the link type to be transcluded.
+;; org-transclusion-add-<tc-type> function needs to be also defined."
   
-  (let ((type (plist-get path ':type))
-        (search (plist-get path ':search-option)))
-    (and (string= type "file")
-         (string-prefix-p "*" search))))
+;;   (let ((type (plist-get path ':type))
+;;         (search (plist-get path ':search-option)))
+;;     (and (string= type "file")
+;;          (string-prefix-p "*" search))))
 
-(defun org-transclusion-add-org-link-headline (path)
-  "Return the text content of the subtree of an Org headline for PATH.
-PATH is assumed to be of the form: file:path/to/file.org::*headline."
-  (let ((file-path (org-element-property :path path))
-        (headline (org-element-property :search-option path)))
-    (when-let ((buf (find-file-noselect file-path)))
-      (with-current-buffer buf
-        (org-with-wide-buffer
-         (org-link-search headline)
-         (org-narrow-to-subtree)
-         (let ((content (buffer-string))
-               (beg (point-min-marker))
-               (end (point-max-marker)))
-           (list :tc-content content
-                 :tc-beg-mkr beg
-                 :tc-end-mkr end)))))))
+;; (defun org-transclusion-add-org-link-headline (path)
+;;   "Return the text content of the subtree of an Org headline for PATH.
+;; PATH is assumed to be of the form: file:path/to/file.org::*headline."
+;;   (let ((file-path (org-element-property :path path))
+;;         (headline (org-element-property :search-option path)))
+;;     (when-let ((buf (find-file-noselect file-path)))
+;;       (with-current-buffer buf
+;;         (org-with-wide-buffer
+;;          (org-link-search headline)
+;;          (org-narrow-to-subtree)
+;;          (let ((content (buffer-string))
+;;                (beg (point-min-marker))
+;;                (end (point-max-marker)))
+;;            (list :tc-content content
+;;                  :tc-beg-mkr beg
+;;                  :tc-end-mkr end)))))))
   
 ;;-----------------------------------------------------------------------------
 ;; Functions to support different link types
 
-(defun org-transclusion-match-paragraph-org-dedicated-target (path)
-  "Return t if PATH if for the link type to be transcluded.
-org-transclusion-add-<tc-type> function needs to be also defined.
+;; (defun org-transclusion-match-paragraph-org-dedicated-target (path)
+;;   "Return t if PATH if for the link type to be transcluded.
+;; org-transclusion-add-<tc-type> function needs to be also defined.
 
-Note that the regex is broader than necessary.  It also matches
-::*headline form as well as ::dedicated-link.
-It is assumed that match for org-headline has been done before
-this match function."
+;; Note that the regex is broader than necessary.  It also matches
+;; ::*headline form as well as ::dedicated-link.
+;; It is assumed that match for org-headline has been done before
+;; this match function."
   
-  (and (string-prefix-p "file:" path)
-       (when (string-match "\\(.org::\\)\\(\\.*\\)" path) t)))
+;;   (and (string-prefix-p "file:" path)
+;;        (when (string-match "\\(.org::\\)\\(\\.*\\)" path) t)))
 
-(defun org-transclusion-add-paragraph-org-dedicated-target (path)
-  "Return the text content of a paragraph in an Org file.
+;; (defun org-transclusion-add-paragraph-org-dedicated-target (path)
+;;   "Return the text content of a paragraph in an Org file.
 
-The target paragraph must be identifiable by a dedicated link with
-a <<paragraph-id>>: e.g.
+;; The target paragraph must be identifiable by a dedicated link with
+;; a <<paragraph-id>>: e.g.
 
-   Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-   Suspendisse ac velit fermentum, sodales nunc in,
-   tincidunt quam.  <<paragraph-id>>
+;;    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+;;    Suspendisse ac velit fermentum, sodales nunc in,
+;;    tincidunt quam.  <<paragraph-id>>
 
-It is generally assumed that the paragraph-id is placed after its content,
-but it is not an absolute requirement; it can be in the beginning (before
-the content) or in the middle of it.  It uses `org-link-search' to locate
-the <<dedicated-link>> and use `mark-paragraph' to select the content.
+;; It is generally assumed that the paragraph-id is placed after its content,
+;; but it is not an absolute requirement; it can be in the beginning (before
+;; the content) or in the middle of it.  It uses `org-link-search' to locate
+;; the <<dedicated-link>> and use `mark-paragraph' to select the content.
 
-PATH is assumed to be of the form: file:path/to/file.org::dedicted-link."
-  (let ((file-path nil)
-        (paragraph-id nil))
-    (string-match "\\(file:\\)\\(.*\\)::\\(.*\\)" path)
-    (setq file-path (match-string-no-properties 2 path))
-    (setq paragraph-id (match-string-no-properties 3 path))
-    (when-let ((buf (find-file-noselect file-path)))
-      (with-current-buffer buf
-        (org-with-wide-buffer
-         (org-link-search paragraph-id)
-         (mark-paragraph)
-         (let* ((beg (point-marker)) ;; it is the beginning of the paragraph
-                (end (mark-marker))
-                (content (buffer-substring beg end)))
-           (deactivate-mark)
-           (list :tc-content content
-                 :tc-beg-mkr beg
-                 :tc-end-mkr end)))))))
+;; PATH is assumed to be of the form: file:path/to/file.org::dedicted-link."
+;;   (let ((file-path nil)
+;;         (paragraph-id nil))
+;;     (string-match "\\(file:\\)\\(.*\\)::\\(.*\\)" path)
+;;     (setq file-path (match-string-no-properties 2 path))
+;;     (setq paragraph-id (match-string-no-properties 3 path))
+;;     (when-let ((buf (find-file-noselect file-path)))
+;;       (with-current-buffer buf
+;;         (org-with-wide-buffer
+;;          (org-link-search paragraph-id)
+;;          (mark-paragraph)
+;;          (let* ((beg (point-marker)) ;; it is the beginning of the paragraph
+;;                 (end (mark-marker))
+;;                 (content (buffer-substring beg end)))
+;;            (deactivate-mark)
+;;            (list :tc-content content
+;;                  :tc-beg-mkr beg
+;;                  :tc-end-mkr end)))))))
 
-(defun org-transclusion-match-org-headline (path)
-  "Return t if PATH if for the link type to be transcluded.
-org-transclusion-add-<tc-type> function needs to be also defined."
-  (and (string-prefix-p "file:" path)
-       (when (string-match "\\(.org::\\)\\(\\*.*\\)" path) t)))
+;; (defun org-transclusion-match-org-headline (path)
+;;   "Return t if PATH if for the link type to be transcluded.
+;; org-transclusion-add-<tc-type> function needs to be also defined."
+;;   (and (string-prefix-p "file:" path)
+;;        (when (string-match "\\(.org::\\)\\(\\*.*\\)" path) t)))
 
-(defun org-transclusion-add-org-headline (path)
-  "Return the text content of the subtree of an Org headline for PATH.
-PATH is assumed to be of the form: file:path/to/file.org::*headline."
-  (let ((file-path nil)
-        (headline nil))
-    (string-match "\\(file:\\)\\(.*\\)::\\(*.*\\)" path)
-    (setq file-path (match-string-no-properties 2 path))
-    (setq headline (match-string-no-properties 3 path))
-    (when-let ((buf (find-file-noselect file-path)))
-      (with-current-buffer buf
-        (org-with-wide-buffer
-         (org-link-search headline)
-         (org-narrow-to-subtree)
-         (let ((content (buffer-string))
-               (beg (point-min-marker))
-               (end (point-max-marker)))
-           (list :tc-content content
-                 :tc-beg-mkr beg
-                 :tc-end-mkr end)))))))
+;; (defun org-transclusion-add-org-headline (path)
+;;   "Return the text content of the subtree of an Org headline for PATH.
+;; PATH is assumed to be of the form: file:path/to/file.org::*headline."
+;;   (let ((file-path nil)
+;;         (headline nil))
+;;     (string-match "\\(file:\\)\\(.*\\)::\\(*.*\\)" path)
+;;     (setq file-path (match-string-no-properties 2 path))
+;;     (setq headline (match-string-no-properties 3 path))
+;;     (when-let ((buf (find-file-noselect file-path)))
+;;       (with-current-buffer buf
+;;         (org-with-wide-buffer
+;;          (org-link-search headline)
+;;          (org-narrow-to-subtree)
+;;          (let ((content (buffer-string))
+;;                (beg (point-min-marker))
+;;                (end (point-max-marker)))
+;;            (list :tc-content content
+;;                  :tc-beg-mkr beg
+;;                  :tc-end-mkr end)))))))
   
-(defun org-transclusion-match-org-id (path)
-  "Return t if PATH if for the link type to be transcluded.
-org-transclusion-add-<tc-type> function needs to be also defined."
-  (string-prefix-p "id:" path))
+;; (defun org-transclusion-match-org-id (path)
+;;   "Return t if PATH if for the link type to be transcluded.
+;; org-transclusion-add-<tc-type> function needs to be also defined."
+;;   (string-prefix-p "id:" path))
 
-(defun org-transclusion-add-org-id (path)
-  "Return the text content of the subtree identified by Org-ID.
-PATH is assumed to be in form `id:uuid'."
-  (let* ((id (progn
-               (string-match "\\(id:\\)\\([[:alnum:]|-]*\\)" path)
-               (match-string 2 path)))
-         (marker (org-id-find id 'marker))
-         (buf (marker-buffer marker)))
-    (with-current-buffer buf
-      (org-with-wide-buffer
-       (goto-char marker)
-       (org-narrow-to-subtree)
-       (let ((content (buffer-string))
-             (beg (point-min-marker))
-             (end (point-max-marker)))
-         (list :tc-content content
-               :tc-beg-mkr beg
-               :tc-end-mkr end))))))
+;; (defun org-transclusion-add-org-id (path)
+;;   "Return the text content of the subtree identified by Org-ID.
+;; PATH is assumed to be in form `id:uuid'."
+;;   (let* ((id (progn
+;;                (string-match "\\(id:\\)\\([[:alnum:]|-]*\\)" path)
+;;                (match-string 2 path)))
+;;          (marker (org-id-find id 'marker))
+;;          (buf (marker-buffer marker)))
+;;     (with-current-buffer buf
+;;       (org-with-wide-buffer
+;;        (goto-char marker)
+;;        (org-narrow-to-subtree)
+;;        (let ((content (buffer-string))
+;;              (beg (point-min-marker))
+;;              (end (point-max-marker)))
+;;          (list :tc-content content
+;;                :tc-beg-mkr beg
+;;                :tc-end-mkr end))))))
 
 ;;-----------------------------------------------------------------------------
 ;; Core Functions
 ;; - Core operations: create-, save-, remove-, detach-at-point
 ;; - Supporting functions for these core operations
 
-(defun org-transclusion--org-link-tc-params-p (link)
-  "Return PARAMS with TC-FN if link type is supported for LINK.
-Link type for this function is the standard Org Mode ones."
-  (let ((types org-transclusion-add-org-link-at-point-functions)
-        (params nil))
-    (while (and (not params)
-                types)
-      (let* ((type (pop types))
-             (match-fn
-              (progn (intern (concat "org-transclusion-match-" type))))
-             (add-fn
-              (progn (intern (concat "org-transclusion-add-" type))))
-             (path (plist-get link ':path )))
-        (when (and (functionp match-fn)
-                   (funcall match-fn link)
-                   (functionp add-fn))
-          (setq params (list :tc-type type :tc-fn add-fn :tc-path path)))))
-    params))
+;; (defun org-transclusion--org-link-tc-params-p (link)
+;;   "Return PARAMS with TC-FN if link type is supported for LINK.
+;; Link type for this function is the standard Org Mode ones."
+;;   (let ((types org-transclusion-add-org-link-at-point-functions)
+;;         (params nil))
+;;     (while (and (not params)
+;;                 types)
+;;       (let* ((type (pop types))
+;;              (match-fn
+;;               (progn (intern (concat "org-transclusion-match-" type))))
+;;              (add-fn
+;;               (progn (intern (concat "org-transclusion-add-" type))))
+;;              (path (plist-get link ':path )))
+;;         (when (and (functionp match-fn)
+;;                    (funcall match-fn link)
+;;                    (functionp add-fn))
+;;           (setq params (list :tc-type type :tc-fn add-fn :tc-path path)))))
+;;     params))
 
-(defun org-transclusion--custom-tc-params-p (str)
-  "Return PARAMS with TC-FN if link type is supported for STR."
-  (let ((types org-transclusion-add-at-point-functions)
-        (params nil))
-    (while (and (not params)
-                types)
-      (let* ((type (pop types))
-             (match-fn
-              (progn (intern (concat "org-transclusion-match-" type))))
-             (add-fn
-              (progn (intern (concat "org-transclusion-add-" type)))))
-        (when (and (functionp match-fn)
-                   (funcall match-fn str)
-                   (functionp add-fn))
-          (setq params (list :tc-type type :tc-fn add-fn :tc-path str)))))
-    params))
+;; (defun org-transclusion--custom-tc-params-p (str)
+;;   "Return PARAMS with TC-FN if link type is supported for STR."
+;;   (let ((types org-transclusion-add-at-point-functions)
+;;         (params nil))
+;;     (while (and (not params)
+;;                 types)
+;;       (let* ((type (pop types))
+;;              (match-fn
+;;               (progn (intern (concat "org-transclusion-match-" type))))
+;;              (add-fn
+;;               (progn (intern (concat "org-transclusion-add-" type)))))
+;;         (when (and (functionp match-fn)
+;;                    (funcall match-fn str)
+;;                    (functionp add-fn))
+;;           (setq params (list :tc-type type :tc-fn add-fn :tc-path str)))))
+;;     params))
   
-(defun org-transclusion--get-tc-params (str)
-  "Return TC-TYPE, TC-FN and TC-PATH by parsing STR.
-Fallback to default if not supported.
+;; (defun org-transclusion--get-tc-params (str)
+;;   "Return TC-TYPE, TC-FN and TC-PATH by parsing STR.
+;; Fallback to default if not supported.
 
-Call the matcher function corresponding to each link type in
-`org-transclusion-add-at-point-functions` from left to right.
+;; Call the matcher function corresponding to each link type in
+;; `org-transclusion-add-at-point-functions` from left to right.
 
-Use the first match (thus, the left has more priority), and then
-return its corresponding TC-FN function, TC-TYPE, and TC-PATH.
-If none of the matchers finds a match, use default."
+;; Use the first match (thus, the left has more priority), and then
+;; return its corresponding TC-FN function, TC-TYPE, and TC-PATH.
+;; If none of the matchers finds a match, use default."
 
-  (let ((params nil))
-    (setq params (org-transclusion--org-link-tc-params-p str))
-    (when (not params)
-      (setq params (org-transclusion--custom-tc-params-p str)))
-    (when (not params) ;fallback to default
-      (setq params (list :tc-type "default"
-                         :tc-fn #'org-transclusion-add-default
-                         :tc-path str)))
-    params))
+;;   (let ((params nil))
+;;     (setq params (org-transclusion--org-link-tc-params-p str))
+;;     (when (not params)
+;;       (setq params (org-transclusion--custom-tc-params-p str)))
+;;     (when (not params) ;fallback to default
+;;       (setq params (list :tc-type "default"
+;;                          :tc-fn #'org-transclusion-add-default
+;;                          :tc-path str)))
+;;     params))
 
-(defun org-transclusion-add-default (path)
-  "Use PATH to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR.
+;; (defun org-transclusion-add-default (path)
+;;   "Use PATH to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR.
 
-TODO need to handle when the file does not exist."
+;; TODO need to handle when the file does not exist."
 
-  (let ((buf (find-file-noselect path)))
-    (with-current-buffer buf
-        (org-with-wide-buffer
-         (let ((content (buffer-string))
-               (beg (point-min-marker))
-               (end (point-max-marker)))
-           (list :tc-content content
-                 :tc-beg-mkr beg
-                 :tc-end-mkr end))))))
+;;   (let ((buf (find-file-noselect path)))
+;;     (with-current-buffer buf
+;;         (org-with-wide-buffer
+;;          (let ((content (buffer-string))
+;;                (beg (point-min-marker))
+;;                (end (point-max-marker)))
+;;            (list :tc-content content
+;;                  :tc-beg-mkr beg
+;;                  :tc-end-mkr end))))))
 
-(defun org-transclusion-call-add-at-point-functions (str &rest _prefix)
-  "Call functions to insclude source text for PATH in current buffer.
-It is meant to be used as a :follow function in the custom Org Mode link type.
+;; (defun org-transclusion-call-add-at-point-functions (str &rest _prefix)
+;;   "Call functions to insclude source text for PATH in current buffer.
+;; It is meant to be used as a :follow function in the custom Org Mode link type.
 
-It is parametarized to make it easy to add support for additional link types.
-Refer to `org-transclusion-add-org-id' as a sample implementation.
+;; It is parametarized to make it easy to add support for additional link types.
+;; Refer to `org-transclusion-add-org-id' as a sample implementation.
 
-The FN must:
-    1. Take arguments: (str) or (str &optional prefix)
-    2. Return nil or TC-PARAMS
+;; The FN must:
+;;     1. Take arguments: (str) or (str &optional prefix)
+;;     2. Return nil or TC-PARAMS
 
-TC-PARAMS is a plist with the following params:
- :tc-content  := text string to be trancluded
- :tc-beg-mkr  := marker pointing to the beginning of the content in the src buf
- :tc-end-mkr  := marker pointing to the end of the content in the src buf
+;; TC-PARAMS is a plist with the following params:
+;;  :tc-content  := text string to be trancluded
+;;  :tc-beg-mkr  := marker pointing to the beginning of the content in the src buf
+;;  :tc-end-mkr  := marker pointing to the end of the content in the src buf
 
-FN should decode STR as a link and determine the TC-TYPE.
-eg. id:uuid-1234-xxxx, for Org-ID.
-Return the content TC-CONTENT and markers TC-BG-MKR and TC-END-MKR.
+;; FN should decode STR as a link and determine the TC-TYPE.
+;; eg. id:uuid-1234-xxxx, for Org-ID.
+;; Return the content TC-CONTENT and markers TC-BG-MKR and TC-END-MKR.
 
-Default to deal with link otc:./path/to/file.txt
+;; Default to deal with link otc:./path/to/file.txt
 
-A conditon check to avoid recursion happens in this function.
+;; A conditon check to avoid recursion happens in this function.
 
-TODO You need to check if the link is at the bottom of buffer."
+;; TODO You need to check if the link is at the bottom of buffer."
   
-  (if (cdr (get-char-property-and-overlay (point) 'tc-type)) nil
-         ;; The link is within a transclusion overlay.
-         ;; Do nothing to avoid recurrsive transclusion.
-    (let* ((tc-params (org-transclusion--get-tc-params str)))
-      (org-transclusion--create-at-point tc-params))))
+;;   (if (cdr (get-char-property-and-overlay (point) 'tc-type)) nil
+;;          ;; The link is within a transclusion overlay.
+;;          ;; Do nothing to avoid recurrsive transclusion.
+;;     (let* ((tc-params (org-transclusion--get-tc-params str)))
+;;       (org-transclusion--create-at-point tc-params))))
 
-(defun org-transclusion--create-at-point (tc-params)
-  "Create transclusion by unpackng TC-PARAMS."
+;; (defun org-transclusion--create-at-point (tc-params)
+;;   "Create transclusion by unpackng TC-PARAMS."
 
-  (when-let ((link-loc (org-transclusion--get-link-location))
-             (link-beg (plist-get link-loc ':begin))
-             (link-end (plist-get link-loc ':end))
-             (raw-link (buffer-substring-no-properties link-beg link-end)))
-    ;; Remove the link
-    ;;(remove-text-properties link-beg link-end '(invisible 'org-link))
+;;   (when-let ((link-loc (org-transclusion--get-link-location))
+;;              (link-beg (plist-get link-loc ':begin))
+;;              (link-end (plist-get link-loc ':end))
+;;              (raw-link (buffer-substring-no-properties link-beg link-end)))
+;;     ;; Remove the link
+;;     ;;(remove-text-properties link-beg link-end '(invisible 'org-link))
     
-    ;;(add-text-properties link-beg link-end '(comment t face highlight invisible t))
-    ;;(add-text-properties link-beg link-end '(invisible t))
-    (delete-region link-beg link-end)
-    ;; Delete a char after the link has been removed to remove the line
-    ;; the link used to occupy. Without this, you end up moving one line
-    ;; every time add operation is called.
-    (delete-char 1)
-    ;; TODO You need to check if the link is at the bottom of buffer
-    ;; If it is, then yank won't work.
+;;     ;;(add-text-properties link-beg link-end '(comment t face highlight invisible t))
+;;     ;;(add-text-properties link-beg link-end '(invisible t))
+;;     (delete-region link-beg link-end)
+;;     ;; Delete a char after the link has been removed to remove the line
+;;     ;; the link used to occupy. Without this, you end up moving one line
+;;     ;; every time add operation is called.
+;;     (delete-char 1)
+;;     ;; TODO You need to check if the link is at the bottom of buffer
+;;     ;; If it is, then yank won't work.
 
-    ;; Add content and overlay
-    (let* ((tc-raw-link raw-link)
-           (tc-type (plist-get tc-params :tc-type))
-           (tc-fn (plist-get tc-params :tc-fn))
-           (tc-path (plist-get tc-params :tc-path))
-           (tc-payload (funcall tc-fn tc-path))
-           (tc-beg-mkr (plist-get tc-payload :tc-beg-mkr))
-           (tc-end-mkr (plist-get tc-payload :tc-end-mkr))
-           (tc-content (plist-get tc-payload :tc-content)))
-      (save-excursion
-        ;;(move-beginning-of-line nil)
-        (insert tc-content))
-      (when-let
-          ((dups (org-transclusion--text-clone-create tc-beg-mkr tc-end-mkr))
-           (ov (car (cdr dups)))
-           (ov-src (car dups)))
-        ;; Put to target overlay
-        (overlay-put ov 'tc-type tc-type)
-        (overlay-put ov 'tc-raw-link tc-raw-link)
-        (overlay-put ov 'tc-beg-mkr tc-beg-mkr)
-        (overlay-put ov 'tc-end-mkr tc-end-mkr)
-        (overlay-put ov 'priority -50)
-        ;;(overlay-put ov 'display tc-content)
-        ;; Put to the source overlay
-        (save-excursion
-          (goto-char (overlay-start ov))
-          (overlay-put ov-src 'tc-by (point-marker)))))))
+;;     ;; Add content and overlay
+;;     (let* ((tc-raw-link raw-link)
+;;            (tc-type (plist-get tc-params :tc-type))
+;;            (tc-fn (plist-get tc-params :tc-fn))
+;;            (tc-path (plist-get tc-params :tc-path))
+;;            (tc-payload (funcall tc-fn tc-path))
+;;            (tc-beg-mkr (plist-get tc-payload :tc-beg-mkr))
+;;            (tc-end-mkr (plist-get tc-payload :tc-end-mkr))
+;;            (tc-content (plist-get tc-payload :tc-content)))
+;;       (save-excursion
+;;         ;;(move-beginning-of-line nil)
+;;         (insert tc-content))
+;;       (when-let
+;;           ((dups (org-transclusion--text-clone-create tc-beg-mkr tc-end-mkr))
+;;            (ov (car (cdr dups)))
+;;            (ov-src (car dups)))
+;;         ;; Put to target overlay
+;;         (overlay-put ov 'tc-type tc-type)
+;;         (overlay-put ov 'tc-raw-link tc-raw-link)
+;;         (overlay-put ov 'tc-beg-mkr tc-beg-mkr)
+;;         (overlay-put ov 'tc-end-mkr tc-end-mkr)
+;;         (overlay-put ov 'priority -50)
+;;         ;;(overlay-put ov 'display tc-content)
+;;         ;; Put to the source overlay
+;;         (save-excursion
+;;           (goto-char (overlay-start ov))
+;;           (overlay-put ov-src 'tc-by (point-marker)))))))
 
 
 (defun org-transclusion--get-org-content-from-link (open-link-fn link)
@@ -624,17 +624,18 @@ to avoid recursion."
         (while (eq t (org-next-link))
           ;; Check if the link at point is tranclusion link
           ;; Check if the link is in the beginning of a line
-          (when (eq (line-beginning-position) (point))
-            (when (org-transclusion--transclusion-org-link-p)
-              ;; the tc link is for standard org mode ones
-              (let* ((link (org-element-link-parser))
-                     (raw-link (org-element-property :raw-link link)))
-                (org-transclusion-call-add-at-point-functions raw-link)))
-            (when (org-transclusion--transclusion-link-p)
-              ;; the tc link is for otc: custom ones
-              (let* ((link (org-element-link-parser))
-                     (path (org-element-property :path link)))
-                (org-transclusion-call-add-at-point-functions path)))))))))
+          (when (eq (line-beginning-position)(point))
+            (org-open-at-point)))))))
+            ;; (when (org-transclusion--transclusion-org-link-p)
+            ;;   ;; the tc link is for standard org mode ones
+            ;;   (let* ((link (org-element-link-parser))
+            ;;          (raw-link (org-element-property :raw-link link)))
+            ;;     (org-transclusion-call-add-at-point-functions raw-link)))
+            ;; (when (org-transclusion--transclusion-link-p)
+            ;;   ;; the tc link is for otc: custom ones
+            ;;   (let* ((link (org-element-link-parser))
+            ;;          (path (org-element-property :path link)))
+            ;;     (org-transclusion-call-add-at-point-functions path)))))))))
 
 (defun org-transclusion-remove-all-in-buffer (&optional buf)
   "Remove all the translusion overlay and copied text in current buffer.
