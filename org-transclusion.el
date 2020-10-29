@@ -45,6 +45,19 @@
 (defvar-local org-transclusion-buffer-modified-p nil)
 (defvar-local org-transclusion-original-position nil)
 (defvar-local org-transclusion-edit-src-at-mkr nil)
+(defvar org-transclusion-last-edit-src-buffer nil
+  "Keep track of the cloned buffer for transclusion sources.
+There should be only one edit source buffer at a time. 
+This is so that you avoid opening too many clone buffers. It is also used
+to close the edit source buffer when minor mode is turned off.
+
+Note that the minor mode is buffer local, but this variable is global. 
+This is deliberte design choice. You may activate Org-transclusion for multiple
+buffers at a time. But editing their sources should be focused, and thus one edit
+buffer can be open at a time.
+
+Killing a clone buffer is assumed to be safe in general, as its original
+buffer is in sync and the content is reflected there.") 
 
 ;;;; Customization variables
 (defgroup org-transclusion nil
@@ -554,11 +567,16 @@ is active, it will automatically bring the transclusion back."
       (let ((from-mkr (point-marker))
             (to-mkr (overlay-get ov 'tc-beg-mkr)))
         (with-current-buffer (marker-buffer to-mkr)
-          (setq org-transclusion-edit-src-at-mkr from-mkr)
-          (goto-char to-mkr)
-          (org-narrow-to-subtree)
-          (org-tree-to-indirect-buffer)
-          (pop-to-buffer org-last-indirect-buffer)
+          (org-with-wide-buffer
+           (setq org-transclusion-edit-src-at-mkr from-mkr)
+           (goto-char to-mkr)
+           (org-narrow-to-subtree)
+           (org-tree-to-indirect-buffer))
+          ;; Only one edit buffer globally at a time
+          (when (buffer-live-p org-transclusion-last-edit-src-buffer)    
+            (kill-buffer org-transclusion-last-edit-src-buffer))
+          (setq org-transclusion-last-edit-src-buffer org-last-indirect-buffer)
+          (pop-to-buffer org-transclusion-last-edit-src-buffer)
           (rename-buffer (concat "*" (buffer-name) "*"))
           (org-transclusion-edit-src-mode)))
     ;; The message below is common for remove and detach
@@ -720,7 +738,7 @@ the mode, `toggle' toggles the state."
             map)
   (setq header-line-format
         (substitute-command-keys
-	 "When done, save and kill this buffer with `\\[org-transclusion-edit-src-commit]'")))
+	 "Editing the source directly. When done, save and return with `\\[org-transclusion-edit-src-commit]'.")))
 
 (defun org-transclusion-activate ()
   "Activate automatic transclusions in the local buffer.
@@ -759,6 +777,8 @@ This should be a buffer-local minior mode.  Not done yet."
         (remove-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save t)
         ;;(advice-remove 'org-link-open #'org-transclusion-link-open)
         (advice-remove 'org-link-open #'org-transclusion--add-from-link)
+        (when (buffer-live-p org-transclusion-last-edit-src-buffer)    
+            (kill-buffer org-transclusion-last-edit-src-buffer))
         (when org-transclusion-activate-persistent-message
           (setq header-line-format nil)))
     (run-with-idle-timer 0 nil 'message
@@ -787,7 +807,8 @@ Meant to be used in the -edit-src-mode."
   (save-buffer)
   (let ((m org-transclusion-edit-src-at-mkr))
     (pop-to-buffer (marker-buffer m))
-    (org-transclusion-remove-at-point m))
+    (org-transclusion-remove-at-point m)
+    (org-transclusion-add-all-in-buffer))
   (kill-buffer org-last-indirect-buffer))
 
 ;;-----------------------------------------------------------------------------
