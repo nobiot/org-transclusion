@@ -820,7 +820,7 @@ changes done to one of the clones will be immediately propagated to the other.
                              (with-current-buffer clone-buf (>= start (point-max))))
                          0 1))
          ;; FIXME: Reuse overlays at point to extend dups!
-         (ol1 (make-overlay (- start start-margin) (+ end end-margin) clone-buf t t)) ;;< Tobia ;; added rea-advance
+         (ol1 (make-overlay (- start start-margin) (+ end end-margin) clone-buf t nil)) ;;< Tobia ;; added rea-advance
 
          (ol2 (make-overlay (- (point) start-margin) (+ pt-end end-margin) nil t nil))
          (dups (list ol1 ol2)))
@@ -839,7 +839,7 @@ changes done to one of the clones will be immediately propagated to the other.
     (overlay-put ol2 'evaporate t)
     (overlay-put ol2 'face 'org-transclusion-block) ;; < nobiot
     (overlay-put ol2 'text-clones dups)
-    (add-text-properties (overlay-start ol2) (overlay-end ol2) '(read-only t))
+    (add-text-properties (overlay-start ol2) (overlay-end ol2) '(read-only t rear-nonsticky t))
     dups)) ;; < nobiot return dups
 
 (provide 'org-transclusion)
