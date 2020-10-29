@@ -450,13 +450,14 @@ is used (ARG is non-nil), then use `org-link-open'."
 
     ;; Add content and overlay
     (let* ((tc-raw-link raw-link)
-           (tc-type "org-link")
+           (tc-type "org-link") ; change this
            (tc-path nil)
            (tc-payload (org-transclusion--get-org-content-from-link open-link-fn link))
            (tc-beg-mkr (plist-get tc-payload :tc-beg-mkr))
            (tc-end-mkr (plist-get tc-payload :tc-end-mkr))
            (tc-content (plist-get tc-payload :tc-content)))
       (save-excursion
+        ;;(org-paste-subtree 2 tc-content nil))
         (insert tc-content))
       (when-let
           ((dups (org-transclusion--text-clone-create tc-beg-mkr tc-end-mkr))
@@ -839,7 +840,7 @@ changes done to one of the clones will be immediately propagated to the other.
     (overlay-put ol2 'evaporate t)
     (overlay-put ol2 'face 'org-transclusion-block) ;; < nobiot
     (overlay-put ol2 'text-clones dups)
-    (add-text-properties (overlay-start ol2) (overlay-end ol2) '(read-only t rear-nonsticky t))
+    (add-text-properties (overlay-start ol2) (overlay-end ol2) '(read-only t))
     dups)) ;; < nobiot return dups
 
 (provide 'org-transclusion)
