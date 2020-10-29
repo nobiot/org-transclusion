@@ -131,14 +131,8 @@ Default to true."
 Meant to be used with add-advice/remove-advice in activate/deactivate.
 
 If the link type is not supported by org-transclusion, or \\[universal-argument]
-is used (ARG is non-nil), then use `org-link-open'."
-  (save-window-excursion
-    (funcall oldfn link)
-    (let* ((el (org-element-context))
-           (disp (buffer-substring
-                  (org-element-property :begin el)
-                  (org-element-property :end el))))
-      disp)))
+is used (ARG is non-nil), then use `org-link-open'.")
+
   ;; (let ((tc-params nil))
   ;;   (if (or arg
   ;;           (not (setq tc-params (org-transclusion--org-link-tc-params-p link))))
@@ -146,34 +140,59 @@ is used (ARG is non-nil), then use `org-link-open'."
   ;;     (org-transclusion--create-at-point tc-params)
   ;;     t))) ;; return t so that advice-add :before-until won't call the orignal fn
 
-;; (defun org-transclusion-match-org-link-headline (path)
-;;   "Return t if PATH if for the link type to be transcluded.
-;; org-transclusion-add-<tc-type> function needs to be also defined."
-  
-;;   (let ((type (plist-get path ':type))
-;;         (search (plist-get path ':search-option)))
-;;     (and (string= type "file")
-;;          (string-prefix-p "*" search))))
+(defun org-transclusion--add-from-link (open-link-fn link &rest arg)
+  "New and simple."
+  ;; Remove the link
+  (when-let ((link-loc (org-transclusion--get-link-location))
+             (link-beg (plist-get link-loc ':begin))
+             (link-end (plist-get link-loc ':end))
+             (raw-link (buffer-substring-no-properties link-beg link-end)))
 
-;; (defun org-transclusion-add-org-link-headline (path)
-;;   "Return the text content of the subtree of an Org headline for PATH.
-;; PATH is assumed to be of the form: file:path/to/file.org::*headline."
-;;   (let ((file-path (org-element-property :path path))
-;;         (headline (org-element-property :search-option path)))
-;;     (when-let ((buf (find-file-noselect file-path)))
-;;       (with-current-buffer buf
-;;         (org-with-wide-buffer
-;;          (org-link-search headline)
-;;          (org-narrow-to-subtree)
-;;          (let ((content (buffer-string))
-;;                (beg (point-min-marker))
-;;                (end (point-max-marker)))
-;;            (list :tc-content content
-;;                  :tc-beg-mkr beg
-;;                  :tc-end-mkr end)))))))
+    (delete-region link-beg link-end)
+    ;; Delete a char after the link has been removed to remove the line
+    ;; the link used to occupy. Without this, you end up moving one line
+    ;; every time add operation is called.
+    (delete-char 1)
+    ;; TODO You need to check if the link is at the bottom of buffer
+    ;; If it is, then yank won't work.
+
+    ;; Add content and overlay
+    (let* ((tc-raw-link raw-link)
+           (tc-type "org-link") ; change this
+           (tc-path nil)
+           (tc-payload (org-transclusion--get-org-content-from-link open-link-fn link))
+           (tc-beg-mkr (plist-get tc-payload :tc-beg-mkr))
+           (tc-end-mkr (plist-get tc-payload :tc-end-mkr))
+           (tc-content (plist-get tc-payload :tc-content)))
+      (save-excursion
+        ;;(org-paste-subtree 2 tc-content nil))
+        (insert tc-content))
+      (let* ((sbuf (marker-buffer tc-beg-mkr))
+             (pt-end (+ (point) (- tc-end-mkr tc-beg-mkr)))
+             ;; FIXME: Reuse overlays at point to extend dups!
+             (ov-src (make-overlay tc-beg-mkr tc-end-mkr sbuf t nil)) ;; source-buffer
+             (ov-tc (make-overlay (point) pt-end nil t nil)) ;; transclusion-buiffer
+             (tc-pair (list ov-src ov-tc)))
+        ;; Put to transclusion overlay
+        (overlay-put ov-tc 'tc-type tc-type)
+        (overlay-put ov-tc 'tc-raw-link tc-raw-link)
+        (overlay-put ov-tc 'tc-beg-mkr tc-beg-mkr)
+        (overlay-put ov-tc 'tc-end-mkr tc-end-mkr)
+        (overlay-put ov-tc 'priority -50)
+        (overlay-put ov-tc 'evaporate t)
+        (overlay-put ov-tc 'face 'org-transclusion-block)
+        (overlay-put ov-tc 'tc-pair tc-pair)
+        (add-text-properties (overlay-start ov-tc) (overlay-end ov-tc) '(read-only t))
+        ;; Put to the source overlay
+        (save-excursion
+          (goto-char (overlay-start ov-tc))
+          (overlay-put ov-src 'tc-by (point-marker)))
+        (overlay-put ov-src 'evaporate t)
+        (overlay-put ov-src 'face 'org-transclusion-source-block)
+        (overlay-put ov-src 'tc-pair tc-pair)))))
   
 ;;-----------------------------------------------------------------------------
-;; Functions to support different link types
+;; Functions to support non-Org-mode link types
 
 ;; (defun org-transclusion-match-paragraph-org-dedicated-target (path)
 ;;   "Return t if PATH if for the link type to be transcluded.
@@ -275,25 +294,6 @@ is used (ARG is non-nil), then use `org-link-open'."
 ;; Core Functions
 ;; - Core operations: create-, save-, remove-, detach-at-point
 ;; - Supporting functions for these core operations
-
-;; (defun org-transclusion--org-link-tc-params-p (link)
-;;   "Return PARAMS with TC-FN if link type is supported for LINK.
-;; Link type for this function is the standard Org Mode ones."
-;;   (let ((types org-transclusion-add-org-link-at-point-functions)
-;;         (params nil))
-;;     (while (and (not params)
-;;                 types)
-;;       (let* ((type (pop types))
-;;              (match-fn
-;;               (progn (intern (concat "org-transclusion-match-" type))))
-;;              (add-fn
-;;               (progn (intern (concat "org-transclusion-add-" type))))
-;;              (path (plist-get link ':path )))
-;;         (when (and (functionp match-fn)
-;;                    (funcall match-fn link)
-;;                    (functionp add-fn))
-;;           (setq params (list :tc-type type :tc-fn add-fn :tc-path path)))))
-;;     params))
 
 ;; (defun org-transclusion--custom-tc-params-p (str)
 ;;   "Return PARAMS with TC-FN if link type is supported for STR."
@@ -448,49 +448,6 @@ is used (ARG is non-nil), then use `org-link-open'."
             :tc-beg-mkr tc-beg-mkr
             :tc-end-mkr tc-end-mkr))))
 
-(defun org-transclusion--add-from-link (open-link-fn link &rest arg)
-  "New and simple."
-  ;; Remove the link
-  (when-let ((link-loc (org-transclusion--get-link-location))
-             (link-beg (plist-get link-loc ':begin))
-             (link-end (plist-get link-loc ':end))
-             (raw-link (buffer-substring-no-properties link-beg link-end)))
-
-    (delete-region link-beg link-end)
-    ;; Delete a char after the link has been removed to remove the line
-    ;; the link used to occupy. Without this, you end up moving one line
-    ;; every time add operation is called.
-    (delete-char 1)
-    ;; TODO You need to check if the link is at the bottom of buffer
-    ;; If it is, then yank won't work.
-
-    ;; Add content and overlay
-    (let* ((tc-raw-link raw-link)
-           (tc-type "org-link") ; change this
-           (tc-path nil)
-           (tc-payload (org-transclusion--get-org-content-from-link open-link-fn link))
-           (tc-beg-mkr (plist-get tc-payload :tc-beg-mkr))
-           (tc-end-mkr (plist-get tc-payload :tc-end-mkr))
-           (tc-content (plist-get tc-payload :tc-content)))
-      (save-excursion
-        ;;(org-paste-subtree 2 tc-content nil))
-        (insert tc-content))
-      (when-let
-          ((dups (org-transclusion--text-clone-create tc-beg-mkr tc-end-mkr))
-           (ov (car (cdr dups)))
-           (ov-src (car dups)))
-        ;; Put to target overlay
-        (overlay-put ov 'tc-type tc-type)
-        (overlay-put ov 'tc-raw-link tc-raw-link)
-        (overlay-put ov 'tc-beg-mkr tc-beg-mkr)
-        (overlay-put ov 'tc-end-mkr tc-end-mkr)
-        (overlay-put ov 'priority -50)
-        ;;(overlay-put ov 'display tc-content)
-        ;; Put to the source overlay
-        (save-excursion
-          (goto-char (overlay-start ov))
-          (overlay-put ov-src 'tc-by (point-marker)))))))
-
 (defun org-transclusion-save-src-at-point (pos)
   "Save the transclusion source buffer with the tranclusion at POS.
 It can be used interactively.
@@ -523,7 +480,8 @@ text."
           ;; texts outside the tranclusion overlay
           (widen)
           (outline-show-all)
-          (let* ((beg (overlay-start ov))
+          (let* ((inhibit-read-only t)
+                 (beg (overlay-start ov))
                  (raw-link (overlay-get ov 'tc-raw-link))
                  (new-beg (progn
                             (goto-char beg)
@@ -533,8 +491,8 @@ text."
                             (forward-line)
                             (point)))
                  (new-end (overlay-end ov))
-                 (dups (overlay-get ov 'text-clones)))
-            (dolist (ol dups)
+                 (tc-pair (overlay-get ov 'tc-pair)))
+            (dolist (ol tc-pair)
               (delete-overlay ol))
             ;; TODO
             ;; Also ensure to delete all the possible orphan overlays from the source
@@ -812,68 +770,6 @@ Meant to be used in the -edit-src-mode."
     (org-transclusion-remove-at-point m)
     (org-transclusion-add-all-in-buffer))
   (kill-buffer org-last-indirect-buffer))
-
-;;-----------------------------------------------------------------------------
-;; Text Clone
-;; Based on StackExchange user Tobias' code; adapted by nobiot
-;; https://emacs.stackexchange.com/questions/56201/is-there-an-emacs-package-which-can-mirror-a-region/56202#56202
-;; Since I'm not using SPREADP argument (or margin), I can simplify
-;; the code much more.
-;; Not sure if I would like to keep regex (TEXT-CLONE-SYNTAX)
-;; I think this should be handled with the add functions above.
-;; that is, leaning towards removing.
-
-(defun org-transclusion--text-clone-create (start end &optional spreadp syntax)
-  "Create a text clone of START...END at point.
-Text clones are chunks of text that are automatically kept identical:
-changes done to one of the clones will be immediately propagated to the other.
-
-  The buffer's content at point is assumed to be already identical to
-  the one between START and END.
-  If SYNTAX is provided it's a regexp that describes the possible text of
-  the clones; the clone will be shrunk or killed if necessary to ensure that
-  its text matches the regexp.
-  If SPREADP is non-nil it indicates that text inserted before/after the
-  clone should be incorporated in the clone."
-  ;; To deal with SPREADP we can either use an overlay with `nil t' along
-  ;; with insert-(behind|in-front-of)-hooks or use a slightly larger overlay
-  ;; (with a one-char margin at each end) with `t nil'.
-  ;; We opted for a larger overlay because it behaves better in the case
-  ;; where the clone is reduced to the empty string (we want the overlay to
-  ;; stay when the clone's content is the empty string and we want to use
-  ;; `evaporate' to make sure those overlays get deleted when needed).
-  ;;
-  (let* ((clone-buf (or (and (markerp start) (marker-buffer start))
-                        (current-buffer)))
-         (pt-end (+ (point) (- end start)))
-         (start-margin (if (or (not spreadp) (bobp) (with-current-buffer clone-buf (<= start (point-min))))
-                           0 1))
-         (end-margin (if (or (not spreadp)
-                             (>= pt-end (point-max))
-                             (with-current-buffer clone-buf (>= start (point-max))))
-                         0 1))
-         ;; FIXME: Reuse overlays at point to extend dups!
-         (ol1 (make-overlay (- start start-margin) (+ end end-margin) clone-buf t nil)) ;;< Tobia ;; added rea-advance
-
-         (ol2 (make-overlay (- (point) start-margin) (+ pt-end end-margin) nil t nil))
-         (dups (list ol1 ol2)))
-;;    (overlay-put ol1 'modification-hooks '(org-transclusion--text-clone--maintain)) ;;< nobiot
-    (when spreadp (overlay-put ol1 'text-clone-spreadp t))
-    (when syntax (overlay-put ol1 'text-clone-syntax syntax))
-    ;;(overlay-put ol1 'face 'underline)
-    (overlay-put ol1 'evaporate t)
-    (overlay-put ol1 'face 'org-transclusion-source-block) ;; < nobiot
-    (overlay-put ol1 'text-clones dups)
-    ;;
-;;    (overlay-put ol2 'modification-hooks '(org-transclusion--text-clone--maintain)) ;;< Tobias
-    (when spreadp (overlay-put ol2 'text-clone-spreadp t))
-    (when syntax (overlay-put ol2 'text-clone-syntax syntax))
-    ;;(overlay-put ol2 'face 'underline)
-    (overlay-put ol2 'evaporate t)
-    (overlay-put ol2 'face 'org-transclusion-block) ;; < nobiot
-    (overlay-put ol2 'text-clones dups)
-    (add-text-properties (overlay-start ol2) (overlay-end ol2) '(read-only t))
-    dups)) ;; < nobiot return dups
 
 (provide 'org-transclusion)
 ;;; org-transclusion.el ends here
