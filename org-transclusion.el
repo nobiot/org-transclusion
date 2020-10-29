@@ -767,6 +767,8 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
   (let ((buf (window-buffer win)))
     (cond ((minibufferp (current-buffer))
            (message "going into minibuffer") nil) ;; do nothing
+          ((string-match-p "*.*" (buffer-name (current-buffer)))
+           (message "going into buffer with *<buffer-name>*") nil)
           ((eq buf (current-buffer))
            (message "coming into %s" win)
            (org-transclusion-add-all-in-buffer)) ;; add all back in
