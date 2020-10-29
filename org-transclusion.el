@@ -44,6 +44,7 @@
 
 (defvar-local org-transclusion-buffer-modified-p nil)
 (defvar-local org-transclusion-original-position nil)
+(defvar-local org-transclusion-edit-src-at-mkr nil)
 
 ;;;; Customization variables
 (defgroup org-transclusion nil
@@ -550,12 +551,15 @@ is active, it will automatically bring the transclusion back."
 (defun org-transclusion-open-edit-buffer-at-point (pos)
   (interactive "d")
   (if-let ((ov (cdr (get-char-property-and-overlay pos 'tc-type))))
-      (let ((mkr (overlay-get ov 'tc-beg-mkr)))
-        (with-current-buffer (marker-buffer mkr)
-          (goto-char mkr)
+      (let ((from-mkr (point-marker))
+            (to-mkr (overlay-get ov 'tc-beg-mkr)))
+        (with-current-buffer (marker-buffer to-mkr)
+          (setq org-transclusion-edit-src-at-mkr from-mkr)
+          (goto-char to-mkr)
           (org-narrow-to-subtree)
           (org-tree-to-indirect-buffer)
-          (switch-to-buffer org-last-indirect-buffer)
+          (pop-to-buffer org-last-indirect-buffer)
+          (rename-buffer (concat "*" (buffer-name) "*"))
           (org-transclusion-edit-src-mode)))
     ;; The message below is common for remove and detach
     (message "Nothing done. No transclusion exists here.")))
@@ -781,7 +785,10 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
 Meant to be used in the -edit-src-mode."
   (interactive)
   (save-buffer)
-  (kill-current-buffer))
+  (let ((m org-transclusion-edit-src-at-mkr))
+    (pop-to-buffer (marker-buffer m))
+    (org-transclusion-remove-at-point m))
+  (kill-buffer org-last-indirect-buffer))
 
 ;;-----------------------------------------------------------------------------
 ;; Text Clone
