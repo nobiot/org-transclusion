@@ -8,30 +8,32 @@
 ;; Version: 0.0.4
 ;; Package-Requires: ((emacs "26.3") (org "9.3")
 
-;; This program is free software: you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation, either version 3 of the License, or
-;; (at your option) any later version.
+;; This program is free software: you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by the
+;; Free Software Foundation, either version 3 of the License, or (at your
+;; option) any later version.
 
-;; This program is distributed in the hope that it will be useful,
-;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;; GNU General Public License for more details.
+;; This program is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;; General Public License for more details.
 
-;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; You should have received a copy of the GNU General Public License along
+;; with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;; This library is an attempt to enable transclusion with Org Mode.
+;; Transclusion is the ability to include content from one file into
+;; another by reference.
 
-;; It is still VERY experimental.  As it modifies your files (notes),
-;; use it with care.  The author and contributors cannot be held
-;; responsible for loss of important work.
+;; It is still VERY experimental.  As it modifies your files (notes), use
+;; it with care.  The author and contributors cannot be held responsible
+;; for loss of important work.
 
-;; Org-transclusion is a buffer-local minor mode.
-;; It is suggested to set a keybinding like this to make it easy to toggle it:
-;; (define-key global-map (kbd "<f12>") #'org-transclusion-mode)
+;; Org-transclusion is a buffer-local minor mode.  It is suggested to set a
+;; keybinding like this to make it easy to toggle it:
+;;     (define-key global-map (kbd "<f12>") #'org-transclusion-mode)
 
 ;;; Code:
 (require 'org)
@@ -47,17 +49,17 @@
 (defvar-local org-transclusion-edit-src-at-mkr nil)
 (defvar org-transclusion-last-edit-src-buffer nil
   "Keep track of the cloned buffer for transclusion sources.
-There should be only one edit source buffer at a time. 
-This is so that you avoid opening too many clone buffers. It is also used
-to close the edit source buffer when minor mode is turned off.
+There should be only one edit source buffer at a time.  This is so that you
+avoid opening too many clone buffers. It is also used to close the edit
+source buffer when minor mode is turned off.
 
-Note that the minor mode is buffer local, but this variable is global. 
-This is deliberte design choice. You may activate Org-transclusion for multiple
-buffers at a time. But editing their sources should be focused, and thus one edit
-buffer can be open at a time.
+Note that the minor mode is buffer local, but this variable is global.
+This is deliberte design choice. You may activate Org-transclusion for
+multiple buffers at a time. But editing their sources should be focused,
+and thus one edit buffer can be open at a time.
 
 Killing a clone buffer is assumed to be safe in general, as its original
-buffer is in sync and the content is reflected there.") 
+buffer is in sync and the content is reflected there.")
 
 ;;;; Customization variables
 (defgroup org-transclusion nil
