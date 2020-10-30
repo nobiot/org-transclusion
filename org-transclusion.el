@@ -68,6 +68,12 @@ buffer is in sync and the content is reflected there.")
   :prefix "org-translusion-"
   :link '(url-link :tag "Github" "https://github.com/nobiot/org-translusion"))
 
+(defcustom org-transclusion-activate-persistent-message t
+  "Define whether or not transclusion buffer has a header line
+when transclusion is active."
+  :type 'boolean
+  :group 'org-transclusion)
+
 (defcustom org-transclusion-auto-add-on-activation t
   "Define whether or not add all the transclusion contents on activation.
 If true, add text contents for all the transclusion links where possible.
@@ -75,22 +81,25 @@ Default to true."
   :type 'boolean
   :group 'org-transclusion)
 
-(defvar org-transclusion-link "otc")
-(defvar org-transclusion-activate-persistent-message t)
+(defcustom org-transclusion-link "otc"
+  "Defines custom org link type used for transclusion links."
+  :type 'string
+  :group 'org-transclusion)
 
-;; ort-translusion-add-at-point-functions is a list of
-;; "link types" org-tranclusion supports.
-;; In addtion to a element in the list, there must be two corresponding
-;; functions with specific names
-;; 
-;; The functions must conform to take specific arguments, and to returnbvalues.
-;; 
-;; org-transclusion-match-<org-id>
-;; org-transclusion-add-<org-id>
-;;
-;; See the functions delivered within org-tranclusion for the API signatures.
-(defvar org-transclusion-add-at-point-functions
-  (list "org-id" "org-headline" "paragraph-org-dedicated-target" "others-default"))
+(defcustom org-transclusion-add-at-point-functions (list "others-default")
+  "ort-translusion-add-at-point-functions is a list of
+`link types' org-tranclusion supports.
+In addtion to a element in the list, there must be two corresponding
+functions with specific names
+
+The functions must conform to take specific arguments, and to returnbvalues.
+
+org-transclusion-match-<org-id>
+org-transclusion-add-<org-id>
+
+See the functions delivered within org-tranclusion for the API signatures."
+  :type '(repeat string)
+  :group 'org-transclusion)
 
 ;;-----------------------------------------------------------------------------
 ;; Faces
@@ -101,14 +110,17 @@ Default to true."
      :background "#fff3da" :extend t)
     (((class color) (min-colors 88) (background dark))
      :background "#fff3da" :extend t))
-  "Face for transcluded block.")
+  "Face for transcluded block."
+  :group 'org-transclusion)
 
 (defface org-transclusion-block
   '((((class color) (min-colors 88) (background light))
      :background "#f3f3ff" :extend t)
     (((class color) (min-colors 88) (background dark))
      :background "#f3f3ff" :extend t))
-  "Face for transcluded block.")
+  "Face for transcluded block."
+  :group 'org-transclusion)
+
 
 ;;-----------------------------------------------------------------------------
 ;; Custom link parameter
@@ -176,7 +188,12 @@ is used (ARG is non-nil), then use `org-link-open'."
 ;; Functions to support non-Org-mode link types
 
 (defun org-transclusion--get-custom-tc-params (link)
-  "Return PARAMS with TC-FN if link type is supported for LINK object."
+  "Return PARAMS with TC-FN if link type is supported for LINK object.
+
+TODO This is a little ugly inthat it takes an Org Mode's link object, and
+for `org-transclusion-link' link type (default `otc'), it takes the raw-link.
+For others, it requires path."
+  
   (let ((types org-transclusion-add-at-point-functions)
         (params nil)
         (link-type (org-element-property :type link))
@@ -198,6 +215,11 @@ is used (ARG is non-nil), then use `org-link-open'."
           (setq params (list :tc-type type :tc-fn (lambda () (funcall add-fn str)))))))
     params))
 
+;;-----------------------------------------------------------------------------
+;; Functions to support otc: link type
+;; Currently, only a few Org links are supported, so they are redundant.
+;; TODO to add more e.g. Markdown
+
 (defun org-transclusion-match-others-default (path)
   (not (string-prefix-p (concat org-transclusion-link ":") path)))
 
@@ -215,113 +237,6 @@ TODO need to handle when the file does not exist."
            (list :tc-content content
                  :tc-beg-mkr beg
                  :tc-end-mkr end))))))
-
-;;-----------------------------------------------------------------------------
-;; Functions to support otc: link type
-;; Currently, only a few Org links are supported, so they are redundant.
-;; TODO to add more e.g. Markdown
-
-(defun org-transclusion-match-paragraph-org-dedicated-target (path)
-  "Return t if PATH if for the link type to be transcluded.
-org-transclusion-add-<tc-type> function needs to be also defined.
-
-Note that the regex is broader than necessary.  It also matches
-::*headline form as well as ::dedicated-link.
-It is assumed that match for org-headline has been done before
-this match function."
-  
-  (and (string-prefix-p (concat org-transclusion-link ":") path)
-       (when (string-match "\\(.org::\\)\\(\\.*\\)" path) t)))
-
-(defun org-transclusion-add-paragraph-org-dedicated-target (path)
-  "Return the text content of a paragraph in an Org file.
-
-The target paragraph must be identifiable by a dedicated link with
-a <<paragraph-id>>: e.g.
-
-   Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-   Suspendisse ac velit fermentum, sodales nunc in,
-   tincidunt quam.  <<paragraph-id>>
-
-It is generally assumed that the paragraph-id is placed after its content,
-but it is not an absolute requirement; it can be in the beginning (before
-the content) or in the middle of it.  It uses `org-link-search' to locate
-the <<dedicated-link>> and use `mark-paragraph' to select the content.
-
-PATH is assumed to be of the form: otc:path/to/file.org::dedicted-link."
-  (let ((file-path nil)
-        (paragraph-id nil)
-        (regex (concat
-                "\\(" org-transclusion-link ":" "\\)"
-                "\\(.*\\)::\\(.*\\)")))
-    (string-match regex path)
-    (setq file-path (match-string-no-properties 2 path))
-    (setq paragraph-id (match-string-no-properties 3 path))
-    (when-let ((buf (find-file-noselect file-path)))
-      (with-current-buffer buf
-        (org-with-wide-buffer
-         (org-link-search paragraph-id)
-         (mark-paragraph)
-         (let* ((beg (point-marker)) ;; it is the beginning of the paragraph
-                (end (mark-marker))
-                (content (buffer-substring beg end)))
-           (deactivate-mark)
-           (list :tc-content content
-                 :tc-beg-mkr beg
-                 :tc-end-mkr end)))))))
-
-(defun org-transclusion-match-org-headline (path)
-  "Return t if PATH if for the link type to be transcluded.
-org-transclusion-add-<tc-type> function needs to be also defined."
-  (and (string-prefix-p (concat org-transclusion-link ":") path)
-       (when (string-match "\\(.org::\\)\\(\\*.*\\)" path) t)))
-
-(defun org-transclusion-add-org-headline (path)
-  "Return the text content of the subtree of an Org headline for PATH.
-PATH is assumed to be of the form: file:path/to/file.org::*headline."
-  (let ((file-path nil)
-        (headline nil)
-        (regex (concat
-                "\\(" org-transclusion-link ":" "\\)"
-                "\\(.*\\)::\\(*.*\\)")))
-    (string-match regex path)
-    (setq file-path (match-string-no-properties 2 path))
-    (setq headline (match-string-no-properties 3 path))
-    (when-let ((buf (find-file-noselect file-path)))
-      (with-current-buffer buf
-        (org-with-wide-buffer
-         (org-link-search headline)
-         (org-narrow-to-subtree)
-         (let ((content (buffer-string))
-               (beg (point-min-marker))
-               (end (point-max-marker)))
-           (list :tc-content content
-                 :tc-beg-mkr beg
-                 :tc-end-mkr end)))))))
-
-(defun org-transclusion-match-org-id (path)
-  "Return t if PATH if for the link type to be transcluded.
-org-transclusion-add-<tc-type> function needs to be also defined."
-  (string-prefix-p "id:" path))
-
-(defun org-transclusion-add-org-id (path)
-  "Return the text content of the subtree identified by Org-ID.
-PATH is assumed to be in form `id:uuid'."
-  (let* ((id (progn
-               (string-match "\\(id:\\)\\([[:alnum:]|-]*\\)" path)
-               (match-string 2 path)))
-         (marker (org-id-find id 'marker))
-         (buf (marker-buffer marker)))
-    (with-current-buffer buf
-      (org-with-wide-buffer
-       (goto-char marker)
-       (org-narrow-to-subtree)
-       (let ((content (buffer-string))
-             (beg (point-min-marker))
-             (end (point-max-marker)))
-         (list :tc-content content
-               :tc-beg-mkr beg
-               :tc-end-mkr end))))))
 
 ;;-----------------------------------------------------------------------------
 ;; Core Functions
