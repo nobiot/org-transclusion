@@ -74,7 +74,7 @@ makes it impossible to debug at runtime.")
   "Insert text contents by way of link references."
   :group 'org
   :prefix "org-translusion-"
-  :link '(url-link :tag "Github" "https://github.com/nobiot/org-translusion"))
+  :link '(url-link :tag "Github" "https://github.com/nobiot/org-transclusion"))
 
 (defcustom org-transclusion-activate-persistent-message t
   "Define whether or not a header line is added when transclusion is active."
