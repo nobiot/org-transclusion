@@ -5,8 +5,9 @@
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
+
 ;; Version: 0.0.4
-;; Package-Requires: ((emacs "26.3") (org "9.3")
+;; Package-Requires: ((emacs "26.3") (org "9.3"))
 
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the
