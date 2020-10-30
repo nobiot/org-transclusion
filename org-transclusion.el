@@ -49,14 +49,16 @@
 (defvar-local org-transclusion-edit-src-at-mkr nil)
 (defvar org-transclusion-last-edit-src-buffer nil
   "Keep track of the cloned buffer for transclusion sources.
-There should be only one edit source buffer at a time.  This is so that you
-avoid opening too many clone buffers. It is also used to close the edit
-source buffer when minor mode is turned off.
+There should be only one edit source buffer at a time.  This is
+so that you avoid opening too many clone buffers.  It is also
+used to close the edit source buffer when minor mode is turned
+off.
 
-Note that the minor mode is buffer local, but this variable is global.
-This is deliberte design choice. You may activate Org-transclusion for
-multiple buffers at a time. But editing their sources should be focused,
-and thus one edit buffer can be open at a time.
+Note that the minor mode is buffer local, but this variable is
+global.  This is deliberte design choice.  You may activate
+Org-transclusion for multiple buffers at a time.  But editing
+their sources should be focused, and thus one edit buffer can be
+open at a time.
 
 Killing a clone buffer is assumed to be safe in general, as its original
 buffer is in sync and the content is reflected there.")
@@ -69,8 +71,8 @@ buffer is in sync and the content is reflected there.")
   :link '(url-link :tag "Github" "https://github.com/nobiot/org-translusion"))
 
 (defcustom org-transclusion-activate-persistent-message t
-  "Define whether or not transclusion buffer has a header line
-when transclusion is active."
+  "Define whether or not a header line is added when transclusion is active."
+
   :type 'boolean
   :group 'org-transclusion)
 
@@ -87,10 +89,9 @@ Default to true."
   :group 'org-transclusion)
 
 (defcustom org-transclusion-add-at-point-functions (list "others-default")
-  "ort-translusion-add-at-point-functions is a list of
-`link types' org-tranclusion supports.
-In addtion to a element in the list, there must be two corresponding
-functions with specific names
+  "Define list of `link types' org-tranclusion supports.
+In addtion to a element in the list, there must be two
+corresponding functions with specific names
 
 The functions must conform to take specific arguments, and to returnbvalues.
 
@@ -136,7 +137,7 @@ See the functions delivered within org-tranclusion for the API signatures."
 ;; Add Support different non-Org link types
 
 (defun org-transclusion-link-open (orgfn link &optional arg)
-  "Override Org Mode's default `org-link-open' for LINK.
+  "Override Org Mode's default `org-link-open' (ORGFN) for LINK.
 Meant to be used with add-advice/remove-advice in activate/deactivate.
 
 If the link type is not supported by org-transclusion, or \\[universal-argument]
@@ -209,7 +210,7 @@ For others, it requires path."
               (progn (intern (concat "org-transclusion-match-" type))))
              (add-fn
               (progn (intern (concat "org-transclusion-add-" type)))))
-        (when (and (functionp match-fn)                   
+        (when (and (functionp match-fn)
                    (funcall match-fn str)
                    (functionp add-fn))
           (setq params (list :tc-type type :tc-fn (lambda () (funcall add-fn str)))))))
@@ -221,6 +222,8 @@ For others, it requires path."
 ;; TODO to add more e.g. Markdown
 
 (defun org-transclusion-match-others-default (path)
+  "Check if `others-default' can be used for the PATH.
+Returns non-nil if check is pass."
   (not (string-prefix-p (concat org-transclusion-link ":") path)))
 
 (defun org-transclusion-add-others-default (path)
@@ -242,38 +245,6 @@ TODO need to handle when the file does not exist."
 ;; Core Functions
 ;; - Core operations: create-, save-, remove-, detach-at-point
 ;; - Supporting functions for these core operations
-
-(defun org-transclusion-call-add-at-point-functions (str &rest _prefix)
-  "Call functions to insclude source text for PATH in current buffer.
-It is meant to be used as a :follow function in the custom Org Mode link type.
-
-It is parametarized to make it easy to add support for additional link types.
-Refer to `org-transclusion-add-org-id' as a sample implementation.
-
-The FN must:
-    1. Take arguments: (str) or (str &optional prefix)
-    2. Return nil or TC-PARAMS
-
-TC-PARAMS is a plist with the following params:
-           (tc-type (plist-get tc-params :tc-type))
-           (tc-fn (plist-get tc-params :tc-fn))
-           (tc-path (plist-get tc-params :tc-path))
-
-FN should decode STR as a link and determine the TC-TYPE.
-eg. id:uuid-1234-xxxx, for Org-ID.
-Return the content TC-CONTENT and markers TC-BG-MKR and TC-END-MKR.
-
-Default to deal with link otc:./path/to/file.txt
-
-A conditon check to avoid recursion happens in this function.
-
-TODO You need to check if the link is at the bottom of buffer."
-  
-  (if (cdr (get-char-property-and-overlay (point) 'tc-type)) nil
-         ;; The link is within a transclusion overlay.
-         ;; Do nothing to avoid recurrsive transclusion.
-    (let* ((tc-params (org-transclusion--get-tc-params str)))
-      (org-transclusion--create-at-point tc-params))))
 
 (defun org-transclusion--create-at-point (tc-params)
   "Create transclusion by unpackng TC-PARAMS."
@@ -401,6 +372,8 @@ is active, it will automatically bring the transclusion back."
       (delete-char (- 0 (length type))))))
 
 (defun org-transclusion-open-edit-buffer-at-point (pos)
+  "Open a clone buffer of transclusions source at POS for editting."
+  
   (interactive "d")
   (if-let ((ov (cdr (get-char-property-and-overlay pos 'tc-type))))
       (let ((from-mkr (point-marker))
@@ -412,7 +385,7 @@ is active, it will automatically bring the transclusion back."
            (org-narrow-to-subtree)
            (org-tree-to-indirect-buffer))
           ;; Only one edit buffer globally at a time
-          (when (buffer-live-p org-transclusion-last-edit-src-buffer)    
+          (when (buffer-live-p org-transclusion-last-edit-src-buffer)
             (kill-buffer org-transclusion-last-edit-src-buffer))
           (setq org-transclusion-last-edit-src-buffer org-last-indirect-buffer)
           (pop-to-buffer org-transclusion-last-edit-src-buffer)
@@ -455,6 +428,47 @@ of the link.  If not link, return nil."
   (when-let ((link (plist-get (org-element-context) 'link)))
     (let ((type (plist-get link ':type)))
       (string= type org-transclusion-link))))
+
+;;-----------------------------------------------------------------------------
+;; Define minor modes
+;;
+
+(define-minor-mode org-transclusion-mode
+  "Toggle Org-transclusion minor mode.
+Interactively with no argument, this command toggles the mode.
+A positive prefix argument enables the mode, any other prefix
+argument disables it.  From Lisp, argument omitted or nil enables
+the mode, `toggle' toggles the state."
+  :init-value nil
+  :lighter " [OT]"
+  :global nil
+  :keymap (let ((map (make-sparse-keymap)))
+            (define-key map (kbd "C-c n e")
+              'org-transclusion-open-edit-buffer-at-point)
+            map)
+  (cond
+   (org-transclusion-mode
+    (org-transclusion-activate))
+   (t
+    (org-transclusion-deactivate))))
+
+(define-minor-mode org-transclusion-edit-src-mode
+  "Toggle Org-transclusion edit source mode.
+Interactively with no argument, this command toggles the mode.
+A positive prefix argument enables the mode, any other prefix
+argument disables it.  From Lisp, argument omitted or nil enables
+the mode, `toggle' toggles the state."
+  :init-value nil
+  :lighter nil
+  :global nil
+  :keymap (let ((map (make-sparse-keymap)))
+            (define-key map (kbd "C-c C-c")
+              #'org-transclusion-edit-src-commit)
+            map)
+  (setq header-line-format
+        (substitute-command-keys
+	 "Editing the source directly. When done, save and return with `\\[org-transclusion-edit-src-commit]'.")))
+
 ;;-----------------------------------------------------------------------------
 ;; Functions to work with all transclusions in the buffer.
 ;; These typically call their correspondong `at-point` function
@@ -493,8 +507,7 @@ As this should be used only when the buffer is current, no argment passed.
 As transclusing adds text after the link, the loop needs to process from top to
 bottom one by one.  The transcluded text may contrain transclusion link.
 
-Check is done within `org-transclusion-call-add-at-point-functions'
-to avoid recursion."
+TODO check needs to be added back in? to avoid recursion."
   
   (interactive)
   ;; Check the windows being worked on is in focus (selected)
@@ -546,42 +559,6 @@ This feature is meant for `org-transclusion--toggle-transclusion-when-out-of-foc
 ;; - Activate / deactivate
 ;; - Toggle translusions when in and out of transclusion buffer
 
-(define-minor-mode org-transclusion-mode
-  "Toggle Org-transclusion minor mode.
-Interactively with no argument, this command toggles the mode.
-A positive prefix argument enables the mode, any other prefix
-argument disables it.  From Lisp, argument omitted or nil enables
-the mode, `toggle' toggles the state."
-  :init-value nil
-  :lighter " [OT]"
-  :global nil
-  :keymap (let ((map (make-sparse-keymap)))
-            (define-key map (kbd "C-c n e")
-              'org-transclusion-open-edit-buffer-at-point)
-            map)
-  (cond
-   (org-transclusion-mode
-    (org-transclusion-activate))
-   (t
-    (org-transclusion-deactivate))))
-
-(define-minor-mode org-transclusion-edit-src-mode
-  "Toggle Org-transclusion edit source mode.
-Interactively with no argument, this command toggles the mode.
-A positive prefix argument enables the mode, any other prefix
-argument disables it.  From Lisp, argument omitted or nil enables
-the mode, `toggle' toggles the state."
-  :init-value nil
-  :lighter nil
-  :global nil
-  :keymap (let ((map (make-sparse-keymap)))
-            (define-key map (kbd "C-c C-c")
-              #'org-transclusion-edit-src-commit)
-            map)
-  (setq header-line-format
-        (substitute-command-keys
-	 "Editing the source directly. When done, save and return with `\\[org-transclusion-edit-src-commit]'.")))
-
 (defun org-transclusion-activate ()
   "Activate automatic transclusions in the local buffer.
 This should be a buffer-local minior mode.  Not done yet."
@@ -617,7 +594,7 @@ This should be a buffer-local minior mode.  Not done yet."
         (remove-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save t)
         (remove-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save t)
         (advice-remove 'org-link-open #'org-transclusion-link-open)
-        (when (buffer-live-p org-transclusion-last-edit-src-buffer)    
+        (when (buffer-live-p org-transclusion-last-edit-src-buffer)
             (kill-buffer org-transclusion-last-edit-src-buffer))
         (when org-transclusion-activate-persistent-message
           (setq header-line-format nil)))
