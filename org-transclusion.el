@@ -212,9 +212,9 @@ For others, it requires path."
                 types)
       (let* ((type (pop types))
              (match-fn
-              (progn (intern (concat "org-transclusion-match-" type))))
+              (progn (intern (concat "org-transclusion--match-" type))))
              (add-fn
-              (progn (intern (concat "org-transclusion-add-" type)))))
+              (progn (intern (concat "org-transclusion--add-" type)))))
         (when (and (functionp match-fn)
                    (funcall match-fn str)
                    (functionp add-fn))
@@ -226,12 +226,12 @@ For others, it requires path."
 ;; Currently, only a few Org links are supported, so they are redundant.
 ;; TODO to add more e.g. Markdown
 
-(defun org-transclusion-match-others-default (path)
+(defun org-transclusion--match-others-default (path)
   "Check if `others-default' can be used for the PATH.
 Returns non-nil if check is pass."
   (not (string-prefix-p (concat org-transclusion-link ":") path)))
 
-(defun org-transclusion-add-others-default (path)
+(defun org-transclusion--add-others-default (path)
   "Use PATH to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR.
 
 TODO need to handle when the file does not exist."
@@ -249,6 +249,7 @@ TODO need to handle when the file does not exist."
 ;;-----------------------------------------------------------------------------
 ;; Core Functions
 ;; - Core operations: create-, save-, remove-, detach-at-point
+;; - edit-src-buffer-at-point
 ;; - Supporting functions for these core operations
 
 (defun org-transclusion--create-at-point (tc-params)
@@ -357,19 +358,8 @@ is active, it will automatically bring the transclusion back."
     (when (string= link-type org-transclusion-link)
       (search-forward type end t 1)
       (delete-char (- 0 (length type))))))
-
-(defun org-transclusion--src-indirect-buffer ()
-  "Clones current buffer for editing transclusion source.
-It is meant to be used within
-`org-transclusion-open-edit-buffer-at-point'.
-`org-narrow-to-subtree' does not work if the point/marker is
-before the first headline.  This function covers this case."
-  (when (buffer-live-p org-last-indirect-buffer)
-    (kill-buffer org-last-indirect-buffer))
-  (let ((ibuf (org-get-indirect-buffer)))
-    (setq org-last-indirect-buffer ibuf)))
   
-(defun org-transclusion-open-edit-buffer-at-point (pos)
+(defun org-transclusion-open-edit-src-buffer-at-point (pos)
   "Open a clone buffer of transclusions source at POS for editting."
   
   (interactive "d")
@@ -393,6 +383,17 @@ before the first headline.  This function covers this case."
     ;; The message below is common for remove and detach
     (message "Nothing done. No transclusion exists here.")))
 
+(defun org-transclusion-edit-src-commit ()
+  "Save and kill the buffer.
+Meant to be used in the -edit-src-mode."
+  (interactive)
+  (save-buffer)
+  (let ((m org-transclusion-edit-src-at-mkr))
+    (pop-to-buffer (marker-buffer m))
+    (org-transclusion-remove-at-point m)
+    (org-transclusion-add-all-in-buffer))
+  (kill-buffer org-last-indirect-buffer))
+
 ;;-----------------------------------------------------------------------------
 ;; Utility functions used in the core functions above
 
@@ -415,18 +416,23 @@ of the link.  If not link, return nil."
       (setq location (plist-put location ':end (plist-get link ':end)))
       location)))
 
-;; (defun org-transclusion--transclusion-org-link-p ()
-;;   "Check if the link at point is a tranclusion link."
-
-;;   (when-let ((link (plist-get (org-element-context) 'link)))
-;;     (org-transclusion--org-link-tc-params-p link)))
-
 (defun org-transclusion--transclusion-link-p ()
   "Check if the link at point is a tranclusion link."
 
   (when-let ((link (plist-get (org-element-context) 'link)))
     (let ((type (plist-get link ':type)))
       (string= type org-transclusion-link))))
+
+(defun org-transclusion--src-indirect-buffer ()
+  "Clones current buffer for editing transclusion source.
+It is meant to be used within
+`org-transclusion-open-edit-buffer-at-point'.
+`org-narrow-to-subtree' does not work if the point/marker is
+before the first headline.  This function covers this case."
+  (when (buffer-live-p org-last-indirect-buffer)
+    (kill-buffer org-last-indirect-buffer))
+  (let ((ibuf (org-get-indirect-buffer)))
+    (setq org-last-indirect-buffer ibuf)))
 
 ;;-----------------------------------------------------------------------------
 ;; Define minor modes
@@ -483,7 +489,6 @@ Meant to be for `after-save-hook'.
 It adds all the transcluded copies back into the current buffer.
 And then saves all the transclusion source buffers."
   (org-transclusion-add-all-in-buffer) ; put all tranclusions back in
-  (org-transclusion-save-all-src-in-buffer) ; save to file
   (goto-char org-transclusion-original-position)
   (setq org-transclusion-original-position nil)
   (set-buffer-modified-p nil))
@@ -605,17 +610,6 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
             (t
              (message "going from %s into %s" buf (current-buffer))
              (org-transclusion-remove-all-in-buffer buf)))))) ;; remove all
-
-(defun org-transclusion-edit-src-commit ()
-  "Save and kill the buffer.
-Meant to be used in the -edit-src-mode."
-  (interactive)
-  (save-buffer)
-  (let ((m org-transclusion-edit-src-at-mkr))
-    (pop-to-buffer (marker-buffer m))
-    (org-transclusion-remove-at-point m)
-    (org-transclusion-add-all-in-buffer))
-  (kill-buffer org-last-indirect-buffer))
 
 (provide 'org-transclusion)
 ;;; org-transclusion.el ends here
