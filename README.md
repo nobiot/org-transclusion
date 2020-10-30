@@ -109,7 +109,7 @@ Below is an example configuration, which I have in my `init.el`.
 
 If the customizing variable `org-transclusion-activate-persistent-message` is non-nil (default), you should see a header appear on top of the buffer indicating transclusion is active.
 
-## Edit the transcluded content
+## Edit transcluded contents
 
 Transcluded contents are read-only. To edit them, use `org-transclusion-open-edit-src-buffer-at-point` command. By default, it is bound to <kbd>C-c n e</kbd> in `org-transclusion-mode-map` (modify the keybinding as you prefer).
 
@@ -131,25 +131,25 @@ It will open an indirect buffer of the **transclusion source**; you will be edit
 
   What's the point of writing up a long-form material (article, academic paper, book chapter, etc.) and you cannot export it outside Emacs? Because transclusions are "temporary copy" with just links in the files, I am not sure export functions work correctly. I am guessing Org Mode's export functions look at the buffer, so it should export the transcluded regions. I also have Pandoc Mode in mind, when you put together multiple files/buffers to form a material. This needs validation, and if it does not work, then a solution.
   
-**Edit:**  I tested it with Org Mode's export dispatcher, and Pandoc mode. One thing I have not tested is a batch processing of export.  Org-transclusion currently assumes that you are visiting the file. 
+  **Edit:**  I tested it with Org Mode's export dispatcher, and Pandoc mode. One thing I have not tested is a batch processing of export.  Org-transclusion currently assumes that you are visiting the file. 
 
 - [x] Consider cycling "Edit" -> "Read-only" modes, perhaps?
 
   I think it is related to the export function. I had an idea to make the transclusions read-only as well as edit mode. When read-only mode is on, you cannot edit the transcluded content, but it will remain on the buffer even if you change the focus away from it. I think the read-only content should be removed on save hooks like the editable ones.
 
-**Edit:** Transclusions are read-only. You need to call a command to open an indirect buffer for editing the source of a transclusion.
+    **Edit:** Transclusions are read-only. You need to call a command to open an indirect buffer for editing the source of a transclusion.
 
 - [x] Consider a good use of mode when transclusion is inactive
 
   I have not thought it through yet. When transclusion is inactive, you can still transclude contents manually clicking on the link. You can use `update-src`, `remove-` or `detach-at-point` commands interactively. When inactive, transclusion does not toggle, update, or save source buffers automatically.
   
-**Edit:** I have put in a check in `add-all-in-buffer` function that requires the minor mode to be active to add transclusions.
+  **Edit:** I have put in a check in `add-all-in-buffer` function that requires the minor mode to be active to add transclusions.
   
 - [x] Make `update-at-point` accept `C-u` or something to turn on save
 
   I just could not work out the way to pass the optional `savebuf` argument to `org-transclusion-update-src-at-point`. I could make a wrapper command `org-transclusion-save-src-at-point`; I was not sure if that's desirable.
 
-**Edit:** Update/save are not relevant anymore; you edit the source via indirect buffer. 
+    **Edit:** Update/save are not relevant anymore; you edit the source via indirect buffer. 
 `C-u` (universal argument) is used for the open link function to behave it like a normal link.
 
 - [ ] Make UX/UI more writer-friendly (e.g face for the overlay)
