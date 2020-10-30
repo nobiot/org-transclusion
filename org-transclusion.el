@@ -63,6 +63,12 @@ open at a time.
 Killing a clone buffer is assumed to be safe in general, as its original
 buffer is in sync and the content is reflected there.")
 
+(defvar org-transclusion-debug nil
+  "Disables the toggle of transclusions.
+It is meant to enable edebugging.  Without this, switching to the source
+code buffer for runtime debugger toggles off the transclusion, and thus
+makes it impossible to debug at runtime.")
+
 ;;;; Customization variables
 (defgroup org-transclusion nil
   "Insert text contents by way of link references."
@@ -151,14 +157,13 @@ is used (ARG is non-nil), then use `org-link-open'."
              (setq tc-params (list :tc-type "org-id"
                                    :tc-fn (lambda ()
                                             tc-payload)))))
-          
-          ((setq tc-params (org-transclusion--get-custom-tc-params link)))
-          
           ((org-transclusion--org-file-p (org-element-property :path link))
            (let ((tc-payload (org-transclusion--get-org-content-from-link orgfn link arg)))
              (setq tc-params (list :tc-type "org-link"
                                    :tc-fn (lambda ()
                                             tc-payload)))))
+          
+          ((setq tc-params (org-transclusion--get-custom-tc-params link)))
           
           ;; If arg is not added, do nothing.
           ;; This is used by transclude-all-in-buffer; you don't want to
@@ -371,6 +376,17 @@ is active, it will automatically bring the transclusion back."
       (search-forward type end t 1)
       (delete-char (- 0 (length type))))))
 
+(defun org-transclusion--clone-buffer ()
+  "Clones current buffer.
+It is meant to be used within
+`org-transclusion-open-edit-buffer-at-point'.
+`org-narrow-to-subtree' does not work if the point/marker is
+before the first headline.  This function covers this case."
+  (when (buffer-live-p org-last-indirect-buffer)
+    (kill-buffer org-last-indirect-buffer))
+  (let ((ibuf (org-get-indirect-buffer)))
+    (setq org-last-indirect-buffer ibuf)))
+  
 (defun org-transclusion-open-edit-buffer-at-point (pos)
   "Open a clone buffer of transclusions source at POS for editting."
   
@@ -382,8 +398,9 @@ is active, it will automatically bring the transclusion back."
           (org-with-wide-buffer
            (setq org-transclusion-edit-src-at-mkr from-mkr)
            (goto-char to-mkr)
-           (org-narrow-to-subtree)
-           (org-tree-to-indirect-buffer))
+           (if (org-up-heading-safe);; if non-nil, it's before the first subtree
+               (org-tree-to-indirect-buffer)
+             (org-transclusion--clone-buffer)))
           ;; Only one edit buffer globally at a time
           (when (buffer-live-p org-transclusion-last-edit-src-buffer)
             (kill-buffer org-transclusion-last-edit-src-buffer))
@@ -605,17 +622,18 @@ This should be a buffer-local minior mode.  Not done yet."
   "Detect focus state of window WIN, and toggle tranclusion on and off.
 The toggling is done via adding and removing all from the appropirate buffer,
 depending on whether the focus is coming in or out of the tranclusion buffer."
-  (let ((buf (window-buffer win)))
-    (cond ((minibufferp (current-buffer))
-           (message "going into minibuffer") nil) ;; do nothing
-          ((string-match-p "*.*" (buffer-name (current-buffer)))
-           (message "going into buffer with *<buffer-name>*") nil)
-          ((eq buf (current-buffer))
-           (message "coming into %s" win)
-           (org-transclusion-add-all-in-buffer)) ;; add all back in
-          (t
-           (message "going from %s into %s" buf (current-buffer))
-           (org-transclusion-remove-all-in-buffer buf))))) ;; remove all
+  (unless org-transclusion-debug
+    (let ((buf (window-buffer win)))
+      (cond ((minibufferp (current-buffer))
+             (message "going into minibuffer") nil) ;; do nothing
+            ((string-match-p "*.*" (buffer-name (current-buffer)))
+             (message "going into buffer with *<buffer-name>*") nil)
+            ((eq buf (current-buffer))
+             (message "coming into %s" win)
+             (org-transclusion-add-all-in-buffer)) ;; add all back in
+            (t
+             (message "going from %s into %s" buf (current-buffer))
+             (org-transclusion-remove-all-in-buffer buf)))))) ;; remove all
 
 (defun org-transclusion-edit-src-commit ()
   "Save and kill the buffer.
