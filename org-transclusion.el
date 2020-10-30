@@ -358,8 +358,8 @@ is active, it will automatically bring the transclusion back."
       (search-forward type end t 1)
       (delete-char (- 0 (length type))))))
 
-(defun org-transclusion--clone-buffer ()
-  "Clones current buffer.
+(defun org-transclusion--src-indirect-buffer ()
+  "Clones current buffer for editing transclusion source.
 It is meant to be used within
 `org-transclusion-open-edit-buffer-at-point'.
 `org-narrow-to-subtree' does not work if the point/marker is
@@ -382,7 +382,7 @@ before the first headline.  This function covers this case."
            (goto-char to-mkr)
            (if (org-up-heading-safe);; if non-nil, it's before the first subtree
                (org-tree-to-indirect-buffer)
-             (org-transclusion--clone-buffer)))
+             (org-transclusion--src-indirect-buffer)))
           ;; Only one edit buffer globally at a time
           (when (buffer-live-p org-transclusion-last-edit-src-buffer)
             (kill-buffer org-transclusion-last-edit-src-buffer))
