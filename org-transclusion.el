@@ -281,7 +281,6 @@ TODO need to handle when the file does not exist."
         (insert tc-content))
       (let* ((sbuf (marker-buffer tc-beg-mkr))
              (pt-end (+ (point) (- tc-end-mkr tc-beg-mkr)))
-             ;; FIXME: Reuse overlays at point to extend dups!
              (ov-src (make-overlay tc-beg-mkr tc-end-mkr sbuf t nil)) ;; source-buffer
              (ov-tc (make-overlay (point) pt-end nil t nil)) ;; transclusion-buiffer
              (tc-pair (list ov-src ov-tc)))
@@ -302,23 +301,6 @@ TODO need to handle when the file does not exist."
         (overlay-put ov-src 'evaporate t)
         (overlay-put ov-src 'face 'org-transclusion-source-block)
         (overlay-put ov-src 'tc-pair tc-pair)))))
-
-(defun org-transclusion-save-src-at-point (pos)
-  "Save the transclusion source buffer with the tranclusion at POS.
-It can be used interactively.
-
-It will create a backup file if this is the first backup for
-the source buffer in this session."
-  
-  (interactive "d")
-  ;; Check POS has an tranclusion overlay
-  ;; If not, get out the function with a message telling the user.
-  (if-let ((ov (cdr (get-char-property-and-overlay pos 'tc-type))))
-      (let ((src_buf (marker-buffer (overlay-get ov 'tc-beg-mkr))))
-        (with-current-buffer src_buf
-          (unless make-backup-files (setq-local make-backup-files t))
-          (save-buffer)))
-    (message "Nothing done. No transclusion exists here.")))
 
 (defun org-transclusion-remove-at-point (pos &optional detach)
   "Remove transclusion and the copied text around POS.
