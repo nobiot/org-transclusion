@@ -42,7 +42,7 @@
 
 ;;-----------------------------------------------------------------------------
 ;; Variables
-;; TODO Most of these should be defcustom
+;;
 
 (defvar-local org-transclusion-buffer-modified-p nil)
 (defvar-local org-transclusion-original-position nil)
@@ -64,7 +64,7 @@ Killing a clone buffer is assumed to be safe in general, as its original
 buffer is in sync and the content is reflected there.")
 
 (defvar org-transclusion-debug nil
-  "Disables the toggle of transclusions.
+  "Disable the toggle of transclusions.
 It is meant to enable edebugging.  Without this, switching to the source
 code buffer for runtime debugger toggles off the transclusion, and thus
 makes it impossible to debug at runtime.")
@@ -90,7 +90,7 @@ Default to true."
   :group 'org-transclusion)
 
 (defcustom org-transclusion-link "otc"
-  "Defines custom org link type used for transclusion links."
+  "Define custom Org link type name used for transclusion links."
   :type 'string
   :group 'org-transclusion)
 
@@ -449,7 +449,7 @@ the mode, `toggle' toggles the state."
   :global nil
   :keymap (let ((map (make-sparse-keymap)))
             (define-key map (kbd "C-c n e")
-              'org-transclusion-open-edit-buffer-at-point)
+              #'org-transclusion-open-edit-src-buffer-at-point)
             map)
   (cond
    (org-transclusion-mode
