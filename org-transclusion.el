@@ -488,17 +488,6 @@ And then saves all the transclusion source buffers."
   (setq org-transclusion-original-position nil)
   (set-buffer-modified-p nil))
 
-(defun org-transclusion-save-all-src-in-buffer ()
-  "Save all transclusion sources from the current buffer."
-
-  (interactive)
-  (save-excursion
-    (save-restriction
-      (widen)
-      (outline-show-all)
-      (dolist (ov (overlays-in (point-min) (point-max)))
-        (org-transclusion-save-src-at-point (overlay-start ov))))))
-
 (defun org-transclusion-add-all-in-buffer ()
   "Add all the transclusions in the current buffer.
 As this should be used only when the buffer is current, no argment passed.
