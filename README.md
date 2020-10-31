@@ -83,6 +83,7 @@ Transclusion has been tested to work for the following:
 - File link with `::dedicated-target`; this is intended for linking to a paragraph. See below.
 - ID link `id:uuid`
 - File link for non-org files (tested with `.txt` and `.md`); for these, the whole buffer gets transcluded
+
 **note:** Link to an org file is not currently working correctly. This is primarily because I have yet to work out a way to deal with buffer-level properties (e.g. `#+title:`, etc., on top of the buffer).
 
 ### Link to a paragraph with dedicated target 
