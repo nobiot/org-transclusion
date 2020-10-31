@@ -124,15 +124,9 @@ It will open an indirect buffer of the **transclusion source**; you will be edit
 
 [Reference issue #14](https://github.com/nobiot/org-transclusion/issues/14)
 
-An experiemental feature has been merged. Now the transcluded source text content "adapts" the headline level of its subtrees to its embedded environment in the transclusion buffer. It's quite monthful, but see the logic below. 
+An experimental feature has been merged. Now the transcluded source text content "adapts" the headline level of its subtrees to its embedded environment in the transclusion buffer. It's quite mouthful, but see the logic below. It should be the same as how refill / archive work in Org Mode (if I am not mistaken).
 
-[If this feature survives incubation, I will do a bit easy-to-grasp illustration / explanation.]
-
-It uses a patched version of `org-paste-subtree`, named `org-transclusion-paste-subtree`. 
-
-The experimental feature is turned on by default, but can be adjusted via `org-transclusion-use-paste-subtree` variable (non-nil, or nil). 
-
-`org-paste-subtree` is used in refiling, so the logic should behave in the same way (patched part influences the location of the point/cursor after inserting the text content).  The logic is described in the documnetation of the fuction as follows:
+Logic is as follows (from documentation of `org-paste-subtree` ):
 
 ```
 [... omitted ... ] [T]he new level is derived from the *visible* headings
@@ -143,6 +137,12 @@ This makes sure that the subtree remains an independent subtree and does
 not swallow low level entries.
 
 ```
+
+[If this feature survives incubation, I will do a bit easy-to-grasp illustration / explanation.]
+
+Org-transclusion uses a patched version of `org-paste-subtree`, named `org-transclusion-paste-subtree`.  
+
+The experimental feature is turned on by default, and can be adjusted via `org-transclusion-use-paste-subtree` variable (non-nil, or nil). 
 
 # List of things to be done
 
