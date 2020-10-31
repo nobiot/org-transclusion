@@ -175,21 +175,22 @@ is used (ARG is non-nil), then use `org-link-open'."
 (defun org-transclusion--get-org-content-from-link (orgfn link &rest _arg)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from LINK using ORGFN."
   (save-window-excursion
-    (funcall orgfn link)
-    (let* ((el (org-element-context))
-           (type (org-element-type el))
-           (beg)(end)(tc-content)(tc-beg-mkr)(tc-end-mkr))
-      (when (and (string= "target" type)
-                 (string= "paragraph" (org-element-type (org-element-property :parent el))))
-        (setq el (org-element-property :parent el)))
-      (setq beg (org-element-property :begin el))
-      (setq end (org-element-property :end el))
-      (setq tc-content (buffer-substring beg end))
-      (setq tc-beg-mkr (progn (goto-char beg) (point-marker)))
-      (setq tc-end-mkr (progn (goto-char end) (point-marker)))
-      (list :tc-content tc-content
-            :tc-beg-mkr tc-beg-mkr
-            :tc-end-mkr tc-end-mkr))))
+    (org-with-wide-buffer
+     (funcall orgfn link)
+     (let* ((el (org-element-context))
+            (type (org-element-type el))
+            (beg)(end)(tc-content)(tc-beg-mkr)(tc-end-mkr))
+       (when (and (string= "target" type)
+                  (string= "paragraph" (org-element-type (org-element-property :parent el))))
+         (setq el (org-element-property :parent el)))
+       (setq beg (org-element-property :begin el))
+       (setq end (org-element-property :end el))
+       (setq tc-content (buffer-substring beg end))
+       (setq tc-beg-mkr (progn (goto-char beg) (point-marker)))
+       (setq tc-end-mkr (progn (goto-char end) (point-marker)))
+       (list :tc-content tc-content
+             :tc-beg-mkr tc-beg-mkr
+             :tc-end-mkr tc-end-mkr)))))
 
 ;;-----------------------------------------------------------------------------
 ;; Functions to support non-Org-mode link types
@@ -382,7 +383,7 @@ is active, it will automatically bring the transclusion back."
           (when (buffer-live-p org-transclusion-last-edit-src-buffer)
             (kill-buffer org-transclusion-last-edit-src-buffer))
           (setq org-transclusion-last-edit-src-buffer org-last-indirect-buffer)
-          (pop-to-buffer org-transclusion-last-edit-src-buffer)
+          (pop-to-buffer org-last-indirect-buffer)
           (rename-buffer (concat "*" (buffer-name) "*"))
           (org-transclusion-edit-src-mode)))
     ;; The message below is common for remove and detach
