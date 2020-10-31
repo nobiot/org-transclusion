@@ -2,8 +2,11 @@
 
 Transclusion is the ability to include content from one file into another by reference.
 
+![Org-transclusion image](./resources/2020-10-31T094200-transclusion-v0.0.4.gif)
+**Figure 1.**  Animation to show activation of Org-transclusion minor mode to include link to a headline
+
 ![Org-transclusion image](./resources/2020-10-30_22-19-24.png)
-**Figure 1.**  Transcluding different text content via links (left); Editing one of the source (right)
+**Figure 2.**  Transcluding different text content via links (left); Editing one of the source (right)
 
 This library is an attempt to enable transclusion with Org Mode in Emacs. It is my take on the [idea by John Kitchin](#original-idea-by-john-kitchin).
 
@@ -45,7 +48,7 @@ I have redesigned the entire program as of v0.0.4. If you have seen my previous 
 This screen shot with my annotation illustrates how it works.
 
 ![How the library works. Screen shot with annotation](./resources/2020-10-29_18-48-53-edit-buffer-v2.png)
-**Figure 2.** Transclusion buffer with multiple text contents added from different sources (left); open a indirect buffer to edit one of the text content (right)
+**Figure 3.** Transclusion buffer with multiple text contents added from different sources (left); open a indirect buffer to edit one of the text content (right)
 
 ## Load
 Load the file (`load-file`) or open the file and evaluate the whole buffer (`eval-buffer`). It is experimental at the moment.
@@ -80,6 +83,7 @@ Transclusion has been tested to work for the following:
 - File link with `::dedicated-target`; this is intended for linking to a paragraph. See below.
 - ID link `id:uuid`
 - File link for non-org files (tested with `.txt` and `.md`); for these, the whole buffer gets transcluded
+**note:** Link to an org file is not currently working correctly. This is primarily because I have yet to work out a way to deal with buffer-level properties (e.g. `#+title:`, etc., on top of the buffer).
 
 ### Link to a paragraph with dedicated target 
 
