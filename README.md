@@ -6,7 +6,7 @@ Transclusion is the ability to include content from one file into another by ref
 **Figure 1.**  Animation to show activation of Org-transclusion minor mode to include link to a headline
 
 ![Org-transclusion image](./resources/2020-10-30_22-19-24.png)
-**Figure 2.**  Transcluding different text content via links (left); Editing one of the source (right)
+**Figure 2.**  Transcluding different text contents via links (left); Editing one of the sources (right)
 
 This library is an attempt to enable transclusion with Org Mode in Emacs. It is my take on the [idea by John Kitchin](#original-idea-by-john-kitchin).
 
