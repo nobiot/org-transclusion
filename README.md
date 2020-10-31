@@ -120,6 +120,30 @@ Transcluded contents are read-only. To edit them, use `org-transclusion-open-edi
 
 It will open an indirect buffer of the **transclusion source**; you will be editing the source directly. In the edit source buffer, there is no "abort" function. You can use undo, and other normal editing facilities. Once done, simply save, and go back by using <kbd>C-c C-c</kbd> to go back to the transclusion buffer. It is a convenience function to close the indirect buffer and return where you have come from.
 
+## Merge different Org Mode headline levels
+
+[Reference issue #14](https://github.com/nobiot/org-transclusion/issues/14)
+
+An experiemental feature has been merged. Now the transcluded source text content "adapts" the headline level of its subtrees to its embedded environment in the transclusion buffer. It's quite monthful, but see the logic below. 
+
+[If this feature survives incubation, I will do a bit easy-to-grasp illustration / explanation.]
+
+It uses a patched version of `org-paste-subtree`, named `org-transclusion-paste-subtree`. 
+
+The experimental feature is turned on by default, but can be adjusted via `org-transclusion-use-paste-subtree` variable (non-nil, or nil). 
+
+`org-paste-subtree` is used in refiling, so the logic should behave in the same way (patched part influences the location of the point/cursor after inserting the text content).  The logic is described in the documnetation of the fuction as follows:
+
+```
+[... omitted ... ] [T]he new level is derived from the *visible* headings
+before and after the insertion point, and taken to be the inferior headline
+level of the two.  So if the previous visible heading is level 3 and the
+next is level 4 (or vice versa), level 4 will be used for insertion.
+This makes sure that the subtree remains an independent subtree and does
+not swallow low level entries.
+
+```
+
 # List of things to be done
 
 - [ ] Validate the fundamental idea / architecture, especially modifying and saving the transclusion sources
