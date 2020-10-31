@@ -293,13 +293,13 @@ TODO need to handle when the file does not exist."
 
         (if (and
              org-transclusion-use-paste-subtree
-             (org-kill-is-subtree-p tc-content)
+             (org-kill-is-subtree-p tc-content))
              ;; Deactivate org-adapt-indentation temporarlily.  This is
              ;; necessary; otherwise, the transclusion links included the
              ;; demoted subtree will have a space by adaptation. It
              ;; disables further adding of transclusion links.
-             (let ((org-adapt-indentation nil))
-               (org-transclusion-paste-subtree nil tc-content t t))) ;; one line removed from original
+            (let ((org-adapt-indentation nil))
+              (org-transclusion-paste-subtree nil tc-content t t)) ;; one line removed from original
           (insert tc-content))
         
         (let* ((sbuf (marker-buffer tc-beg-mkr))
