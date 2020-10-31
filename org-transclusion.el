@@ -598,7 +598,8 @@ This should be a buffer-local minior mode.  Not done yet."
     (advice-add 'org-link-open :around #'org-transclusion-link-open)
     (when org-transclusion-activate-persistent-message
       (setq header-line-format
-	    "Transclusion active in this buffer")))
+            (substitute-command-keys
+	     "Transclusion active in this buffer. `\\[org-transclusion-open-edit-src-buffer-at-point]' to edit the transclusion at point."))))
   (when org-transclusion-auto-add-on-activation
     (org-transclusion-add-all-in-buffer)))
 
