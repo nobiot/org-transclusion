@@ -417,13 +417,11 @@ of the link.  If not link, return nil."
       (setq location (plist-put location ':end (plist-get link ':end)))
       location)))
 
-(defun org-transclusion--transclusion-link-p ()
-  "Check if the link at point is a tranclusion link."
+(defun org-transclusion--is-link-within-transclusion ()
+  "Check if the link at point is within a tranclusion overlay."
 
-  (when-let ((link (plist-get (org-element-context) 'link)))
-    (let ((type (plist-get link ':type)))
-      (string= type org-transclusion-link))))
-
+  (when (cdr (get-char-property-and-overlay (point) 'tc-type)) t))
+  
 (defun org-transclusion--src-indirect-buffer ()
   "Clones current buffer for editing transclusion source.
 It is meant to be used within
@@ -486,23 +484,29 @@ the mode, `toggle' toggles the state."
 
 (defun org-transclusion--process-all-in-buffer-after-save ()
   "Add tranclusions back into current buffer, and save source buffers.
-Meant to be for `after-save-hook'.
-It adds all the transcluded copies back into the current buffer.
-And then saves all the transclusion source buffers."
+Meant to be for `after-save-hook'.  It adds all the transcluded copies back
+into the current buffer.  And then saves all the transclusion source
+buffers."
+  
   (org-transclusion-add-all-in-buffer) ; put all tranclusions back in
   (goto-char org-transclusion-original-position)
   (setq org-transclusion-original-position nil)
   (set-buffer-modified-p nil))
 
 (defun org-transclusion-add-all-in-buffer ()
-  "Add all the transclusions in the current buffer.
-As this should be used only when the buffer is current, no argment passed.
+  "Add all the transclusions in the current buffer.  As this function
+should be used only on the current buffer, no argument is passed.
 
-As transclusing adds text after the link, the loop needs to process from top to
-bottom one by one.  The transcluded text may contrain transclusion link.
+Adding transclusion inserts text contents after the link.  As the while
+loop processes links from the top of buffer to bottom one by one, this
+function avoids infinite recursion of transclusions.
 
-TODO check needs to be added back in? to avoid recursion."
-  
+The following conditions are checked before calling a function to work on
+each link:
+
+- Check if the link is in the beginning of a line 
+- Check if the link at point is NOT within transclusion"
+
   (interactive)
   ;; Check the windows being worked on is in focus (selected)
   ;; This is to prevent background hook (e.g. save hooks) from updating
@@ -525,9 +529,11 @@ TODO check needs to be added back in? to avoid recursion."
                (when (eq (line-beginning-position)(point))
                  (org-open-at-point)))
              (while (eq t (org-next-link))
-               ;; Check if the link at point is tranclusion link
                ;; Check if the link is in the beginning of a line
-               (when (eq (line-beginning-position)(point))
+               ;; Check if the link at point is NOT within tranclusion
+               (when (and (eq (line-beginning-position)(point))
+                          (not (org-transclusion--is-link-within-transclusion)))
+                 ;; org-link-open (used by org-open-at-point) advised when minor mode is on
                  (org-open-at-point)))))
          (set-buffer-modified-p org-transclusion-buffer-modified-p))))
 
