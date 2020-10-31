@@ -40,7 +40,7 @@
 (require 'org)
 (require 'org-element)
 (require 'org-id)
-
+(load-file "./org-transclusion-paste-subtree.el")
 ;;-----------------------------------------------------------------------------
 ;; Variables
 ;;
@@ -277,32 +277,35 @@ TODO need to handle when the file does not exist."
            (tc-payload (funcall tc-fn))
            (tc-beg-mkr (plist-get tc-payload :tc-beg-mkr))
            (tc-end-mkr (plist-get tc-payload :tc-end-mkr))
-           (tc-content (plist-get tc-payload :tc-content)))
+           (tc-content (plist-get tc-payload :tc-content))
+           (beg (point)) ;; at the beginning of the text content before inserting it
+           (beg-mkr (point-marker))) ;; for source overlay
       (save-excursion
-        ;;(org-paste-subtree 2 tc-content nil))
-        (insert tc-content))
-      (let* ((sbuf (marker-buffer tc-beg-mkr))
-             (pt-end (+ (point) (- tc-end-mkr tc-beg-mkr)))
-             (ov-src (make-overlay tc-beg-mkr tc-end-mkr sbuf t nil)) ;; source-buffer
-             (ov-tc (make-overlay (point) pt-end nil t nil)) ;; transclusion-buiffer
-             (tc-pair (list ov-src ov-tc)))
-        ;; Put to transclusion overlay
-        (overlay-put ov-tc 'tc-type tc-type)
-        (overlay-put ov-tc 'tc-raw-link tc-raw-link)
-        (overlay-put ov-tc 'tc-beg-mkr tc-beg-mkr)
-        (overlay-put ov-tc 'tc-end-mkr tc-end-mkr)
-        (overlay-put ov-tc 'priority -50)
-        (overlay-put ov-tc 'evaporate t)
-        (overlay-put ov-tc 'face 'org-transclusion-block)
-        (overlay-put ov-tc 'tc-pair tc-pair)
-        (add-text-properties (overlay-start ov-tc) (overlay-end ov-tc) '(read-only t))
-        ;; Put to the source overlay
-        (save-excursion
-          (goto-char (overlay-start ov-tc))
-          (overlay-put ov-src 'tc-by (point-marker)))
-        (overlay-put ov-src 'evaporate t)
-        (overlay-put ov-src 'face 'org-transclusion-source-block)
-        (overlay-put ov-src 'tc-pair tc-pair)))))
+
+        (if (org-kill-is-subtree-p tc-content)
+            (org-transclusion-paste-subtree nil tc-content t t) ;; one line removed from original
+          (insert tc-content))
+        
+        (let* ((sbuf (marker-buffer tc-beg-mkr))
+               (end (point)) ;; at the end of text content after inserting it
+               (ov-src (make-overlay tc-beg-mkr tc-end-mkr sbuf t nil)) ;; source-buffer
+               (ov-tc (make-overlay beg end nil t nil)) ;; transclusion-buiffer
+               (tc-pair (list ov-src ov-tc)))
+          ;; Put to transclusion overlay
+          (overlay-put ov-tc 'tc-type tc-type)
+          (overlay-put ov-tc 'tc-raw-link tc-raw-link)
+          (overlay-put ov-tc 'tc-beg-mkr tc-beg-mkr)
+          (overlay-put ov-tc 'tc-end-mkr tc-end-mkr)
+          (overlay-put ov-tc 'priority -50)
+          (overlay-put ov-tc 'evaporate t)
+          (overlay-put ov-tc 'face 'org-transclusion-block)
+          (overlay-put ov-tc 'tc-pair tc-pair)
+          (add-text-properties (overlay-start ov-tc) (overlay-end ov-tc) '(read-only t))
+          ;; Put to the source overlay
+          (overlay-put ov-src 'tc-by beg-mkr)
+          (overlay-put ov-src 'evaporate t)
+          (overlay-put ov-src 'face 'org-transclusion-source-block)
+          (overlay-put ov-src 'tc-pair tc-pair))))))
 
 (defun org-transclusion-remove-at-point (pos &optional detach)
   "Remove transclusion and the copied text around POS.
