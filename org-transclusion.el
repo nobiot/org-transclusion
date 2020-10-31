@@ -174,22 +174,31 @@ is used (ARG is non-nil), then use `org-link-open'."
 
 (defun org-transclusion--get-org-content-from-link (orgfn link &rest _arg)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from LINK using ORGFN."
-  (save-window-excursion
-    (funcall orgfn link)
-    (let* ((el (org-element-context))
-           (type (org-element-type el))
-           (beg)(end)(tc-content)(tc-beg-mkr)(tc-end-mkr))
-      (when (and (string= "target" type)
-                 (string= "paragraph" (org-element-type (org-element-property :parent el))))
-        (setq el (org-element-property :parent el)))
-      (setq beg (org-element-property :begin el))
-      (setq end (org-element-property :end el))
-      (setq tc-content (buffer-substring beg end))
-      (setq tc-beg-mkr (progn (goto-char beg) (point-marker)))
-      (setq tc-end-mkr (progn (goto-char end) (point-marker)))
-      (list :tc-content tc-content
-            :tc-beg-mkr tc-beg-mkr
-            :tc-end-mkr tc-end-mkr))))
+  (save-window-excursion 
+    (funcall orgfn link)    
+     (org-with-wide-buffer
+      (outline-show-all)
+      ;; ID does not go to the right position if buffer is narrowed to a different subtree.
+      (let ((type (org-element-property :type link)))
+        (when (string= type "id")
+          ;; :path property carries the uuid when :type is id. Calling
+          ;; org-id-goto again in the target buffer after widening ensures
+          ;; the point is in the right location.
+          (org-id-goto (org-element-property :path link))))
+      (let* ((el (org-element-context))
+             (type (org-element-type el))
+             (beg)(end)(tc-content)(tc-beg-mkr)(tc-end-mkr))
+        (when (and (string= "target" type)
+                   (string= "paragraph" (org-element-type (org-element-property :parent el))))
+          (setq el (org-element-property :parent el)))
+        (setq beg (org-element-property :begin el))
+        (setq end (org-element-property :end el))
+        (setq tc-content (buffer-substring beg end))
+        (setq tc-beg-mkr (progn (goto-char beg) (point-marker)))
+        (setq tc-end-mkr (progn (goto-char end) (point-marker)))
+        (list :tc-content tc-content
+              :tc-beg-mkr tc-beg-mkr
+              :tc-end-mkr tc-end-mkr)))))
 
 ;;-----------------------------------------------------------------------------
 ;; Functions to support non-Org-mode link types
@@ -372,16 +381,17 @@ is active, it will automatically bring the transclusion back."
             (to-mkr (overlay-get ov 'tc-beg-mkr)))
         (with-current-buffer (marker-buffer to-mkr)
           (org-with-wide-buffer
+           (outline-show-all)
            (setq org-transclusion-edit-src-at-mkr from-mkr)
            (goto-char to-mkr)
-           (if (org-up-heading-safe);; if non-nil, it's before the first subtree
+           (if (org-transclusion--buffer-org-file-p)
                (org-tree-to-indirect-buffer)
              (org-transclusion--src-indirect-buffer)))
           ;; Only one edit buffer globally at a time
           (when (buffer-live-p org-transclusion-last-edit-src-buffer)
             (kill-buffer org-transclusion-last-edit-src-buffer))
           (setq org-transclusion-last-edit-src-buffer org-last-indirect-buffer)
-          (pop-to-buffer org-transclusion-last-edit-src-buffer)
+          (pop-to-buffer org-last-indirect-buffer)
           (rename-buffer (concat "*" (buffer-name) "*"))
           (org-transclusion-edit-src-mode)))
     ;; The message below is common for remove and detach
@@ -401,9 +411,18 @@ Meant to be used in the -edit-src-mode."
 ;;-----------------------------------------------------------------------------
 ;; Utility functions used in the core functions above
 
+(defun org-transclusion--buffer-org-file-p (&optional buf)
+  "Check if BUF is visiting an org file.
+When BUF is nil, use current buffer. This function works for
+indirect buffers."
+  
+  (let ((cbuf (or buf (current-buffer))))
+    (org-transclusion--org-file-p (buffer-file-name cbuf))))
+
 (defun org-transclusion--org-file-p (path)
   "Return non-nil if PATH is an Org file.
 Checked with the extension `org'."
+  
   (let ((ext (file-name-extension path)))
     (string= ext "org")))
 
@@ -428,7 +447,7 @@ of the link.  If not link, return nil."
 (defun org-transclusion--src-indirect-buffer ()
   "Clones current buffer for editing transclusion source.
 It is meant to be used within
-`org-transclusion-open-edit-buffer-at-point'.
+`org-transclusion-open-edit-src-buffer-at-point'.
 `org-narrow-to-subtree' does not work if the point/marker is
 before the first headline.  This function covers this case."
   (when (buffer-live-p org-last-indirect-buffer)
