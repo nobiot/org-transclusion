@@ -3,7 +3,7 @@
 Transclusion is the ability to include content from one file into another by reference.
 
 ![Org-transclusion image](./resources/2020-10-31T094200-transclusion-v0.0.4.gif)
-**Figure 1.**  Animation to show activation of Org-transclusion minor mode to transclude a text content in a headline in a separate org file
+**Figure 1.**  Animation to show activation of Org-transclusion minor mode to transclude a text content under a headline in a separate org file
 
 ![Org-transclusion image](./resources/2020-10-30_22-19-24.png)
 **Figure 2.**  Transcluding different text contents via links (left); Editing one of the sources (right)
