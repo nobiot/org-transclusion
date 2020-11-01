@@ -10,9 +10,9 @@ Transclusion is the ability to include content from one file into another by ref
 
 This library is an attempt to enable transclusion with Org Mode in Emacs. It is my take on the [idea by John Kitchin](#original-idea-by-john-kitchin).
 
-This 10--20-minutes show & tell on YouTube I did shows you how this library works.
+This 12-minutes show & tell on YouTube I did shows you how this library currently works.
 
-Demo #4 is to be recorded soon.
+[![12-minute Demo video #4: v0.0.4](./resources/demo4-title.png)](https://youtu.be/nO_JEXUeGkI)
 
 - [Demo video #3: v0.0.3 Headline, paragraph, Org Mode link](https://youtu.be/KxDrE3spAL8)
 - [Demo video #2: v0.0.2 real-time sync](https://youtu.be/HQ0rUa7gVXA)
@@ -31,11 +31,11 @@ I would love your involvement if you think the idea and the current implementati
 
 It would be great if you can work on some items on [list of things](#list-of-things-to-be-done); or add to it (we can collectively discuss additions in the forum, or perhaps in the issue)
 
-I am writing this on 10 October 2020. I am hoping that we can have a conclusion within this year whether or not the idea and implementation are something worth pursuing collectively. Otherwise, I think it can remain my personal hobby tool. 
+I am writing this on 10 October 2020. I am hoping that we can have a conclusion within this year whether or not the idea and implementation are something worth pursuing collectively. Otherwise, I think it can remain my personal hobby tool.
 
 # Intended use
 
-I am dabbling in the Zettelkasten method, with using [Org-roam](https://www.orgroam.com/). I keep my notes in a repository where my network of notes reside (I guess people call them evergreen, concept, or permanent notes). 
+I am dabbling in the Zettelkasten method, with using [Org-roam](https://www.orgroam.com/). I keep my notes in a repository where my network of notes reside (I guess people call them evergreen, concept, or permanent notes).
 
 When I start writing something long-form, I want to have a writing project separately from my notes repository, assemble relevant notes to form a basis of the long-form material, and avoid having multiple copies of notes flying around.
 
@@ -43,7 +43,7 @@ Transclusion should let me do this.
 
 # How to use the library
 
-I have redesigned the entire program as of v0.0.4. If you have seen my previous versions, the way it works is drastically different. 
+I have redesigned the entire program as of v0.0.4. If you have seen my previous versions, the way it works is drastically different.
 
 This screen shot with my annotation illustrates how it works.
 
@@ -69,11 +69,11 @@ As an example, I have the following in my `init.el` file.
 
 ## Org  Mode links
 
-As of v0.0.4, Org Mode's standard file and ID links work. 
+As of v0.0.4, Org Mode's standard file and ID links work.
 
-The link must be in the beginning of a line for transclusion. If there is any character (even a space for indentation), Org-transclusion skips it. 
+The link must be in the beginning of a line for transclusion. If there is any character (even a space for indentation), Org-transclusion skips it.
 
-This is to avoid transcluding links in the middle of a sentence. 
+This is to avoid transcluding links in the middle of a sentence.
 
 Transclusion has been tested to work for the following:
 
@@ -86,12 +86,12 @@ Transclusion has been tested to work for the following:
 
 **note:** Link to an org file is not currently working correctly. This is primarily because I have yet to work out a way to deal with buffer-level properties (e.g. `#+title:`, etc., on top of the buffer).
 
-### Link to a paragraph with dedicated target 
+### Link to a paragraph with dedicated target
 
-For transcluding a specific paragraph, Org-transclusion relies on Org mode's [dedicated-target](https://orgmode.org/manual/Internal-Links.html#Internal-Links). The target paragraph must be identifiable by a dedicated target with a `<<paragraph-id>>`: e.g. 
+For transcluding a specific paragraph, Org-transclusion relies on Org mode's [dedicated-target](https://orgmode.org/manual/Internal-Links.html#Internal-Links). The target paragraph must be identifiable by a dedicated target with a `<<paragraph-id>>`: e.g.
 
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-    Suspendisse ac velit fermentum, sodales nunc in, 
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+    Suspendisse ac velit fermentum, sodales nunc in,
     tincidunt quam. <<paragraph-id>>
 
 It is generally assumed that the paragraph-id is placed after its content, but it is not an absolute requirement; it can be in the beginning (before the content) or in the middle of it.
@@ -101,7 +101,7 @@ In the previous versions, Org-transclusion worked on a special link type (defaul
 
 ## Activate and deactivate -- `org-transclusion-mode` minor mode
 
-Org-transclusion is a buffer-local minor mode. Use `org-transaction-mode` to toggle on and off.  When you are in an Org file where you want to transclude text content via a link, toggle it on. It is suggest that a keybinding is assigned to make it easy switch it on and off. 
+Org-transclusion is a buffer-local minor mode. Use `org-transaction-mode` to toggle on and off.  When you are in an Org file where you want to transclude text content via a link, toggle it on. It is suggest that a keybinding is assigned to make it easy switch it on and off.
 
 Below is an example configuration, which I have in my `init.el`.
 
@@ -140,18 +140,18 @@ not swallow low level entries.
 
 [If this feature survives incubation, I will do a bit easy-to-grasp illustration / explanation.]
 
-Org-transclusion uses a patched version of `org-paste-subtree`, named `org-transclusion-paste-subtree`.  
+Org-transclusion uses a patched version of `org-paste-subtree`, named `org-transclusion-paste-subtree`.
 
-The experimental feature is turned on by default, and can be adjusted via `org-transclusion-use-paste-subtree` variable (non-nil, or nil). 
+The experimental feature is turned on by default, and can be adjusted via `org-transclusion-use-paste-subtree` variable (non-nil, or nil).
 
 # List of things to be done
 
 - [ ] Validate the fundamental idea / architecture, especially modifying and saving the transclusion sources
-   
-   I took the modifying logic from `org-edit-src` (`-save` and `-exit` more specifically). This may not be the best of ideas given that this part of code modifies people's notes (outcome of hard intellectual work). 
-   
-   I made the `save-buffer` part so that Emac's backup facility will be turned on for the local-buffer when you have it turned off. This backup does not seem to be assuring enough; however, making multiple versions of backup files might clutter your notes repository. 
-   
+
+   I took the modifying logic from `org-edit-src` (`-save` and `-exit` more specifically). This may not be the best of ideas given that this part of code modifies people's notes (outcome of hard intellectual work).
+
+   I made the `save-buffer` part so that Emac's backup facility will be turned on for the local-buffer when you have it turned off. This backup does not seem to be assuring enough; however, making multiple versions of backup files might clutter your notes repository.
+
 - [x] Turn the activation / deactivation into a buffer-local minor mode
 
   I just don't know how (yet) -- there is good in-system documentation, so it should be a matter of focus reading and playing with. If someone out there who can "just do it", that would be very helpful.
@@ -159,8 +159,8 @@ The experimental feature is turned on by default, and can be adjusted via `org-t
 - [x] Ensure export works
 
   What's the point of writing up a long-form material (article, academic paper, book chapter, etc.) and you cannot export it outside Emacs? Because transclusions are "temporary copy" with just links in the files, I am not sure export functions work correctly. I am guessing Org Mode's export functions look at the buffer, so it should export the transcluded regions. I also have Pandoc Mode in mind, when you put together multiple files/buffers to form a material. This needs validation, and if it does not work, then a solution.
-  
-  **Edit:**  I tested it with Org Mode's export dispatcher, and Pandoc mode. One thing I have not tested is a batch processing of export.  Org-transclusion currently assumes that you are visiting the file. 
+
+  **Edit:**  I tested it with Org Mode's export dispatcher, and Pandoc mode. One thing I have not tested is a batch processing of export.  Org-transclusion currently assumes that you are visiting the file.
 
 - [x] Consider cycling "Edit" -> "Read-only" modes, perhaps?
 
@@ -171,36 +171,36 @@ The experimental feature is turned on by default, and can be adjusted via `org-t
 - [x] Consider a good use of mode when transclusion is inactive
 
   I have not thought it through yet. When transclusion is inactive, you can still transclude contents manually clicking on the link. You can use `update-src`, `remove-` or `detach-at-point` commands interactively. When inactive, transclusion does not toggle, update, or save source buffers automatically.
-  
+
   **Edit:** I have put in a check in `add-all-in-buffer` function that requires the minor mode to be active to add transclusions.
-  
+
 - [x] Make `update-at-point` accept `C-u` or something to turn on save
 
   I just could not work out the way to pass the optional `savebuf` argument to `org-transclusion-update-src-at-point`. I could make a wrapper command `org-transclusion-save-src-at-point`; I was not sure if that's desirable.
 
-    **Edit:** Update/save are not relevant anymore; you edit the source via indirect buffer. 
+    **Edit:** Update/save are not relevant anymore; you edit the source via indirect buffer.
 `C-u` (universal argument) is used for the open link function to behave it like a normal link.
 
 - [ ] Make UX/UI more writer-friendly (e.g face for the overlay)
 
-  I didn't have enough knowledge how defining faces work. 
-If we also have edit and read-only mode, I think it makes sense to have different colors on the overlay to indicate they are different. 
+  I didn't have enough knowledge how defining faces work.
+If we also have edit and read-only mode, I think it makes sense to have different colors on the overlay to indicate they are different.
 
-    I also like the idea of using gutter (like the `git-gutter` package). 
+    I also like the idea of using gutter (like the `git-gutter` package).
 
 - [x] Add visual queue to the source buffer
 
-    One of the UI/UX improvements. I think the source buffer should also visually indicate that there is an active transclusion for the buffer or element (headline). For this, using the gutter would add a subtle and yet sufficient visual indication, I think. 
+    One of the UI/UX improvements. I think the source buffer should also visually indicate that there is an active transclusion for the buffer or element (headline). For this, using the gutter would add a subtle and yet sufficient visual indication, I think.
 
     Since the `org-transclusion--yank-source-to-target` visits the source buffer, it should be possible to do something with it.
-    
+
     **Edit:** Need more experiments to improve the UI.
 
 - [x] Review John Kitchin's implementation
 
   I was not aware of John's implementation while making my own prototype for sharing on GitHub. I would like to review what he has done.
     https://github.com/whacked/transclusion-minor-mode/blob/master/transcluding-org-elements.org
-    
+
     **Edit:** Yes. `save-window-excursion` was a revelation, and enabled the new approach.
     Using the display property of overlays is not suitable for the purpose; it does not export displayed contents.
 
