@@ -7,7 +7,7 @@
 ;; Keywords: org-mode, transclusion, writing
 
 ;; Version: 0.0.4
-;; Package-Requires: ((emacs "26.3") (org "9.3"))
+;; Package-Requires: ((emacs "27.1") (org "9.4"))
 
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the
@@ -152,7 +152,7 @@ is used (ARG is non-nil), then use `org-link-open'."
 
   (let ((tc-params nil))
     (cond (arg (apply orgfn link arg))
-          
+
           ((string= "id" (org-element-property :type link))
            (let ((tc-payload (org-transclusion--get-org-content-from-link orgfn link arg)))
              (setq tc-params (list :tc-type "org-id"
@@ -163,9 +163,9 @@ is used (ARG is non-nil), then use `org-link-open'."
              (setq tc-params (list :tc-type "org-link"
                                    :tc-fn (lambda ()
                                             tc-payload)))))
-          
+
           ((setq tc-params (org-transclusion--get-custom-tc-params link)))
-          
+
           ;; If arg is not added, do nothing.
           ;; This is used by transclude-all-in-buffer; you don't want to
           ;; navigate to these files.
@@ -174,8 +174,8 @@ is used (ARG is non-nil), then use `org-link-open'."
 
 (defun org-transclusion--get-org-content-from-link (orgfn link &rest _arg)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from LINK using ORGFN."
-  (save-window-excursion 
-    (funcall orgfn link)    
+  (save-window-excursion
+    (funcall orgfn link)
      (org-with-wide-buffer
       (outline-show-all)
       ;; ID does not go to the right position if buffer is narrowed to a different subtree.
@@ -209,7 +209,7 @@ is used (ARG is non-nil), then use `org-link-open'."
 TODO This is a little ugly inthat it takes an Org Mode's link object, and
 for `org-transclusion-link' link type (default `otc'), it takes the raw-link.
 For others, it requires path."
-  
+
   (let ((types org-transclusion-add-at-point-functions)
         (params nil)
         (link-type (org-element-property :type link))
@@ -217,7 +217,7 @@ For others, it requires path."
     (if (string= link-type org-transclusion-link)
         (setq str (org-element-property :raw-link link))
       (setq str (org-element-property :path link)))
-    
+
     (while (and (not params)
                 types)
       (let* ((type (pop types))
@@ -270,7 +270,7 @@ TODO need to handle when the file does not exist."
              (link-beg (plist-get link-loc ':begin))
              (link-end (plist-get link-loc ':end))
              (raw-link (buffer-substring-no-properties link-beg link-end)))
-    
+
     (delete-region link-beg link-end)
     ;; Delete a char after the link has been removed to remove the line
     ;; the link used to occupy. Without this, you end up moving one line
@@ -301,7 +301,7 @@ TODO need to handle when the file does not exist."
             (let ((org-adapt-indentation nil))
               (org-transclusion-paste-subtree nil tc-content t t)) ;; one line removed from original
           (insert tc-content))
-        
+
         (let* ((sbuf (marker-buffer tc-beg-mkr))
                (end (point)) ;; at the end of text content after inserting it
                (ov-src (make-overlay tc-beg-mkr tc-end-mkr sbuf t nil)) ;; source-buffer
@@ -327,7 +327,7 @@ TODO need to handle when the file does not exist."
   "Remove transclusion and the copied text around POS.
 When DETACH is non-nil, remove the tranclusion overlay only, keeping the copied
 text."
-  
+
   (interactive "d")
   (if-let ((ov (cdr (get-char-property-and-overlay pos 'tc-type))))
       (save-excursion
@@ -378,10 +378,10 @@ is active, it will automatically bring the transclusion back."
     (when (string= link-type org-transclusion-link)
       (search-forward type end t 1)
       (delete-char (- 0 (length type))))))
-  
+
 (defun org-transclusion-open-edit-src-buffer-at-point (pos)
   "Open a clone buffer of transclusions source at POS for editting."
-  
+
   (interactive "d")
   (if-let ((ov (cdr (get-char-property-and-overlay pos 'tc-type))))
       (let ((from-mkr (point-marker))
@@ -422,14 +422,14 @@ Meant to be used in the -edit-src-mode."
   "Check if BUF is visiting an org file.
 When BUF is nil, use current buffer. This function works for
 indirect buffers."
-  
+
   (let ((cbuf (or buf (current-buffer))))
     (org-transclusion--org-file-p (buffer-file-name cbuf))))
 
 (defun org-transclusion--org-file-p (path)
   "Return non-nil if PATH is an Org file.
 Checked with the extension `org'."
-  
+
   (let ((ext (file-name-extension path)))
     (string= ext "org")))
 
@@ -450,7 +450,7 @@ of the link.  If not link, return nil."
   "Check if the link at point is within a tranclusion overlay."
 
   (when (cdr (get-char-property-and-overlay (point) 'tc-type)) t))
-  
+
 (defun org-transclusion--src-indirect-buffer ()
   "Clones current buffer for editing transclusion source.
 It is meant to be used within
@@ -500,7 +500,7 @@ the mode, `toggle' toggles the state."
             map)
   (setq header-line-format
         (substitute-command-keys
-	 "Editing the source directly. When done, save and return with `\\[org-transclusion-edit-src-commit]'.")))
+         "Editing the source directly. When done, save and return with `\\[org-transclusion-edit-src-commit]'.")))
 
 ;;-----------------------------------------------------------------------------
 ;; Functions to work with all transclusions in the buffer.
@@ -516,7 +516,7 @@ the mode, `toggle' toggles the state."
 Meant to be for `after-save-hook'.  It adds all the transcluded copies back
 into the current buffer.  And then saves all the transclusion source
 buffers."
-  
+
   (org-transclusion-add-all-in-buffer) ; put all tranclusions back in
   (goto-char org-transclusion-original-position)
   (setq org-transclusion-original-position nil)
@@ -533,7 +533,7 @@ function avoids infinite recursion of transclusions.
 The following conditions are checked before calling a function to work on
 each link:
 
-- Check if the link is in the beginning of a line 
+- Check if the link is in the beginning of a line
 - Check if the link at point is NOT within transclusion"
 
   (interactive)
@@ -542,7 +542,7 @@ each link:
   ;; the transclusion buffer.
   (cond ((not org-transclusion-mode)
          (message "Org-transclusion mode is not active."))
-        
+
         ((eq (current-buffer)(window-buffer (selected-window)))
          (setq org-transclusion-buffer-modified-p (buffer-modified-p))
          (save-excursion
@@ -570,7 +570,7 @@ each link:
   "Remove all the translusion overlay and copied text in current buffer.
 Caller can pass BUF to specify which BUF needs to remove transclusions.
 This feature is meant for `org-transclusion--toggle-transclusion-when-out-of-focus'."
-  
+
   (interactive)
   (when buf (set-buffer buf))
   (setq org-transclusion-buffer-modified-p (buffer-modified-p))
@@ -605,7 +605,7 @@ This should be a buffer-local minior mode.  Not done yet."
     (when org-transclusion-activate-persistent-message
       (setq header-line-format
             (substitute-command-keys
-	     "Transclusion active in this buffer. `\\[org-transclusion-open-edit-src-buffer-at-point]' to edit the transclusion at point."))))
+             "Transclusion active in this buffer. `\\[org-transclusion-open-edit-src-buffer-at-point]' to edit the transclusion at point."))))
   (when org-transclusion-auto-add-on-activation
     (org-transclusion-add-all-in-buffer)))
 
@@ -630,7 +630,7 @@ This should be a buffer-local minior mode.  Not done yet."
           (setq header-line-format nil)))
     (run-with-idle-timer 0 nil 'message
                          "Nothing done. Transclusion is not active.")))
-  
+
 (defun org-transclusion--toggle-transclusion-when-out-of-focus (win)
   "Detect focus state of window WIN, and toggle tranclusion on and off.
 The toggling is done via adding and removing all from the appropirate buffer,
@@ -650,7 +650,7 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
 
 ;;-----------------------------------------------------------------------------
 ;; Definition of org-transclusion-paste-subtree
-;; 
+;;
 
 (defvar org-transclusion-use-paste-subtree t)
 
@@ -662,7 +662,7 @@ This is a Org-transclusion version of the Org Mode's standard function
 `org-paste-subtree' (based on v9.4). Only one line has been commented out.
 This is noted with a comment \";; nobiot removed\".
 
-Use of this function in Org-transclusion is still experimental. 
+Use of this function in Org-transclusion is still experimental.
 Use variable `org-transclusion-use-paste-subtree' to control its usage.
 ----------
 
@@ -698,38 +698,38 @@ When REMOVE is non-nil, remove the subtree from the clipboard."
       "The kill is not a (set of) tree(s).  Use `\\[yank]' to yank anyway")))
   (org-with-limited-levels
    (let* ((visp (not (org-invisible-p)))
-	  (txt tree)
-	  (old-level (if (string-match org-outline-regexp-bol txt)
-			 (- (match-end 0) (match-beginning 0) 1)
-		       -1))
-	  (force-level
-	   (cond
-	    (level (prefix-numeric-value level))
-	    ;; When point is after the stars in an otherwise empty
-	    ;; headline, use the number of stars as the forced level.
-	    ((and (org-match-line "^\\*+[ \t]*$")
-		  (not (eq ?* (char-after))))
-	     (org-outline-level))
-	    ((looking-at-p org-outline-regexp-bol) (org-outline-level))))
-	  (previous-level
-	   (save-excursion
-	     (org-previous-visible-heading 1)
-	     (if (org-at-heading-p) (org-outline-level) 1)))
-	  (next-level
-	   (save-excursion
-	     (if (org-at-heading-p) (org-outline-level)
-	       (org-next-visible-heading 1)
-	       (if (org-at-heading-p) (org-outline-level) 1))))
-	  (new-level (or force-level (max previous-level next-level)))
-	  (shift (if (or (= old-level -1)
-			 (= new-level -1)
-			 (= old-level new-level))
-		     0
-		   (- new-level old-level)))
-	  (delta (if (> shift 0) -1 1))
-	  (func (if (> shift 0) #'org-demote #'org-promote))
-	  (org-odd-levels-only nil)
-	  beg end newend)
+          (txt tree)
+          (old-level (if (string-match org-outline-regexp-bol txt)
+                         (- (match-end 0) (match-beginning 0) 1)
+                       -1))
+          (force-level
+           (cond
+            (level (prefix-numeric-value level))
+            ;; When point is after the stars in an otherwise empty
+            ;; headline, use the number of stars as the forced level.
+            ((and (org-match-line "^\\*+[ \t]*$")
+                  (not (eq ?* (char-after))))
+             (org-outline-level))
+            ((looking-at-p org-outline-regexp-bol) (org-outline-level))))
+          (previous-level
+           (save-excursion
+             (org-previous-visible-heading 1)
+             (if (org-at-heading-p) (org-outline-level) 1)))
+          (next-level
+           (save-excursion
+             (if (org-at-heading-p) (org-outline-level)
+               (org-next-visible-heading 1)
+               (if (org-at-heading-p) (org-outline-level) 1))))
+          (new-level (or force-level (max previous-level next-level)))
+          (shift (if (or (= old-level -1)
+                         (= new-level -1)
+                         (= old-level new-level))
+                     0
+                   (- new-level old-level)))
+          (delta (if (> shift 0) -1 1))
+          (func (if (> shift 0) #'org-demote #'org-promote))
+          (org-odd-levels-only nil)
+          beg end newend)
      ;; Remove the forced level indicator.
      (when (and force-level (not level))
        (delete-region (line-beginning-position) (point)))
@@ -753,18 +753,18 @@ When REMOVE is non-nil, remove the subtree from the clipboard."
      ;; Shift if necessary.
      (unless (= shift 0)
        (save-restriction
-	 (narrow-to-region beg end)
-	 (while (not (= shift 0))
-	   (org-map-region func (point-min) (point-max))
-	   (setq shift (+ delta shift)))
-	 (goto-char (point-min))
-	 (setq newend (point-max))))
+         (narrow-to-region beg end)
+         (while (not (= shift 0))
+           (org-map-region func (point-min) (point-max))
+           (setq shift (+ delta shift)))
+         (goto-char (point-min))
+         (setq newend (point-max))))
      (when (or for-yank (called-interactively-p 'interactive))
        (message "Clipboard pasted as level %d subtree" new-level))
      (when (and (not for-yank) ; in this case, org-yank will decide about folding
-		kill-ring
-		(equal org-subtree-clip (current-kill 0))
-		org-subtree-clip-folded)
+                kill-ring
+                (equal org-subtree-clip (current-kill 0))
+                org-subtree-clip-folded)
        ;; The tree was folded before it was killed/copied
        (org-flag-subtree t))
      (when for-yank (goto-char newend))
