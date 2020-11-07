@@ -335,6 +335,8 @@ TODO need to handle when the file does not exist."
               (overlay-put ov-tc 'evaporate t)
               (overlay-put ov-tc 'face 'org-transclusion-block)
               (overlay-put ov-tc 'tc-pair tc-pair)
+              (when (plist-member key-params ':detach)
+                (setq key-params (org-plist-delete key-params ':detach)))
               (overlay-put ov-tc 'tc-key-params key-params)
               (overlay-put ov-tc 'help-echo
                            (substitute-command-keys
@@ -380,7 +382,14 @@ text."
             ;; TODO
             ;; Also ensure to delete all the possible orphan overlays from the source
             ;; When remove fn, delete the copied texts
-            (unless detach
+            (cond
+             (detach
+              (goto-char beg)
+              (setq key-params (plist-put key-params ':embed nil))
+              (setq key-params (plist-put key-params ':detach t))
+              (let ((keyword-params (mapconcat #'symbol-name key-params " ")))
+                (insert (concat "#+transclude: " keyword-params "\n"))))
+             (t ;; remove
               (when (called-interactively-p)
                 ;; When remove-at-point is interactively called,
                 ;; prevent further embedding
@@ -390,8 +399,7 @@ text."
                 (delete-region new-beg new-end)
                 ;; Add back #+transclusion:
                 (goto-char beg)
-                ;; TODO need parameters
-                (insert (concat "#+transclude: " keyword-params "\n")))))))
+                (insert (concat "#+transclude: " keyword-params "\n"))))))))
     ;; The message below is common for remove and detach
     (message "Nothing done. No transclusion exists here.")))
 
@@ -400,18 +408,7 @@ text."
 It needs remove the link type as well, otherwise, when the tranclusion
 is active, it will automatically bring the transclusion back."
   (interactive "d")
-  (org-transclusion-remove-at-point pos t)
-  ;; this OR is necessary to check if the function is called at
-  ;; the beginning of the overlay.
-  (let* ((link (or (org-element-link-parser)
-                   (progn (org-next-link t)
-                          (org-element-link-parser))))
-         (end (org-element-property :end link))
-         (link-type (org-element-property :type link))
-         (type (concat org-transclusion-link ":")))
-    (when (string= link-type org-transclusion-link)
-      (search-forward type end t 1)
-      (delete-char (- 0 (length type))))))
+  (org-transclusion-remove-at-point pos t))
 
 (defun org-transclusion-open-edit-src-buffer-at-point (pos)
   "Open a clone buffer of transclusions source at POS for editting."
