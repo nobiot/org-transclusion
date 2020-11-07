@@ -340,17 +340,7 @@ TODO need to handle when the file does not exist."
           (overlay-put ov-src 'tc-by beg-mkr)
           (overlay-put ov-src 'evaporate t)
           (overlay-put ov-src 'face 'org-transclusion-source-block)
-          (overlay-put ov-src 'tc-pair tc-pair)
-
-        ;; Add transclusion keyword
-          (let ((inhibit-read-only t) ;;transcluded content is already read-only
-                (beg (point))
-                (end nil)
-                (str nil))
-            (setq str (propertize (concat "#+transclude: " ":origin " tc-raw-link "\n")
-                                  'face 'org-transclusion-keyword 'read-only nil))
-            (insert str)
-            (setq end (point))))))))
+          (overlay-put ov-src 'tc-pair tc-pair))))))
 
 (defun org-transclusion-remove-at-point (pos &optional detach)
   "Remove transclusion and the copied text around POS.
@@ -379,16 +369,6 @@ text."
                             (point)))
                  (new-end (overlay-end ov))
                  (tc-pair (overlay-get ov 'tc-pair)))
-            ;; Add the :translusion line
-            ;; Assume it's in the next line from the end of overlay
-            (goto-char (overlay-end ov))
-            (beginning-of-line)
-            (let* ((cxt (org-element-context))
-                   (kbeg (org-element-property :begin cxt))
-                   (kend (org-element-property :end cxt))
-                   (kpost-blank(org-element-property :post-blank cxt)))
-              (when (string= "keyword" (car cxt))
-                (delete-region kbeg (- kend kpost-blank))))
             ;;Remove overlays
             (dolist (ol tc-pair)
               (delete-overlay ol))
@@ -471,14 +451,7 @@ TODO Add check it is indeed called in the beginning of a link"
     (forward-line -1)
     (let ((transclude-re "^[ \t]*#\\+transclude:")
           (beginning-of-line))
-      (when (looking-at-p transclude-re)
-        (let ((value (org-element-property :value (org-element-context))))
-          ;; if two links are put in a row without space or \n, the second
-          ;; link will be directly followed by #+transclude you need to
-          ;; check if the second link can be really transcluded by checking
-          ;; the presence of :origin -- if present, then it's a result of
-          ;; the prevous transclusion.
-          (unless (string-match ":origin" value) t))))))
+      (looking-at-p transclude-re))))
 
 (defun org-transclusion--buffer-org-file-p (&optional buf)
   "Check if BUF is visiting an org file.
@@ -614,16 +587,16 @@ each link:
              (goto-char (point-min))
              ;; For `org-next-link', eq t is needed for this while loop to check
              ;; no link.  This is because fn returns a message string when there
-             ;; is no further link.  The OR condition supports when a link is in
-             ;; the begging of buffer
-             (when (org-element-link-parser)
+             ;; is no further link.
+             (when (org-element-link-parser)  ;; when a link is in the begging of buffer
                (when (eq (line-beginning-position)(point))
                  (org-open-at-point)))
              (while (eq t (org-next-link))
                ;; Check if the link is in the beginning of a line
+               ;; Check if the link immediately follows the keyword line #+transclude:
                ;; Check if the link at point is NOT within tranclusion
-               (when (and ;;(beginning-of-line)(bolp)
-                          (org-transclusion-keyword-p)
+               (when (and (bolp)
+                          (org-transclusion--keyword-p)
                           (not (org-transclusion--is-link-within-transclusion)))
                  ;; org-link-open (used by org-open-at-point) advised when minor mode is on
                  (org-open-at-point)))))
