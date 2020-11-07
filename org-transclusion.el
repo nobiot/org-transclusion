@@ -6,7 +6,7 @@
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
 
-;; Version: 0.0.4
+;; Version: 0.0.5
 ;; Package-Requires: ((emacs "27.1") (org "9.4"))
 
 ;; This program is free software: you can redistribute it and/or modify it
@@ -129,6 +129,10 @@ See the functions delivered within org-tranclusion for the API signatures."
   "Face for transcluded block."
   :group 'org-transclusion)
 
+(defface org-transclusion-keyword
+  '((t (:foreground "gray90" :extend t)))
+    "Face for the :transclusion keyword."
+    :group 'org-transclusion)
 
 ;;-----------------------------------------------------------------------------
 ;; Custom link parameter
@@ -151,25 +155,29 @@ If the link type is not supported by org-transclusion, or \\[universal-argument]
 is used (ARG is non-nil), then use `org-link-open'."
 
   (let ((tc-params nil))
-    (cond (arg (apply orgfn link arg))
+    (cond
+     ((not (org-transclusion-keyword-p)) (apply orgfn link arg))
 
-          ((string= "id" (org-element-property :type link))
-           (let ((tc-payload (org-transclusion--get-org-content-from-link orgfn link arg)))
-             (setq tc-params (list :tc-type "org-id"
-                                   :tc-fn (lambda ()
-                                            tc-payload)))))
-          ((org-transclusion--org-file-p (org-element-property :path link))
-           (let ((tc-payload (org-transclusion--get-org-content-from-link orgfn link arg)))
-             (setq tc-params (list :tc-type "org-link"
-                                   :tc-fn (lambda ()
-                                            tc-payload)))))
+     (arg (apply orgfn link arg))
 
-          ((setq tc-params (org-transclusion--get-custom-tc-params link)))
+     ((string= "id" (org-element-property :type link))
+      (let ((tc-payload (org-transclusion--get-org-content-from-link orgfn link arg)))
+        (setq tc-params (list :tc-type "org-id"
+                              :tc-fn (lambda ()
+                                       tc-payload)))))
+     ((org-transclusion--org-file-p (org-element-property :path link))
+      (let ((tc-payload (org-transclusion--get-org-content-from-link orgfn link arg)))
+        (setq tc-params (list :tc-type "org-link"
+                              :tc-fn (lambda ()
+                                       tc-payload)))))
 
-          ;; If arg is not added, do nothing.
-          ;; This is used by transclude-all-in-buffer; you don't want to
-          ;; navigate to these files.
-          (t "No transclusion added."))
+     ((setq tc-params (org-transclusion--get-custom-tc-params link)))
+
+     ;; If arg is not added, do nothing.
+     ;; This is used by transclude-all-in-buffer; you don't want to
+     ;; navigate to these files.
+     (t "No transclusion added."))
+
     (when tc-params (org-transclusion--create-at-point tc-params))))
 
 (defun org-transclusion--get-org-content-from-link (orgfn link &rest _arg)
@@ -265,6 +273,17 @@ TODO need to handle when the file does not exist."
 (defun org-transclusion--create-at-point (tc-params)
   "Create transclusion by unpackng TC-PARAMS."
 
+  ;; Remove #+transclude keyword
+  ;; Assume in the beginning of a link
+  (when (org-transclusion--keyword-p)
+    (save-excursion
+      (forward-line -1)
+      (beginning-of-line)
+      ;; Assume there is no space or line feed between the keyword and link in question
+      (let* ((elm (org-element-at-point))
+             (beg (org-element-property :begin elm))
+             (end (org-element-property :end elm)))
+        (delete-region beg end))))
   ;; Remove the link
   (when-let ((link-loc (org-transclusion--get-link-location))
              (link-beg (plist-get link-loc ':begin))
@@ -289,8 +308,8 @@ TODO need to handle when the file does not exist."
            (tc-content (plist-get tc-payload :tc-content))
            (beg (point)) ;; at the beginning of the text content before inserting it
            (beg-mkr (point-marker))) ;; for source overlay
-      (save-excursion
 
+      (save-excursion
         (if (and
              org-transclusion-use-paste-subtree
              (org-kill-is-subtree-p tc-content))
@@ -321,7 +340,17 @@ TODO need to handle when the file does not exist."
           (overlay-put ov-src 'tc-by beg-mkr)
           (overlay-put ov-src 'evaporate t)
           (overlay-put ov-src 'face 'org-transclusion-source-block)
-          (overlay-put ov-src 'tc-pair tc-pair))))))
+          (overlay-put ov-src 'tc-pair tc-pair)
+
+        ;; Add transclusion keyword
+          (let ((inhibit-read-only t) ;;transcluded content is already read-only
+                (beg (point))
+                (end nil)
+                (str nil))
+            (setq str (propertize (concat "#+transclude: " ":origin " tc-raw-link "\n")
+                                  'face 'org-transclusion-keyword 'read-only nil))
+            (insert str)
+            (setq end (point))))))))
 
 (defun org-transclusion-remove-at-point (pos &optional detach)
   "Remove transclusion and the copied text around POS.
@@ -350,6 +379,17 @@ text."
                             (point)))
                  (new-end (overlay-end ov))
                  (tc-pair (overlay-get ov 'tc-pair)))
+            ;; Add the :translusion line
+            ;; Assume it's in the next line from the end of overlay
+            (goto-char (overlay-end ov))
+            (beginning-of-line)
+            (let* ((cxt (org-element-context))
+                   (kbeg (org-element-property :begin cxt))
+                   (kend (org-element-property :end cxt))
+                   (kpost-blank(org-element-property :post-blank cxt)))
+              (when (string= "keyword" (car cxt))
+                (delete-region kbeg (- kend kpost-blank))))
+            ;;Remove overlays
             (dolist (ol tc-pair)
               (delete-overlay ol))
             ;; TODO
@@ -357,7 +397,11 @@ text."
             ;; When remove fn, delete the copied texts
             (unless detach
               (let ((inhibit-read-only t))
-                (delete-region new-beg new-end))))))
+                (delete-region new-beg new-end)
+                ;; Add back #+transclusion:
+                (goto-char beg)
+                ;; TODO need parameters
+                (insert (concat "#+transclude:" "\n")))))))
     ;; The message below is common for remove and detach
     (message "Nothing done. No transclusion exists here.")))
 
@@ -417,6 +461,24 @@ Meant to be used in the -edit-src-mode."
 
 ;;-----------------------------------------------------------------------------
 ;; Utility functions used in the core functions above
+
+(defun org-transclusion--keyword-p ()
+  "Return t if keyword #+transclusion: is present.
+It assumes that this function is called in the beginning of a link.
+
+TODO Add check it is indeed called in the beginning of a link"
+  (save-excursion
+    (forward-line -1)
+    (let ((transclude-re "^[ \t]*#\\+transclude:")
+          (beginning-of-line))
+      (when (looking-at-p transclude-re)
+        (let ((value (org-element-property :value (org-element-context))))
+          ;; if two links are put in a row without space or \n, the second
+          ;; link will be directly followed by #+transclude you need to
+          ;; check if the second link can be really transcluded by checking
+          ;; the presence of :origin -- if present, then it's a result of
+          ;; the prevous transclusion.
+          (unless (string-match ":origin" value) t))))))
 
 (defun org-transclusion--buffer-org-file-p (&optional buf)
   "Check if BUF is visiting an org file.
@@ -560,7 +622,8 @@ each link:
              (while (eq t (org-next-link))
                ;; Check if the link is in the beginning of a line
                ;; Check if the link at point is NOT within tranclusion
-               (when (and (eq (line-beginning-position)(point))
+               (when (and ;;(beginning-of-line)(bolp)
+                          (org-transclusion-keyword-p)
                           (not (org-transclusion--is-link-within-transclusion)))
                  ;; org-link-open (used by org-open-at-point) advised when minor mode is on
                  (org-open-at-point)))))
