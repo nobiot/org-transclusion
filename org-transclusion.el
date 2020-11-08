@@ -195,15 +195,33 @@ is used (ARG is non-nil), then use `org-link-open'."
           (org-id-goto (org-element-property :path link))))
       (let* ((el (org-element-context))
              (type (org-element-type el))
+             (search-option (org-element-property :search-option link))
              (beg)(end)(tc-content)(tc-beg-mkr)(tc-end-mkr))
         (when (and (string= "target" type)
                    (string= "paragraph" (org-element-type (org-element-property :parent el))))
           (setq el (org-element-property :parent el)))
-        (setq beg (org-element-property :begin el))
-        (setq end (org-element-property :end el))
-        (setq tc-content (buffer-substring beg end))
-        (setq tc-beg-mkr (progn (goto-char beg) (point-marker)))
-        (setq tc-end-mkr (progn (goto-char end) (point-marker)))
+        (if search-option
+            ;; either ::#custom-id or ::*headline
+            (progn
+              (setq beg (org-element-property :begin el))
+              (setq end (org-element-property :end el))
+              (setq tc-content (buffer-substring beg end))
+              (setq tc-beg-mkr (progn (goto-char beg) (point-marker)))
+              (setq tc-end-mkr (progn (goto-char end) (point-marker))))
+          ;; search-option nil means it's for the entire buffer
+          (message "for the whole buffer.")
+          ;; (let
+          ;;     ((obj (org-element-map (org-element-parse-buffer) nil #'identity)))
+          ;;   (setq tc-content (mapconcat
+          ;;                     (lambda (o)
+          ;;                       (let* ((beg (org-element-property :contents-begin o))
+          ;;                              (end (org-element-property :contents-end o))
+          ;;                              (content (buffer-substring beg end)))
+          ;;                         content))
+          ;;                     obj "\n")) ;;(buffer-substring (point-min) (point-max)))
+          (setq tc-content (buffer-string))
+          (setq tc-beg-mkr (progn (goto-char (point-min)) (point-marker)))
+          (setq tc-end-mkr (progn (goto-char (point-max)) (point-marker))))
         (list :tc-content tc-content
               :tc-beg-mkr tc-beg-mkr
               :tc-end-mkr tc-end-mkr)))))
