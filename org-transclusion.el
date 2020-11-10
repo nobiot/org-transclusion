@@ -212,15 +212,12 @@ is used (ARG is non-nil), then use `org-link-open'."
           (message "for the whole buffer.")
           (let ((obj (org-element-map
                          (org-element-parse-buffer)
-                         '(babel-call center-block clock comment comment-block diary-sexp drawer dynamic-block example-block export-block fixed-width footnote-definition headline horizontal-rule inlinetask item keyword latex-environment node-property paragraph plain-list planning quote-block section special-block src-block table table-row verse-block)
-
+                         org-element-all-elements
                        ;;#'identity
                        ;; Want to remove the elements of the types included in the list
                        ;; from the AST
-                       (lambda (d)
-                         (unless (memq (org-element-type d) '(section))
-                           (identity d)))
-                       nil nil '(section headline) nil)))
+                       #'org-transclusion--filter-buffer
+                       nil nil '(headline section) nil)))
             (setq tc-content (org-element-interpret-data obj)))
           ;; (let
           ;;     ((obj (org-element-map (org-element-parse-buffer) nil #'identity)))
@@ -237,6 +234,19 @@ is used (ARG is non-nil), then use `org-link-open'."
         (list :tc-content tc-content
               :tc-beg-mkr tc-beg-mkr
               :tc-end-mkr tc-end-mkr)))))
+
+(defun org-transclusion--filter-buffer (data)
+  (cond ((memq (org-element-type data) '(section))
+         ;; Intended to remove the first section, taht is the part before the first headlne
+         ;; the rest of the sections are included in the headlines
+         ;; Thies means that if there is no headline, nothing gets transcluded.
+         nil)
+        (t
+         ;; Rest of the case. This can be customizing.
+         (org-element-map data '(property-drawer quote-block keyword) (lambda (d)
+                                                    (org-element-extract-element d)
+                                                    nil))
+         data)))
 
 ;;-----------------------------------------------------------------------------
 ;; Functions to support non-Org-mode link types
