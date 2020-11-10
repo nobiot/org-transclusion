@@ -210,6 +210,18 @@ is used (ARG is non-nil), then use `org-link-open'."
               (setq tc-end-mkr (progn (goto-char end) (point-marker))))
           ;; search-option nil means it's for the entire buffer
           (message "for the whole buffer.")
+          (let ((obj (org-element-map
+                         (org-element-parse-buffer)
+                         '(babel-call center-block clock comment comment-block diary-sexp drawer dynamic-block example-block export-block fixed-width footnote-definition headline horizontal-rule inlinetask item keyword latex-environment node-property paragraph plain-list planning quote-block section special-block src-block table table-row verse-block)
+
+                       ;;#'identity
+                       ;; Want to remove the elements of the types included in the list
+                       ;; from the AST
+                       (lambda (d)
+                         (unless (memq (org-element-type d) '(section))
+                           (identity d)))
+                       nil nil '(section headline) nil)))
+            (setq tc-content (org-element-interpret-data obj)))
           ;; (let
           ;;     ((obj (org-element-map (org-element-parse-buffer) nil #'identity)))
           ;;   (setq tc-content (mapconcat
@@ -219,7 +231,7 @@ is used (ARG is non-nil), then use `org-link-open'."
           ;;                              (content (buffer-substring beg end)))
           ;;                         content))
           ;;                     obj "\n")) ;;(buffer-substring (point-min) (point-max)))
-          (setq tc-content (buffer-string))
+          ;;(setq tc-content (buffer-string))
           (setq tc-beg-mkr (progn (goto-char (point-min)) (point-marker)))
           (setq tc-end-mkr (progn (goto-char (point-max)) (point-marker))))
         (list :tc-content tc-content
@@ -313,9 +325,7 @@ TODO need to handle when the file does not exist."
           ;; Delete a char after the link has been removed to remove the line
           ;; the link used to occupy. Without this, you end up moving one line
           ;; every time add operation is called.
-          (delete-char 1)
-          ;; TODO You need to check if the link is at the bottom of buffer
-          ;; If it is, then yank won't work.
+          (unless (eobp) (delete-char 1))
 
           ;; Add content and overlay
           (let* ((tc-raw-link raw-link)
@@ -474,6 +484,10 @@ Meant to be used in the -edit-src-mode."
 
 ;;-----------------------------------------------------------------------------
 ;; Utility functions used in the core functions above
+
+(defun org-transclusion--transclusion-overlay-at-point-p ()
+  "Return t if the point is transclusion overlay."
+  (when (cdr (get-char-property-and-overlay (point) 'tc-type)) t))
 
 (defun org-transclusion--not-nil (v)
   "Returns t or nil.
@@ -765,6 +779,26 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
             (t
              (message "going from %s into %s" buf (current-buffer))
              (org-transclusion-remove-all-in-buffer buf)))))) ;; remove all
+
+;;-----------------------------------------------------------------------------
+;; Metaup/down
+
+
+(defun org-transclusion-metaup-down (oldfn &optional arg)
+  (interactive)
+  (if-let (ov (cdr (get-char-property-and-overlay (point) 'tc-type)))
+      (progn
+        (save-excursion
+          (goto-char (overlay-start ov))
+          (org-transclusion-remove-at-point (point))
+          (set-mark (point)) (forward-line 1)(end-of-line)
+          (funcall oldfn arg)
+          (deactivate-mark)
+          (org-transclusion-add-all-in-buffer)))
+    (funcall oldfn arg)))
+
+(advice-add 'org-metaup :around #'org-transclusion-metaup-down)
+(advice-add 'org-metadown :around #'org-transclusion-metaup-down)
 
 ;;-----------------------------------------------------------------------------
 ;; Definition of org-transclusion-paste-subtree
