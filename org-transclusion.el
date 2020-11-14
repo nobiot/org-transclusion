@@ -488,10 +488,6 @@ Meant to be used in the -edit-src-mode."
 ;;-----------------------------------------------------------------------------
 ;; Utility functions used in the core functions above
 
-(defun org-transclusion--transclusion-overlay-at-point-p ()
-  "Return t if the point is transclusion overlay."
-  (when (cdr (get-char-property-and-overlay (point) 'tc-type)) t))
-
 (defun org-transclusion--not-nil (v)
   "Returns t or nil.
 It is like `org-not-nil', but when the value is non-nil or
@@ -580,9 +576,8 @@ of the link.  If not link, return nil."
       (setq location (plist-put location ':end (plist-get link ':end)))
       location)))
 
-(defun org-transclusion--is-link-within-transclusion ()
-  "Check if the link at point is within a tranclusion overlay."
-
+(defun org-transclusion--is-within-transclusion ()
+  "Return t if the current point is within a tranclusion overlay."
   (when (cdr (get-char-property-and-overlay (point) 'tc-type)) t))
 
 (defun org-transclusion--src-indirect-buffer ()
@@ -615,13 +610,9 @@ the mode, `toggle' toggles the state."
             map)
   (cond
    (org-transclusion-mode
-    (org-transclusion-activate)
-    (advice-add 'org-metaup :around #'org-transclusion-metaup-down)
-    (advice-add 'org-metadown :around #'org-transclusion-metaup-down))
+    (org-transclusion-activate))
    (t
-    (org-transclusion-deactivate)
-    (advice-remove 'org-metaup #'org-transclusion-metaup-down)
-    (advice-remove 'org-metadown #'org-transclusion-metaup-down))))
+    (org-transclusion-deactivate))))
 
 (define-minor-mode org-transclusion-edit-src-mode
   "Toggle Org-transclusion edit source mode.
@@ -700,7 +691,7 @@ each link:
                ;; Check if the link at point is NOT within tranclusion
                (when (and (bolp)
                           (org-transclusion--ok-to-transclude)
-                          (not (org-transclusion--is-link-within-transclusion)))
+                          (not (org-transclusion--is-within-transclusion)))
                  ;; org-link-open (used by org-open-at-point) advised when minor mode is on
                  (org-open-at-point)))))
          (set-buffer-modified-p org-transclusion-buffer-modified-p))))
@@ -741,6 +732,9 @@ This should be a buffer-local minior mode.  Not done yet."
     (add-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save nil t)
     (add-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save nil t)
     (advice-add 'org-link-open :around #'org-transclusion-link-open)
+    ;;WIP not included yet
+    ;;(advice-add 'org-metaup :around #'org-transclusion-metaup-down)
+    ;;(advice-add 'org-metadown :around #'org-transclusion-metaup-down)
     (when org-transclusion-activate-persistent-message
       (setq header-line-format
             (substitute-command-keys
@@ -763,6 +757,9 @@ This should be a buffer-local minior mode.  Not done yet."
         (remove-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save t)
         (remove-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save t)
         (advice-remove 'org-link-open #'org-transclusion-link-open)
+        ;;WIP not included yet
+        ;;(advice-remove 'org-metaup #'org-transclusion-metaup-down)
+        ;;(advice-remove 'org-metadown #'org-transclusion-metaup-down))))
         (when (buffer-live-p org-transclusion-last-edit-src-buffer)
             (kill-buffer org-transclusion-last-edit-src-buffer))
         (when org-transclusion-activate-persistent-message
@@ -791,6 +788,7 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
 ;; Metaup/down
 
 (defun org-transclusion-metaup-down (oldfn &optional arg)
+  "TODO. WIP. "
   ;;; This implementation does not do what I want.
   ;;; When headline moves, the overlay is deleted.
   ;;; Changing the evaporate property to nil does not work either.
