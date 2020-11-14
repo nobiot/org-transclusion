@@ -453,7 +453,8 @@ is active, it will automatically bring the transclusion back."
            (outline-show-all)
            (setq org-transclusion-edit-src-at-mkr from-mkr)
            (goto-char to-mkr)
-           (if (org-transclusion--buffer-org-file-p)
+           (if (and (org-transclusion--buffer-org-file-p)
+                   (org-up-heading-safe))
                (org-tree-to-indirect-buffer)
              (org-transclusion--src-indirect-buffer)))
           ;; Only one edit buffer globally at a time
