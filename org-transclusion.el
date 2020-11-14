@@ -89,6 +89,13 @@ Default to true."
   :type 'boolean
   :group 'org-transclusion)
 
+(defcustom org-transclusion-exclude-elements (list 'property-drawer)
+  "Define the Org elements that are excluded from transcluded copies.
+It is a list of elements to be filtered out.
+Refer to variable `org-element-all-elements' for names of elements accepted."
+  :type '(repeat symbol)
+  :group 'org-transclusion)
+
 (defcustom org-transclusion-link "otc"
   "Define custom Org link type name used for transclusion links."
   :type 'string
@@ -159,12 +166,14 @@ is used (ARG is non-nil), then use `org-link-open'."
      (arg (apply orgfn link arg))
 
      ((string= "id" (org-element-property :type link))
-      (let ((tc-payload (org-transclusion--get-org-content-from-link orgfn link arg)))
+      ;; when type is id, the value of path is the id
+      (let ((tc-payload (org-transclusion--get-org-content-from-link link arg)))
         (setq tc-params (list :tc-type "org-id"
                               :tc-fn (lambda ()
                                        tc-payload)))))
+
      ((org-transclusion--org-file-p (org-element-property :path link))
-      (let ((tc-payload (org-transclusion--get-org-content-from-link orgfn link arg)))
+      (let ((tc-payload (org-transclusion--get-org-content-from-link link arg)))
         (setq tc-params (list :tc-type "org-link"
                               :tc-fn (lambda ()
                                        tc-payload)))))
@@ -178,63 +187,69 @@ is used (ARG is non-nil), then use `org-link-open'."
 
     (when tc-params (org-transclusion--create-at-point tc-params))))
 
-(defun org-transclusion--get-org-content-from-link (orgfn link &rest _arg)
-  "Return tc-beg-mkr, tc-end-mkr, tc-content from LINK using ORGFN."
-  (save-window-excursion
-    (funcall orgfn link)
-     (org-with-wide-buffer
-      (outline-show-all)
-      ;; ID does not go to the right position if buffer is narrowed to a different subtree.
-      (let ((type (org-element-property :type link)))
-        (when (string= type "id")
-          ;; :path property carries the uuid when :type is id. Calling
-          ;; org-id-goto again in the target buffer after widening ensures
-          ;; the point is in the right location.
-          (org-id-goto (org-element-property :path link))))
-      (let* ((el (org-element-context))
-             (type (org-element-type el))
-             (search-option (org-element-property :search-option link))
-             (beg)(end)(tc-content)(tc-beg-mkr)(tc-end-mkr))
-        (when (and (string= "target" type)
-                   (string= "paragraph" (org-element-type (org-element-property :parent el))))
-          (setq el (org-element-property :parent el)))
-        (if search-option
-            ;; either ::#custom-id or ::*headline
-            (progn
-              (setq beg (org-element-property :begin el))
-              (setq end (org-element-property :end el))
-              (setq tc-content (buffer-substring beg end))
-              (setq tc-beg-mkr (progn (goto-char beg) (point-marker)))
-              (setq tc-end-mkr (progn (goto-char end) (point-marker))))
-          ;; search-option nil means it's for the entire buffer
-          (message "for the whole buffer.")
-          (let ((obj (org-element-map
-                         (org-element-parse-buffer)
-                         org-element-all-elements
-                       ;; Map all the elements (not objects).  But for the
-                       ;; output (transcluded copy) do not do recursive for
-                       ;; headline and section (as to avoid duplicate
-                       ;; sections; headlines contain section) Want to remove
-                       ;; the elements of the types included in the list from
-                       ;; the AST.
-                       #'org-transclusion--filter-buffer
-                       nil nil '(headline section) nil)))
-            (setq tc-content (org-element-interpret-data obj)))
-          (setq tc-beg-mkr (progn (goto-char (point-min)) (point-marker)))
-          (setq tc-end-mkr (progn (goto-char (point-max)) (point-marker))))
-        (list :tc-content tc-content
-              :tc-beg-mkr tc-beg-mkr
-              :tc-end-mkr tc-end-mkr)))))
+(defun org-transclusion--get-org-content-from-link (link &rest _arg)
+  "Return tc-beg-mkr, tc-end-mkr, tc-content from LINK."
+  (save-excursion
+    ;; First visit the buffer and go to the relevant elelement if id or
+    ;; search-option is present.
+    (let* ((path (org-element-property :path link))
+           (search-option (org-element-property :search-option link))
+           (id-marker (progn
+                        (when (string= "id" (org-element-property :type link))
+                          ;; when type is id, the value of path is id
+                          (org-id-find path 'marker))))
+           (buf (progn
+                  (if id-marker (marker-buffer id-marker) (find-file-noselect path)))))
+      (with-current-buffer buf
+        (org-with-wide-buffer
+         (outline-show-all)
+         (when id-marker (goto-char id-marker))
+         (when search-option (org-link-search search-option))
+         ;;
+         (let* ((el (org-element-context))
+                (type (org-element-type el))
+                (beg)(end)(tc-content)(tc-beg-mkr)(tc-end-mkr))
+           ;; For dedicated target, we want to get the parent paragraph,
+           ;; rather than the target itself
+           (when (and (string= "target" type)
+                      (string= "paragraph" (org-element-type (org-element-property :parent el))))
+             (setq el (org-element-property :parent el)))
+           (let* ((tree (progn (if (or id-marker
+                                       search-option)
+                                   ;; Parse only the element in question (headline, table, paragraph, etc.)
+                                   (org-element--parse-elements
+                                    (org-element-property :begin el)
+                                    (org-element-property :end el)
+                                    'section nil 'object nil (list 'tc-paragraph nil))
+                                 (org-element-parse-buffer))))
+                  (obj (org-element-map
+                           tree
+                           org-element-all-elements
+                         ;; Map all the elements (not objects).  But for the
+                         ;; output (transcluded copy) do not do recursive for
+                         ;; headline and section (as to avoid duplicate
+                         ;; sections; headlines contain section) Want to remove
+                         ;; the elements of the types included in the list from
+                         ;; the AST.
+                         #'org-transclusion--filter-buffer
+                         nil nil '(headline section) nil)))
+             (setq tc-content (org-element-interpret-data obj))
+             (setq tc-beg-mkr (progn (goto-char (point-min)) (point-marker)))
+             (setq tc-end-mkr (progn (goto-char (point-max)) (point-marker)))
+             (list :tc-content tc-content
+                   :tc-beg-mkr tc-beg-mkr
+                   :tc-end-mkr tc-end-mkr))))))))
 
 (defun org-transclusion--filter-buffer (data)
-  (cond ((memq (org-element-type data) '(section))
+  (cond ((and (memq (org-element-type data) '(section))
+              (not (eq 'tc-paragraph (org-element-type (org-element-property :parent data)))))
          ;; Intended to remove the first section, taht is the part before the first headlne
          ;; the rest of the sections are included in the headlines
          ;; Thies means that if there is no headline, nothing gets transcluded.
          nil)
         (t
-         ;; Rest of the case. This can be customizing.
-         (org-element-map data '(property-drawer quote-block keyword) (lambda (d)
+         ;; Rest of the case.
+         (org-element-map data org-transclusion-exclude-elements (lambda (d)
                                                     (org-element-extract-element d)
                                                     nil))
          data)))
@@ -243,11 +258,7 @@ is used (ARG is non-nil), then use `org-link-open'."
 ;; Functions to support non-Org-mode link types
 
 (defun org-transclusion--get-custom-tc-params (link)
-  "Return PARAMS with TC-FN if link type is supported for LINK object.
-
-TODO This is a little ugly inthat it takes an Org Mode's link object, and
-for `org-transclusion-link' link type (default `otc'), it takes the raw-link.
-For others, it requires path."
+  "Return PARAMS with TC-FN if link type is supported for LINK object."
   (let ((types org-transclusion-add-at-point-functions)
         (params nil)
         (link-type (org-element-property :type link))
