@@ -79,7 +79,6 @@ makes it impossible to debug at runtime.")
 
 (defcustom org-transclusion-activate-persistent-message t
   "Define whether or not a header line is added when transclusion is active."
-
   :type 'boolean
   :group 'org-transclusion)
 
@@ -153,7 +152,6 @@ Meant to be used with add-advice/remove-advice in activate/deactivate.
 
 If the link type is not supported by org-transclusion, or \\[universal-argument]
 is used (ARG is non-nil), then use `org-link-open'."
-
   (let ((tc-params nil))
     (cond
      ((not (org-transclusion--ok-to-transclude)) (apply orgfn link arg))
@@ -250,7 +248,6 @@ is used (ARG is non-nil), then use `org-link-open'."
 TODO This is a little ugly inthat it takes an Org Mode's link object, and
 for `org-transclusion-link' link type (default `otc'), it takes the raw-link.
 For others, it requires path."
-
   (let ((types org-transclusion-add-at-point-functions)
         (params nil)
         (link-type (org-element-property :type link))
@@ -286,7 +283,6 @@ Returns non-nil if check is pass."
   "Use PATH to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR.
 
 TODO need to handle when the file does not exist."
-
   (let ((buf (find-file-noselect path)))
     (with-current-buffer buf
         (org-with-wide-buffer
@@ -305,7 +301,6 @@ TODO need to handle when the file does not exist."
 
 (defun org-transclusion--create-at-point (tc-params)
   "Create transclusion by unpackng TC-PARAMS."
-
   ;; Remove #+transclude keyword
   ;; Assume in the beginning of a link
   (when (org-transclusion--ok-to-transclude)
@@ -383,7 +378,6 @@ TODO need to handle when the file does not exist."
   "Remove transclusion and the copied text around POS.
 When DETACH is non-nil, remove the tranclusion overlay only, keeping the copied
 text."
-
   (interactive "d")
   (if-let ((ov (cdr (get-char-property-and-overlay pos 'tc-type))))
       (save-excursion
@@ -443,7 +437,6 @@ is active, it will automatically bring the transclusion back."
 
 (defun org-transclusion-open-edit-src-buffer-at-point (pos)
   "Open a clone buffer of transclusions source at POS for editting."
-
   (interactive "d")
   (if-let ((ov (cdr (get-char-property-and-overlay pos 'tc-type))))
       (let ((from-mkr (point-marker))
@@ -530,7 +523,6 @@ double quotations. The logic does not work when it is expected the the string co
 Checks
 - exisistence of #+transclude: keyword
 - :embed param value is t."
-
   (let ((params (org-transclusion--get-keyword-values)))
     ;; if params are there, the keyword is present
     ;; then need to check :embed parameter.
@@ -568,7 +560,6 @@ Checked with the extension `org'."
 If the current point is a translusion link, return BEGIN and END
    plist: '(begin: BEGIN  end: END)
 of the link.  If not link, return nil."
-
   (let ((location '())
         (context (org-element-context)))
     (when-let ((link (plist-get context 'link)))
