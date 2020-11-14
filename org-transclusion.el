@@ -213,22 +213,15 @@ is used (ARG is non-nil), then use `org-link-open'."
           (let ((obj (org-element-map
                          (org-element-parse-buffer)
                          org-element-all-elements
-                       ;;#'identity
-                       ;; Want to remove the elements of the types included in the list
-                       ;; from the AST
+                       ;; Map all the elements (not objects).  But for the
+                       ;; output (transcluded copy) do not do recursive for
+                       ;; headline and section (as to avoid duplicate
+                       ;; sections; headlines contain section) Want to remove
+                       ;; the elements of the types included in the list from
+                       ;; the AST.
                        #'org-transclusion--filter-buffer
                        nil nil '(headline section) nil)))
             (setq tc-content (org-element-interpret-data obj)))
-          ;; (let
-          ;;     ((obj (org-element-map (org-element-parse-buffer) nil #'identity)))
-          ;;   (setq tc-content (mapconcat
-          ;;                     (lambda (o)
-          ;;                       (let* ((beg (org-element-property :contents-begin o))
-          ;;                              (end (org-element-property :contents-end o))
-          ;;                              (content (buffer-substring beg end)))
-          ;;                         content))
-          ;;                     obj "\n")) ;;(buffer-substring (point-min) (point-max)))
-          ;;(setq tc-content (buffer-string))
           (setq tc-beg-mkr (progn (goto-char (point-min)) (point-marker)))
           (setq tc-end-mkr (progn (goto-char (point-max)) (point-marker))))
         (list :tc-content tc-content
@@ -622,9 +615,13 @@ the mode, `toggle' toggles the state."
             map)
   (cond
    (org-transclusion-mode
-    (org-transclusion-activate))
+    (org-transclusion-activate)
+    (advice-add 'org-metaup :around #'org-transclusion-metaup-down)
+    (advice-add 'org-metadown :around #'org-transclusion-metaup-down))
    (t
-    (org-transclusion-deactivate))))
+    (org-transclusion-deactivate)
+    (advice-remove 'org-metaup #'org-transclusion-metaup-down)
+    (advice-remove 'org-metadown #'org-transclusion-metaup-down))))
 
 (define-minor-mode org-transclusion-edit-src-mode
   "Toggle Org-transclusion edit source mode.
@@ -793,22 +790,27 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
 ;;-----------------------------------------------------------------------------
 ;; Metaup/down
 
-
 (defun org-transclusion-metaup-down (oldfn &optional arg)
+  ;;; This implementation does not do what I want.
+  ;;; When headline moves, the overlay is deleted.
+  ;;; Changing the evaporate property to nil does not work either.
+  ;;; Need to add stars to the keyword for all the overlays (not a bit issue.)
+  "Temporarily remove text-only attributes to allow for metaup/down to move headlines around."
   (interactive)
-  (if-let (ov (cdr (get-char-property-and-overlay (point) 'tc-type)))
-      (progn
-        (save-excursion
-          (goto-char (overlay-start ov))
-          (org-transclusion-remove-at-point (point))
-          (set-mark (point)) (forward-line 1)(end-of-line)
-          (funcall oldfn arg)
-          (deactivate-mark)
-          (org-transclusion-add-all-in-buffer)))
-    (funcall oldfn arg)))
 
-(advice-add 'org-metaup :around #'org-transclusion-metaup-down)
-(advice-add 'org-metadown :around #'org-transclusion-metaup-down)
+  (if-let (ov (cdr (get-char-property-and-overlay (point) 'tc-type)))
+      ;; Only if you are in the transclusion overlay
+      (progn
+        (dolist (ov (overlays-in (point-min) (point-max)))
+          (let ((inhibit-read-only t))
+            (add-text-properties (overlay-start ov) (overlay-end ov) '(read-only nil))))
+        ;; Call the normal metaup/down
+        (funcall oldfn arg)
+        ;; After calll metaup/down
+        (dolist (ov (overlays-in (point-min) (point-max)))
+          (add-text-properties (overlay-start ov) (overlay-end ov) '(read-only t))))
+    ;; If not in the transclusion overlay, do as normal.
+    (funcall oldfn arg)))
 
 ;;-----------------------------------------------------------------------------
 ;; Definition of org-transclusion-paste-subtree
