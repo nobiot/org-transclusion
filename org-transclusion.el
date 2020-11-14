@@ -315,7 +315,7 @@ TODO need to handle when the file does not exist."
   ;; Remove #+transclude keyword
   ;; Assume in the beginning of a link
   (when (org-transclusion--ok-to-transclude)
-    (let ((key-params (org-transclusion--get-keyword-values)))
+    (let ((key-params (org-transclusion--ok-to-transclude)))
       (save-excursion
         (forward-line -1)
         (beginning-of-line)
@@ -372,8 +372,6 @@ TODO need to handle when the file does not exist."
               (overlay-put ov-tc 'evaporate t)
               (overlay-put ov-tc 'face 'org-transclusion-block)
               (overlay-put ov-tc 'tc-pair tc-pair)
-              (when (plist-member key-params ':detach)
-                (setq key-params (org-plist-delete key-params ':detach)))
               (overlay-put ov-tc 'tc-key-params key-params)
               (overlay-put ov-tc 'help-echo
                            (substitute-command-keys
@@ -420,22 +418,20 @@ text."
             ;; When remove fn, delete the copied texts
             (cond
              (detach
-              (goto-char beg)
-              (setq key-params (plist-put key-params ':embed nil))
-              (setq key-params (plist-put key-params ':detach t))
-              (let ((keyword-params (mapconcat #'symbol-name key-params " ")))
-                (insert (concat "#+transclude: " keyword-params "\n"))))
+              (setq key-params "nil")
+              (remove-text-properties new-beg new-end '(read-only)))
              (t ;; remove
-              (when (called-interactively-p)
-                ;; When remove-at-point is interactively called,
-                ;; prevent further embedding
-                (setq key-params (plist-put key-params ':embed nil)))
-              (let ((inhibit-read-only t)
-                    (keyword-params (mapconcat #'symbol-name key-params " ")))
-                (delete-region new-beg new-end)
-                ;; Add back #+transclusion:
-                (goto-char beg)
-                (insert (concat "#+transclude: " keyword-params "\n"))))))))
+              ;; TODO called-interactively-p is not correctly evaluated
+              (let ((inhibit-read-only t))
+                (setq key-params "t")
+                ;; for when detatch-at-point is called interactively
+                ;; We want to stop adding it back again.
+
+                (when (called-interactively-p) (setq key-params "nil"))
+                (delete-region new-beg new-end))))
+            ;; Add back #+transclusion:
+            (goto-char beg)
+            (insert (concat "#+transclude: " key-params "\n")))))
     ;; The message below is common for remove and detach
     (message "Nothing done. No transclusion exists here.")))
 
@@ -498,47 +494,18 @@ It is like `org-not-nil', but when the value is non-nil or
 not "nil", return symbol t."
   (when (org-not-nil v) t))
 
-(defun org-transclusion--get-keyword-values ()
-  "Return defined keywords in the keyword line as plist.  It assumes that this
-function is called in the beginning of a link.
-
--- :embed t/nil
--- :detach t/nil
--- :only-contents t/nil
-
-:origin is expected, but not returned in the plist as its value is a string in the escaped
-double quotations. The logic does not work when it is expected the the string contains space."
-
+(defun org-transclusion--ok-to-transclude ()
+  "Return t if the transclusion link at point is OK to include."
   (save-excursion
     (forward-line -1)
     (beginning-of-line)
-    (let ((transclude-re "^[ \t]*#\\+transclude:")
-          (plist nil))
+    (let ((transclude-re "^[ \t]*#\\+transclude:"))
       (when (looking-at-p transclude-re)
         ;; #+transclude: keyword exists.
         ;; Further checking the value
         (when-let ((value (org-element-property :value (org-element-at-point))))
-          (when (string-match ":embed *\\([^: \r\t\n]\\S-*\\)?" value)
-            (setq plist
-                  (plist-put plist :embed (org-transclusion--not-nil (match-string 1 value)))))
-          (when (string-match ":detach *\\([^: \r\t\n]\\S-*\\)?" value)
-            (setq plist
-                  (plist-put plist :detach (org-transclusion--not-nil (match-string 1 value)))))
-          (when (string-match ":only-contents *\\([^: \r\t\n]\\S-*\\)?" value)
-            (setq plist
-                  (plist-put plist :only-contents (org-transclusion--not-nil (match-string 1 value)))))))
-      plist)))
-
-(defun org-transclusion--ok-to-transclude ()
-  "Return t if the transclusion link at point is OK to include.
-Checks
-- exisistence of #+transclude: keyword
-- :embed param value is t."
-  (let ((params (org-transclusion--get-keyword-values)))
-    ;; if params are there, the keyword is present
-    ;; then need to check :embed parameter.
-    (when params
-      (plist-get params ':embed))))
+          (when (string-match "^\\(t\\|nil\\).*$" value)
+            (org-transclusion--not-nil (match-string 1 value))))))))
 
 (defun org-transclusion--keyword-p ()
   "Return t if keyword #+transclusion: is present.
