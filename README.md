@@ -65,11 +65,19 @@ As an example, I have the following in my `init.el` file.
 ```
 
 ## Org  Mode links
-As of v0.0.4, Org Mode's standard file and ID links work.
+To transclude the content via a link, use Org's normal file link immediately followed by keyword `#+transclude:` like this example below.
 
-The link must be in the beginning of a line for transclusion. If there is any character (even a space for indentation), Org-transclusion skips it.
+```
+#+transclude: t
+[[file:headline-less.org][Org note without headlines]]
 
-This is to avoid transcluding links in the middle of a sentence.
+```
+
+Use the value `t` or `nil` for the `#+transclude:` keyword to control whether or not Org-transclusion is to transclude the content via the link in question.
+
+The link must be in the beginning of a line for transclusion. If there is any character (even a space for indentation), Org-transclusion skips it. This is to avoid transcluding links in the middle of a sentence.
+
+Org-transclusion also skips tranclusion links within another transclusion in order to avoid multiple recursions.
 
 Transclusion has been tested to work for the following:
 
