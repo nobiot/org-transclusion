@@ -12,7 +12,7 @@ This library is an attempt to enable transclusion with Org Mode in Emacs. It is 
 
 This 8-minutes show & tell on YouTube I did shows you how this library currently works.
 
-[![xx-minute Demo video #5: v0.0.5](./resources/demo5-title.png)](https://youtu.be/hz92vaO8IgQ)
+[![8-minute Demo video #5: v0.0.5](./resources/demo5-title.png)](https://youtu.be/hz92vaO8IgQ)
 
 - [Demo video #4: v0.0.4: edit via indirect buffer, export, more supported link types](https://youtu.be/nO_JEXUeGkI)
 - [Demo video #3: v0.0.3: headline, paragraph, Org Mode link](https://youtu.be/KxDrE3spAL8)
