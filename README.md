@@ -90,6 +90,9 @@ It is a list of symbols, and the default is `(property-drawer)`. The accepted va
 
 How to use it is demonstrated in the [YouTube video #5](https://youtu.be/hz92vaO8IgQ) as well.
 
+### Customisable filter to exclude certain Org elements
+After the v0.0.5, a feature to include the first section (section before the first headline) is added. It is toggled via cusotmizing variable `org-transclusion-include-first-section`. Its default value is `nil`. Set it to `t` to transclude the first section.
+
 ### Link to a paragraph with dedicated target
 For transcluding a specific paragraph, Org-transclusion relies on Org mode's [dedicated-target](https://orgmode.org/manual/Internal-Links.html#Internal-Links). The target paragraph must be identifiable by a dedicated target with a `<<paragraph-id>>`: e.g.
 

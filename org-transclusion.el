@@ -96,6 +96,13 @@ Refer to variable `org-element-all-elements' for names of elements accepted."
   :type '(repeat symbol)
   :group 'org-transclusion)
 
+(defcustom org-transclusion-include-first-section nil
+  "Define whether or not transclusion for Org files includes \"first section\".
+If t, the section before the first headline is
+transcluded. Default is nil."
+  :type 'boolean
+  :group 'org-transclusion)
+
 (defcustom org-transclusion-link "otc"
   "Define custom Org link type name used for transclusion links."
   :type 'string
@@ -246,7 +253,7 @@ is used (ARG is non-nil), then use `org-link-open'."
          ;; Intended to remove the first section, taht is the part before the first headlne
          ;; the rest of the sections are included in the headlines
          ;; Thies means that if there is no headline, nothing gets transcluded.
-         nil)
+         (if org-transclusion-include-first-section data nil))
         (t
          ;; Rest of the case.
          (org-element-map data org-transclusion-exclude-elements (lambda (d)
