@@ -48,9 +48,9 @@ This screen shot with my annotation illustrates how you can edit transcluded cop
 **Figure 3.** Transclusion buffer with multiple text contents added from different sources (left); open a indirect buffer to edit one of the text content (right)
 
 ## Load
-Load the file (`load-file`) or open the file and evaluate the whole buffer (`eval-buffer`). It is experimental at the moment.
+Load the file (`load-file`) or open the file and evaluate the whole buffer (`eval-buffer`).
 
-As an example, I have the following in my `init.el` file.
+To make automatic every time you launch Emacs, you can set up Org-transclusion in your dotemacs. As an example, I have the following in my `init.el` file.
 
 ``` emacs-lisp
 (with-eval-after-load 'org
@@ -61,25 +61,23 @@ As an example, I have the following in my `init.el` file.
 ;; ... other configurations ...
 
 (add-hook 'org-mode-hook (lambda () (load-file "~/local-repos/org-transclusion/org-transclusion.el")))
-
 ```
 
 ## Org  Mode links
-To transclude the content via a link, use Org's normal file link immediately followed by keyword `#+transclude:` like this example below.
+To transclude text content via a link, use Org's normal file link immediately following a keyword `#+transclude:` line like this example below.
 
 ```
 #+transclude: t
 [[file:headline-less.org][Org note without headlines]]
-
 ```
 
-Use the value `t` or `nil` for the `#+transclude:` keyword to control whether or not Org-transclusion is to transclude the content via the link in question.
+Use a value `t` or `nil` for the `#+transclude:` keyword to control whether or not Org-transclusion is to transclude the content via the link in question.
 
 The link must be in the beginning of a line for transclusion. If there is any character (even a space for indentation), Org-transclusion skips it. This is to avoid transcluding links in the middle of a sentence.
 
-Org-transclusion also skips tranclusion links within another transclusion in order to avoid multiple recursions.
+Org-transclusion also skips transclusion links within another transclusion in order to avoid multiple recursions.
 
-Transclusion has been tested to work for the following:
+Transclusion has been tested to work for the following types of links:
 
 - File link for an entire org file/buffer; e.g. `[[file:~/org/file.org][My Org Notes]]`
 - File link with `::*heading`
@@ -89,17 +87,17 @@ Transclusion has been tested to work for the following:
 - ID link `id:uuid`
 - File link for non-org files (tested with `.txt` and `.md`); for these, the whole buffer gets transcluded
 
-### Customisable filter to exclude certain Org elements
+### Customizable filter to exclude certain Org elements
 Set customizable variable `org-transclusion-exclude-elements` to define which elements to be **excluded** in the transclusion.
 
-The filter works for all cases when transcluding an entire Org file, and parts of an Org file (headlines, custom ID, etc.). There is no filter for non-Org files.
+The filter works for all supported types of links within an Org file when transcluding an entire Org file, and parts of it (headlines, custom ID, etc.). There is no filter for non-Org files.
 
-It is a list of symbols, and the default is `(property-drawer)`. The accepted values are the ones defined by `org-element-all-elements` (Org's standard set of elements).
+It is a list of symbols, and the default is `(property-drawer)`. The accepted values are the ones defined by `org-element-all-elements` (Org's standard set of elements; refer to its documentation for an exhaustive list).
 
 How to use it is demonstrated in the [YouTube video #5](https://youtu.be/hz92vaO8IgQ) as well.
 
 ### Include the section before the first headline (Org file only)
-You can now include the first section (section before the first headline). It is toggled via cusotmizing variable `org-transclusion-include-first-section`. Its default value is `nil`. Set it to `t` to transclude the first section.
+You can now include the first section (section before the first headline) of an Org file. It is toggled via customizing variable `org-transclusion-include-first-section`. Its default value is `nil`. Set it to `t` to transclude the first section. It works when the first section is followed by headlines (only lightly tested; I will appreciate your testing. I might need to consider retracting this feature if it proves to be too buggy).
 
 ### Link to a paragraph with dedicated target
 For transcluding a specific paragraph, Org-transclusion relies on Org mode's [dedicated-target](https://orgmode.org/manual/Internal-Links.html#Internal-Links). The target paragraph must be identifiable by a dedicated target with a `<<paragraph-id>>`: e.g.
@@ -115,7 +113,7 @@ In the previous versions, Org-transclusion worked on a special link type (defaul
 
 ## Activate and deactivate -- `org-transclusion-mode` minor mode
 
-Org-transclusion is a buffer-local minor mode. Use `org-transaction-mode` to toggle on and off.  When you are in an Org file where you want to transclude text content via a link, toggle it on. It is suggest that a keybinding is assigned to make it easy switch it on and off.
+Org-transclusion is a buffer-local minor mode. Use `org-transaction-mode` to toggle it on and off.  When you are in an Org file where you want to transclude text content via a link, toggle it on. It is suggested that a keybinding is assigned to make it easy to switch it on and off.
 
 Below is an example configuration, which I have in my `init.el`.
 
@@ -136,7 +134,7 @@ It will open an indirect buffer of the **transclusion source**; you will be edit
 ## Merge different Org Mode headline levels
 [Reference issue #14](https://github.com/nobiot/org-transclusion/issues/14)
 
-An experimental feature has been merged. Now the transcluded source text content "adapts" the headline level of its subtrees to its embedded environment in the transclusion buffer. It's quite mouthful, but see the logic below. It should be the same as how refill / archive work in Org Mode (if I am not mistaken).
+An experimental feature has been merged. Now the transcluded source text content "adapts" the headline level of its subtrees to its embedded environment in the transclusion buffer. It's quite mouthful, but see the logic below. It should be the same as how refile and archive work in Org Mode (if I am not mistaken).
 
 Logic is as follows (from documentation of `org-paste-subtree` ):
 
@@ -147,25 +145,24 @@ level of the two.  So if the previous visible heading is level 3 and the
 next is level 4 (or vice versa), level 4 will be used for insertion.
 This makes sure that the subtree remains an independent subtree and does
 not swallow low level entries.
-
 ```
 
 [If this feature survives incubation, I will do a bit easy-to-grasp illustration / explanation.]
 
-Org-transclusion uses a patched version of `org-paste-subtree`, named `org-transclusion-paste-subtree`.
+Org-transclusion uses a patched version of the `org-paste-subtree` function, named `org-transclusion-paste-subtree`.
 
-The experimental feature is turned on by default, and can be adjusted via `org-transclusion-use-paste-subtree` variable (non-nil, or nil).
+The experimental feature is turned on by default, and can be switched on and off with the `org-transclusion-use-paste-subtree` variable (non-nil, or nil).
 
 # List of things to be done
 - [ ] Validate the fundamental idea / architecture, especially modifying and saving the transclusion sources
 
     ~~I took the modifying logic from `org-edit-src` (`-save` and `-exit` more specifically). This may not be the best of ideas given that this part of code modifies people's notes (outcome of hard intellectual work).~~
 
-   **Edit:** As of v0.0.4, I have implemented an alternative approach for the "copy-edit-sync" cycle -- the core of this implementation of transclusion. The transcluded copy is read-only. In order to edit it, use a function to create a clone indirect buffer of the source. As it is a clone of the source, you would be directly editting the source. The copy gets updated the next time you come back to the transcluding buffer.
+   **Edit:** As of v0.0.4, I have implemented an alternative approach for the "copy-edit-sync" cycle -- the core of this implementation of transclusion. The transcluded copy is read-only. In order to edit it, use a function to create a clone indirect buffer of the source. As it is a clone of the source, you would be directly editing the source. The copy gets updated the next time you come back to the transcluding buffer.
 
    This approach has opened up new possibilities, among which is the filtering mechanism; you can exclude specified elements of the source from copied over in the corresponding transclusion (implemented in v0.0.5). I am also considering functions to adjust the headline levels of the transclusions. These functions would have been nearly impossible to implement for me, so I think I am nearly convinced that it is the best way forward. I would love to hear feedback on this.
 
-   For the writing purpose, these flexibilities outweight the benefit of real-time sync I demonstrated with v0.0.2.
+   For the writing purpose, these flexibilities outweigh the benefit of real-time sync I demonstrated with v0.0.2.
 
 - [x] Turn the activation / deactivation into a buffer-local minor mode
 
@@ -218,6 +215,8 @@ If we also have edit and read-only mode, I think it makes sense to have differen
 
     **Edit:** Yes. `save-window-excursion` was a revelation, and enabled the new approach.
     Using the display property of overlays is not suitable for the purpose; it does not export displayed contents.
+
+    However... It seems that the `save-window-excursion` macro leads to very-hard-to-reproduce issues on different OSs. As of v0.0.5, I moved away from using it. It is not confirmed that the macro is indeed problematic; I am still waiting to see if that will resolve the reported issues (e.g. [#19](https://github.com/nobiot/org-transclusion/issues/19)).
 
 - [ ] Other things I miss
 
