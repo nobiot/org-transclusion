@@ -10,12 +10,13 @@ Transclusion is the ability to include content from one file into another by ref
 
 This library is an attempt to enable transclusion with Org Mode in Emacs. It is my take on the [idea by John Kitchin](#original-idea-by-john-kitchin).
 
-This 12-minutes show & tell on YouTube I did shows you how this library currently works.
+This 8-minutes show & tell on YouTube I did shows you how this library currently works.
 
-[![12-minute Demo video #4: v0.0.4](./resources/demo4-title.png)](https://youtu.be/nO_JEXUeGkI)
+[![xx-minute Demo video #5: v0.0.5](./resources/demo5-title.png)](https://youtu.be/hz92vaO8IgQ)
 
-- [Demo video #3: v0.0.3 Headline, paragraph, Org Mode link](https://youtu.be/KxDrE3spAL8)
-- [Demo video #2: v0.0.2 real-time sync](https://youtu.be/HQ0rUa7gVXA)
+- [Demo video #4: v0.0.4: edit via indirect buffer, export, more supported link types](https://youtu.be/nO_JEXUeGkI)
+- [Demo video #3: v0.0.3: headline, paragraph, Org Mode link](https://youtu.be/KxDrE3spAL8)
+- [Demo video #2: v0.0.2: real-time sync](https://youtu.be/HQ0rUa7gVXA)
 - [How to install video for test drive v0.0.2 alpha](https://youtu.be/c1aelYM3m9U)
 - [Demo video #1: prototype](https://youtu.be/Wjk-otO2xrI)
 
@@ -34,7 +35,6 @@ It would be great if you can work on some items on [list of things](#list-of-thi
 I am writing this on 10 October 2020. I am hoping that we can have a conclusion within this year whether or not the idea and implementation are something worth pursuing collectively. Otherwise, I think it can remain my personal hobby tool.
 
 # Intended use
-
 I am dabbling in the Zettelkasten method, with using [Org-roam](https://www.orgroam.com/). I keep my notes in a repository where my network of notes reside (I guess people call them evergreen, concept, or permanent notes).
 
 When I start writing something long-form, I want to have a writing project separately from my notes repository, assemble relevant notes to form a basis of the long-form material, and avoid having multiple copies of notes flying around.
@@ -42,10 +42,7 @@ When I start writing something long-form, I want to have a writing project separ
 Transclusion should let me do this.
 
 # How to use the library
-
-I have redesigned the entire program as of v0.0.4. If you have seen my previous versions, the way it works is drastically different.
-
-This screen shot with my annotation illustrates how it works.
+This screen shot with my annotation illustrates how you can edit transcluded copies.
 
 ![How the library works. Screen shot with annotation](./resources/2020-10-29_18-48-53-edit-buffer-v2.png)
 **Figure 3.** Transclusion buffer with multiple text contents added from different sources (left); open a indirect buffer to edit one of the text content (right)
@@ -68,7 +65,6 @@ As an example, I have the following in my `init.el` file.
 ```
 
 ## Org  Mode links
-
 As of v0.0.4, Org Mode's standard file and ID links work.
 
 The link must be in the beginning of a line for transclusion. If there is any character (even a space for indentation), Org-transclusion skips it.
@@ -77,6 +73,7 @@ This is to avoid transcluding links in the middle of a sentence.
 
 Transclusion has been tested to work for the following:
 
+- File link for an entire org file/buffer; e.g. `[[file:~/org/file.org][My Org Notes]]`
 - File link with `::*heading`
 - File link with `::#custom-id`
 - File link with `::name` for blocks (e.g. blocked quotations) and tables
@@ -84,10 +81,16 @@ Transclusion has been tested to work for the following:
 - ID link `id:uuid`
 - File link for non-org files (tested with `.txt` and `.md`); for these, the whole buffer gets transcluded
 
-**note:** Link to an org file is not currently working correctly. This is primarily because I have yet to work out a way to deal with buffer-level properties (e.g. `#+title:`, etc., on top of the buffer).
+### Customisable filter to exclude certain Org elements
+Set customizable variable `org-transclusion-exclude-elements` to define which elements to be **excluded** in the transclusion.
+
+The filter works for all cases when transcluding an entire Org file, and parts of an Org file (headlines, custom ID, etc.). There is no filter for non-Org files.
+
+It is a list of symbols, and the default is `(property-drawer)`. The accepted values are the ones defined by `org-element-all-elements` (Org's standard set of elements).
+
+How to use it is demonstrated in the [YouTube video #5](https://youtu.be/hz92vaO8IgQ) as well.
 
 ### Link to a paragraph with dedicated target
-
 For transcluding a specific paragraph, Org-transclusion relies on Org mode's [dedicated-target](https://orgmode.org/manual/Internal-Links.html#Internal-Links). The target paragraph must be identifiable by a dedicated target with a `<<paragraph-id>>`: e.g.
 
     Lorem ipsum dolor sit amet, consectetur adipiscing elit.
@@ -115,13 +118,11 @@ Below is an example configuration, which I have in my `init.el`.
 If the customizing variable `org-transclusion-activate-persistent-message` is non-nil (default), you should see a header appear on top of the buffer indicating transclusion is active.
 
 ## Edit transcluded contents
-
 Transcluded contents are read-only. To edit them, use `org-transclusion-open-edit-src-buffer-at-point` command. By default, it is bound to <kbd>C-c n e</kbd> in `org-transclusion-mode-map` (modify the keybinding as you prefer).
 
 It will open an indirect buffer of the **transclusion source**; you will be editing the source directly. In the edit source buffer, there is no "abort" function. You can use undo, and other normal editing facilities. Once done, simply save, and go back by using <kbd>C-c C-c</kbd> to go back to the transclusion buffer. It is a convenience function to close the indirect buffer and return where you have come from.
 
 ## Merge different Org Mode headline levels
-
 [Reference issue #14](https://github.com/nobiot/org-transclusion/issues/14)
 
 An experimental feature has been merged. Now the transcluded source text content "adapts" the headline level of its subtrees to its embedded environment in the transclusion buffer. It's quite mouthful, but see the logic below. It should be the same as how refill / archive work in Org Mode (if I am not mistaken).
@@ -145,12 +146,15 @@ Org-transclusion uses a patched version of `org-paste-subtree`, named `org-trans
 The experimental feature is turned on by default, and can be adjusted via `org-transclusion-use-paste-subtree` variable (non-nil, or nil).
 
 # List of things to be done
-
 - [ ] Validate the fundamental idea / architecture, especially modifying and saving the transclusion sources
 
-   I took the modifying logic from `org-edit-src` (`-save` and `-exit` more specifically). This may not be the best of ideas given that this part of code modifies people's notes (outcome of hard intellectual work).
+    ~~I took the modifying logic from `org-edit-src` (`-save` and `-exit` more specifically). This may not be the best of ideas given that this part of code modifies people's notes (outcome of hard intellectual work).~~
 
-   I made the `save-buffer` part so that Emac's backup facility will be turned on for the local-buffer when you have it turned off. This backup does not seem to be assuring enough; however, making multiple versions of backup files might clutter your notes repository.
+   **Edit:** As of v0.0.4, I have implemented an alternative approach for the "copy-edit-sync" cycle -- the core of this implementation of transclusion. The transcluded copy is read-only. In order to edit it, use a function to create a clone indirect buffer of the source. As it is a clone of the source, you would be directly editting the source. The copy gets updated the next time you come back to the transcluding buffer.
+
+   This approach has opened up new possibilities, among which is the filtering mechanism; you can exclude specified elements of the source from copied over in the corresponding transclusion (implemented in v0.0.5). I am also considering functions to adjust the headline levels of the transclusions. These functions would have been nearly impossible to implement for me, so I think I am nearly convinced that it is the best way forward. I would love to hear feedback on this.
+
+   For the writing purpose, these flexibilities outweight the benefit of real-time sync I demonstrated with v0.0.2.
 
 - [x] Turn the activation / deactivation into a buffer-local minor mode
 
