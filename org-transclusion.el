@@ -160,7 +160,24 @@ See the functions delivered within org-tranclusion for the API signatures."
 ;; Transclude standard Org Mode file links
 ;; Add Support different non-Org link types
 
-(defun org-transclusion-link-open (orgfn link &optional arg)
+(defun org-transclusion-link-open-at-point (&optional arg)
+  "Meant to be for hook `org-open-at-point-functions'.
+Make it local hook and increase priority.
+Only for type  is \"file\" or \"id\".
+Assume it is called in the beginning of a link."
+  (let* ((context (org-element-context))
+         (type (org-element-property :type context)))
+    (cond
+     ((or (string= "id" type)
+          (string= "file" type))
+      (org-transclusion-link-open context arg)
+      ;; return t to stop run-hook-with-args-until-success
+      t)
+     ;; For all the other cases, return nil so that standard org functions
+     ;; (and other lower-prio functions in the hook can run.
+     (t nil))))
+
+(defun org-transclusion-link-open (link &optional arg)
   "Override Org Mode's default `org-link-open' (ORGFN) for LINK.
 Meant to be used with add-advice/remove-advice in activate/deactivate.
 
@@ -168,13 +185,14 @@ If the link type is not supported by org-transclusion, or \\[universal-argument]
 is used (ARG is non-nil), then use `org-link-open'."
   (let ((tc-params nil))
     (cond
-     ((not (org-transclusion--ok-to-transclude)) (apply orgfn link arg))
+     ((not (org-transclusion--ok-to-transclude)) (org-link-open link arg))
 
-     (arg (apply orgfn link arg))
+     (arg (org-link-open link arg))
 
      ((string= "id" (org-element-property :type link))
       ;; when type is id, the value of path is the id
-      (let ((tc-payload (org-transclusion--get-org-content-from-link link arg)))
+      (let* ((id (org-element-property :path link))
+             (tc-payload (org-transclusion--get-org-content-from-marker (org-id-find id t))))
         (setq tc-params (list :tc-type "org-id"
                               :tc-fn (lambda ()
                                        tc-payload)))))
@@ -190,9 +208,29 @@ is used (ARG is non-nil), then use `org-link-open'."
      ;; If arg is not added, do nothing.
      ;; This is used by transclude-all-in-buffer; you don't want to
      ;; navigate to these files.
-     (t "No transclusion added."))
+     (t (message "No transclusion added.")))
 
     (when tc-params (org-transclusion--create-at-point tc-params))))
+
+(defun org-transclusion-marker-open (marker)
+  (if-let ((tc-payload (org-transclusion--get-org-content-from-marker marker)))
+      (org-transclusion--create-at-point (list :tc-type "org-id"
+                                               :tc-fn (lambda ()
+                                                        tc-payload)))
+    (message "No transclusion added.")))
+
+(defun org-transclusion--get-org-content-from-marker (marker)
+  "Return tc-beg-mkr, tc-end-mkr, tc-content from MARKER.
+This is meant for Org-ID, and advice for `org-goto-marker-or-bmk'"
+  (if (and marker (marker-buffer marker)
+           (buffer-live-p (marker-buffer marker)))
+      (progn
+        (with-current-buffer (marker-buffer marker)
+          (org-with-wide-buffer
+           (outline-show-all)
+           (goto-char marker)
+           (org-transclusion--get-org-buffer-or-element-at-point t))))
+    (message "Nothing done. Cannot find marker for the ID.")))
 
 (defun org-transclusion--get-org-content-from-link (link &rest _arg)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from LINK."
@@ -201,51 +239,52 @@ is used (ARG is non-nil), then use `org-link-open'."
     ;; search-option is present.
     (let* ((path (org-element-property :path link))
            (search-option (org-element-property :search-option link))
-           (id-marker (progn
-                        (when (string= "id" (org-element-property :type link))
-                          ;; when type is id, the value of path is id
-                          (org-id-find path 'marker))))
-           (buf (progn
-                  (if id-marker (marker-buffer id-marker) (find-file-noselect path)))))
+           (buf (find-file-noselect path)))
       (with-current-buffer buf
         (org-with-wide-buffer
          (outline-show-all)
-         (when id-marker (goto-char id-marker))
-         (when search-option (org-link-search search-option))
-         ;;
-         (let* ((el (org-element-context))
-                (type (org-element-type el))
-                (beg)(end)(tc-content)(tc-beg-mkr)(tc-end-mkr))
-           ;; For dedicated target, we want to get the parent paragraph,
-           ;; rather than the target itself
-           (when (and (string= "target" type)
-                      (string= "paragraph" (org-element-type (org-element-property :parent el))))
-             (setq el (org-element-property :parent el)))
-           (let* ((tree (progn (if (or id-marker
-                                       search-option)
-                                   ;; Parse only the element in question (headline, table, paragraph, etc.)
-                                   (org-element--parse-elements
-                                    (org-element-property :begin el)
-                                    (org-element-property :end el)
-                                    'section nil 'object nil (list 'tc-paragraph nil))
-                                 (org-element-parse-buffer))))
-                  (obj (org-element-map
-                           tree
-                           org-element-all-elements
-                         ;; Map all the elements (not objects).  But for the
-                         ;; output (transcluded copy) do not do recursive for
-                         ;; headline and section (as to avoid duplicate
-                         ;; sections; headlines contain section) Want to remove
-                         ;; the elements of the types included in the list from
-                         ;; the AST.
-                         #'org-transclusion--filter-buffer
-                         nil nil '(headline section) nil)))
-             (setq tc-content (org-element-interpret-data obj))
-             (setq tc-beg-mkr (progn (goto-char (point-min)) (point-marker)))
-             (setq tc-end-mkr (progn (goto-char (point-max)) (point-marker)))
-             (list :tc-content tc-content
-                   :tc-beg-mkr tc-beg-mkr
-                   :tc-end-mkr tc-end-mkr))))))))
+         (if search-option
+             (progn
+               (org-link-search search-option)
+               (org-transclusion--get-org-buffer-or-element-at-point t))
+           (org-transclusion--get-org-buffer-or-element-at-point)))))))
+
+(defun org-transclusion--get-org-buffer-or-element-at-point (&optional only-element)
+  "Return content for transclusion.
+When ONLY-ELEMENT is t, only the element.  If nil, the whole buffer.
+Assume you are in the beginning of the org element to transclude."
+  (let* ((el (org-element-context))
+         (type (org-element-type el))
+         (tc-content)(tc-beg-mkr)(tc-end-mkr))
+    ;; For dedicated target, we want to get the parent paragraph,
+    ;; rather than the target itself
+    (when (and (string= "target" type)
+               (string= "paragraph" (org-element-type (org-element-property :parent el))))
+      (setq el (org-element-property :parent el)))
+    (let* ((tree (progn (if only-element
+                            ;; Parse only the element in question (headline, table, paragraph, etc.)
+                            (org-element--parse-elements
+                             (org-element-property :begin el)
+                             (org-element-property :end el)
+                             'section nil 'object nil (list 'tc-paragraph nil))
+                          (org-element-parse-buffer))))
+           (obj (org-element-map
+                    tree
+                    org-element-all-elements
+                  ;; Map all the elements (not objects).  But for the
+                  ;; output (transcluded copy) do not do recursive for
+                  ;; headline and section (as to avoid duplicate
+                  ;; sections; headlines contain section) Want to remove
+                  ;; the elements of the types included in the list from
+                  ;; the AST.
+                  #'org-transclusion--filter-buffer
+                  nil nil '(headline section) nil)))
+      (setq tc-content (org-element-interpret-data obj))
+      (setq tc-beg-mkr (progn (goto-char (point-min)) (point-marker)))
+      (setq tc-end-mkr (progn (goto-char (point-max)) (point-marker)))
+      (list :tc-content tc-content
+            :tc-beg-mkr tc-beg-mkr
+            :tc-end-mkr tc-end-mkr))))
 
 (defun org-transclusion--filter-buffer (data)
   (cond ((and (memq (org-element-type data) '(section))
@@ -708,7 +747,10 @@ This should be a buffer-local minior mode.  Not done yet."
                       window-selection-change-functions))
     (add-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save nil t)
     (add-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save nil t)
-    (advice-add 'org-link-open :around #'org-transclusion-link-open)
+    ;; `org-transclusion-link-open-at-point' should be higher priority than `org-roam-id-open'
+    (add-hook 'org-open-at-point-functions #'org-transclusion-link-open-at-point -10 t)
+;;    (advice-add 'org-link-open :around #'org-transclusion-link-open)
+;;    (advice-add 'org-goto-marker-or-bmk :override #'org-transclusion-marker-open)
     ;;WIP not included yet
     ;;(advice-add 'org-metaup :around #'org-transclusion-metaup-down)
     ;;(advice-add 'org-metadown :around #'org-transclusion-metaup-down)
@@ -733,7 +775,9 @@ This should be a buffer-local minior mode.  Not done yet."
                             window-selection-change-functions))
         (remove-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save t)
         (remove-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save t)
-        (advice-remove 'org-link-open #'org-transclusion-link-open)
+        (remove-hook 'org-open-at-point-functions #'org-transclusion-link-open-at-point t)
+;;        (advice-remove 'org-link-open #'org-transclusion-link-open)
+;;        (advice-remove 'org-goto-marker-or-bmk #'org-transclusion-marker-open)
         ;;WIP not included yet
         ;;(advice-remove 'org-metaup #'org-transclusion-metaup-down)
         ;;(advice-remove 'org-metadown #'org-transclusion-metaup-down))))
