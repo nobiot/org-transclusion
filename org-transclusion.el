@@ -700,7 +700,7 @@ each link:
              ;; is no further link.
              (when (org-element-link-parser)  ;; when a link is in the begging of buffer
                (when (eq (line-beginning-position)(point))
-                 (org-open-at-point)))
+                 (org-transclusion-link-open-at-point))) ;org-open-at-point
              (while (eq t (org-next-link))
                ;; Check if the link is in the beginning of a line
                ;; Check if the link immediately follows the keyword line #+transclude:
@@ -709,7 +709,7 @@ each link:
                           (org-transclusion--ok-to-transclude)
                           (not (org-transclusion--is-within-transclusion)))
                  ;; org-link-open (used by org-open-at-point) advised when minor mode is on
-                 (org-open-at-point)))))
+                 (org-transclusion-link-open-at-point))))) ;org-open-at-point
          (set-buffer-modified-p org-transclusion-buffer-modified-p))))
 
 (defun org-transclusion-remove-all-in-buffer (&optional buf)
@@ -747,10 +747,6 @@ This should be a buffer-local minior mode.  Not done yet."
                       window-selection-change-functions))
     (add-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save nil t)
     (add-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save nil t)
-    ;; `org-transclusion-link-open-at-point' should be higher priority than `org-roam-id-open'
-    (add-hook 'org-open-at-point-functions #'org-transclusion-link-open-at-point -10 t)
-;;    (advice-add 'org-link-open :around #'org-transclusion-link-open)
-;;    (advice-add 'org-goto-marker-or-bmk :override #'org-transclusion-marker-open)
     ;;WIP not included yet
     ;;(advice-add 'org-metaup :around #'org-transclusion-metaup-down)
     ;;(advice-add 'org-metadown :around #'org-transclusion-metaup-down)
@@ -775,9 +771,6 @@ This should be a buffer-local minior mode.  Not done yet."
                             window-selection-change-functions))
         (remove-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save t)
         (remove-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save t)
-        (remove-hook 'org-open-at-point-functions #'org-transclusion-link-open-at-point t)
-;;        (advice-remove 'org-link-open #'org-transclusion-link-open)
-;;        (advice-remove 'org-goto-marker-or-bmk #'org-transclusion-marker-open)
         ;;WIP not included yet
         ;;(advice-remove 'org-metaup #'org-transclusion-metaup-down)
         ;;(advice-remove 'org-metadown #'org-transclusion-metaup-down))))
