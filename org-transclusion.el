@@ -128,17 +128,17 @@ See the functions delivered within org-tranclusion for the API signatures."
 
 (defface org-transclusion-source-block
   '((((class color) (min-colors 88) (background light))
-     :background "#fff3da" :extend t)
+     :background "#ebf6fa" :extend t)
     (((class color) (min-colors 88) (background dark))
-     :background "#fff3da" :extend t))
+     :background "#041529" :extend t))
   "Face for transcluded block."
   :group 'org-transclusion)
 
 (defface org-transclusion-block
   '((((class color) (min-colors 88) (background light))
-     :background "#f3f3ff" :extend t)
+     :background "#efefef" :extend t)
     (((class color) (min-colors 88) (background dark))
-     :background "#f3f3ff" :extend t))
+     :foreground "#bfc0c" :background "#1e1e1e" :extend t))
   "Face for transcluded block."
   :group 'org-transclusion)
 
