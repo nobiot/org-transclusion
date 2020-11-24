@@ -178,17 +178,15 @@ is used (ARG is non-nil), then use `org-link-open'."
 
      ((string= "id" (org-element-property :type link))
       ;; when type is id, the value of path is the id
-      (let* ((id (org-element-property :path link))
-             (tc-payload (org-transclusion--get-org-content-from-marker (org-id-find id t))))
+      (let* ((id (org-element-property :path link)))
         (setq tc-params (list :tc-type "org-id"
-                              :tc-fn (lambda ()
-                                       tc-payload)))))
+                              :tc-arg (org-id-find id t)
+                              :tc-fn #'org-transclusion--get-org-content-from-marker))))
 
      ((org-transclusion--org-file-p (org-element-property :path link))
-      (let ((tc-payload (org-transclusion--get-org-content-from-link link arg)))
-        (setq tc-params (list :tc-type "org-link"
-                              :tc-fn (lambda ()
-                                       tc-payload)))))
+      (setq tc-params (list :tc-type "org-link"
+                            :tc-arg link
+                            :tc-fn #'org-transclusion--get-org-content-from-link)))
 
      ((setq tc-params (org-transclusion--get-custom-tc-params link)))
 
@@ -199,12 +197,13 @@ is used (ARG is non-nil), then use `org-link-open'."
 
     (when tc-params (org-transclusion--create-at-point tc-params))))
 
-(defun org-transclusion-marker-open (marker)
-  (if-let ((tc-payload (org-transclusion--get-org-content-from-marker marker)))
-      (org-transclusion--create-at-point (list :tc-type "org-id"
-                                               :tc-fn (lambda ()
-                                                        tc-payload)))
-    (message "No transclusion added.")))
+;; Not used but might be useful...
+;; (defun org-transclusion-marker-open (marker)
+;;   (if-let ((tc-payload (org-transclusion--get-org-content-from-marker marker)))
+;;       (org-transclusion--create-at-point (list :tc-type "org-id"
+;;                                                :tc-fn (lambda ()
+;;                                                         tc-payload)))
+;;     (message "No transclusion added.")))
 
 (defun org-transclusion--get-org-content-from-marker (marker)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from MARKER.
@@ -274,6 +273,7 @@ Assume you are in the beginning of the org element to transclude."
             :tc-end-mkr tc-end-mkr))))
 
 (defun org-transclusion--filter-buffer (data)
+  "TODO Doc for `org-tranclusion--filter-buuffer'."
   (cond ((and (memq (org-element-type data) '(section))
               (not (eq 'tc-paragraph (org-element-type (org-element-property :parent data)))))
          ;; Intended to remove the first section, taht is the part before the first headlne
@@ -296,10 +296,7 @@ Assume you are in the beginning of the org element to transclude."
         (params nil)
         (link-type (org-element-property :type link))
         (str nil))
-    (if (string= link-type org-transclusion-link)
-        (setq str (org-element-property :raw-link link))
-      (setq str (org-element-property :path link)))
-
+    (setq str (org-element-property :path link))
     (while (and (not params)
                 types)
       (let* ((type (pop types))
@@ -310,7 +307,7 @@ Assume you are in the beginning of the org element to transclude."
         (when (and (functionp match-fn)
                    (funcall match-fn str)
                    (functionp add-fn))
-          (setq params (list :tc-type type :tc-fn (lambda () (funcall add-fn str)))))))
+          (setq params (list :tc-type type :tc-fn add-fn :tc-arg str)))))
     params))
 
 ;;-----------------------------------------------------------------------------
@@ -321,11 +318,10 @@ Assume you are in the beginning of the org element to transclude."
 (defun org-transclusion--match-others-default (path)
   "Check if `others-default' can be used for the PATH.
 Returns non-nil if check is pass."
-  (not (string-prefix-p (concat org-transclusion-link ":") path)))
+  t)
 
 (defun org-transclusion--add-others-default (path)
   "Use PATH to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR.
-
 TODO need to handle when the file does not exist."
   (let ((buf (find-file-noselect path)))
     (with-current-buffer buf
@@ -372,8 +368,9 @@ TODO need to handle when the file does not exist."
           ;; Add content and overlay
           (let* ((tc-raw-link raw-link)
                  (tc-type (plist-get tc-params :tc-type))
+                 (tc-arg (plist-get tc-params :tc-arg))
                  (tc-fn (plist-get tc-params :tc-fn))
-                 (tc-payload (funcall tc-fn))
+                 (tc-payload (funcall tc-fn tc-arg))
                  (tc-beg-mkr (plist-get tc-payload :tc-beg-mkr))
                  (tc-end-mkr (plist-get tc-payload :tc-end-mkr))
                  (tc-content (plist-get tc-payload :tc-content))
@@ -791,6 +788,9 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
              (org-transclusion-add-all-in-buffer)) ;; add all back in
             (t
              (message "going from %s into %s" buf (current-buffer))
+             ;; FIXME This cannot add transclusion when moving from one
+             ;; transclusion buffer to another.  I think it needs to check the
+             ;; condition if both from and to buffers have minior mode on
              (org-transclusion-remove-all-in-buffer buf)))))) ;; remove all
 
 ;;-----------------------------------------------------------------------------
