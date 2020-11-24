@@ -103,11 +103,6 @@ transcluded. Default is nil."
   :type 'boolean
   :group 'org-transclusion)
 
-(defcustom org-transclusion-link "otc"
-  "Define custom Org link type name used for transclusion links."
-  :type 'string
-  :group 'org-transclusion)
-
 (defcustom org-transclusion-add-at-point-functions (list "others-default")
   "Define list of `link types' org-tranclusion supports.
 In addtion to a element in the list, there must be two
@@ -146,14 +141,6 @@ See the functions delivered within org-tranclusion for the API signatures."
   '((t (:foreground "gray90" :extend t)))
     "Face for the :transclusion keyword."
     :group 'org-transclusion)
-
-;;-----------------------------------------------------------------------------
-;; Custom link parameter
-;; :follow fn should be a one that can do-list for functions, where
-;; each function support different type of links: e.g. file, ID, etc.
-;; At the moment, it does not do anything special.
-
-(org-link-set-parameters org-transclusion-link)
 
 ;;-----------------------------------------------------------------------------
 ;; Functions to override org-link-open
