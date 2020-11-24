@@ -6,7 +6,7 @@
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
 
-;; Version: 0.0.5
+;; Version: 0.0.6
 ;; Package-Requires: ((emacs "27.1") (org "9.4"))
 
 ;; This program is free software: you can redistribute it and/or modify it
@@ -401,7 +401,7 @@ TODO need to handle when the file does not exist."
                 ;; demoted subtree will have a space by adaptation. It
                 ;; disables further adding of transclusion links.
                 (let ((org-adapt-indentation nil))
-                  (org-transclusion-paste-subtree nil tc-content t t)) ;; one line removed from original
+                  (org-transclusion-paste-subtree 1 tc-content t t)) ;; one line removed from original
               (insert tc-content))
 
             (let* ((sbuf (marker-buffer tc-beg-mkr))
@@ -750,6 +750,10 @@ This should be a buffer-local minior mode.  Not done yet."
     ;;WIP not included yet
     ;;(advice-add 'org-metaup :around #'org-transclusion-metaup-down)
     ;;(advice-add 'org-metadown :around #'org-transclusion-metaup-down)
+    (advice-add 'org-metaleft :around #'org-transclusion-metaleft-right)
+    (advice-add 'org-metaright :around #'org-transclusion-metaleft-right)
+    (advice-add 'org-shiftmetaleft :around #'org-transclusion-metaleft-right)
+    (advice-add 'org-shiftmetaright :around #'org-transclusion-metaleft-right)
     (when org-transclusion-activate-persistent-message
       (setq header-line-format
             (substitute-command-keys
@@ -774,6 +778,10 @@ This should be a buffer-local minior mode.  Not done yet."
         ;;WIP not included yet
         ;;(advice-remove 'org-metaup #'org-transclusion-metaup-down)
         ;;(advice-remove 'org-metadown #'org-transclusion-metaup-down))))
+        (advice-remove 'org-metaleft #'org-transclusion-metaleft-right)
+        (advice-remove 'org-metaright #'org-transclusion-metaleft-right)
+        (advice-remove 'org-shiftmetaleft #'org-transclusion-metaleft-right)
+        (advice-remove 'org-shiftmetaright #'org-transclusion-metaleft-right)
         (when (buffer-live-p org-transclusion-last-edit-src-buffer)
             (kill-buffer org-transclusion-last-edit-src-buffer))
         (when org-transclusion-activate-persistent-message
@@ -799,8 +807,7 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
              (org-transclusion-remove-all-in-buffer buf)))))) ;; remove all
 
 ;;-----------------------------------------------------------------------------
-;; Metaup/down
-
+;; Metaup/down; metaleft/right metashiftleft/right
 (defun org-transclusion-metaup-down (oldfn &optional arg)
   "TODO. WIP. "
   ;;; This implementation does not do what I want.
@@ -823,6 +830,24 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
           (add-text-properties (overlay-start ov) (overlay-end ov) '(read-only t))))
     ;; If not in the transclusion overlay, do as normal.
     (funcall oldfn arg)))
+
+(defun org-transclusion-metaleft-right (oldfn &optional arg)
+  "Metashift/right, rather than metaleft/right.
+This is because we want to treat the whole subtree as one unit."
+  (interactive)
+    (if-let (ov (cdr (get-char-property-and-overlay (point) 'tc-type)))
+      ;; Only if you are in the transclusion overlay
+      (progn
+        (dolist (ov (overlays-in (point-min) (point-max)))
+          (let ((inhibit-read-only t))
+            (add-text-properties (overlay-start ov) (overlay-end ov) '(read-only nil))))
+        ;; Call the normal metaup/down
+        (funcall oldfn)
+        ;; After calll metaup/down
+        (dolist (ov (overlays-in (point-min) (point-max)))
+          (add-text-properties (overlay-start ov) (overlay-end ov) '(read-only t))))
+    ;; If not in the transclusion overlay, do as normal.
+    (funcall oldfn)))
 
 ;;-----------------------------------------------------------------------------
 ;; Definition of org-transclusion-paste-subtree
