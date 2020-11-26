@@ -840,6 +840,27 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
     ;; If not in the transclusion overlay, do as normal.
     (funcall oldfn arg)))
 
+;; move this to utility
+(defun org-transclusion--highest-hlevel-at-point ()
+  "Returns the level of the subtree at point
+This does not work for transclusion for the file with the first section."
+  (let ((level))
+    (org-with-wide-buffer
+     (when (org-transclusion--is-within-transclusion)
+       (setq level (org-current-level))
+       (while (and (org-transclusion--is-within-transclusion)
+                   (org-up-heading-safe)))))
+    level))
+
+(defun org-transclusion--update-hlevel-at-point ()
+  "Update the tc-keword-values with \":hlevel\" for overlay at point."
+  (let* ((level (org-transclusion--highest-hlevel-at-point))
+         (ov (cdr (get-char-property-and-overlay (point) 'tc-type)))
+         (plist (overlay-get ov 'tc-keyword-values)))
+    (when level
+      (setq plist (plist-put plist ':hlevel (number-to-string level)))
+      (overlay-put ov 'tc-keyword-values plist))))
+
 (defun org-transclusion-metaleft-right (oldfn &optional arg)
   "Metashift/right, rather than metaleft/right.
 This is because we want to treat the whole subtree as one unit."
@@ -851,12 +872,14 @@ This is because we want to treat the whole subtree as one unit."
           (let ((inhibit-read-only t))
             (add-text-properties (overlay-start ov) (overlay-end ov) '(read-only nil))))
         ;; Call the normal metaup/down
+        ;; TODO Move to the top of the subtree in the transclusion if you can
         (funcall oldfn)
-        ;; After calll metaup/down
+        ;; After calll metaleft/right
+        (org-transclusion--update-hlevel-at-point)
         (dolist (ov (overlays-in (point-min) (point-max)))
           (add-text-properties (overlay-start ov) (overlay-end ov) '(read-only t))))
-    ;; If not in the transclusion overlay, do as normal.
-    (funcall oldfn)))
+      ;; If not in the transclusion overlay, do as normal.
+      (funcall oldfn)))
 
 ;;-----------------------------------------------------------------------------
 ;; Definition of org-transclusion-paste-subtree
