@@ -344,7 +344,7 @@ TODO need to handle when the file does not exist."
   ;; Remove #+transclude keyword
   ;; Assume in the beginning of a link
   (when (org-transclusion--ok-to-transclude)
-    (let ((key-params (org-transclusion--get-keyword-value)))
+    (let ((keyword-values (org-transclusion--get-keyword-values)))
       (save-excursion
         (forward-line -1)
         (beginning-of-line)
@@ -385,7 +385,7 @@ TODO need to handle when the file does not exist."
                 ;; demoted subtree will have a space by adaptation. It
                 ;; disables further adding of transclusion links.
                 (let ((org-adapt-indentation nil)
-                      (hlevel (plist-get key-params ':hlevel)))
+                      (hlevel (plist-get keyword-values ':hlevel)))
                   (when hlevel (setq hlevel (string-to-number hlevel)))
                   (org-transclusion-paste-subtree hlevel tc-content t t)) ;; one line removed from original
               (insert tc-content))
@@ -404,7 +404,7 @@ TODO need to handle when the file does not exist."
               (overlay-put ov-tc 'evaporate t)
               (overlay-put ov-tc 'face 'org-transclusion-block)
               (overlay-put ov-tc 'tc-pair tc-pair)
-              (overlay-put ov-tc 'tc-key-params key-params)
+              (overlay-put ov-tc 'tc-keyword-values keyword-values)
               (overlay-put ov-tc 'help-echo
                            (substitute-command-keys
                             (concat "Original link: " tc-raw-link ". Visit with `\\[org-transclusion-open-src-buffer-at-point]'.")))
@@ -432,11 +432,10 @@ text."
           (let* ((inhibit-read-only t)
                  (beg (overlay-start ov))
                  (raw-link (overlay-get ov 'tc-raw-link))
-                 (keyword-params (overlay-get ov 'tc-key-params))
                  (keyword-values (mapconcat
                                   (lambda (v)
                                     (if (symbolp v) (symbol-name v) v))
-                                  keyword-params " "))
+                                  (overlay-get ov 'tc-keyword-values) " "))
                  (t-or-nil)
                  (new-beg (progn
                             (goto-char beg)
@@ -531,7 +530,7 @@ It is like `org-not-nil', but when the value is non-nil or
 not "nil", return symbol t."
   (when (org-not-nil v) t))
 
-(defun org-transclusion--get-keyword-value ()
+(defun org-transclusion--get-keyword-values ()
   "Return \"#+transclude:\" pre-defined values.
 The values are returned as plist."
     (save-excursion
