@@ -344,7 +344,7 @@ TODO need to handle when the file does not exist."
   ;; Remove #+transclude keyword
   ;; Assume in the beginning of a link
   (when (org-transclusion--ok-to-transclude)
-    (let ((key-params (org-transclusion--ok-to-transclude)))
+    (let ((key-params (org-transclusion--get-keyword-value)))
       (save-excursion
         (forward-line -1)
         (beginning-of-line)
@@ -384,8 +384,10 @@ TODO need to handle when the file does not exist."
                 ;; necessary; otherwise, the transclusion links included the
                 ;; demoted subtree will have a space by adaptation. It
                 ;; disables further adding of transclusion links.
-                (let ((org-adapt-indentation nil))
-                  (org-transclusion-paste-subtree 1 tc-content t t)) ;; one line removed from original
+                (let ((org-adapt-indentation nil)
+                      (hlevel (plist-get key-params ':hlevel)))
+                  (when hlevel (setq hlevel (string-to-number hlevel)))
+                  (org-transclusion-paste-subtree hlevel tc-content t t)) ;; one line removed from original
               (insert tc-content))
 
             (let* ((sbuf (marker-buffer tc-beg-mkr))
@@ -430,7 +432,12 @@ text."
           (let* ((inhibit-read-only t)
                  (beg (overlay-start ov))
                  (raw-link (overlay-get ov 'tc-raw-link))
-                 (key-params (overlay-get ov 'tc-key-params))
+                 (keyword-params (overlay-get ov 'tc-key-params))
+                 (keyword-values (mapconcat
+                                  (lambda (v)
+                                    (if (symbolp v) (symbol-name v) v))
+                                  keyword-params " "))
+                 (t-or-nil)
                  (new-beg (progn
                             (goto-char beg)
                             (newline)
@@ -448,20 +455,19 @@ text."
             ;; When remove fn, delete the copied texts
             (cond
              (detach
-              (setq key-params "nil")
+              (setq t-or-nil "nil")
               (remove-text-properties new-beg new-end '(read-only)))
              (t ;; remove
               ;; TODO called-interactively-p is not correctly evaluated
               (let ((inhibit-read-only t))
-                (setq key-params "t")
+                (setq t-or-nil "t")
                 ;; for when detatch-at-point is called interactively
                 ;; We want to stop adding it back again.
-
-                (when (called-interactively-p) (setq key-params "nil"))
+                (when (called-interactively-p 'interactive) (setq t-or-nil "nil"))
                 (delete-region new-beg new-end))))
             ;; Add back #+transclusion:
             (goto-char beg)
-            (insert (concat "#+transclude: " key-params "\n")))))
+            (insert (concat "#+transclude: " t-or-nil " " keyword-values "\n")))))
     ;; The message below is common for remove and detach
     (message "Nothing done. No transclusion exists here.")))
 
@@ -525,6 +531,22 @@ It is like `org-not-nil', but when the value is non-nil or
 not "nil", return symbol t."
   (when (org-not-nil v) t))
 
+(defun org-transclusion--get-keyword-value ()
+  "Return \"#+transclude:\" pre-defined values.
+The values are returned as plist."
+    (save-excursion
+    (forward-line -1)
+    (beginning-of-line)
+    (let ((transclude-re "^[ \t]*#\\+transclude:")
+          (plist))
+      (when (looking-at-p transclude-re)
+        ;; #+transclude: keyword exists.
+        ;; Further checking the value
+        (when-let ((value (org-element-property :value (org-element-at-point))))
+          (when (string-match ":hlevel *\\([1-9]\\)" value)
+            (setq plist
+                  (plist-put plist :hlevel (match-string 1 value)))))))))
+
 (defun org-transclusion--ok-to-transclude ()
   "Return t if the transclusion link at point is OK to include."
   (save-excursion
@@ -538,16 +560,17 @@ not "nil", return symbol t."
           (when (string-match "^\\(t\\|nil\\).*$" value)
             (org-transclusion--not-nil (match-string 1 value))))))))
 
-(defun org-transclusion--keyword-p ()
-  "Return t if keyword #+transclusion: is present.
-It assumes that this function is called in the beginning of a link.
+;; Not used. Candidate for removal
+;; (defun org-transclusion--keyword-p ()
+;;   "Return t if keyword #+transclusion: is present.
+;; It assumes that this function is called in the beginning of a link.
 
-TODO Add check it is indeed called in the beginning of a link"
-  (save-excursion
-    (forward-line -1)
-    (beginning-of-line)
-    (let ((transclude-re "^[ \t]*#\\+transclude:"))
-      (when (looking-at-p transclude-re) t))))
+;; TODO Add check it is indeed called in the beginning of a link"
+;;   (save-excursion
+;;     (forward-line -1)
+;;     (beginning-of-line)
+;;     (let ((transclude-re "^[ \t]*#\\+transclude:"))
+;;       (when (looking-at-p transclude-re) t))))
 
 (defun org-transclusion--buffer-org-file-p (&optional buf)
   "Check if BUF is visiting an org file.
