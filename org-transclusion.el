@@ -756,10 +756,10 @@ This should be a buffer-local minior mode.  Not done yet."
     ;;WIP not included yet
     ;;(advice-add 'org-metaup :around #'org-transclusion-metaup-down)
     ;;(advice-add 'org-metadown :around #'org-transclusion-metaup-down)
-    (advice-add 'org-metaleft :around #'org-transclusion-metaleft-right)
-    (advice-add 'org-metaright :around #'org-transclusion-metaleft-right)
-    (advice-add 'org-shiftmetaleft :around #'org-transclusion-metaleft-right)
-    (advice-add 'org-shiftmetaright :around #'org-transclusion-metaleft-right)
+    (advice-add 'org-metaleft :around #'org-transclusion-left)
+    (advice-add 'org-metaright :around #'org-transclusion-right)
+    (advice-add 'org-shiftmetaleft :around #'org-transclusion-left)
+    (advice-add 'org-shiftmetaright :around #'org-transclusion-right)
     (when org-transclusion-activate-persistent-message
       (setq header-line-format
             (substitute-command-keys
@@ -784,10 +784,10 @@ This should be a buffer-local minior mode.  Not done yet."
         ;;WIP not included yet
         ;;(advice-remove 'org-metaup #'org-transclusion-metaup-down)
         ;;(advice-remove 'org-metadown #'org-transclusion-metaup-down))))
-        (advice-remove 'org-metaleft #'org-transclusion-metaleft-right)
-        (advice-remove 'org-metaright #'org-transclusion-metaleft-right)
-        (advice-remove 'org-shiftmetaleft #'org-transclusion-metaleft-right)
-        (advice-remove 'org-shiftmetaright #'org-transclusion-metaleft-right)
+        (advice-remove 'org-metaleft #'org-transclusion-left)
+        (advice-remove 'org-metaright #'org-transclusion-right)
+        (advice-remove 'org-shiftmetaleft #'org-transclusion-left)
+        (advice-remove 'org-shiftmetaright #'org-transclusion-right)
         (when (buffer-live-p org-transclusion-last-edit-src-buffer)
             (kill-buffer org-transclusion-last-edit-src-buffer))
         (when org-transclusion-activate-persistent-message
@@ -841,29 +841,54 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
     (funcall oldfn arg)))
 
 ;; move this to utility
-(defun org-transclusion--highest-hlevel-at-point ()
-  "Returns the level of the subtree at point
-This does not work for transclusion for the file with the first section."
-  (let ((level))
-    (org-with-wide-buffer
-     (when (org-transclusion--is-within-transclusion)
-       (setq level (org-current-level))
-       (while (and (org-transclusion--is-within-transclusion)
-                   (org-up-heading-safe)))))
-    level))
+;; (defun org-transclusion--highest-hlevel-at-point ()
+;;   "Returns the level of the subtree at point
+;; This does not work for transclusion for the file with the first section."
+;;   (let ((level))
+;;     (org-with-wide-buffer
+;;      (when (org-transclusion--is-within-transclusion)
+;;        (setq level (org-current-level))
+;;        (while (and (org-transclusion--is-within-transclusion)
+;;                    (org-up-heading-safe)))))
+;;     level))
+
+;; (defun org-transclusion--update-hlevel-at-point ()
+;;   "Update the tc-keword-values with \":hlevel\" for overlay at point."
+;;   (let* ((level (org-transclusion--highest-hlevel-at-point))
+;;          (ov (cdr (get-char-property-and-overlay (point) 'tc-type)))
+;;          (plist (overlay-get ov 'tc-keyword-values)))
+;;     (when level
+;;       (setq plist (plist-put plist ':hlevel (number-to-string level)))
+;;       (overlay-put ov 'tc-keyword-values plist))))
+
+(defun org-transclusion--move-to-root-hlevel-of-transclusion-at-point ()
+  (while
+      (save-excursion
+        (and (org-up-heading-safe)
+             (org-transclusion--is-within-transclusion)))
+    (org-up-heading-safe)))
 
 (defun org-transclusion--update-hlevel-at-point ()
-  "Update the tc-keword-values with \":hlevel\" for overlay at point."
-  (let* ((level (org-transclusion--highest-hlevel-at-point))
+  "Assume the point is on the headline."
+  (let* ((level (org-current-level))
          (ov (cdr (get-char-property-and-overlay (point) 'tc-type)))
          (plist (overlay-get ov 'tc-keyword-values)))
-    (when level
-      (setq plist (plist-put plist ':hlevel (number-to-string level)))
-      (overlay-put ov 'tc-keyword-values plist))))
+    (setq plist (plist-put plist ':hlevel (number-to-string level)))
+    (overlay-put ov 'tc-keyword-values plist)))
 
-(defun org-transclusion-metaleft-right (oldfn &optional arg)
+(defun org-transclusion-left (oldfn &optional arg)
+  (org-transclusion-metaleft-right oldfn "left" arg))
+
+(defun org-transclusion-right (oldfn &optional arg)
+  (org-transclusion-metaleft-right oldfn "right" arg))
+
+(defun org-transclusion-metaleft-right (oldfn left-or-right &optional arg)
   "Metashift/right, rather than metaleft/right.
-This is because we want to treat the whole subtree as one unit."
+This is because we want to treat the whole subtree as one unit.
+
+Check if the point is on the heading < this check is probably not
+necessary as the region is read only. Move to the highest, and
+then call metashift, instead of meta."
   (interactive)
     (if-let (ov (cdr (get-char-property-and-overlay (point) 'tc-type)))
       ;; Only if you are in the transclusion overlay
@@ -873,13 +898,20 @@ This is because we want to treat the whole subtree as one unit."
             (add-text-properties (overlay-start ov) (overlay-end ov) '(read-only nil))))
         ;; Call the normal metaup/down
         ;; TODO Move to the top of the subtree in the transclusion if you can
-        (funcall oldfn)
+        (org-with-wide-buffer
+         (org-transclusion--move-to-root-hlevel-of-transclusion-at-point)
+         (if (string= left-or-right "left")
+             (org-promote-subtree)
+           ;; As this function is advised for only org-shiftmetaright/left
+           ;; org-metaleft/right, the rest of the case must be either metaleft
+           ;; or shiftmetaleft
+           (org-demote-subtree))
+         (org-transclusion--update-hlevel-at-point))
         ;; After calll metaleft/right
-        (org-transclusion--update-hlevel-at-point)
         (dolist (ov (overlays-in (point-min) (point-max)))
           (add-text-properties (overlay-start ov) (overlay-end ov) '(read-only t))))
       ;; If not in the transclusion overlay, do as normal.
-      (funcall oldfn)))
+      (funcall oldfn arg)))
 
 ;;-----------------------------------------------------------------------------
 ;; Definition of org-transclusion-paste-subtree
