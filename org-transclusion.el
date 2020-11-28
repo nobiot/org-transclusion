@@ -415,7 +415,7 @@ TODO need to handle when the file does not exist."
               (overlay-put ov-src 'face 'org-transclusion-source-block)
               (overlay-put ov-src 'tc-pair tc-pair))))))))
 
-(defun org-transclusion-remove-at-point (pos &optional detach)
+(defun org-transclusion-remove-at-point (pos &optional detach stars)
   "Remove transclusion and the copied text around POS.
 When DETACH is non-nil, remove the tranclusion overlay only, keeping the copied
 text."
@@ -433,8 +433,7 @@ text."
                  (beg (overlay-start ov))
                  (raw-link (overlay-get ov 'tc-raw-link))
                  (keyword-values (mapconcat
-                                  (lambda (v)
-                                    (if (symbolp v) (symbol-name v) v))
+                                  (lambda (v) (if (symbolp v) (symbol-name v) v))
                                   (overlay-get ov 'tc-keyword-values) " "))
                  (t-or-nil)
                  (new-beg (progn
@@ -466,6 +465,8 @@ text."
                 (delete-region new-beg new-end))))
             ;; Add back #+transclusion:
             (goto-char beg)
+            (when stars
+              (insert (propertize (make-string stars ?*) 'tc-metamove t) " "))
             (insert (concat "#+transclude: " t-or-nil " " keyword-values "\n")))))
     ;; The message below is common for remove and detach
     (message "Nothing done. No transclusion exists here.")))
@@ -686,14 +687,12 @@ each link:
 
 - Check if the link is in the beginning of a line
 - Check if the link at point is NOT within transclusion"
-
   (interactive)
   ;; Check the windows being worked on is in focus (selected)
   ;; This is to prevent background hook (e.g. save hooks) from updating
   ;; the transclusion buffer.
   (cond ((not org-transclusion-mode)
          (message "Org-transclusion mode is not active."))
-
         ((eq (current-buffer)(window-buffer (selected-window)))
          (setq org-transclusion-buffer-modified-p (buffer-modified-p))
          (save-excursion
@@ -718,11 +717,10 @@ each link:
                  (org-transclusion-link-open-at-point))))) ;org-open-at-point
          (set-buffer-modified-p org-transclusion-buffer-modified-p))))
 
-(defun org-transclusion-remove-all-in-buffer (&optional buf)
+(defun org-transclusion-remove-all-in-buffer (&optional buf add-stars)
   "Remove all the translusion overlay and copied text in current buffer.
 Caller can pass BUF to specify which BUF needs to remove transclusions.
 This feature is meant for `org-transclusion--toggle-transclusion-when-out-of-focus'."
-
   (interactive)
   (when buf (set-buffer buf))
   (setq org-transclusion-buffer-modified-p (buffer-modified-p))
@@ -731,8 +729,14 @@ This feature is meant for `org-transclusion--toggle-transclusion-when-out-of-foc
       (widen)
       (outline-show-all)
       (dolist (ov (overlays-in (point-min) (point-max)))
-        (when-let ((pos (overlay-start ov)))
-          (org-transclusion-remove-at-point pos)))))
+        (let ((pos (overlay-start ov))
+              (level))
+          (when pos
+            (when add-stars
+              (save-excursion
+                (org-transclusion--move-to-root-hlevel-of-transclusion-at-point)
+                (setq level (org-outline-level))))
+            (org-transclusion-remove-at-point pos nil level))))))
   (set-buffer-modified-p org-transclusion-buffer-modified-p))
 
 ;;-----------------------------------------------------------------------------
@@ -754,8 +758,8 @@ This should be a buffer-local minior mode.  Not done yet."
     (add-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save nil t)
     (add-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save nil t)
     ;;WIP not included yet
-    ;;(advice-add 'org-metaup :around #'org-transclusion-metaup-down)
-    ;;(advice-add 'org-metadown :around #'org-transclusion-metaup-down)
+    (advice-add 'org-metaup :around #'org-transclusion-metaup-down)
+    (advice-add 'org-metadown :around #'org-transclusion-metaup-down)
     (advice-add 'org-metaleft :around #'org-transclusion-left)
     (advice-add 'org-metaright :around #'org-transclusion-right)
     (advice-add 'org-shiftmetaleft :around #'org-transclusion-left)
@@ -782,8 +786,8 @@ This should be a buffer-local minior mode.  Not done yet."
         (remove-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save t)
         (remove-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save t)
         ;;WIP not included yet
-        ;;(advice-remove 'org-metaup #'org-transclusion-metaup-down)
-        ;;(advice-remove 'org-metadown #'org-transclusion-metaup-down))))
+        (advice-remove 'org-metaup #'org-transclusion-metaup-down)
+        (advice-remove 'org-metadown #'org-transclusion-metaup-down)
         (advice-remove 'org-metaleft #'org-transclusion-left)
         (advice-remove 'org-metaright #'org-transclusion-right)
         (advice-remove 'org-shiftmetaleft #'org-transclusion-left)
@@ -817,55 +821,47 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
 
 ;;-----------------------------------------------------------------------------
 ;; Metaup/down; metaleft/right metashiftleft/right
+
+(defun org-transclusion--toggle-all-headline ()
+  (save-excursion
+    (goto-char (point-min))
+    (while (or (and (bobp)(org-at-heading-p))
+               (and (not (eobp))(org-at-heading-p)))
+      (when (get-text-property (point) 'tc-metamove)
+        (org-toggle-heading))
+      (org-next-visible-heading 1))))
+
 (defun org-transclusion-metaup-down (oldfn &optional arg)
   "TODO. WIP. "
   ;;; This implementation does not do what I want.
   ;;; When headline moves, the overlay is deleted.
   ;;; Changing the evaporate property to nil does not work either.
   ;;; Need to add stars to the keyword for all the overlays (not a bit issue.)
-  "Temporarily remove text-only attributes to allow for metaup/down to move headlines around."
+  ;;; Temporarily remove text-only attributes to allow for metaup/down to move headlines around."
   (interactive)
 
   (if-let (ov (cdr (get-char-property-and-overlay (point) 'tc-type)))
       ;; Only if you are in the transclusion overlay
       (progn
-        (dolist (ov (overlays-in (point-min) (point-max)))
-          (let ((inhibit-read-only t))
-            (add-text-properties (overlay-start ov) (overlay-end ov) '(read-only nil))))
         ;; Call the normal metaup/down
-        (funcall oldfn arg)
+        (org-transclusion-remove-all-in-buffer (current-buffer) t)
+        (when (org-at-heading-p)
+          (ignore-errors (funcall oldfn arg)))
+        ;; remove heading on the keyword
+        ;; Go through all the headlines, if tc-metamove is on, toggle headline off
+        (org-transclusion--toggle-all-headline)
         ;; After calll metaup/down
-        (dolist (ov (overlays-in (point-min) (point-max)))
-          (add-text-properties (overlay-start ov) (overlay-end ov) '(read-only t))))
+        (org-transclusion-add-all-in-buffer))
     ;; If not in the transclusion overlay, do as normal.
     (funcall oldfn arg)))
 
 ;; move this to utility
-;; (defun org-transclusion--highest-hlevel-at-point ()
-;;   "Returns the level of the subtree at point
-;; This does not work for transclusion for the file with the first section."
-;;   (let ((level))
-;;     (org-with-wide-buffer
-;;      (when (org-transclusion--is-within-transclusion)
-;;        (setq level (org-current-level))
-;;        (while (and (org-transclusion--is-within-transclusion)
-;;                    (org-up-heading-safe)))))
-;;     level))
-
-;; (defun org-transclusion--update-hlevel-at-point ()
-;;   "Update the tc-keword-values with \":hlevel\" for overlay at point."
-;;   (let* ((level (org-transclusion--highest-hlevel-at-point))
-;;          (ov (cdr (get-char-property-and-overlay (point) 'tc-type)))
-;;          (plist (overlay-get ov 'tc-keyword-values)))
-;;     (when level
-;;       (setq plist (plist-put plist ':hlevel (number-to-string level)))
-;;       (overlay-put ov 'tc-keyword-values plist))))
-
 (defun org-transclusion--move-to-root-hlevel-of-transclusion-at-point ()
-  (while
-      (save-excursion
-        (and (org-up-heading-safe)
-             (org-transclusion--is-within-transclusion)))
+  "Move to the root of subtree within the transclusion at point."
+  (while (save-excursion
+           ;; Check the destination before actually moving the point
+           (and (org-up-heading-safe)
+                (org-transclusion--is-within-transclusion)))
     (org-up-heading-safe)))
 
 (defun org-transclusion--update-hlevel-at-point ()
@@ -892,7 +888,8 @@ then call metashift, instead of meta."
   (interactive)
     (if-let (ov (cdr (get-char-property-and-overlay (point) 'tc-type)))
       ;; Only if you are in the transclusion overlay
-      (progn
+        (progn ;; All the operations are in this progn
+        ;;TODO only in the current overlay
         (dolist (ov (overlays-in (point-min) (point-max)))
           (let ((inhibit-read-only t))
             (add-text-properties (overlay-start ov) (overlay-end ov) '(read-only nil))))
