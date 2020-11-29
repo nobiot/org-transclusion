@@ -755,7 +755,8 @@ each link:
 (defun org-transclusion-remove-all-in-buffer (&optional buf add-stars)
   "Remove all the translusion overlay and copied text in current buffer.
 Caller can pass BUF to specify which BUF needs to remove transclusions.
-`org-transclusion-metaup-down' use this function with ADD-STARS t."
+`org-transclusion-metaup-down' use this function with ADD-STARS.
+The values can be 't or 'only-with-headline."
   (interactive)
   (when buf (set-buffer buf))
   (setq org-transclusion-buffer-modified-p (buffer-modified-p))
@@ -769,7 +770,9 @@ Caller can pass BUF to specify which BUF needs to remove transclusions.
               (level))
           (when pos
             (goto-char pos)
-            (when (org-transclusion--has-headline-p)
+            (when (or (eq add-stars t)
+                      (and (eq add-stars 'only-with-headline)
+                           (org-transclusion--has-headline-p)))
               (org-transclusion--move-to-root-hlevel-of-transclusion-at-point)
               (setq switch 'stars)
               (setq level (org-outline-level)))
@@ -797,6 +800,8 @@ This should be a buffer-local minior mode.  Not done yet."
     ;;WIP not included yet
     (advice-add 'org-metaup :around #'org-transclusion-metaup-down)
     (advice-add 'org-metadown :around #'org-transclusion-metaup-down)
+    (advice-add 'org-shiftmetaup :around #'org-transclusion-shiftmetaup)
+    (advice-add 'org-shiftmetadown :around #'org-transclusion-shiftmetadown)
     (advice-add 'org-metaleft :around #'org-transclusion-metaleft)
     (advice-add 'org-metaright :around #'org-transclusion-metaright)
     (advice-add 'org-shiftmetaleft :around #'org-transclusion-metaleft)
@@ -825,6 +830,8 @@ This should be a buffer-local minior mode.  Not done yet."
         ;;WIP not included yet
         (advice-remove 'org-metaup #'org-transclusion-metaup-down)
         (advice-remove 'org-metadown #'org-transclusion-metaup-down)
+        (advice-remove 'org-shiftmetaup #'org-transclusion-shiftmetaup)
+        (advice-remove 'org-shiftmetadown #'org-transclusion-shiftmetadown)
         (advice-remove 'org-metaleft #'org-transclusion-metaleft)
         (advice-remove 'org-metaright #'org-transclusion-metaright)
         (advice-remove 'org-shiftmetaleft #'org-transclusion-metaleft)
@@ -859,31 +866,40 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
 ;;-----------------------------------------------------------------------------
 ;; Metaup/down; metaleft/right metashiftleft/right
 
-(defun org-transclusion-metaup-down (oldfn &optional arg)
+(defun org-transclusion-shiftmetaup (_oldfn &optional _arg)
+  (org-transclusion-up-down #'org-move-subtree-up t))
+
+(defun org-transclusion-shiftmetadown (_oldfn &optional _arg)
+  (org-transclusion-up-down #'org-move-subtree-down t))
+
+(defun org-transclusion-metaup-down (oldfn &optional _arg)
+  (org-transclusion-up-down oldfn 'only-with-headline))
+
+(defun org-transclusion-up-down (oldfn add-stars-switch)
   "Move the transcluded region at point up and down as a unified chunk.
 It only works on the headlines within a transclusion.
 Otherwise, the original function (OLDFN with optional ARG) is used.
 Need to add stars to the keyword for all the overlays (not a bit issue.)
 Temporarily remove text-only attributes to allow for metaup/down to move headlines around.
 
-shift -- subtree down
-metashift -- drag line down"
+meta -- subtree down
+shiftmeta -- drag line down"
   (interactive)
   (if-let (ov (cdr (get-char-property-and-overlay (point) 'tc-type)))
       ;; Only if you are in the transclusion overlay
       (progn
         ;; Call the normal metaup/down
-        (org-transclusion--add-temporarly-headline-stars)
+        (org-transclusion--add-temporarly-headline-stars add-stars-switch)
         (when (org-at-heading-p)
-          (ignore-errors (funcall oldfn arg)))
+          (ignore-errors (funcall oldfn)))
         ;; Remove heading on the keyword
         ;; Go through all the headlines, if tc-metamove is on, toggle headline off
         (org-transclusion--remove-all-temporarly-headline-stars)
         ;; After calll metaup/down
         (org-transclusion-add-all-in-buffer))
     ;; If not in the transclusion overlay.
-    (org-transclusion--add-temporarly-headline-stars)
-    (ignore-errors (funcall oldfn arg))
+    (org-transclusion--add-temporarly-headline-stars add-stars-switch)
+    (ignore-errors (funcall oldfn))
     (org-transclusion--remove-all-temporarly-headline-stars)
     (org-transclusion-add-all-in-buffer)))
 
@@ -895,7 +911,7 @@ metashift -- drag line down"
 
 (defvar-local org-transclusion--temp-markers '())
 
-(defun org-transclusion-metaleft-right (oldfn left-or-right &optional arg)
+(defun org-transclusion-metaleft-right (oldfn left-or-right &optional _arg)
   "Metashift/right, rather than metaleft/right.
 This is because we want to treat the whole subtree as one unit.
 
@@ -935,7 +951,7 @@ then call metashift, instead of meta."
         (dolist (ov (overlays-in (point-min) (point-max)))
           (add-text-properties (overlay-start ov) (overlay-end ov) '(read-only t))))
       ;; If not in the transclusion overlay, do as normal.
-      (funcall oldfn arg)))
+      (funcall oldfn)))
 
 (defun org-transclusion--get-overlay-at-point ()
   "Returns overlay object of the transclusion at point."
@@ -950,11 +966,11 @@ then call metashift, instead of meta."
         (goto-char beg)
         (when (re-search-forward org-heading-regexp end t 1) t))))
 
-(defun org-transclusion--add-temporarly-headline-stars ()
+(defun org-transclusion--add-temporarly-headline-stars (add-stars-switch)
   "Add temporary headline stars to the \"#+transclude:\" keyword.
 This function is meant to be used for
 `org-transclusion-metaup-down'."
-  (org-transclusion-remove-all-in-buffer (current-buffer) add-stars))
+  (org-transclusion-remove-all-in-buffer (current-buffer) add-stars-switch))
 
 (defun org-transclusion--remove-all-temporarly-headline-stars ()
   "Remove temporary headline stars from the \"#+transclude:\" keyword.
