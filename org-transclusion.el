@@ -923,33 +923,24 @@ then call metashift, instead of meta."
       ;; Only if you are in the transclusion overlay
         (progn ;; All the operations are in this progn
         ;;TODO only in the current overlay
-        (dolist (ov (overlays-in (point-min) (point-max)))
           (let ((inhibit-read-only t))
-            (add-text-properties (overlay-start ov) (overlay-end ov) '(read-only nil))))
+            (add-text-properties (overlay-start ov) (overlay-end ov) '(read-only nil)))
         ;; Call the normal metaup/down
         ;; TODO Move to the top of the subtree in the transclusion if you can
         (org-with-wide-buffer
          ;; for multiple subtrees in buffer, need to have markers for all the top level
          ;; headings, and then loop through them.
          (org-transclusion--move-to-root-hlevel-of-transclusion-at-point)
-         (push (point) org-transclusion--temp-markers)
-         (org-forward-heading-same-level 1)
-         (while (not (memq (point) org-transclusion--temp-markers))
-           (push (point) org-transclusion--temp-markers)
-           (org-forward-heading-same-level 1))
-         (dolist (p org-transclusion--temp-markers)
-           (goto-char p)
-           (if (eq left-or-right 'left)
-               (org-promote-subtree)
-             ;; As this function is advised for only org-shiftmetaright/left
-             ;; org-metaleft/right, the rest of the case must be either metaleft
-             ;; or shiftmetaleft
-             (org-demote-subtree)))
+         (if (eq left-or-right 'left)
+             (org-promote-subtree)
+           ;; As this function is advised for only org-shiftmetaright/left
+           ;; org-metaleft/right, the rest of the case must be either metaleft
+           ;; or shiftmetaleft
+           (org-demote-subtree)))
          (org-transclusion--update-hlevel-at-point)
-         (setq org-transclusion--temp-markers nil))
-        ;; After calll metaleft/right
-        (dolist (ov (overlays-in (point-min) (point-max)))
-          (add-text-properties (overlay-start ov) (overlay-end ov) '(read-only t))))
+         (setq org-transclusion--temp-markers nil)
+         ;; After calll metaleft/right
+         (add-text-properties (overlay-start ov) (overlay-end ov) '(read-only t)))
       ;; If not in the transclusion overlay, do as normal.
       (funcall oldfn)))
 
