@@ -768,11 +768,11 @@ Caller can pass BUF to specify which BUF needs to remove transclusions.
               (switch)
               (level))
           (when pos
-            (when add-stars
-              (save-excursion
-                (org-transclusion--move-to-root-hlevel-of-transclusion-at-point)
-                (setq switch 'stars)
-                (setq level (org-outline-level))))
+            (goto-char pos)
+            (when (org-transclusion--has-headline-p)
+              (org-transclusion--move-to-root-hlevel-of-transclusion-at-point)
+              (setq switch 'stars)
+              (setq level (org-outline-level)))
             (org-transclusion-remove-at-point pos switch level))))))
   (set-buffer-modified-p org-transclusion-buffer-modified-p))
 
@@ -864,7 +864,10 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
 It only works on the headlines within a transclusion.
 Otherwise, the original function (OLDFN with optional ARG) is used.
 Need to add stars to the keyword for all the overlays (not a bit issue.)
-Temporarily remove text-only attributes to allow for metaup/down to move headlines around."
+Temporarily remove text-only attributes to allow for metaup/down to move headlines around.
+
+shift -- subtree down
+metashift -- drag line down"
   (interactive)
   (if-let (ov (cdr (get-char-property-and-overlay (point) 'tc-type)))
       ;; Only if you are in the transclusion overlay
@@ -934,11 +937,24 @@ then call metashift, instead of meta."
       ;; If not in the transclusion overlay, do as normal.
       (funcall oldfn arg)))
 
+(defun org-transclusion--get-overlay-at-point ()
+  "Returns overlay object of the transclusion at point."
+  (cdr (get-char-property-and-overlay (point) 'tc-type)))
+
+(defun org-transclusion--has-headline-p ()
+  "Returns t if the transclusion at point contains a headline."
+  (if-let* ((ov (org-transclusion--get-overlay-at-point))
+            (beg (overlay-start ov))
+            (end (overlay-end ov)))
+      (save-excursion
+        (goto-char beg)
+        (when (re-search-forward org-heading-regexp end t 1) t))))
+
 (defun org-transclusion--add-temporarly-headline-stars ()
   "Add temporary headline stars to the \"#+transclude:\" keyword.
 This function is meant to be used for
 `org-transclusion-metaup-down'."
-  (org-transclusion-remove-all-in-buffer (current-buffer) t))
+  (org-transclusion-remove-all-in-buffer (current-buffer) add-stars))
 
 (defun org-transclusion--remove-all-temporarly-headline-stars ()
   "Remove temporary headline stars from the \"#+transclude:\" keyword.
@@ -946,6 +962,8 @@ This function is meant to be used for
 `org-transclusion-metaup-down'."
   (save-excursion
     (goto-char (point-min))
+    (or (and (bobp)(org-at-heading-p))
+        (or (org-next-visible-heading 1) t))
     (while (or (and (bobp)(org-at-heading-p))
                (and (not (eobp))(org-at-heading-p)))
       (when (get-text-property (point) 'tc-metamove)
