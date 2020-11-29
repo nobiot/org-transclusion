@@ -878,14 +878,19 @@ Temporarily remove text-only attributes to allow for metaup/down to move headlin
         (org-transclusion--remove-all-temporarly-headline-stars)
         ;; After calll metaup/down
         (org-transclusion-add-all-in-buffer))
-    ;; If not in the transclusion overlay, do as normal.
-    (funcall oldfn arg)))
+    ;; If not in the transclusion overlay.
+    (org-transclusion--add-temporarly-headline-stars)
+    (ignore-errors (funcall oldfn arg))
+    (org-transclusion--remove-all-temporarly-headline-stars)
+    (org-transclusion-add-all-in-buffer)))
 
 (defun org-transclusion-metaleft (oldfn &optional arg)
   (org-transclusion-metaleft-right oldfn 'left arg))
 
 (defun org-transclusion-metaright (oldfn &optional arg)
   (org-transclusion-metaleft-right oldfn 'right arg))
+
+(defvar-local org-transclusion--temp-markers '())
 
 (defun org-transclusion-metaleft-right (oldfn left-or-right &optional arg)
   "Metashift/right, rather than metaleft/right.
@@ -905,14 +910,24 @@ then call metashift, instead of meta."
         ;; Call the normal metaup/down
         ;; TODO Move to the top of the subtree in the transclusion if you can
         (org-with-wide-buffer
+         ;; for multiple subtrees in buffer, need to have markers for all the top level
+         ;; headings, and then loop through them.
          (org-transclusion--move-to-root-hlevel-of-transclusion-at-point)
-         (if (eq left-or-right 'left)
-             (org-promote-subtree)
-           ;; As this function is advised for only org-shiftmetaright/left
-           ;; org-metaleft/right, the rest of the case must be either metaleft
-           ;; or shiftmetaleft
-           (org-demote-subtree))
-         (org-transclusion--update-hlevel-at-point))
+         (push (point) org-transclusion--temp-markers)
+         (org-forward-heading-same-level 1)
+         (while (not (memq (point) org-transclusion--temp-markers))
+           (push (point) org-transclusion--temp-markers)
+           (org-forward-heading-same-level 1))
+         (dolist (p org-transclusion--temp-markers)
+           (goto-char p)
+           (if (eq left-or-right 'left)
+               (org-promote-subtree)
+             ;; As this function is advised for only org-shiftmetaright/left
+             ;; org-metaleft/right, the rest of the case must be either metaleft
+             ;; or shiftmetaleft
+             (org-demote-subtree)))
+         (org-transclusion--update-hlevel-at-point)
+         (setq org-transclusion--temp-markers nil))
         ;; After calll metaleft/right
         (dolist (ov (overlays-in (point-min) (point-max)))
           (add-text-properties (overlay-start ov) (overlay-end ov) '(read-only t))))
@@ -943,7 +958,8 @@ This function is meant to be used for
            ;; Check the destination before actually moving the point
            (and (org-up-heading-safe)
                 (org-transclusion--is-within-transclusion)))
-    (org-up-heading-safe)))
+    (org-up-heading-safe)
+    (beginning-of-line)))
 
 (defun org-transclusion--update-hlevel-at-point ()
   "Assume the point is on the headline."
