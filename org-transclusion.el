@@ -298,8 +298,12 @@ to include the first section."
          ;; In this case, the whole DATA should be returned.
          ;; Sections are included in the headlines Thies means that if there
          ;; is no headline, nothing gets transcluded.
-         ;; TODO It looks like there is no filter on the first section.
-         (if org-transclusion-include-first-section data nil))
+         (if org-transclusion-include-first-section
+             ;; Add filter to the first section as well
+             (progn (org-element-map data org-transclusion-exclude-elements
+                      (lambda (d) (org-element-extract-element d)))
+                    data)
+           nil))
         ;; Rest of the case.
         (t (org-element-map data org-transclusion-exclude-elements
              (lambda (d) (org-element-extract-element d) nil))
