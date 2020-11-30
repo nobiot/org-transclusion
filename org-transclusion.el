@@ -179,10 +179,13 @@ is used (ARG is non-nil), then use the standard `org-link-open'."
 
      ((string= "id" (org-element-property :type link))
       ;; when type is id, the value of path is the id
-      (let* ((id (org-element-property :path link)))
-        (setq tc-params (list :tc-type "org-id"
-                              :tc-arg (org-id-find id t)
-                              :tc-fn #'org-transclusion--get-org-content-from-marker))))
+      (let* ((id (org-element-property :path link))
+             (mkr (ignore-errors (org-id-find id t))))
+        (if mkr (progn
+                  (setq tc-params (list :tc-type "org-id"
+                                        :tc-arg mkr
+                                        :tc-fn #'org-transclusion--get-org-content-from-marker)))
+          (message "No transclusion done for this ID. Ensure it works."))))
 
      ((org-transclusion--org-file-p (org-element-property :path link))
       (setq tc-params (list :tc-type "org-link"
@@ -908,8 +911,6 @@ shiftmeta -- drag line down"
 
 (defun org-transclusion-metaright (oldfn &optional arg)
   (org-transclusion-metaleft-right oldfn 'right arg))
-
-(defvar-local org-transclusion--temp-markers '())
 
 (defun org-transclusion-metaleft-right (oldfn left-or-right &optional _arg)
   "Metashift/right, rather than metaleft/right.
