@@ -885,7 +885,7 @@ Temporarily remove text-only attributes to allow for metaup/down to move headlin
 meta -- subtree down
 shiftmeta -- drag line down"
   (interactive)
-  (if-let (ov (cdr (get-char-property-and-overlay (point) 'tc-type)))
+  (if-let (ov (org-transclusion--get-overlay-at-point))
       ;; Only if you are in the transclusion overlay
       (progn
         ;; Call the normal metaup/down
@@ -919,30 +919,36 @@ Check if the point is on the heading < this check is probably not
 necessary as the region is read only. Move to the highest, and
 then call metashift, instead of meta."
   (interactive)
-    (if-let (ov (cdr (get-char-property-and-overlay (point) 'tc-type)))
-      ;; Only if you are in the transclusion overlay
-        (progn ;; All the operations are in this progn
-        ;;TODO only in the current overlay
-          (let ((inhibit-read-only t))
-            (add-text-properties (overlay-start ov) (overlay-end ov) '(read-only nil)))
-        ;; Call the normal metaup/down
-        ;; TODO Move to the top of the subtree in the transclusion if you can
+  (if-let* ((ov (org-transclusion--get-overlay-at-point))
+            (ov-beg (overlay-start ov))
+            (ov-end (overlay-end ov)))
+      (progn ;; if you are in the transclusion overlay
+        (let ((inhibit-read-only t))
+          (add-text-properties ov-beg ov-end '(read-only nil)))
         (org-with-wide-buffer
-         ;; for multiple subtrees in buffer, need to have markers for all the top level
-         ;; headings, and then loop through them.
-         (org-transclusion--move-to-root-hlevel-of-transclusion-at-point)
-         (if (eq left-or-right 'left)
-             (org-promote-subtree)
-           ;; As this function is advised for only org-shiftmetaright/left
-           ;; org-metaleft/right, the rest of the case must be either metaleft
-           ;; or shiftmetaleft
-           (org-demote-subtree)))
-         (org-transclusion--update-hlevel-at-point)
-         (setq org-transclusion--temp-markers nil)
-         ;; After calll metaleft/right
-         (add-text-properties (overlay-start ov) (overlay-end ov) '(read-only t)))
-      ;; If not in the transclusion overlay, do as normal.
-      (funcall oldfn)))
+         (let ((more-subtree-p t))
+           (while more-subtree-p
+             (goto-char ov-beg)
+             (org-transclusion--move-to-root-hlevel-of-transclusion-at-point ov)
+             (if (eq left-or-right 'left)
+                 (ignore-errors (org-promote-subtree))
+               ;; As this function is advised for only org-shiftmetaright/left
+               ;; org-metaleft/right, the rest of the case must be either metaleft
+               ;; or shiftmetaleft
+               (ignore-errors (org-demote-subtree)))
+             (save-excursion
+               (org-forward-heading-same-level 1)
+               (when (or (eq ov-beg (point)) ;; no movement means no heading of the same level
+                         (< ov-end (point))) ;; outside the transclusion overlay
+                 (setq more-subtree-p nil)))
+             (when more-subtree-p (org-forward-heading-same-level 1))))
+         (org-transclusion--update-hlevel-at-point))
+        ;; After calll metaleft/right
+        (add-text-properties ov-beg ov-end '(read-only t)))
+    ;; If not in the transclusion overlay, do as normal.
+    ;; ignore-errors needed to ignore "read-only"
+    ;; when the headline subsumes a transcusion region
+    (ignore-errors (funcall oldfn))))
 
 (defun org-transclusion--get-overlay-at-point ()
   "Returns overlay object of the transclusion at point."
@@ -977,14 +983,22 @@ This function is meant to be used for
         (org-toggle-heading))
       (org-next-visible-heading 1))))
 
-(defun org-transclusion--move-to-root-hlevel-of-transclusion-at-point ()
-  "Move to the root of subtree within the transclusion at point."
-  (while (save-excursion
-           ;; Check the destination before actually moving the point
-           (and (org-up-heading-safe)
-                (org-transclusion--is-within-transclusion)))
-    (org-up-heading-safe)
-    (beginning-of-line)))
+(defun org-transclusion--move-to-root-hlevel-of-transclusion-at-point (&optional ov)
+  "Move to the root of subtree within the transclusion at point.
+Optionally OVerlay can be passed. If not passed, this function will get one at point.
+
+TODO Currently it does not work when the transclusion includes
+the first section and the point is before the first headline."
+  (beginning-of-line)
+  (let ((ov ov))
+    (when (not ov) (setq ov (org-transclusion--get-overlay-at-point)))
+    (while (save-excursion
+             ;; Check the destination before actually moving the point
+             (and (org-up-heading-safe)
+                  (<= (overlay-start ov) (point))
+                  (org-transclusion--is-within-transclusion)))
+      (org-up-heading-safe)
+      (beginning-of-line))))
 
 (defun org-transclusion--update-hlevel-at-point ()
   "Assume the point is on the headline."
