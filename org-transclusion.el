@@ -379,72 +379,74 @@ tc-content :: the actual text content to be transcluded"
   ;; Remove #+transclude keyword
   ;; Assume in the beginning of a link
   (when (org-transclusion--ok-to-transclude)
-    (let ((keyword-values (org-transclusion--get-keyword-values)))
-      (save-excursion
-        (forward-line -1)
-        (beginning-of-line)
-        ;; Assume there is no space or line feed between the keyword and link in question
-        (let* ((elm (org-element-at-point))
-               (beg (org-element-property :begin elm))
-               (end (org-element-property :end elm)))
-          (delete-region beg end))
-        ;; Remove the link
-        (when-let ((link-loc (org-transclusion--get-link-location))
-                   (link-beg (plist-get link-loc ':begin))
-                   (link-end (plist-get link-loc ':end))
-                   (raw-link (buffer-substring-no-properties link-beg link-end)))
-          (delete-region link-beg link-end)
-          ;; Delete a char after the link has been removed to remove the line
-          ;; the link used to occupy. Without this, you end up moving one line
-          ;; every time add operation is called.
-          (unless (eobp) (delete-char 1))
-          ;; Add content and overlay
-          (let* ((tc-raw-link raw-link)
-                 (tc-type (plist-get tc-params :tc-type))
-                 (tc-arg (plist-get tc-params :tc-arg))
-                 (tc-fn (plist-get tc-params :tc-fn))
-                 (tc-payload (funcall tc-fn tc-arg))
-                 (tc-beg-mkr (plist-get tc-payload :tc-beg-mkr))
-                 (tc-end-mkr (plist-get tc-payload :tc-end-mkr))
-                 (tc-content (plist-get tc-payload :tc-content))
-                 (beg (point)) ;; at the beginning of the text content before inserting it
-                 (beg-mkr (point-marker))) ;; for source overlay
-            (if (and
-                 org-transclusion-use-paste-subtree
-                 (org-kill-is-subtree-p tc-content))
-                ;; Deactivate org-adapt-indentation temporarlily.  This is
-                ;; necessary; otherwise, the transclusion links included the
-                ;; demoted subtree will have a space by adaptation. It
-                ;; disables further adding of transclusion links.
-                (let ((org-adapt-indentation nil)
-                      (hlevel (plist-get keyword-values ':hlevel)))
-                  (when hlevel (setq hlevel (string-to-number hlevel)))
-                  (org-transclusion-paste-subtree hlevel tc-content t t)) ;; one line removed from original
-              (insert tc-content))
-            (let* ((sbuf (marker-buffer tc-beg-mkr)) ;source buffer
-                   (end (point)) ;; at the end of text content after inserting it
-                   (ov-src (make-overlay tc-beg-mkr tc-end-mkr sbuf t nil)) ;; source-buffer
-                   (ov-tc (make-overlay beg end nil t nil)) ;; transclusion-buiffer
-                   (tc-pair (list ov-src ov-tc)))
-              ;; Put to transclusion overlay
-              (overlay-put ov-tc 'tc-type tc-type)
-              (overlay-put ov-tc 'tc-raw-link tc-raw-link)
-              (overlay-put ov-tc 'tc-beg-mkr tc-beg-mkr)
-              (overlay-put ov-tc 'tc-end-mkr tc-end-mkr)
-              (overlay-put ov-tc 'priority -50)
-              (overlay-put ov-tc 'evaporate t)
-              (overlay-put ov-tc 'face 'org-transclusion-block)
-              (overlay-put ov-tc 'tc-pair tc-pair)
-              (overlay-put ov-tc 'tc-keyword-values keyword-values)
-              (overlay-put ov-tc 'help-echo
-                           (substitute-command-keys
-                            (concat "Original link: " tc-raw-link ". Visit with `\\[org-transclusion-open-src-buffer-at-point]'.")))
-              (add-text-properties (overlay-start ov-tc) (overlay-end ov-tc) '(read-only t))
-              ;; Put to the source overlay
-              (overlay-put ov-src 'tc-by beg-mkr)
-              (overlay-put ov-src 'evaporate t)
-              (overlay-put ov-src 'face 'org-transclusion-source-block)
-              (overlay-put ov-src 'tc-pair tc-pair))))))))
+    (let* ((keyword-values (org-transclusion--get-keyword-values))
+           (tc-type (plist-get tc-params :tc-type))
+           (tc-arg (plist-get tc-params :tc-arg))
+           (tc-fn (plist-get tc-params :tc-fn))
+           (tc-payload (funcall tc-fn tc-arg))
+           (tc-beg-mkr (plist-get tc-payload :tc-beg-mkr))
+           (tc-end-mkr (plist-get tc-payload :tc-end-mkr))
+           (tc-content (plist-get tc-payload :tc-content)))
+      (if (string= tc-content "") (message "Nothing done. No content is found through the link.")
+        ;; Do creation only when there is content to be transcluded
+        (save-excursion
+          (forward-line -1)
+          (beginning-of-line)
+          ;; Assume there is no space or line feed between the keyword and link in question
+          (let* ((elm (org-element-at-point))
+                 (beg (org-element-property :begin elm))
+                 (end (org-element-property :end elm)))
+            (delete-region beg end))
+          ;; Remove the link
+          (when-let ((link-loc (org-transclusion--get-link-location))
+                     (link-beg (plist-get link-loc ':begin))
+                     (link-end (plist-get link-loc ':end))
+                     (raw-link (buffer-substring-no-properties link-beg link-end)))
+            (delete-region link-beg link-end)
+            ;; Delete a char after the link has been removed to remove the line
+            ;; the link used to occupy. Without this, you end up moving one line
+            ;; every time add operation is called.
+            (unless (eobp) (delete-char 1))
+            ;; Add content and overlay
+            (let* ((tc-raw-link raw-link)
+                   (beg (point)) ;; at the beginning of the text content before inserting it
+                   (beg-mkr (point-marker))) ;; for source overlay
+              (if (and
+                   org-transclusion-use-paste-subtree
+                   (org-kill-is-subtree-p tc-content))
+                  ;; Deactivate org-adapt-indentation temporarlily.  This is
+                  ;; necessary; otherwise, the transclusion links included the
+                  ;; demoted subtree will have a space by adaptation. It
+                  ;; disables further adding of transclusion links.
+                  (let ((org-adapt-indentation nil)
+                        (hlevel (plist-get keyword-values ':hlevel)))
+                    (when hlevel (setq hlevel (string-to-number hlevel)))
+                    (org-transclusion-paste-subtree hlevel tc-content t t)) ;; one line removed from original
+                (insert tc-content))
+              (let* ((sbuf (marker-buffer tc-beg-mkr)) ;source buffer
+                     (end (point)) ;; at the end of text content after inserting it
+                     (ov-src (make-overlay tc-beg-mkr tc-end-mkr sbuf t nil)) ;; source-buffer
+                     (ov-tc (make-overlay beg end nil t nil)) ;; transclusion-buiffer
+                     (tc-pair (list ov-src ov-tc)))
+                ;; Put to transclusion overlay
+                (overlay-put ov-tc 'tc-type tc-type)
+                (overlay-put ov-tc 'tc-raw-link tc-raw-link)
+                (overlay-put ov-tc 'tc-beg-mkr tc-beg-mkr)
+                (overlay-put ov-tc 'tc-end-mkr tc-end-mkr)
+                (overlay-put ov-tc 'priority -50)
+                (overlay-put ov-tc 'evaporate t)
+                (overlay-put ov-tc 'face 'org-transclusion-block)
+                (overlay-put ov-tc 'tc-pair tc-pair)
+                (overlay-put ov-tc 'tc-keyword-values keyword-values)
+                (overlay-put ov-tc 'help-echo
+                             (substitute-command-keys
+                              (concat "Original link: " tc-raw-link ". Visit with `\\[org-transclusion-open-src-buffer-at-point]'.")))
+                (add-text-properties (overlay-start ov-tc) (overlay-end ov-tc) '(read-only t))
+                ;; Put to the source overlay
+                (overlay-put ov-src 'tc-by beg-mkr)
+                (overlay-put ov-src 'evaporate t)
+                (overlay-put ov-src 'face 'org-transclusion-source-block)
+                (overlay-put ov-src 'tc-pair tc-pair)))))))))
 
 (defun org-transclusion-remove-at-point (pos &optional mode stars)
   "Remove transclusion and the copied text around POS.
