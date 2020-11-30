@@ -164,8 +164,7 @@ with `org-link-open'."
                (string= "file" type)))
       (org-transclusion-link-open context))
      ;; For other cases. Do nothing
-     (t
-      (message "Nothing done. Not at a link, or link not supported.")))))
+     (t (message "Nothing done. Not at a link, or link not supported.")))))
 
 (defun org-transclusion-link-open (link &optional arg)
   "Check the LINK can be transcluded, and open it to transclude its content.
@@ -173,10 +172,11 @@ If the LINK type is not supported by org-transclusion, or \\[universal-argument]
 is used (ARG is non-nil), then use the standard `org-link-open'."
   (let ((tc-params nil))
     (cond
+     ;; Check the link is meant for translusion
      ((not (org-transclusion--ok-to-transclude)) (org-link-open link arg))
-
+     ;; Check if ARG is passed
      (arg (org-link-open link arg))
-
+     ;; For Org-ID
      ((string= "id" (org-element-property :type link))
       ;; when type is id, the value of path is the id
       (let* ((id (org-element-property :path link))
@@ -186,19 +186,16 @@ is used (ARG is non-nil), then use the standard `org-link-open'."
                                         :tc-arg mkr
                                         :tc-fn #'org-transclusion--get-org-content-from-marker)))
           (message "No transclusion done for this ID. Ensure it works."))))
-
+     ;; Other Org file links
      ((org-transclusion--org-file-p (org-element-property :path link))
       (setq tc-params (list :tc-type "org-link"
                             :tc-arg link
                             :tc-fn #'org-transclusion--get-org-content-from-link)))
-
+     ;; For non-Org files
      ((setq tc-params (org-transclusion--get-custom-tc-params link)))
-
-     ;; If arg is not added, do nothing.
-     ;; This is used by transclude-all-in-buffer; you don't want to
-     ;; navigate to these files.
+     ;;All the other cases
      (t (message "No transclusion added.")))
-
+    ;; Do transclusion when tc-params are populated
     (when tc-params (org-transclusion--create-at-point tc-params))))
 
 ;; Not used but might be useful...
@@ -220,7 +217,7 @@ This is meant for Org-ID."
            (outline-show-all)
            (goto-char marker)
            (org-transclusion--get-org-buffer-or-element-at-point t))))
-    (message "Nothing done. Cannot find marker for the marker/ID.")))
+    (message "Nothing done. Cannot find marker for the ID.")))
 
 (defun org-transclusion--get-org-content-from-link (link &rest _arg)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from LINK."
@@ -257,6 +254,7 @@ Assume you are at the beginning of the org element to transclude."
                              (org-element-property :begin el)
                              (org-element-property :end el)
                              'section nil 'object nil (list 'tc-paragraph nil))
+                          ;; If not only-element, then parse the entire buffer
                           (org-element-parse-buffer))))
            (obj (org-element-map
                     tree
@@ -302,12 +300,10 @@ to include the first section."
          ;; is no headline, nothing gets transcluded.
          ;; TODO It looks like there is no filter on the first section.
          (if org-transclusion-include-first-section data nil))
-        (t
-         ;; Rest of the case.
-         (org-element-map data org-transclusion-exclude-elements (lambda (d)
-                                                    (org-element-extract-element d)
-                                                    nil))
-         data)))
+        ;; Rest of the case.
+        (t (org-element-map data org-transclusion-exclude-elements
+             (lambda (d) (org-element-extract-element d) nil))
+           data)))
 
 ;;-----------------------------------------------------------------------------
 ;; Functions to support non-Org-mode link types
@@ -446,12 +442,12 @@ tc-content :: the actual text content to be transcluded"
               (overlay-put ov-src 'face 'org-transclusion-source-block)
               (overlay-put ov-src 'tc-pair tc-pair))))))))
 
-(defun org-transclusion-remove-at-point (pos &optional switch stars)
+(defun org-transclusion-remove-at-point (pos &optional mode stars)
   "Remove transclusion and the copied text around POS.
-When SWITCH is 'detatch, remove the tranclusion overlay only,
+When MODE is 'detatch, remove the tranclusion overlay only,
 keeping the copied text, and the original link.
 
- When SWITHC is 'stars, it is meant for
+ When MODE is 'stars, it is meant for
 `org-transclusion-metaup-down'.  The the number of STARS are
 added to the keyword when the transclusion is removed to make
 headlines."
@@ -488,23 +484,24 @@ headlines."
             ;; Also ensure to delete all the possible orphan overlays from the source
             ;; When remove fn, delete the copied texts
             (cond
-             ((eq switch 'detach)
+             ((eq mode 'detach)
               (setq t-or-nil "nil")
               (remove-text-properties new-beg new-end '(read-only)))
              (t ;; remove
               ;; TODO called-interactively-p is not correctly evaluated
               (let ((inhibit-read-only t))
-                (setq t-or-nil "t")
                 ;; for when detatch-at-point is called interactively
                 ;; We want to stop adding it back again.
-                (when (called-interactively-p 'interactive) (setq t-or-nil "nil"))
+                (if (called-interactively-p 'interactive) (setq t-or-nil "nil")
+                  (setq t-or-nil "t"))
                 (delete-region new-beg new-end))))
             ;; Add back #+transclusion:
             (goto-char beg)
-            (when (eq switch 'stars)
+            (when (eq mode 'stars)
+              (unless stars (setq stars 1))
               (insert (propertize (make-string stars ?*) 'tc-metamove t) " "))
             (insert (concat "#+transclude: " t-or-nil " " keyword-values "\n")))))
-    ;; The message below is common for remove and detach
+    ;; The message below is common for all the modes
     (message "Nothing done. No transclusion exists here.")))
 
 (defun org-transclusion-detach-at-point (pos)
@@ -671,8 +668,7 @@ the mode, `toggle' toggles the state."
   (cond
    (org-transclusion-mode
     (org-transclusion-activate))
-   (t
-    (org-transclusion-deactivate))))
+   (t (org-transclusion-deactivate))))
 
 (define-minor-mode org-transclusion-edit-src-mode
   "Toggle Org-transclusion edit source mode.
@@ -800,7 +796,6 @@ This should be a buffer-local minior mode.  Not done yet."
                       window-selection-change-functions))
     (add-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save nil t)
     (add-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save nil t)
-    ;;WIP not included yet
     (advice-add 'org-metaup :around #'org-transclusion-metaup-down)
     (advice-add 'org-metadown :around #'org-transclusion-metaup-down)
     (advice-add 'org-shiftmetaup :around #'org-transclusion-shiftmetaup)
@@ -830,7 +825,6 @@ This should be a buffer-local minior mode.  Not done yet."
                             window-selection-change-functions))
         (remove-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save t)
         (remove-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save t)
-        ;;WIP not included yet
         (advice-remove 'org-metaup #'org-transclusion-metaup-down)
         (advice-remove 'org-metadown #'org-transclusion-metaup-down)
         (advice-remove 'org-shiftmetaup #'org-transclusion-shiftmetaup)
@@ -861,7 +855,7 @@ depending on whether the focus is coming in or out of the tranclusion buffer."
              (org-transclusion-add-all-in-buffer)) ;; add all back in
             (t
              (message "going from %s into %s" buf (current-buffer))
-             ;; FIXME This cannot add transclusion when moving from one
+             ;; TODO This cannot add transclusion when moving from one
              ;; transclusion buffer to another.  I think it needs to check the
              ;; condition if both from and to buffers have minior mode on
              (org-transclusion-remove-all-in-buffer buf)))))) ;; remove all
