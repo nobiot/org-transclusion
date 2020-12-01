@@ -929,7 +929,6 @@ then call metashift, instead of meta."
         (org-with-wide-buffer
          (let ((more-subtree-p t))
            (while more-subtree-p
-             (goto-char ov-beg)
              (org-transclusion--move-to-root-hlevel-of-transclusion-at-point ov)
              (if (eq left-or-right 'left)
                  (ignore-errors (org-promote-subtree))
@@ -984,20 +983,43 @@ This function is meant to be used for
         (org-toggle-heading))
       (org-next-visible-heading 1))))
 
+(defun org-transclusion--point-is-within-transclusion (&optional ov pos)
+  "Return non-nil if POS is within transclusion OV.
+If OV is not passed, it will be the overlay at the current point.
+If POS is not passed it will be the current point."
+  ((let ((ov (progn (if ov ov (org-transclusion--get-overlay-at-point)))))
+     ;; only when the OV is a transclusion overlay.
+     (when (overlay-get ov 'tc-type)
+       (let ((beg (overlay-start ov))
+             (end (overlay-end ov))
+             (p (progn (if pos pos (point)))))
+         ;; Check Point is between beg (inclusive) and end (exclusive) end
+         ;; check can be inclusive, but the point is assumed to be in the
+         ;; beginning of a line. And overlay does not end there.
+         (and (<= beg p)
+              (> end p)))))))
+
 (defun org-transclusion--move-to-root-hlevel-of-transclusion-at-point (&optional ov)
   "Move to the root of subtree within the transclusion at point.
-Optionally OVerlay can be passed. If not passed, this function will get one at point.
-
-TODO Currently it does not work when the transclusion includes
-the first section and the point is before the first headline."
-  (beginning-of-line)
-  (let ((ov ov))
-    (when (not ov) (setq ov (org-transclusion--get-overlay-at-point)))
+Optionally OVerlay can be passed. If not passed, this function will get one at point."
+  (let* ((ov (prog (if ov ov (org-transclusion--get-overlay-at-point))))
+         (ov-beg (overlay-start ov))
+         (ov-end (overlay-end ov)))
+    (goto-char ov-beg)
+    ;; Check if the point is at heading or first section before the first
+    ;; headline.  If not a heading, it can be a paragraph, block element,
+    ;; etc. with no heading, or first section.  Move to the next heading. If
+    ;; it is the first section followed by a heading, continue.  If not go
+    ;; back to the beginning of the overlay and process as normal.
+    (unless (org-at-heading-p)
+      (org-next-visible-heading 1)
+      (unless (org-transclusion--is-within-transclusion) (goto-char ov-beg)))
     (while (save-excursion
-             ;; Check the destination before actually moving the point
+             ;; Check the destination is within the current transclusion
+             ;; before actually moving the point
              (and (org-up-heading-safe)
-                  (<= (overlay-start ov) (point))
-                  (org-transclusion--is-within-transclusion)))
+                  (org-transclusion--point-is-within-transclusion ov)))
+      ;; Move point
       (org-up-heading-safe)
       (beginning-of-line))))
 
