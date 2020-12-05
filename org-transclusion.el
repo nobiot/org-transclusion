@@ -987,15 +987,16 @@ This function is meant to be used for
   "Remove temporary headline stars from the \"#+transclude:\" keyword.
 This function is meant to be used for
 `org-transclusion-metaup-down'."
-  (save-excursion
-    (goto-char (point-min))
-    (or (and (bobp)(org-at-heading-p))
-        (or (org-next-visible-heading 1) t))
-    (while (or (and (bobp)(org-at-heading-p))
-               (and (not (eobp))(org-at-heading-p)))
-      (when (get-text-property (point) 'tc-metamove)
-        (org-toggle-heading))
-      (org-next-visible-heading 1))))
+  (org-with-wide-buffer
+   (org-show-all)
+   (goto-char (point-min))
+   (or (and (bobp)(org-at-heading-p))
+       (or (org-next-visible-heading 1) t))
+   (while (or (and (bobp)(org-at-heading-p))
+              (and (not (eobp))(org-at-heading-p)))
+     (when (get-text-property (point) 'tc-metamove)
+       (org-toggle-heading))
+     (org-next-visible-heading 1))))
 
 (defun org-transclusion--point-is-within-transclusion (&optional ov pos)
   "Return non-nil if POS is within transclusion OV.
