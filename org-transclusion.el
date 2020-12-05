@@ -600,7 +600,10 @@ Others are ignored and removed."
         ;; Further checking the value
         (when-let ((value (org-element-property :value (org-element-at-point))))
           (when (string-match "^\\(t\\|nil\\).*$" value)
-            (org-transclusion--not-nil (match-string 1 value))))))))
+            (and (org-transclusion--not-nil (match-string 1 value))
+                 ;; If inserting in or immediately after another overaly -
+                 ;; read-onl, it transclusion fails with "Read-Only" error
+                 (not (get-pos-property (point) 'read-only)))))))))
 
 ;; Not used. Candidate for removal
 ;; (defun org-transclusion--keyword-p ()
