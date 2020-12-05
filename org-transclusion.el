@@ -214,7 +214,7 @@ This is meant for Org-ID."
       (progn
         (with-current-buffer (marker-buffer marker)
           (org-with-wide-buffer
-           (outline-show-all)
+           ;;(outline-show-all)
            (goto-char marker)
            (org-transclusion--get-org-buffer-or-element-at-point t))))
     (message "Nothing done. Cannot find marker for the ID.")))
@@ -229,7 +229,7 @@ This is meant for Org-ID."
            (buf (find-file-noselect path)))
       (with-current-buffer buf
         (org-with-wide-buffer
-         (outline-show-all)
+         ;;(outline-show-all)
          (if search-option
              (progn
                (org-link-search search-option)
@@ -466,7 +466,7 @@ headlines."
           ;; as the transcluded heading might have folded
           ;; texts outside the tranclusion overlay
           (widen)
-          (outline-show-all)
+          ;;(outline-show-all)
           (let* ((inhibit-read-only t)
                  (beg (overlay-start ov))
                  (raw-link (overlay-get ov 'tc-raw-link))
@@ -718,14 +718,18 @@ buffers."
 As this function should be used only on the current buffer, no
 argument is passed.
 
-Adding transclusion inserts text contents after the link.  As the while
-loop processes links from the top of buffer to bottom one by one, this
+Adding transclusion inserts text contents after the link.  This
 function avoids infinite recursion of transclusions.
+
+It retains the `buffer-modified-p' status before transcluding any
+linked contents.  This means transclusion is not considered
+modification to the buffer for the auto save facilities, such as
+`auto-save-mode' and `auto-save-visited-mode'.
 
 The following conditions are checked before calling a function to work on
 each link:
 
-- Check if the link is in the beginning of a line
+- Check if the link is preceded by a #+transclusion keyword with value t
 - Check if the link at point is NOT within transclusion"
   (interactive)
   ;; Check the windows being worked on is in focus (selected)
@@ -735,53 +739,52 @@ each link:
          (message "Org-transclusion mode is not active."))
         ((eq (current-buffer)(window-buffer (selected-window)))
          (setq org-transclusion-buffer-modified-p (buffer-modified-p))
-         (save-excursion
-           (save-restriction
-             (widen)
-             (outline-show-all)
-             (goto-char (point-min))
-             ;; For `org-next-link', eq t is needed for this while loop to check
-             ;; no link.  This is because fn returns a message string when there
-             ;; is no further link.
-             (when (org-element-link-parser)  ;; when a link is in the begging of buffer
-               (when (eq (line-beginning-position)(point))
-                 (org-transclusion-link-open-at-point))) ;org-open-at-point
-             (while (eq t (org-next-link))
-               ;; Check if the link is in the beginning of a line
-               ;; Check if the link immediately follows the keyword line #+transclude:
-               ;; Check if the link at point is NOT within tranclusion
-               (when (and (bolp)
-                          (org-transclusion--ok-to-transclude)
-                          (not (org-transclusion--is-within-transclusion)))
-                 ;; org-link-open (used by org-open-at-point) advised when minor mode is on
-                 (org-transclusion-link-open-at-point))))) ;org-open-at-point
+         (org-with-wide-buffer
+          (goto-char (point-min))
+          ;; We do not need to consider the case where the link is at
+          ;; point-min, because we need the #+transclusion keyword.
+          ;; Skip this:
+          ;; (when (org-element-link-parser)  ;; when a link is in the begging of buffer
+          (while (eq t (org-next-link))
+            ;; For `org-next-link', eq t is needed for this while loop to check
+            ;; no link.  This is because fn returns a message string when there
+            ;; is no further link.
+            ;; Check if the link is in the beginning of a line
+            ;; Check if the link immediately follows the keyword line #+transclude:
+            ;; Check if the link at point is NOT within tranclusion
+            (when (and (bolp)
+                       (org-transclusion--ok-to-transclude)
+                       (not (org-transclusion--is-within-transclusion)))
+              (org-transclusion-link-open-at-point))))
          (set-buffer-modified-p org-transclusion-buffer-modified-p))))
 
 (defun org-transclusion-remove-all-in-buffer (&optional buf add-stars)
   "Remove all the translusion overlay and copied text in current buffer.
 Caller can pass BUF to specify which BUF needs to remove transclusions.
 `org-transclusion-metaup-down' use this function with ADD-STARS.
-The values can be 't or 'only-with-headline."
+The values can be 't or 'only-with-headline.
+
+It retains the `buffer-modified-p' status before removing any
+transclusions; this is not considered modification to the buffer
+for the auto save facilities, such as `auto-save-mode' and
+`auto-save-visited-mode'."
   (interactive)
   (when buf (set-buffer buf))
   (setq org-transclusion-buffer-modified-p (buffer-modified-p))
-  (save-excursion
-    (save-restriction
-      (widen)
-      (outline-show-all)
-      (dolist (ov (overlays-in (point-min) (point-max)))
-        (let ((pos (overlay-start ov))
-              (switch)
-              (level))
-          (when pos
-            (goto-char pos)
-            (when (or (eq add-stars t)
-                      (and (eq add-stars 'only-with-headline)
-                           (org-transclusion--has-headline-p)))
-              (org-transclusion--move-to-root-hlevel-of-transclusion-at-point)
-              (setq switch 'stars)
-              (setq level (org-outline-level)))
-            (org-transclusion-remove-at-point pos switch level))))))
+  (org-with-wide-buffer
+   (dolist (ov (overlays-in (point-min) (point-max)))
+     (let ((pos (overlay-start ov))
+           (switch)
+           (level))
+       (when pos
+         (goto-char pos)
+         (when (or (eq add-stars t)
+                   (and (eq add-stars 'only-with-headline)
+                        (org-transclusion--has-headline-p)))
+           (org-transclusion--move-to-root-hlevel-of-transclusion-at-point)
+           (setq switch 'stars)
+           (setq level (org-outline-level)))
+         (org-transclusion-remove-at-point pos switch level)))))
   (set-buffer-modified-p org-transclusion-buffer-modified-p))
 
 ;;-----------------------------------------------------------------------------
@@ -888,7 +891,7 @@ Temporarily remove text-only attributes to allow for metaup/down to move headlin
 meta -- subtree down
 shiftmeta -- drag line down"
   (interactive)
-  (if-let (ov (org-transclusion--get-overlay-at-point))
+  (if-let ((ov (org-transclusion--get-overlay-at-point)))
       ;; Only if you are in the transclusion overlay
       (progn
         ;; Call the normal metaup/down
@@ -1010,7 +1013,7 @@ If POS is not passed it will be the current point."
 (defun org-transclusion--move-to-root-hlevel-of-transclusion-at-point (&optional ov)
   "Move to the root of subtree within the transclusion at point.
 Optionally OVerlay can be passed. If not passed, this function will get one at point."
-  (let* ((ov (progn (if ov ov (org-transclusion--get-overlay-at-point))))
+  (when-let* ((ov (progn (if ov ov (org-transclusion--get-overlay-at-point))))
          (ov-beg (overlay-start ov))
          (ov-end (overlay-end ov)))
     ;; This function can be in a while loop and need to have a clear exit
@@ -1032,8 +1035,8 @@ Optionally OVerlay can be passed. If not passed, this function will get one at p
              (and (org-up-heading-safe)
                   (org-transclusion--point-is-within-transclusion ov)))
       ;; Move point
-      (org-up-heading-safe)
-      (beginning-of-line))))
+      (org-up-heading-safe))))
+      ;;(beginning-of-line)
 
 (defun org-transclusion--update-hlevel-at-point ()
   "Assume the point is on the headline."
