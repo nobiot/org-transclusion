@@ -135,7 +135,7 @@ See the functions delivered within org-tranclusion for the API signatures."
   '((((class color) (min-colors 88) (background light))
      :background "#efefef" :extend t)
     (((class color) (min-colors 88) (background dark))
-     :foreground "#bfc0c" :background "#1e1e1e" :extend t))
+     :foreground "#bfc0c4" :background "#1e1e1e" :extend t))
   "Face for transcluded block."
   :group 'org-transclusion)
 
