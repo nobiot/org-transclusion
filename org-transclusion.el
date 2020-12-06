@@ -272,8 +272,14 @@ Assume you are at the beginning of the org element to transclude."
                       #'org-transclusion--filter-buffer
                       nil nil '(headline section) nil)))
           (setq tc-content (org-element-interpret-data obj))
-          (setq tc-beg-mkr (progn (goto-char (org-element-property :begin el)) (point-marker)))
-          (setq tc-end-mkr (progn (goto-char (org-element-property :end el)) (point-marker)))
+          (setq tc-beg-mkr (progn (goto-char
+                                   (if only-element (org-element-property :begin el)
+                                     (point-min))) ;; for the entire buffer
+                                   (point-marker)))
+          (setq tc-end-mkr (progn (goto-char
+                                   (if only-element (org-element-property :end el)
+                                     (point-max))) ;; for the entire buffer
+                                   (point-marker)))
           (list :tc-content tc-content
                 :tc-beg-mkr tc-beg-mkr
                 :tc-end-mkr tc-end-mkr)))
