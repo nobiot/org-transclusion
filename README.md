@@ -2,7 +2,7 @@
 
 Transclusion is the ability to include content from one file into another by reference.
 
-![Org-transclusion image](./resources/2020-10-31T094200-transclusion-v0.0.4.gif)
+![Org-transclusion image](./resources/2020-12-06T145000-transclusion-v0.0.6.gif)
 **Figure 1.**  Animation to show activation of Org-transclusion minor mode to transclude a text content under a headline in a separate org file
 
 ![Org-transclusion image](./resources/2020-10-30_22-19-24.png)
@@ -10,10 +10,11 @@ Transclusion is the ability to include content from one file into another by ref
 
 This library is an attempt to enable transclusion with Org Mode in Emacs. It is my take on the [idea by John Kitchin](#original-idea-by-john-kitchin).
 
-This 8-minutes show & tell on YouTube I did shows you how this library currently works.
+This 13-minutes show & tell on YouTube I did shows you how this library currently works.
+https://youtu.be/nXQXLz-rsDk
+[![13-minute Demo video #6: v0.0.5](./resources/demo6-title.png)](https://youtu.be/nXQXLz-rsDk)
 
-[![8-minute Demo video #5: v0.0.5](./resources/demo5-title.png)](https://youtu.be/hz92vaO8IgQ)
-
+- [Demo video #5: v0.0.5: `#+transclude:` keyword, support for entire Org file, and excluding filter](https://youtu.be/hz92vaO8IgQ)
 - [Demo video #4: v0.0.4: edit via indirect buffer, export, more supported link types](https://youtu.be/nO_JEXUeGkI)
 - [Demo video #3: v0.0.3: headline, paragraph, Org Mode link](https://youtu.be/KxDrE3spAL8)
 - [Demo video #2: v0.0.2: real-time sync](https://youtu.be/HQ0rUa7gVXA)
@@ -152,6 +153,20 @@ not swallow low level entries.
 Org-transclusion uses a patched version of the `org-paste-subtree` function, named `org-transclusion-paste-subtree`.
 
 The experimental feature is turned on by default, and can be switched on and off with the `org-transclusion-use-paste-subtree` variable (non-nil, or nil).
+
+## Adjust the headline level in transclusion
+
+  You can now control the headline level with a keyword value as follows:
+
+```
+  #+transclude: t :hlevel 3
+  [[file: ~/path/to/org.file::*Headline][org-file]]
+```
+
+  The headline level of the root of the subtree to be transcluded will be the level specified by the `:hlevel` value.
+
+### Promote / demote subtrees in transclusion
+Use `M-left` or `M-right` (equivalently, `S-M-left` and `S-M-right`) to promote and demote the subtrees in a transclusion. The adjusted headline level is recorded as the `:hlevel` property so that next time you transclude the same link, Org-transclusion applies the same headline leve.
 
 # List of things to be done
 - [ ] Validate the fundamental idea / architecture, especially modifying and saving the transclusion sources
