@@ -240,39 +240,40 @@ This is meant for Org-ID."
   "Return content for transclusion.
 When ONLY-ELEMENT is t, only the element.  If nil, the whole buffer.
 Assume you are at the beginning of the org element to transclude."
-  (let* ((el (org-element-context))
-         (type (org-element-type el))
-         (tc-content)(tc-beg-mkr)(tc-end-mkr))
-    ;; For dedicated target, we want to get the parent paragraph,
-    ;; rather than the target itself
-    (when (and (string= "target" type)
-               (string= "paragraph" (org-element-type (org-element-property :parent el))))
-      (setq el (org-element-property :parent el)))
-    (let* ((tree (progn (if only-element
-                            ;; Parse only the element in question (headline, table, paragraph, etc.)
-                            (org-element--parse-elements
-                             (org-element-property :begin el)
-                             (org-element-property :end el)
-                             'section nil 'object nil (list 'tc-paragraph nil))
-                          ;; If not only-element, then parse the entire buffer
-                          (org-element-parse-buffer))))
-           (obj (org-element-map
-                    tree
-                    org-element-all-elements
-                  ;; Map all the elements (not objects).  But for the
-                  ;; output (transcluded copy) do not do recursive for
-                  ;; headline and section (as to avoid duplicate
-                  ;; sections; headlines contain section) Want to remove
-                  ;; the elements of the types included in the list from
-                  ;; the AST.
-                  #'org-transclusion--filter-buffer
-                  nil nil '(headline section) nil)))
-      (setq tc-content (org-element-interpret-data obj))
-      (setq tc-beg-mkr (progn (goto-char (org-element-property :begin el)) (point-marker)))
-      (setq tc-end-mkr (progn (goto-char (org-element-property :end el)) (point-marker)))
-      (list :tc-content tc-content
-            :tc-beg-mkr tc-beg-mkr
-            :tc-end-mkr tc-end-mkr))))
+  (if-let* ((el (org-element-context))
+            (type (org-element-type el)))
+      (let ((tc-content)(tc-beg-mkr)(tc-end-mkr))
+        ;; For dedicated target, we want to get the parent paragraph,
+        ;; rather than the target itself
+        (when (and (string= "target" type)
+                   (string= "paragraph" (org-element-type (org-element-property :parent el))))
+          (setq el (org-element-property :parent el)))
+        (let* ((tree (progn (if only-element
+                                ;; Parse only the element in question (headline, table, paragraph, etc.)
+                                (org-element--parse-elements
+                                 (org-element-property :begin el)
+                                 (org-element-property :end el)
+                                 'section nil 'object nil (list 'tc-paragraph nil))
+                              ;; If not only-element, then parse the entire buffer
+                              (org-element-parse-buffer))))
+               (obj (org-element-map
+                        tree
+                        org-element-all-elements
+                      ;; Map all the elements (not objects).  But for the
+                      ;; output (transcluded copy) do not do recursive for
+                      ;; headline and section (as to avoid duplicate
+                      ;; sections; headlines contain section) Want to remove
+                      ;; the elements of the types included in the list from
+                      ;; the AST.
+                      #'org-transclusion--filter-buffer
+                      nil nil '(headline section) nil)))
+          (setq tc-content (org-element-interpret-data obj))
+          (setq tc-beg-mkr (progn (goto-char (org-element-property :begin el)) (point-marker)))
+          (setq tc-end-mkr (progn (goto-char (org-element-property :end el)) (point-marker)))
+          (list :tc-content tc-content
+                :tc-beg-mkr tc-beg-mkr
+                :tc-end-mkr tc-end-mkr)))
+    (message "Nothing done. Content is empty.")))
 
 (defun org-transclusion--filter-buffer (data)
   "Filter DATA before transcluding its content.
@@ -387,7 +388,9 @@ tc-content :: the actual text content to be transcluded"
            (tc-beg-mkr (plist-get tc-payload :tc-beg-mkr))
            (tc-end-mkr (plist-get tc-payload :tc-end-mkr))
            (tc-content (plist-get tc-payload :tc-content)))
-      (if (string= tc-content "") (message "Nothing done. No content is found through the link.")
+      (if (or (string= tc-content "")
+              (eq tc-content nil))
+          (message "Nothing done. No content is found through the link.")
         ;; Do creation only when there is content to be transcluded
         (save-excursion
           (forward-line -1)
