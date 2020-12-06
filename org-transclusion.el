@@ -242,18 +242,22 @@ When ONLY-ELEMENT is t, only the element.  If nil, the whole buffer.
 Assume you are at the beginning of the org element to transclude."
   (if-let* ((el (org-element-context))
             (type (org-element-type el)))
-      (let ((tc-content)(tc-beg-mkr)(tc-end-mkr))
+      (let ((parse-mode 'section) ;; default is 'section. For org-element--parse-elements
+            (tc-content)(tc-beg-mkr)(tc-end-mkr))
         ;; For dedicated target, we want to get the parent paragraph,
         ;; rather than the target itself
         (when (and (string= "target" type)
                    (string= "paragraph" (org-element-type (org-element-property :parent el))))
-          (setq el (org-element-property :parent el)))
+          (setq el (org-element-property :parent el))
+          ;; for dedicated darget = paragraph, parse-mode should be nil to
+          ;; avoid getting the whole section
+          (setq parse-mode nil))
         (let* ((tree (progn (if only-element
                                 ;; Parse only the element in question (headline, table, paragraph, etc.)
                                 (org-element--parse-elements
                                  (org-element-property :begin el)
                                  (org-element-property :end el)
-                                 'section nil 'object nil (list 'tc-paragraph nil))
+                                 parse-mode nil 'object nil (list 'tc-paragraph nil))
                               ;; If not only-element, then parse the entire buffer
                               (org-element-parse-buffer))))
                (obj (org-element-map
