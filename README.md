@@ -74,7 +74,7 @@ To transclude text content via a link, use Org's normal file link immediately fo
 
 Use a value `t` or `nil` for the `#+transclude:` keyword to control whether or not Org-transclusion is to transclude the content via the link in question.
 
-The link must be in the beginning of a line for transclusion. If there is any character (even a space for indentation), Org-transclusion skips it. This is to avoid transcluding links in the middle of a sentence.
+**The link must be in the beginning of a line for transclusion.** If there is any character (even a space for indentation), Org-transclusion skips it. This is to avoid transcluding links in the middle of a sentence.
 
 Org-transclusion also skips transclusion links within another transclusion in order to avoid multiple recursions.
 
