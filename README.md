@@ -6,7 +6,10 @@ Transclusion is the ability to include content from one file into another by ref
 **Figure 1.**  Animation to show activation of Org-transclusion minor mode to transclude a text content under a headline in a separate org file
 
 ![Org-transclusion image](./resources/2020-10-30_22-19-24.png)
-**Figure 2.**  Transcluding different text contents via links (left); Editing one of the sources (right)
+**Figure 2.**  Transcluding different text content via links (left); Editing one of the sources (right)
+
+![Transcluding a paragraph, blocked quote, table, and list](./resources/2021-01-23T222736.png)
+**Figure 3.**  Transcluding a paragraph, block quote, table, and list with using `[[file:path/to/file.org::name]]` syntax
 
 This library is an attempt to enable transclusion with Org Mode in Emacs. It is my take on the [idea by John Kitchin](#original-idea-by-john-kitchin).
 
@@ -46,7 +49,9 @@ Transclusion should let me do this.
 This screen shot with my annotation illustrates how you can edit transcluded copies.
 
 ![How the library works. Screen shot with annotation](./resources/2020-10-29_18-48-53-edit-buffer-v2.png)
-**Figure 3.** Transclusion buffer with multiple text contents added from different sources (left); open a indirect buffer to edit one of the text content (right)
+**Figure 4.** Transclusion buffer with multiple text contents added from different sources (left); open a indirect buffer to edit one of the text content (right)
+
+
 
 ## Load
 Load the file (`load-file`) or open the file and evaluate the whole buffer (`eval-buffer`).
@@ -83,7 +88,7 @@ Transclusion has been tested to work for the following types of links:
 - File link for an entire org file/buffer; e.g. `[[file:~/org/file.org][My Org Notes]]`
 - File link with `::*heading`
 - File link with `::#custom-id`
-- File link with `::name` for blocks (e.g. blocked quotations) and tables
+- File link with `::name` for blocks (e.g. blocked quotations), tables, and links
 - File link with `::dedicated-target`; this is intended for linking to a paragraph. See below.
 - ID link `id:uuid`
 - File link for non-org files (tested with `.txt` and `.md`); for these, the whole buffer gets transcluded
