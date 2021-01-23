@@ -243,6 +243,7 @@ Assume you are at the beginning of the org element to transclude."
   (if-let* ((el (org-element-context))
             (type (org-element-type el)))
       (let ((parse-mode 'section) ;; default is 'section. For org-element--parse-elements
+            (no-recursion '(headline section))
             (tc-content)(tc-beg-mkr)(tc-end-mkr))
         ;; For dedicated target, we want to get the parent paragraph,
         ;; rather than the target itself
@@ -254,10 +255,13 @@ Assume you are at the beginning of the org element to transclude."
           (setq parse-mode nil))
         (let* ((tree (progn (if only-element
                                 ;; Parse only the element in question (headline, table, paragraph, etc.)
-                                (org-element--parse-elements
-                                 (org-element-property :begin el)
-                                 (org-element-property :end el)
-                                 parse-mode nil 'object nil (list 'tc-paragraph nil))
+                                (progn
+                                  (setq parse-mode nil) ; needed for table, list, block-quote, etc.
+                                  (push type no-recursion)
+                                  (org-element--parse-elements
+                                   (org-element-property :begin el)
+                                   (org-element-property :end el)
+                                   nil nil 'object nil (list 'tc-paragraph nil)))
                               ;; If not only-element, then parse the entire buffer
                               (org-element-parse-buffer))))
                (obj (org-element-map
@@ -270,7 +274,7 @@ Assume you are at the beginning of the org element to transclude."
                       ;; the elements of the types included in the list from
                       ;; the AST.
                       #'org-transclusion--filter-buffer
-                      nil nil '(headline section) nil)))
+                      nil nil no-recursion nil)))
           (setq tc-content (org-element-interpret-data obj))
           (setq tc-beg-mkr (progn (goto-char
                                    (if only-element (org-element-property :begin el)
