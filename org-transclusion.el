@@ -439,7 +439,14 @@ tc-content :: the actual text content to be transcluded"
                         (hlevel (plist-get keyword-values ':hlevel)))
                     (when hlevel (setq hlevel (string-to-number hlevel)))
                     (org-transclusion-paste-subtree hlevel tc-content t t)) ;; one line removed from original
-                (insert tc-content))
+                (insert tc-content)
+                ;; Attempted to provide a generic fix before insert, but didn't work
+                ;; Align table
+                (save-excursion
+                  (search-backward "|" beg 'NO-ERROR)
+                  (when (org-at-table-p) (org-table-align))))
+                ;; (insert (org-transclusion--format-content tc-content)))
+
               (let* ((sbuf (marker-buffer tc-beg-mkr)) ;source buffer
                      (end (point)) ;; at the end of text content after inserting it
                      (ov-src (make-overlay tc-beg-mkr tc-end-mkr sbuf t nil)) ;; source-buffer
