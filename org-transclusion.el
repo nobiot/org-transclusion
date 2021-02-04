@@ -439,12 +439,6 @@ tc-content :: the actual text content to be transcluded"
                         (hlevel (plist-get keyword-values ':hlevel)))
                     (when hlevel (setq hlevel (string-to-number hlevel)))
                     (org-transclusion-paste-subtree hlevel (org-transclusion--format-content tc-content) t t)) ;; one line removed from original
-                ;; (insert tc-content)
-                ;; Attempted to provide a generic fix before insert, but didn't work
-                ;; Align table
-                ;; (save-excursion
-                ;;   (search-backward "|" beg 'NO-ERROR)
-                ;;   (when (org-at-table-p) (org-table-align))))
                 (insert (org-transclusion--format-content tc-content)))
 
               (let* ((sbuf (marker-buffer tc-beg-mkr)) ;source buffer
@@ -471,23 +465,6 @@ tc-content :: the actual text content to be transcluded"
                 (overlay-put ov-src 'evaporate t)
                 (overlay-put ov-src 'face 'org-transclusion-source-block)
                 (overlay-put ov-src 'tc-pair tc-pair)))))))))
-
-(defun org-transclusion--format-content (content)
-  "Format text CONTENT from source before transcluding.
-Return content modified (or unmodified, if not applicable)."
-  ;; This is meant to fix GitHub issue #54
-  (let ((temp-buf (generate-new-buffer "*temp*")))
-    (with-current-buffer temp-buf
-      (org-mode)
-      (insert content)
-      (let ((point (point-min)))
-        (while point
-          (goto-char (1+ point))
-          (when (org-at-table-p)
-            (org-table-align)
-            (goto-char (org-table-end)))
-          (setq point (search-forward "|" (point-max) t))))
-      (buffer-string))))
 
 (defun org-transclusion-remove-at-point (pos &optional mode stars)
   "Remove transclusion and the copied text around POS.
@@ -697,6 +674,22 @@ before the first headline.  This function covers this case."
     (kill-buffer org-last-indirect-buffer))
   (let ((ibuf (org-get-indirect-buffer)))
     (setq org-last-indirect-buffer ibuf)))
+
+(defun org-transclusion--format-content (content)
+  "Format text CONTENT from source before transcluding.
+Return content modified (or unmodified, if not applicable).
+Currently it only re-aligns table with links in the content."
+  (with-temp-buffer
+    (org-mode)
+    (insert content)
+    (let ((point (point-min)))
+      (while point
+        (goto-char (1+ point))
+        (when (org-at-table-p)
+          (org-table-align)
+          (goto-char (org-table-end)))
+        (setq point (search-forward "|" (point-max) t))))
+    (buffer-string)))
 
 ;;-----------------------------------------------------------------------------
 ;; Define minor modes
