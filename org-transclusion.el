@@ -438,14 +438,14 @@ tc-content :: the actual text content to be transcluded"
                   (let ((org-adapt-indentation nil)
                         (hlevel (plist-get keyword-values ':hlevel)))
                     (when hlevel (setq hlevel (string-to-number hlevel)))
-                    (org-transclusion-paste-subtree hlevel tc-content t t)) ;; one line removed from original
-                (insert tc-content)
+                    (org-transclusion-paste-subtree hlevel (org-transclusion--format-content tc-content) t t)) ;; one line removed from original
+                ;; (insert tc-content)
                 ;; Attempted to provide a generic fix before insert, but didn't work
                 ;; Align table
-                (save-excursion
-                  (search-backward "|" beg 'NO-ERROR)
-                  (when (org-at-table-p) (org-table-align))))
-                ;; (insert (org-transclusion--format-content tc-content)))
+                ;; (save-excursion
+                ;;   (search-backward "|" beg 'NO-ERROR)
+                ;;   (when (org-at-table-p) (org-table-align))))
+                (insert (org-transclusion--format-content tc-content)))
 
               (let* ((sbuf (marker-buffer tc-beg-mkr)) ;source buffer
                      (end (point)) ;; at the end of text content after inserting it
@@ -471,6 +471,23 @@ tc-content :: the actual text content to be transcluded"
                 (overlay-put ov-src 'evaporate t)
                 (overlay-put ov-src 'face 'org-transclusion-source-block)
                 (overlay-put ov-src 'tc-pair tc-pair)))))))))
+
+(defun org-transclusion--format-content (content)
+  "Format text CONTENT from source before transcluding.
+Return content modified (or unmodified, if not applicable)."
+  ;; This is meant to fix GitHub issue #54
+  (let ((temp-buf (generate-new-buffer "*temp*")))
+    (with-current-buffer temp-buf
+      (org-mode)
+      (insert content)
+      (let ((point (point-min)))
+        (while point
+          (goto-char (1+ point))
+          (when (org-at-table-p)
+            (org-table-align)
+            (goto-char (org-table-end)))
+          (setq point (search-forward "|" (point-max) t))))
+      (buffer-string))))
 
 (defun org-transclusion-remove-at-point (pos &optional mode stars)
   "Remove transclusion and the copied text around POS.
