@@ -72,6 +72,8 @@ makes it impossible to debug at runtime.")
 
 (defvar org-transclusion-use-paste-subtree t)
 
+(defvar org-transclusion-next-link-hook '(org-transclusion-next-link))
+
 ;;;; Customization variables
 (defgroup org-transclusion nil
   "Insert text contents by way of link references."
@@ -782,10 +784,7 @@ each link:
           ;; point-min, because we need the #+transclusion keyword.
           ;; Skip this:
           ;; (when (org-element-link-parser)  ;; when a link is in the begging of buffer
-          (while (eq t (org-next-link))
-            ;; For `org-next-link', eq t is needed for this while loop to check
-            ;; no link.  This is because fn returns a message string when there
-            ;; is no further link.
+          (while (run-hook-with-args-until-success 'org-transclusion-next-link-hook)
             ;; Check if the link is in the beginning of a line
             ;; Check if the link immediately follows the keyword line #+transclude:
             ;; Check if the link at point is NOT within tranclusion
@@ -794,6 +793,19 @@ each link:
                        (not (org-transclusion--is-within-transclusion)))
               (org-transclusion-link-open-at-point))))
          (set-buffer-modified-p org-transclusion-buffer-modified-p))))
+
+(defun org-transclusion-next-link ()
+  "Wrap `org-next-link' to return non-nil when t.
+It moves to the beginning of the next org link when found. If
+nothing found, it still outputs the message from `org-next-link'
+but returns nil.
+
+This is useful for `while' loop, be cause
+`org-next-link' returns a message (non-nil) when it fails to find
+anything; thus, you cannot use non-nil as an indicator whether or
+not a link is found."
+  (interactive)
+  (if (eq t (org-next-link)) t nil))
 
 (defun org-transclusion-remove-all-in-buffer (&optional buf add-stars)
   "Remove all the translusion overlay and copied text in current buffer.
