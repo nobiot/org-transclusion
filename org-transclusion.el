@@ -74,6 +74,10 @@ makes it impossible to debug at runtime.")
 
 (defvar org-transclusion-next-link-hook '(org-transclusion-next-link))
 
+(defvar org-transclusion-link-open-hook '(org-transclusion-link-open-org-id
+                                          org-transclusion-link-open-org-file-links
+                                          org-transclusion-link-open-other-file-links))
+
 ;;;; Customization variables
 (defgroup org-transclusion nil
   "Insert text contents by way of link references."
@@ -178,27 +182,36 @@ is used (ARG is non-nil), then use the standard `org-link-open'."
      ((not (org-transclusion--ok-to-transclude)) (org-link-open link arg))
      ;; Check if ARG is passed
      (arg (org-link-open link arg))
-     ;; For Org-ID
-     ((string= "id" (org-element-property :type link))
-      ;; when type is id, the value of path is the id
-      (let* ((id (org-element-property :path link))
-             (mkr (ignore-errors (org-id-find id t))))
-        (if mkr (progn
-                  (setq tc-params (list :tc-type "org-id"
-                                        :tc-arg mkr
-                                        :tc-fn #'org-transclusion--get-org-content-from-marker)))
-          (message "No transclusion done for this ID. Ensure it works."))))
-     ;; Other Org file links
-     ((org-transclusion--org-file-p (org-element-property :path link))
-      (setq tc-params (list :tc-type "org-link"
-                            :tc-arg link
-                            :tc-fn #'org-transclusion--get-org-content-from-link)))
-     ;; For non-Org files
-     ((setq tc-params (org-transclusion--get-custom-tc-params link)))
-     ;;All the other cases
-     (t (message "No transclusion added.")))
+     ;; Run hook
+     (t
+      (setq tc-params (run-hook-with-args-until-success 'org-transclusion-link-open-hook tc-params link))))
     ;; Do transclusion when tc-params are populated
-    (when tc-params (org-transclusion--create-at-point tc-params))))
+    (if tc-params (org-transclusion--create-at-point tc-params)
+      (message "No transclusion added."))))
+
+(defun org-transclusion-link-open-org-id (tc-params link)
+  "For Org-id.
+Return nil if not found."
+  (when (string= "id" (org-element-property :type link))
+    ;; when type is id, the value of path is the id
+    (let* ((id (org-element-property :path link))
+           (mkr (ignore-errors (org-id-find id t))))
+      (if mkr (progn
+                (setq tc-params (list :tc-type "org-id"
+                                      :tc-arg mkr
+                                      :tc-fn #'org-transclusion--get-org-content-from-marker)))
+        (message "No transclusion done for this ID. Ensure it works.")))))
+
+(defun org-transclusion-link-open-org-file-links (tc-params link)
+  ;; Other Org file links
+  (when (org-transclusion--org-file-p (org-element-property :path link))
+   (setq tc-params (list :tc-type "org-link"
+                         :tc-arg link
+                         :tc-fn #'org-transclusion--get-org-content-from-link))))
+
+(defun org-transclusion-link-open-other-file-links (tc-params link)
+     ;; For non-Org files
+     ((setq tc-params (org-transclusion--get-custom-tc-params link))))
 
 ;; Not used but might be useful...
 ;; (defun org-transclusion-marker-open (marker)
