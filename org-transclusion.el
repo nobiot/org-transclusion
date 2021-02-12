@@ -788,8 +788,7 @@ each link:
             ;; Check if the link is in the beginning of a line
             ;; Check if the link immediately follows the keyword line #+transclude:
             ;; Check if the link at point is NOT within tranclusion
-            (when (and (bolp)
-                       (org-transclusion--ok-to-transclude)
+            (when (and (org-transclusion--ok-to-transclude)
                        (not (org-transclusion--is-within-transclusion)))
               (org-transclusion-link-open-at-point))))
          (set-buffer-modified-p org-transclusion-buffer-modified-p))))
