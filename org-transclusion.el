@@ -9,6 +9,8 @@
 ;; Version: 0.0.6
 ;; Package-Requires: ((emacs "27.1") (org "9.4"))
 
+;; This file is not part of GNU Emacs.
+
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the
 ;; Free Software Foundation, either version 3 of the License, or (at your
@@ -37,48 +39,14 @@
 ;;     (define-key global-map (kbd "<f12>") #'org-transclusion-mode)
 
 ;;; Code:
+
+;;;; Requirements
 (require 'org)
 (require 'org-element)
 (require 'org-id)
 
-;;-----------------------------------------------------------------------------
-;; Variables
-;;
+;;;; Customization
 
-(defvar-local org-transclusion-buffer-modified-p nil)
-(defvar-local org-transclusion-original-position nil)
-(defvar-local org-transclusion-edit-src-at-mkr nil)
-(defvar org-transclusion-last-edit-src-buffer nil
-  "Keep track of the cloned buffer for transclusion sources.
-There should be only one edit source buffer at a time.  This is
-so that you avoid opening too many clone buffers.  It is also
-used to close the edit source buffer when minor mode is turned
-off.
-
-Note that the minor mode is buffer local, but this variable is
-global.  This is a deliberte design choice.  You may activate
-Org-transclusion for multiple buffers at a time.  But editing
-their sources should be a focused task, and thus one edit buffer
-can be open at a time.
-
-Killing a clone buffer is assumed to be safe in general, as its original
-buffer is in sync and the content is reflected there.")
-
-(defvar org-transclusion-debug nil
-  "Disable the toggle of transclusions.
-It is meant to enable edebugging.  Without this, switching to the source
-code buffer for runtime debugger toggles off the transclusion, and thus
-makes it impossible to debug at runtime.")
-
-(defvar org-transclusion-use-paste-subtree t)
-
-(defvar org-transclusion-next-link-hook '(org-transclusion-next-link))
-
-(defvar org-transclusion-link-open-hook '(org-transclusion-link-open-org-id
-                                          org-transclusion-link-open-org-file-links
-                                          org-transclusion-link-open-other-file-links))
-
-;;;; Customization variables
 (defgroup org-transclusion nil
   "Insert text contents by way of link references."
   :group 'org
@@ -125,9 +93,7 @@ See the functions delivered within org-tranclusion for the API signatures."
   :type '(repeat string)
   :group 'org-transclusion)
 
-;;-----------------------------------------------------------------------------
-;; Faces
-;;
+;;;; Faces
 
 (defface org-transclusion-source-block
   '((((class color) (min-colors 88) (background light))
@@ -151,10 +117,136 @@ See the functions delivered within org-tranclusion for the API signatures."
     "Face for the :transclusion keyword."
     :group 'org-transclusion)
 
-;;-----------------------------------------------------------------------------
-;; Functions to override org-link-open
-;; Transclude standard Org Mode file links
-;; Add Support different non-Org link types
+;;;; Variables
+
+(defvar-local org-transclusion-buffer-modified-p nil)
+(defvar-local org-transclusion-original-position nil)
+(defvar-local org-transclusion-edit-src-at-mkr nil)
+(defvar org-transclusion-last-edit-src-buffer nil
+  "Keep track of the cloned buffer for transclusion sources.
+There should be only one edit source buffer at a time.  This is
+so that you avoid opening too many clone buffers.  It is also
+used to close the edit source buffer when minor mode is turned
+off.
+
+Note that the minor mode is buffer local, but this variable is
+global.  This is a deliberte design choice.  You may activate
+Org-transclusion for multiple buffers at a time.  But editing
+their sources should be a focused task, and thus one edit buffer
+can be open at a time.
+
+Killing a clone buffer is assumed to be safe in general, as its original
+buffer is in sync and the content is reflected there.")
+
+(defvar org-transclusion-debug nil
+  "Disable the toggle of transclusions.
+It is meant to enable edebugging.  Without this, switching to the source
+code buffer for runtime debugger toggles off the transclusion, and thus
+makes it impossible to debug at runtime.")
+
+(defvar org-transclusion-use-paste-subtree t)
+
+(defvar org-transclusion-next-link-hook '(org-transclusion-next-link))
+
+(defvar org-transclusion-link-open-hook '(org-transclusion-link-open-org-id
+                                          org-transclusion-link-open-org-file-links
+                                          org-transclusion-link-open-other-file-links))
+
+;;;; Commands
+
+;; Define minor modes
+
+(define-minor-mode org-transclusion-mode
+  "Toggle Org-transclusion minor mode.
+Interactively with no argument, this command toggles the mode.
+A positive prefix argument enables the mode, any other prefix
+argument disables it.  From Lisp, argument omitted or nil enables
+the mode, `toggle' toggles the state."
+  :init-value nil
+  :lighter " [OT]"
+  :global nil
+  :keymap (let ((map (make-sparse-keymap)))
+            (define-key map (kbd "C-c n e") #'org-transclusion-open-edit-src-buffer-at-point)
+            (define-key map (kbd "C-c n o") #'org-transclusion-open-src-buffer-at-point)
+            map)
+  (cond
+   (org-transclusion-mode
+    (org-transclusion-activate))
+   (t (org-transclusion-deactivate))))
+
+(define-minor-mode org-transclusion-edit-src-mode
+  "Toggle Org-transclusion edit source mode.
+Interactively with no argument, this command toggles the mode.
+A positive prefix argument enables the mode, any other prefix
+argument disables it.  From Lisp, argument omitted or nil enables
+the mode, `toggle' toggles the state."
+  :init-value nil
+  :lighter nil
+  :global nil
+  :keymap (let ((map (make-sparse-keymap)))
+            (define-key map (kbd "C-c C-c")
+              #'org-transclusion-edit-src-commit)
+            map)
+  (setq header-line-format
+        (substitute-command-keys
+         "Editing the source directly. When done, save and return with `\\[org-transclusion-edit-src-commit]'.")))
+
+(defun org-transclusion-activate ()
+  "Activate automatic transclusions in the local buffer.
+This should be a buffer-local minior mode.  Not done yet."
+  (interactive)
+  (if (memq 'org-transclusion--toggle-transclusion-when-out-of-focus
+            window-selection-change-functions)
+      (run-with-idle-timer 0 nil 'message
+                           "Nothing done. Transclusion is aleady active.")
+    (setq-local window-selection-change-functions
+                (push 'org-transclusion--toggle-transclusion-when-out-of-focus
+                      window-selection-change-functions))
+    (add-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save nil t)
+    (add-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save nil t)
+    (advice-add 'org-metaup :around #'org-transclusion-metaup-down)
+    (advice-add 'org-metadown :around #'org-transclusion-metaup-down)
+    (advice-add 'org-shiftmetaup :around #'org-transclusion-shiftmetaup)
+    (advice-add 'org-shiftmetadown :around #'org-transclusion-shiftmetadown)
+    (advice-add 'org-metaleft :around #'org-transclusion-metaleft)
+    (advice-add 'org-metaright :around #'org-transclusion-metaright)
+    (advice-add 'org-shiftmetaleft :around #'org-transclusion-metaleft)
+    (advice-add 'org-shiftmetaright :around #'org-transclusion-metaright)
+    (when org-transclusion-activate-persistent-message
+      (setq header-line-format
+            (substitute-command-keys
+             "Transclusion active in this buffer. `\\[org-transclusion-open-edit-src-buffer-at-point]' to edit the transclusion at point."))))
+  (when org-transclusion-auto-add-on-activation
+    (org-transclusion-add-all-in-buffer)))
+
+(defun org-transclusion-deactivate ()
+  "Deactivate automatic transclusions in the local buffer."
+  ;; Consider keeping the tc copies as read-only to be able to read
+  ;; or for export mode
+  (interactive)
+  (if (memq 'org-transclusion--toggle-transclusion-when-out-of-focus
+            window-selection-change-functions)
+      (progn
+        (org-transclusion-remove-all-in-buffer)
+        (setq-local window-selection-change-functions
+                    (remove 'org-transclusion--toggle-transclusion-when-out-of-focus
+                            window-selection-change-functions))
+        (remove-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save t)
+        (remove-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save t)
+        (advice-remove 'org-metaup #'org-transclusion-metaup-down)
+        (advice-remove 'org-metadown #'org-transclusion-metaup-down)
+        (advice-remove 'org-shiftmetaup #'org-transclusion-shiftmetaup)
+        (advice-remove 'org-shiftmetadown #'org-transclusion-shiftmetadown)
+        (advice-remove 'org-metaleft #'org-transclusion-metaleft)
+        (advice-remove 'org-metaright #'org-transclusion-metaright)
+        (advice-remove 'org-shiftmetaleft #'org-transclusion-metaleft)
+        (advice-remove 'org-shiftmetaright #'org-transclusion-metaright)
+        (when (buffer-live-p org-transclusion-last-edit-src-buffer)
+            (kill-buffer org-transclusion-last-edit-src-buffer))
+        (when org-transclusion-activate-persistent-message
+          (setq header-line-format nil)))
+    (run-with-idle-timer 0 nil 'message
+                         "Nothing done. Transclusion is not active.")))
 
 (defun org-transclusion-link-open-at-point (&optional arg)
   "Pass Org mode's link object to `org-transclusion-link-open'.
@@ -172,10 +264,211 @@ with `org-link-open'."
      ;; For other cases. Do nothing
      (t (message "Nothing done. Not at a link, or link not supported.")))))
 
+(defun org-transclusion-add-all-in-buffer ()
+  "Add all the transclusions in the current buffer.
+As this function should be used only on the current buffer, no
+argument is passed.
+
+Adding transclusion inserts text contents after the link.  This
+function avoids infinite recursion of transclusions.
+
+It retains the `buffer-modified-p' status before transcluding any
+linked contents.  This means transclusion is not considered
+modification to the buffer for the auto save facilities, such as
+`auto-save-mode' and `auto-save-visited-mode'.
+
+The following conditions are checked before calling a function to work on
+each link:
+
+- Check if the link is preceded by a #+transclusion keyword with value t
+- Check if the link at point is NOT within transclusion"
+  (interactive)
+  ;; Check the windows being worked on is in focus (selected)
+  ;; This is to prevent background hook (e.g. save hooks) from updating
+  ;; the transclusion buffer.
+  (cond ((not org-transclusion-mode)
+         (message "Org-transclusion mode is not active."))
+        ((eq (current-buffer)(window-buffer (selected-window)))
+         (setq org-transclusion-buffer-modified-p (buffer-modified-p))
+         (org-with-wide-buffer
+          (goto-char (point-min))
+          ;; We do not need to consider the case where the link is at
+          ;; point-min, because we need the #+transclusion keyword.
+          ;; Skip this:
+          ;; (when (org-element-link-parser)  ;; when a link is in the begging of buffer
+          (while (run-hook-with-args-until-success 'org-transclusion-next-link-hook)
+            ;; Check if the link is in the beginning of a line
+            ;; Check if the link immediately follows the keyword line #+transclude:
+            ;; Check if the link at point is NOT within tranclusion
+            (when (and (org-transclusion--ok-to-transclude)
+                       (not (org-transclusion--is-within-transclusion)))
+              (org-transclusion-link-open-at-point))))
+         (set-buffer-modified-p org-transclusion-buffer-modified-p))))
+
+(defun org-transclusion-remove-at-point (pos &optional mode stars)
+  "Remove transclusion and the copied text around POS.
+When MODE is 'detatch, remove the tranclusion overlay only,
+keeping the copied text, and the original link.
+
+ When MODE is 'stars, it is meant for
+`org-transclusion-metaup-down'.  The the number of STARS are
+added to the keyword when the transclusion is removed to make
+headlines."
+  (interactive "d")
+  (if-let ((ov (cdr (get-char-property-and-overlay pos 'tc-type))))
+      (save-excursion
+        (save-restriction
+          ;; Bring back the transclusion link.
+          ;; Show all the folded parts is needed
+          ;; as the transcluded heading might have folded
+          ;; texts outside the tranclusion overlay
+          (widen)
+          ;;(outline-show-all)
+          (let* ((inhibit-read-only t)
+                 (beg (overlay-start ov))
+                 (raw-link (overlay-get ov 'tc-raw-link))
+                 (keyword-values (mapconcat
+                                  (lambda (v) (if (symbolp v) (symbol-name v) v))
+                                  (overlay-get ov 'tc-keyword-values) " "))
+                 (t-or-nil)
+                 (new-beg (progn
+                            (goto-char beg)
+                            (newline)
+                            (forward-line -1)
+                            (insert raw-link)
+                            (forward-line)
+                            (point)))
+                 (new-end (overlay-end ov))
+                 (tc-pair (overlay-get ov 'tc-pair)))
+            ;;Remove overlays
+            (dolist (ol tc-pair)
+              (delete-overlay ol))
+            ;; TODO
+            ;; Also ensure to delete all the possible orphan overlays from the source
+            ;; When remove fn, delete the copied texts
+            (cond
+             ((eq mode 'detach)
+              (setq t-or-nil "nil")
+              (remove-text-properties new-beg new-end '(read-only)))
+             (t ;; remove
+              ;; TODO called-interactively-p is not correctly evaluated
+              (let ((inhibit-read-only t))
+                ;; for when detatch-at-point is called interactively
+                ;; We want to stop adding it back again.
+                (if (called-interactively-p 'interactive) (setq t-or-nil "nil")
+                  (setq t-or-nil "t"))
+                (delete-region new-beg new-end))))
+            ;; Add back #+transclusion:
+            (goto-char beg)
+            (when (eq mode 'stars)
+              (unless stars (setq stars 1))
+              (insert (propertize (make-string stars ?*) 'tc-metamove t) " "))
+            (insert (concat "#+transclude: " t-or-nil " " keyword-values "\n")))))
+    ;; The message below is common for all the modes
+    (message "Nothing done. No transclusion exists here.")))
+
+(defun org-transclusion-remove-all-in-buffer (&optional buf add-stars)
+  "Remove all the translusion overlay and copied text in current buffer.
+Caller can pass BUF to specify which BUF needs to remove transclusions.
+`org-transclusion-metaup-down' use this function with ADD-STARS.
+The values can be 't or 'only-with-headline.
+
+It retains the `buffer-modified-p' status before removing any
+transclusions; this is not considered modification to the buffer
+for the auto save facilities, such as `auto-save-mode' and
+`auto-save-visited-mode'."
+  (interactive)
+  (when buf (set-buffer buf))
+  (setq org-transclusion-buffer-modified-p (buffer-modified-p))
+  (org-with-wide-buffer
+   (dolist (ov (overlays-in (point-min) (point-max)))
+     (let ((pos (overlay-start ov))
+           (switch)
+           (level))
+       (when pos
+         (goto-char pos)
+         (when (or (eq add-stars t)
+                   (and (eq add-stars 'only-with-headline)
+                        (org-transclusion--has-headline-p)))
+           (org-transclusion--move-to-root-hlevel-of-transclusion-at-point)
+           (setq switch 'stars)
+           (setq level (org-outline-level)))
+         (org-transclusion-remove-at-point pos switch level)))))
+  (set-buffer-modified-p org-transclusion-buffer-modified-p))
+
+(defun org-transclusion-detach-at-point (pos)
+  "Detach the transclusion at POS, removing the overlay only.
+It needs remove the link type as well, otherwise, when the tranclusion
+is active, it will automatically bring the transclusion back."
+  (interactive "d")
+  (org-transclusion-remove-at-point pos 'detach))
+
+(defun org-transclusion-next-link ()
+  "Wrap `org-next-link' to return non-nil when t.
+It moves to the beginning of the next org link when found. If
+nothing found, it still outputs the message from `org-next-link'
+but returns nil.
+
+This is useful for `while' loop, be cause
+`org-next-link' returns a message (non-nil) when it fails to find
+anything; thus, you cannot use non-nil as an indicator whether or
+not a link is found."
+  (interactive)
+  (if (eq t (org-next-link)) t nil))
+
+(defun org-transclusion-open-edit-src-buffer-at-point (pos)
+  "Open a clone buffer of transclusions source at POS for editting."
+  (interactive "d")
+  (if-let ((ov (cdr (get-char-property-and-overlay pos 'tc-type))))
+      (let ((from-mkr (point-marker))
+            (to-mkr (overlay-get ov 'tc-beg-mkr)))
+        (with-current-buffer (marker-buffer to-mkr)
+          (org-with-wide-buffer
+           (outline-show-all)
+           (setq org-transclusion-edit-src-at-mkr from-mkr)
+           (goto-char to-mkr)
+           (if (and (org-transclusion--buffer-org-file-p)
+                   (org-up-heading-safe))
+               (org-tree-to-indirect-buffer)
+             (org-transclusion--src-indirect-buffer)))
+          ;; Only one edit buffer globally at a time
+          (when (buffer-live-p org-transclusion-last-edit-src-buffer)
+            (kill-buffer org-transclusion-last-edit-src-buffer))
+          (setq org-transclusion-last-edit-src-buffer org-last-indirect-buffer)
+          (pop-to-buffer org-last-indirect-buffer)
+          (rename-buffer (concat "*" (buffer-name) "*"))
+          (org-transclusion-edit-src-mode)))
+    ;; The message below is common for remove and detach
+    (message "Nothing done. No transclusion exists here.")))
+
+(defun org-transclusion-open-src-buffer-at-point (pos)
+  "Open source buffer link for the transclusion at POS."
+  (interactive "d")
+  (if-let ((link (car (get-char-property-and-overlay (point) 'tc-raw-link))))
+      (org-link-open-from-string link '(t))
+    ;; Not in the transclusion overlay
+    (message "Nothing done. No transclusion exists here.")))
+
+(defun org-transclusion-edit-src-commit ()
+  "Save and kill the buffer.
+Meant to be used in the -edit-src-mode."
+  (interactive)
+  (save-buffer)
+  (let ((m org-transclusion-edit-src-at-mkr))
+    (pop-to-buffer (marker-buffer m))
+    (org-transclusion-remove-at-point m)
+    (org-transclusion-add-all-in-buffer))
+  (kill-buffer org-last-indirect-buffer))
+
+;;;; Functions to override org-link-open
+;; Transclude standard Org Mode file links
+;; Add Support different non-Org link types
+
 (defun org-transclusion-link-open (link &optional arg)
   "Check the LINK can be transcluded, and open it to transclude its content.
-If the LINK type is not supported by org-transclusion, or \\[universal-argument]
-is used (ARG is non-nil), then use the standard `org-link-open'."
+If the LINK type is not supported by org-transclusion, or
+\\[universal-argument] is used (ARG is non-nil), then use the
+standard `org-link-open'."
   (let ((tc-params nil))
     (cond
      ;; Check the link is meant for translusion
@@ -184,7 +477,8 @@ is used (ARG is non-nil), then use the standard `org-link-open'."
      (arg (org-link-open link arg))
      ;; Run hook
      (t
-      (setq tc-params (run-hook-with-args-until-success 'org-transclusion-link-open-hook tc-params link))))
+      (setq tc-params (run-hook-with-args-until-success
+                       'org-transclusion-link-open-hook tc-params link))))
     ;; Do transclusion when tc-params are populated
     (if tc-params (org-transclusion--create-at-point tc-params)
       (message "No transclusion added."))))
@@ -340,7 +634,7 @@ to include the first section."
            data)))
 
 ;;-----------------------------------------------------------------------------
-;; Functions to support non-Org-mode link types
+;;;; Functions to support non-Org-mode link types
 
 (defun org-transclusion--get-custom-tc-params (link)
   "Return PARAMS with TC-FN if link type is supported for LINK object."
@@ -380,10 +674,10 @@ TODO need to handle when the file does not exist."
                  :tc-end-mkr end))))))
 
 ;;-----------------------------------------------------------------------------
-;; Core Functions
-;; - Core operations: create-, save-, remove-, detach-at-point
-;; - edit-src-buffer-at-point
-;; - Supporting functions for these core operations
+;;;; Core Functions
+;;   - Core operations: create-, save-, remove-, detach-at-point
+;;   - edit-src-buffer-at-point
+;;   - Supporting functions for these core operations
 
 (defun org-transclusion--create-at-point (tc-params)
   "Create transclusion by unpacking TC-PARAMS.
@@ -481,121 +775,8 @@ tc-content :: the actual text content to be transcluded"
                 (overlay-put ov-src 'face 'org-transclusion-source-block)
                 (overlay-put ov-src 'tc-pair tc-pair)))))))))
 
-(defun org-transclusion-remove-at-point (pos &optional mode stars)
-  "Remove transclusion and the copied text around POS.
-When MODE is 'detatch, remove the tranclusion overlay only,
-keeping the copied text, and the original link.
-
- When MODE is 'stars, it is meant for
-`org-transclusion-metaup-down'.  The the number of STARS are
-added to the keyword when the transclusion is removed to make
-headlines."
-  (interactive "d")
-  (if-let ((ov (cdr (get-char-property-and-overlay pos 'tc-type))))
-      (save-excursion
-        (save-restriction
-          ;; Bring back the transclusion link.
-          ;; Show all the folded parts is needed
-          ;; as the transcluded heading might have folded
-          ;; texts outside the tranclusion overlay
-          (widen)
-          ;;(outline-show-all)
-          (let* ((inhibit-read-only t)
-                 (beg (overlay-start ov))
-                 (raw-link (overlay-get ov 'tc-raw-link))
-                 (keyword-values (mapconcat
-                                  (lambda (v) (if (symbolp v) (symbol-name v) v))
-                                  (overlay-get ov 'tc-keyword-values) " "))
-                 (t-or-nil)
-                 (new-beg (progn
-                            (goto-char beg)
-                            (newline)
-                            (forward-line -1)
-                            (insert raw-link)
-                            (forward-line)
-                            (point)))
-                 (new-end (overlay-end ov))
-                 (tc-pair (overlay-get ov 'tc-pair)))
-            ;;Remove overlays
-            (dolist (ol tc-pair)
-              (delete-overlay ol))
-            ;; TODO
-            ;; Also ensure to delete all the possible orphan overlays from the source
-            ;; When remove fn, delete the copied texts
-            (cond
-             ((eq mode 'detach)
-              (setq t-or-nil "nil")
-              (remove-text-properties new-beg new-end '(read-only)))
-             (t ;; remove
-              ;; TODO called-interactively-p is not correctly evaluated
-              (let ((inhibit-read-only t))
-                ;; for when detatch-at-point is called interactively
-                ;; We want to stop adding it back again.
-                (if (called-interactively-p 'interactive) (setq t-or-nil "nil")
-                  (setq t-or-nil "t"))
-                (delete-region new-beg new-end))))
-            ;; Add back #+transclusion:
-            (goto-char beg)
-            (when (eq mode 'stars)
-              (unless stars (setq stars 1))
-              (insert (propertize (make-string stars ?*) 'tc-metamove t) " "))
-            (insert (concat "#+transclude: " t-or-nil " " keyword-values "\n")))))
-    ;; The message below is common for all the modes
-    (message "Nothing done. No transclusion exists here.")))
-
-(defun org-transclusion-detach-at-point (pos)
-  "Detach the transclusion at POS, removing the overlay only.
-It needs remove the link type as well, otherwise, when the tranclusion
-is active, it will automatically bring the transclusion back."
-  (interactive "d")
-  (org-transclusion-remove-at-point pos 'detach))
-
-(defun org-transclusion-open-edit-src-buffer-at-point (pos)
-  "Open a clone buffer of transclusions source at POS for editting."
-  (interactive "d")
-  (if-let ((ov (cdr (get-char-property-and-overlay pos 'tc-type))))
-      (let ((from-mkr (point-marker))
-            (to-mkr (overlay-get ov 'tc-beg-mkr)))
-        (with-current-buffer (marker-buffer to-mkr)
-          (org-with-wide-buffer
-           (outline-show-all)
-           (setq org-transclusion-edit-src-at-mkr from-mkr)
-           (goto-char to-mkr)
-           (if (and (org-transclusion--buffer-org-file-p)
-                   (org-up-heading-safe))
-               (org-tree-to-indirect-buffer)
-             (org-transclusion--src-indirect-buffer)))
-          ;; Only one edit buffer globally at a time
-          (when (buffer-live-p org-transclusion-last-edit-src-buffer)
-            (kill-buffer org-transclusion-last-edit-src-buffer))
-          (setq org-transclusion-last-edit-src-buffer org-last-indirect-buffer)
-          (pop-to-buffer org-last-indirect-buffer)
-          (rename-buffer (concat "*" (buffer-name) "*"))
-          (org-transclusion-edit-src-mode)))
-    ;; The message below is common for remove and detach
-    (message "Nothing done. No transclusion exists here.")))
-
-(defun org-transclusion-open-src-buffer-at-point (pos)
-  "Open source buffer link for the transclusion at POS."
-  (interactive "d")
-  (if-let ((link (car (get-char-property-and-overlay (point) 'tc-raw-link))))
-      (org-link-open-from-string link '(t))
-    ;; Not in the transclusion overlay
-    (message "Nothing done. No transclusion exists here.")))
-
-(defun org-transclusion-edit-src-commit ()
-  "Save and kill the buffer.
-Meant to be used in the -edit-src-mode."
-  (interactive)
-  (save-buffer)
-  (let ((m org-transclusion-edit-src-at-mkr))
-    (pop-to-buffer (marker-buffer m))
-    (org-transclusion-remove-at-point m)
-    (org-transclusion-add-all-in-buffer))
-  (kill-buffer org-last-indirect-buffer))
-
 ;;-----------------------------------------------------------------------------
-;; Utility functions used in the core functions above
+;;;; Utility functions used in the core functions above
 
 (defun org-transclusion--not-nil (v)
   "Return t or nil.
@@ -707,47 +888,7 @@ Currently it only re-aligns table with links in the content."
     (buffer-string)))
 
 ;;-----------------------------------------------------------------------------
-;; Define minor modes
-;;
-
-(define-minor-mode org-transclusion-mode
-  "Toggle Org-transclusion minor mode.
-Interactively with no argument, this command toggles the mode.
-A positive prefix argument enables the mode, any other prefix
-argument disables it.  From Lisp, argument omitted or nil enables
-the mode, `toggle' toggles the state."
-  :init-value nil
-  :lighter " [OT]"
-  :global nil
-  :keymap (let ((map (make-sparse-keymap)))
-            (define-key map (kbd "C-c n e") #'org-transclusion-open-edit-src-buffer-at-point)
-            (define-key map (kbd "C-c n o") #'org-transclusion-open-src-buffer-at-point)
-            map)
-  (cond
-   (org-transclusion-mode
-    (org-transclusion-activate))
-   (t (org-transclusion-deactivate))))
-
-(define-minor-mode org-transclusion-edit-src-mode
-  "Toggle Org-transclusion edit source mode.
-Interactively with no argument, this command toggles the mode.
-A positive prefix argument enables the mode, any other prefix
-argument disables it.  From Lisp, argument omitted or nil enables
-the mode, `toggle' toggles the state."
-  :init-value nil
-  :lighter nil
-  :global nil
-  :keymap (let ((map (make-sparse-keymap)))
-            (define-key map (kbd "C-c C-c")
-              #'org-transclusion-edit-src-commit)
-            map)
-  (setq header-line-format
-        (substitute-command-keys
-         "Editing the source directly. When done, save and return with `\\[org-transclusion-edit-src-commit]'.")))
-
-;;-----------------------------------------------------------------------------
-;; Functions to work with all transclusions in the buffer.
-;; These typically call their correspondong `at-point` function
+;;;; Functions to work with before- and after- save-hooks
 
 (defun org-transclusion--process-all-in-buffer-before-save ()
   "Update and remove all translusions in the current buffer `before-save-hook'."
@@ -765,150 +906,10 @@ buffers."
   (setq org-transclusion-original-position nil)
   (set-buffer-modified-p nil))
 
-(defun org-transclusion-add-all-in-buffer ()
-  "Add all the transclusions in the current buffer.
-As this function should be used only on the current buffer, no
-argument is passed.
-
-Adding transclusion inserts text contents after the link.  This
-function avoids infinite recursion of transclusions.
-
-It retains the `buffer-modified-p' status before transcluding any
-linked contents.  This means transclusion is not considered
-modification to the buffer for the auto save facilities, such as
-`auto-save-mode' and `auto-save-visited-mode'.
-
-The following conditions are checked before calling a function to work on
-each link:
-
-- Check if the link is preceded by a #+transclusion keyword with value t
-- Check if the link at point is NOT within transclusion"
-  (interactive)
-  ;; Check the windows being worked on is in focus (selected)
-  ;; This is to prevent background hook (e.g. save hooks) from updating
-  ;; the transclusion buffer.
-  (cond ((not org-transclusion-mode)
-         (message "Org-transclusion mode is not active."))
-        ((eq (current-buffer)(window-buffer (selected-window)))
-         (setq org-transclusion-buffer-modified-p (buffer-modified-p))
-         (org-with-wide-buffer
-          (goto-char (point-min))
-          ;; We do not need to consider the case where the link is at
-          ;; point-min, because we need the #+transclusion keyword.
-          ;; Skip this:
-          ;; (when (org-element-link-parser)  ;; when a link is in the begging of buffer
-          (while (run-hook-with-args-until-success 'org-transclusion-next-link-hook)
-            ;; Check if the link is in the beginning of a line
-            ;; Check if the link immediately follows the keyword line #+transclude:
-            ;; Check if the link at point is NOT within tranclusion
-            (when (and (org-transclusion--ok-to-transclude)
-                       (not (org-transclusion--is-within-transclusion)))
-              (org-transclusion-link-open-at-point))))
-         (set-buffer-modified-p org-transclusion-buffer-modified-p))))
-
-(defun org-transclusion-next-link ()
-  "Wrap `org-next-link' to return non-nil when t.
-It moves to the beginning of the next org link when found. If
-nothing found, it still outputs the message from `org-next-link'
-but returns nil.
-
-This is useful for `while' loop, be cause
-`org-next-link' returns a message (non-nil) when it fails to find
-anything; thus, you cannot use non-nil as an indicator whether or
-not a link is found."
-  (interactive)
-  (if (eq t (org-next-link)) t nil))
-
-(defun org-transclusion-remove-all-in-buffer (&optional buf add-stars)
-  "Remove all the translusion overlay and copied text in current buffer.
-Caller can pass BUF to specify which BUF needs to remove transclusions.
-`org-transclusion-metaup-down' use this function with ADD-STARS.
-The values can be 't or 'only-with-headline.
-
-It retains the `buffer-modified-p' status before removing any
-transclusions; this is not considered modification to the buffer
-for the auto save facilities, such as `auto-save-mode' and
-`auto-save-visited-mode'."
-  (interactive)
-  (when buf (set-buffer buf))
-  (setq org-transclusion-buffer-modified-p (buffer-modified-p))
-  (org-with-wide-buffer
-   (dolist (ov (overlays-in (point-min) (point-max)))
-     (let ((pos (overlay-start ov))
-           (switch)
-           (level))
-       (when pos
-         (goto-char pos)
-         (when (or (eq add-stars t)
-                   (and (eq add-stars 'only-with-headline)
-                        (org-transclusion--has-headline-p)))
-           (org-transclusion--move-to-root-hlevel-of-transclusion-at-point)
-           (setq switch 'stars)
-           (setq level (org-outline-level)))
-         (org-transclusion-remove-at-point pos switch level)))))
-  (set-buffer-modified-p org-transclusion-buffer-modified-p))
-
 ;;-----------------------------------------------------------------------------
 ;; Functions
 ;; - Activate / deactivate
 ;; - Toggle translusions when in and out of transclusion buffer
-
-(defun org-transclusion-activate ()
-  "Activate automatic transclusions in the local buffer.
-This should be a buffer-local minior mode.  Not done yet."
-  (interactive)
-  (if (memq 'org-transclusion--toggle-transclusion-when-out-of-focus
-            window-selection-change-functions)
-      (run-with-idle-timer 0 nil 'message
-                           "Nothing done. Transclusion is aleady active.")
-    (setq-local window-selection-change-functions
-                (push 'org-transclusion--toggle-transclusion-when-out-of-focus
-                      window-selection-change-functions))
-    (add-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save nil t)
-    (add-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save nil t)
-    (advice-add 'org-metaup :around #'org-transclusion-metaup-down)
-    (advice-add 'org-metadown :around #'org-transclusion-metaup-down)
-    (advice-add 'org-shiftmetaup :around #'org-transclusion-shiftmetaup)
-    (advice-add 'org-shiftmetadown :around #'org-transclusion-shiftmetadown)
-    (advice-add 'org-metaleft :around #'org-transclusion-metaleft)
-    (advice-add 'org-metaright :around #'org-transclusion-metaright)
-    (advice-add 'org-shiftmetaleft :around #'org-transclusion-metaleft)
-    (advice-add 'org-shiftmetaright :around #'org-transclusion-metaright)
-    (when org-transclusion-activate-persistent-message
-      (setq header-line-format
-            (substitute-command-keys
-             "Transclusion active in this buffer. `\\[org-transclusion-open-edit-src-buffer-at-point]' to edit the transclusion at point."))))
-  (when org-transclusion-auto-add-on-activation
-    (org-transclusion-add-all-in-buffer)))
-
-(defun org-transclusion-deactivate ()
-  "Deactivate automatic transclusions in the local buffer."
-  ;; Consider keeping the tc copies as read-only to be able to read
-  ;; or for export mode
-  (interactive)
-  (if (memq 'org-transclusion--toggle-transclusion-when-out-of-focus
-            window-selection-change-functions)
-      (progn
-        (org-transclusion-remove-all-in-buffer)
-        (setq-local window-selection-change-functions
-                    (remove 'org-transclusion--toggle-transclusion-when-out-of-focus
-                            window-selection-change-functions))
-        (remove-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save t)
-        (remove-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save t)
-        (advice-remove 'org-metaup #'org-transclusion-metaup-down)
-        (advice-remove 'org-metadown #'org-transclusion-metaup-down)
-        (advice-remove 'org-shiftmetaup #'org-transclusion-shiftmetaup)
-        (advice-remove 'org-shiftmetadown #'org-transclusion-shiftmetadown)
-        (advice-remove 'org-metaleft #'org-transclusion-metaleft)
-        (advice-remove 'org-metaright #'org-transclusion-metaright)
-        (advice-remove 'org-shiftmetaleft #'org-transclusion-metaleft)
-        (advice-remove 'org-shiftmetaright #'org-transclusion-metaright)
-        (when (buffer-live-p org-transclusion-last-edit-src-buffer)
-            (kill-buffer org-transclusion-last-edit-src-buffer))
-        (when org-transclusion-activate-persistent-message
-          (setq header-line-format nil)))
-    (run-with-idle-timer 0 nil 'message
-                         "Nothing done. Transclusion is not active.")))
 
 (defun org-transclusion--toggle-transclusion-when-out-of-focus (win)
   "Detect focus state of window WIN, and toggle tranclusion on and off.
