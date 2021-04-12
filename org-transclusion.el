@@ -138,12 +138,6 @@ can be open at a time.
 Killing a clone buffer is assumed to be safe in general, as its original
 buffer is in sync and the content is reflected there.")
 
-(defvar org-transclusion-debug nil
-  "Disable the toggle of transclusions.
-It is meant to enable edebugging.  Without this, switching to the source
-code buffer for runtime debugger toggles off the transclusion, and thus
-makes it impossible to debug at runtime.")
-
 (defvar org-transclusion-use-paste-subtree t)
 
 (defvar org-transclusion-next-link-hook '(org-transclusion-next-link))
@@ -195,58 +189,45 @@ the mode, `toggle' toggles the state."
   "Activate automatic transclusions in the local buffer.
 This should be a buffer-local minior mode.  Not done yet."
   (interactive)
-  (if (memq 'org-transclusion--toggle-transclusion-when-out-of-focus
-            window-selection-change-functions)
-      (run-with-idle-timer 0 nil 'message
-                           "Nothing done. Transclusion is aleady active.")
-    (setq-local window-selection-change-functions
-                (push 'org-transclusion--toggle-transclusion-when-out-of-focus
-                      window-selection-change-functions))
-    (add-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save nil t)
-    (add-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save nil t)
-    (advice-add 'org-metaup :around #'org-transclusion-metaup-down)
-    (advice-add 'org-metadown :around #'org-transclusion-metaup-down)
-    (advice-add 'org-shiftmetaup :around #'org-transclusion-shiftmetaup)
-    (advice-add 'org-shiftmetadown :around #'org-transclusion-shiftmetadown)
-    (advice-add 'org-metaleft :around #'org-transclusion-metaleft)
-    (advice-add 'org-metaright :around #'org-transclusion-metaright)
-    (advice-add 'org-shiftmetaleft :around #'org-transclusion-metaleft)
-    (advice-add 'org-shiftmetaright :around #'org-transclusion-metaright)
-    (when org-transclusion-activate-persistent-message
-      (setq header-line-format
-            (substitute-command-keys
-             "Transclusion active in this buffer. `\\[org-transclusion-open-edit-src-buffer-at-point]' to edit the transclusion at point."))))
-  (when org-transclusion-auto-add-on-activation
-    (org-transclusion-add-all-in-buffer)))
+  (add-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save nil t)
+  (add-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save nil t)
+  (advice-add 'org-metaup :around #'org-transclusion-metaup-down)
+  (advice-add 'org-metadown :around #'org-transclusion-metaup-down)
+  (advice-add 'org-shiftmetaup :around #'org-transclusion-shiftmetaup)
+  (advice-add 'org-shiftmetadown :around #'org-transclusion-shiftmetadown)
+  (advice-add 'org-metaleft :around #'org-transclusion-metaleft)
+  (advice-add 'org-metaright :around #'org-transclusion-metaright)
+  (advice-add 'org-shiftmetaleft :around #'org-transclusion-metaleft)
+  (advice-add 'org-shiftmetaright :around #'org-transclusion-metaright)
+  (when org-transclusion-activate-persistent-message
+    (setq header-line-format
+          (substitute-command-keys
+           "Transclusion active in this buffer. `\\[org-transclusion-open-edit-src-buffer-at-point]' to edit the transclusion at point.")))
+  (when org-transclusion-auto-add-on-activation))
 
 (defun org-transclusion-deactivate ()
   "Deactivate automatic transclusions in the local buffer."
   ;; Consider keeping the tc copies as read-only to be able to read
   ;; or for export mode
   (interactive)
-  (if (memq 'org-transclusion--toggle-transclusion-when-out-of-focus
-            window-selection-change-functions)
-      (progn
-        (org-transclusion-remove-all-in-buffer)
-        (setq-local window-selection-change-functions
-                    (remove 'org-transclusion--toggle-transclusion-when-out-of-focus
-                            window-selection-change-functions))
-        (remove-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save t)
-        (remove-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save t)
-        (advice-remove 'org-metaup #'org-transclusion-metaup-down)
-        (advice-remove 'org-metadown #'org-transclusion-metaup-down)
-        (advice-remove 'org-shiftmetaup #'org-transclusion-shiftmetaup)
-        (advice-remove 'org-shiftmetadown #'org-transclusion-shiftmetadown)
-        (advice-remove 'org-metaleft #'org-transclusion-metaleft)
-        (advice-remove 'org-metaright #'org-transclusion-metaright)
-        (advice-remove 'org-shiftmetaleft #'org-transclusion-metaleft)
-        (advice-remove 'org-shiftmetaright #'org-transclusion-metaright)
-        (when (buffer-live-p org-transclusion-last-edit-src-buffer)
-            (kill-buffer org-transclusion-last-edit-src-buffer))
-        (when org-transclusion-activate-persistent-message
-          (setq header-line-format nil)))
-    (run-with-idle-timer 0 nil 'message
-                         "Nothing done. Transclusion is not active.")))
+  (org-transclusion-remove-all-in-buffer)
+  (setq-local window-selection-change-functions
+              (remove 'org-transclusion--toggle-transclusion-when-out-of-focus
+                      window-selection-change-functions))
+  (remove-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save t)
+  (remove-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save t)
+  (advice-remove 'org-metaup #'org-transclusion-metaup-down)
+  (advice-remove 'org-metadown #'org-transclusion-metaup-down)
+  (advice-remove 'org-shiftmetaup #'org-transclusion-shiftmetaup)
+  (advice-remove 'org-shiftmetadown #'org-transclusion-shiftmetadown)
+  (advice-remove 'org-metaleft #'org-transclusion-metaleft)
+  (advice-remove 'org-metaright #'org-transclusion-metaright)
+  (advice-remove 'org-shiftmetaleft #'org-transclusion-metaleft)
+  (advice-remove 'org-shiftmetaright #'org-transclusion-metaright)
+  (when (buffer-live-p org-transclusion-last-edit-src-buffer)
+    (kill-buffer org-transclusion-last-edit-src-buffer))
+  (when org-transclusion-activate-persistent-message
+    (setq header-line-format nil)))
 
 (defun org-transclusion-link-open-at-point (&optional arg)
   "Pass Org mode's link object to `org-transclusion-link-open'.
@@ -256,13 +237,12 @@ with `org-link-open'."
   (interactive)
   (let* ((context (org-element-context))
          (type (org-element-property :type context)))
-    (cond
-     ((and org-transclusion-mode
-           (or (string= "id" type)
-               (string= "file" type)))
-      (org-transclusion-link-open context))
+    (cond ((or (string= "id" type)
+               (string= "file" type))
+           (when (org-transclusion-link-open context)
+             (org-transclusion-mode 1)))
      ;; For other cases. Do nothing
-     (t (message "Nothing done. Not at a link, or link not supported.")))))
+          (t (message "Nothing done. Not at a link, or link not supported.")))))
 
 (defun org-transclusion-add-all-in-buffer ()
   "Add all the transclusions in the current buffer.
@@ -297,7 +277,6 @@ each link:
           ;; Skip this:
           ;; (when (org-element-link-parser)  ;; when a link is in the begging of buffer
           (while (run-hook-with-args-until-success 'org-transclusion-next-link-hook)
-            ;; Check if the link is in the beginning of a line
             ;; Check if the link immediately follows the keyword line #+transclude:
             ;; Check if the link at point is NOT within tranclusion
             (when (and (org-transclusion--ok-to-transclude)
@@ -480,8 +459,12 @@ standard `org-link-open'."
       (setq tc-params (run-hook-with-args-until-success
                        'org-transclusion-link-open-hook tc-params link))))
     ;; Do transclusion when tc-params are populated
-    (if tc-params (org-transclusion--create-at-point tc-params)
-      (message "No transclusion added."))))
+    (if tc-params
+        (progn
+          (org-transclusion--create-at-point tc-params)
+          t)
+      (message "No transclusion added.")
+      nil)))
 
 (defun org-transclusion-link-open-org-id (tc-params link)
   "For Org-id.
@@ -506,14 +489,6 @@ Return nil if not found."
 (defun org-transclusion-link-open-other-file-links (tc-params link)
      ;; For non-Org files
      ((setq tc-params (org-transclusion--get-custom-tc-params link))))
-
-;; Not used but might be useful...
-;; (defun org-transclusion-marker-open (marker)
-;;   (if-let ((tc-payload (org-transclusion--get-org-content-from-marker marker)))
-;;       (org-transclusion--create-at-point (list :tc-type "org-id"
-;;                                                :tc-fn (lambda ()
-;;                                                         tc-payload)))
-;;     (message "No transclusion added.")))
 
 (defun org-transclusion--get-org-content-from-marker (marker)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from MARKER.
@@ -905,31 +880,6 @@ buffers."
   (goto-char org-transclusion-original-position)
   (setq org-transclusion-original-position nil)
   (set-buffer-modified-p nil))
-
-;;-----------------------------------------------------------------------------
-;; Functions
-;; - Activate / deactivate
-;; - Toggle translusions when in and out of transclusion buffer
-
-(defun org-transclusion--toggle-transclusion-when-out-of-focus (win)
-  "Detect focus state of window WIN, and toggle tranclusion on and off.
-The toggling is done via adding and removing all from the appropirate buffer,
-depending on whether the focus is coming in or out of the tranclusion buffer."
-  (unless org-transclusion-debug
-    (let ((buf (window-buffer win)))
-      (cond ((minibufferp (current-buffer))
-             (message "going into minibuffer") nil) ;; do nothing
-            ((string-match-p "*.*" (buffer-name (current-buffer)))
-             (message "going into buffer with *<buffer-name>*") nil)
-            ((eq buf (current-buffer))
-             (message "coming into %s" win)
-             (org-transclusion-add-all-in-buffer)) ;; add all back in
-            (t
-             (message "going from %s into %s" buf (current-buffer))
-             ;; TODO This cannot add transclusion when moving from one
-             ;; transclusion buffer to another.  I think it needs to check the
-             ;; condition if both from and to buffers have minior mode on
-             (org-transclusion-remove-all-in-buffer buf)))))) ;; remove all
 
 ;;-----------------------------------------------------------------------------
 ;; Metaup/down; metaleft/right metashiftleft/right
