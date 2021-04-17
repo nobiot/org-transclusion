@@ -1093,7 +1093,7 @@ Optionally OVerlay can be passed. If not passed, this function will get one at p
     (list :path (org-strip-quotes (match-string 0 value)))))
 
 (defun org-transclusion--get-keyword-level-value (value)
-  (when (string-match ":hlevel *\\([1-9]\\)" value)
+  (when (string-match ":level *\\([1-9]\\)" value)
     (list :level (org-strip-quotes (match-string 1 value)))))
 
 (defun org-transclusion-wrap-path-to-link (path)
@@ -1102,7 +1102,7 @@ Optionally OVerlay can be passed. If not passed, this function will get one at p
     (insert (concat "[[" path "]]"))
     (org-element-context)))
 
-(defun org-transclusion-open-at-point (&optional arg)
+(defun org-transclusion-add-at-point (&optional arg)
   "Transclude keyword.
 
 Pass Org mode's link object to `org-transclusion-link-open'.
@@ -1110,87 +1110,94 @@ This function assumes the point is at the beginning of a link.
 \\[universal-argument] (ARG) can be passed to force it to open the link
 with `org-link-open'."
   (interactive)
-  (when-let* ((plist (org-transclusion-get-keyword-values-at-point))
-              (link (org-transclusion-wrap-path-to-link (plist-get plist :path)))
+  (when-let* ((keyword-values (org-transclusion-get-keyword-values-at-point))
+              (link (org-transclusion-wrap-path-to-link (plist-get keyword-values :path)))
               (type (org-element-property :type link)))
     ;; The transclusion needs to be active, and the link type needs to be
     ;; either id or file
-    (cond ((and (plist-get plist :active-p)
+    (cond ((and (plist-get keyword-values :active-p)
                 (or (string= "id" type)
                     (string= "file" type)))
-           (message "Transcluding...")
            (let ((tc-params))
              (setq tc-params (run-hook-with-args-until-success
                               'org-transclusion-link-open-hook tc-params link))
-             (if tc-params
-                 (progn
-                   (org-transclusion-add-at-point tc-params plist) t)
-               (message "No transclusion added.") nil)))
-           ;; For other cases. Do nothing
+             (if (not tc-params)
+                 (progn (message "No transclusion added.") nil) ; return nil)
+               (let* ((tc-type (plist-get tc-params :tc-type))
+                      (tc-arg (plist-get tc-params :tc-arg))
+                      (tc-fn (plist-get tc-params :tc-fn))
+                      (tc-payload (funcall tc-fn tc-arg))
+                      (tc-beg-mkr (plist-get tc-payload :tc-beg-mkr))
+                      (tc-end-mkr (plist-get tc-payload :tc-end-mkr))
+                      (tc-content (plist-get tc-payload :tc-content)))
+                 (if (or (string= tc-content "")
+                         (eq tc-content nil))
+                     (progn (message "Nothing done. No content is found through the link.") nil)
+                   (save-excursion
+                     ;; (org-transclusion-insert-content tc-params keyword-values)
+                     ;; Remove keyword
+                     (org-transclusion-remove-keyword)
+                     ;; Insert & overlay
+                     (org-transclusion-insert-content keyword-values tc-type tc-content tc-beg-mkr tc-end-mkr)
+                     t))))))
+          ;; For other cases. Do nothing
           (t (message "Nothing done. Transclusion inactive or link missing.") nil))))
 
-(defun org-transclusion-add-at-point (tc-params plist)
+(defun org-transclusion-remove-keyword ()
+  (let* ((elm (org-element-at-point))
+         (beg (org-element-property :begin elm))
+         (end (org-element-property :end elm))
+         (post-blank (org-element-property :post-blank elm)))
+    (delete-region beg (- end post-blank)) t))
+
+(defun org-transclusion-insert-content (keyword-values type content src-beg-m src-end-m)
+  "Add content and overlay."
+  (let* ((sbuf (marker-buffer src-beg-m)) ;source buffer
+         (beg (point)) ;; before the text is inserted
+         (beg-mkr (point-marker))
+         (end) ;; at the end of text content after inserting it
+         (ov-src) ;; source-buffer
+         (ov-tc) ;; transclusion-buiffer
+         (tc-pair))
+    (if (org-kill-is-subtree-p content)
+        (let ((level (plist-get keyword-values :level)))
+          (when level (setq level (string-to-number level)))
+          (org-transclusion-paste-subtree level (org-transclusion--format-content content) t t)) ;; one line removed from original
+      (insert (org-transclusion--format-content content)))
+    ;; Put to transclusion overlay
+    (setq end (point))
+    (setq ov-src (make-overlay src-beg-m src-end-m sbuf t nil))
+    (setq ov-tc (make-overlay beg end nil t nil))
+    (setq tc-pair (list ov-src ov-tc))
+    (overlay-put ov-tc 'tc-type type)
+    (overlay-put ov-tc 'tc-beg-mkr src-beg-m)
+    (overlay-put ov-tc 'tc-end-mkr src-end-m)
+    (overlay-put ov-tc 'priority -50)
+    (overlay-put ov-tc 'evaporate t)
+    (overlay-put ov-tc 'face 'org-transclusion-block)
+    (overlay-put ov-tc 'line-prefix "⋮ ")
+    (overlay-put ov-tc 'wrap-prefix "⋮ ")
+    (overlay-put ov-tc 'tc-pair tc-pair)
+    (overlay-put ov-tc 'tc-orig-keyword keyword-values)
+    ;; Text Property to the inserted text
+    (add-text-properties (overlay-start ov-tc) (overlay-end ov-tc)
+                         '(read-only t rear-nonsticky t))
+    ;; Put to the source overlay
+    (overlay-put ov-src 'tc-by beg-mkr)
+    (overlay-put ov-src 'evaporate t)
+    (overlay-put ov-src 'face 'org-transclusion-source-block)
+    (overlay-put ov-src 'tc-pair tc-pair)))
+
+(defun org-transclusion-keyword-values-to-keyword (values)
   "."
-  ;; Remove #+transclude keyword
-  ;; Assume in the beginning of a link
-  (let* ((tc-type (plist-get tc-params :tc-type))
-         (tc-arg (plist-get tc-params :tc-arg))
-         (tc-fn (plist-get tc-params :tc-fn))
-         (tc-payload (funcall tc-fn tc-arg))
-         (tc-beg-mkr (plist-get tc-payload :tc-beg-mkr))
-         (tc-end-mkr (plist-get tc-payload :tc-end-mkr))
-         (tc-content (plist-get tc-payload :tc-content)))
-    (if (or (string= tc-content "")
-            (eq tc-content nil))
-        (message "Nothing done. No content is found through the link.")
-      (save-excursion
-        ;;(beginning-of-line)
-        ;; Assume there is no space or line feed between the keyword and link in question
-        (let* ((elm (org-element-at-point))
-               (beg (org-element-property :begin elm)) ;; for keyword, it's bol
-               (end (org-element-property :end elm))
-               (post-blank (org-element-property :post-blank elm))
-               (tc-raw-link (buffer-substring-no-properties beg (- end post-blank)))
-               (beg-mkr (move-marker (make-marker) beg))) ;; for source overlay
-          (delete-region beg (- end post-blank))
-          ;; Add content and overlay
-          (if (org-kill-is-subtree-p tc-content)
-              ;; Deactivate org-adapt-indentation temporarlily.  This is
-              ;; necessary; otherwise, the transclusion links included the
-              ;; demoted subtree will have a space by adaptation. It
-              ;; disables further adding of transclusion links.
-
-              ;; this does not do antything for keyword transclusion. Turning to t for now
-              (let ((org-adapt-indentation t)
-                    (level (plist-get plist :level)))
-                (when level (setq level (string-to-number level)))
-                (org-transclusion-paste-subtree level (org-transclusion--format-content tc-content) t t)) ;; one line removed from original
-            (insert (org-transclusion--format-content tc-content)))
-
-          (let* ((sbuf (marker-buffer tc-beg-mkr)) ;source buffer
-                 (end (point)) ;; at the end of text content after inserting it
-                 (ov-src (make-overlay tc-beg-mkr tc-end-mkr sbuf t nil)) ;; source-buffer
-                 (ov-tc (make-overlay beg end nil t nil)) ;; transclusion-buiffer
-                 (tc-pair (list ov-src ov-tc)))
-            ;; Put to transclusion overlay
-            (overlay-put ov-tc 'tc-type tc-type)
-            (overlay-put ov-tc 'tc-raw-link tc-raw-link)
-            (overlay-put ov-tc 'tc-beg-mkr tc-beg-mkr)
-            (overlay-put ov-tc 'tc-end-mkr tc-end-mkr)
-            (overlay-put ov-tc 'priority -50)
-            (overlay-put ov-tc 'evaporate t)
-            (overlay-put ov-tc 'face 'org-transclusion-block)
-            (overlay-put ov-tc 'tc-pair tc-pair)
-            (overlay-put ov-tc 'tc-keyword-values "keyword-values")
-            (overlay-put ov-tc 'help-echo
-                         (substitute-command-keys
-                          (concat "Original link: " tc-raw-link ". Visit with `\\[org-transclusion-open-src-buffer-at-point]'.")))
-            (add-text-properties (overlay-start ov-tc) (overlay-end ov-tc) '(read-only t rear-nonsticky t))
-            ;; Put to the source overlay
-            (overlay-put ov-src 'tc-by beg-mkr)
-            (overlay-put ov-src 'evaporate t)
-            (overlay-put ov-src 'face 'org-transclusion-source-block)
-            (overlay-put ov-src 'tc-pair tc-pair)))))))
+  (let ((active-p (plist-get values :active-p))
+        (path (plist-get values :path))
+        (level (plist-get values :level)))
+    (concat "#+transclude: "
+            (symbol-name active-p)
+            " \"" path "\""
+            (when level (concat " :level " level))
+            "\n")))
 
 (defun org-transclusion-remove-at-point-2 (pos)
   "Remove transclusion and the copied text around POS.
@@ -1212,7 +1219,8 @@ headlines."
           (widen)
           (let* ((inhibit-read-only t)
                  (beg (overlay-start ov))
-                 (raw-link (overlay-get ov 'tc-raw-link))
+                 (keyword (org-transclusion-keyword-values-to-keyword
+                           (overlay-get ov 'tc-orig-keyword)))
                  (end (overlay-end ov))
                  (tc-pair (overlay-get ov 'tc-pair)))
             ;;Remove overlays
@@ -1226,7 +1234,7 @@ headlines."
             (delete-region beg end)
             ;; Add back #+transclusion:
             ;; Need to consider :level prop
-            (insert raw-link))))
+            (insert keyword))))
     ;; The message below is common for all the modes
     (message "Nothing done. No transclusion exists here.")))
 
