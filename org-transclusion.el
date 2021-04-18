@@ -172,7 +172,7 @@ This function assumes the point is at the beginning of a link."
           ;; For other cases. Do nothing
           (t (message "Nothing done. Transclusion inactive or link missing.") nil))))
 
-(defun org-transclusion-remove-at-point (pos)
+(defun org-transclusion-remove-at-point ()
   "Remove transclusion and the copied text around POS.
 When MODE is 'detatch, remove the tranclusion overlay only,
 keeping the copied text, and the original link.
@@ -181,8 +181,14 @@ keeping the copied text, and the original link.
 `org-transclusion-metaup-down'.  The the number of STARS are
 added to the keyword when the transclusion is removed to make
 headlines."
-  (interactive "d")
-  (if-let ((ov (cdr (get-char-property-and-overlay pos 'tc-type))))
+  (interactive)
+  (if-let* ((ov (cdr (get-char-property-and-overlay (point) 'tc-type)))
+            (beg (overlay-start ov))
+            (end (overlay-end ov))
+            (keyword (org-transclusion-keyword-values-to-keyword
+                      (overlay-get ov 'tc-orig-keyword)))
+            (tc-pair (overlay-get ov 'tc-pair))
+            (inhibit-read-only t))
       (save-excursion
         (save-restriction
           ;; Bring back the transclusion link.
@@ -190,25 +196,19 @@ headlines."
           ;; as the transcluded heading might have folded
           ;; texts outside the tranclusion overlay
           (widen)
-          (let* ((inhibit-read-only t)
-                 (beg (overlay-start ov))
-                 (keyword (org-transclusion-keyword-values-to-keyword
-                           (overlay-get ov 'tc-orig-keyword)))
-                 (end (overlay-end ov))
-                 (tc-pair (overlay-get ov 'tc-pair)))
-            ;;Remove overlays
-            (dolist (ol tc-pair)
-              (delete-overlay ol))
-            ;; TODO
-            ;; Also ensure to delete all the possible orphan overlays from the source
-            ;; When remove fn, delete the copied texts
-            ;; for when detatch-at-point is called interactively
-            ;; We want to stop adding it back again.
-            (with-silent-modifications
-              (delete-region beg end)
-              ;; Add back #+transclusion:
-              ;; Need to consider :level prop
-              (insert keyword)))))
+          ;;Remove overlays
+          (dolist (ol tc-pair)
+            (delete-overlay ol))
+          ;; TODO
+          ;; Also ensure to delete all the possible orphan overlays from the source
+          ;; When remove fn, delete the copied texts
+          ;; for when detatch-at-point is called interactively
+          ;; We want to stop adding it back again.
+          (with-silent-modifications
+            (delete-region beg end)
+            ;; Add back #+transclusion:
+            ;; Need to consider :level prop
+            (insert keyword))))
     ;; The message below is common for all the modes
     (message "Nothing done. No transclusion exists here.")))
 
@@ -241,12 +241,6 @@ headlines."
 (defun org-transclusion--get-keyword-level-value (value)
   (when (string-match ":level *\\([1-9]\\)" value)
     (list :level (string-to-number (org-strip-quotes (match-string 1 value))))))
-
-(defun org-transclusion-wrap-path-to-link (path)
-  "Take PATH string. Return Org link object."
-  (with-temp-buffer
-    (insert (concat "[[" path "]]"))
-    (org-element-context)))
 
 (defun org-transclusion-remove-keyword ()
   (let* ((elm (org-element-at-point))
@@ -525,6 +519,13 @@ buffers."
 
 ;;-----------------------------------------------------------------------------
 ;;; Utility Functions
+
+(defun org-transclusion-wrap-path-to-link (path)
+  "Take PATH string. Return Org link object."
+  (with-temp-buffer
+    (insert (concat "[[" path "]]"))
+    (org-element-context)))
+
 (defun org-transclusion--org-file-p (path)
   "Return non-nil if PATH is an Org file.
 Checked with the extension `org'."
