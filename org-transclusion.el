@@ -53,18 +53,6 @@
   :prefix "org-translusion-"
   :link '(url-link :tag "Github" "https://github.com/nobiot/org-transclusion"))
 
-;; (defcustom org-transclusion-activate-persistent-message t
-;;   "Define whether or not a header line is added when transclusion is active."
-;;   :type 'boolean
-;;   :group 'org-transclusion)
-
-;; (defcustom org-transclusion-auto-add-on-activation t
-;;   "Define whether or not add all the transclusion contents on activation.
-;; If true, add text contents for all the transclusion links where possible.
-;; Default to true."
-;;   :type 'boolean
-;;   :group 'org-transclusion)
-
 (defcustom org-transclusion-exclude-elements (list 'property-drawer)
   "Define the Org elements that are excluded from transcluded copies.
 It is a list of elements to be filtered out.
@@ -111,15 +99,7 @@ See the functions delivered within org-tranclusion for the API signatures."
   "Face for transcluded block."
   :group 'org-transclusion)
 
-;; WIP. Not working
-(defface org-transclusion-keyword
-  '((t (:foreground "gray90" :extend t)))
-    "Face for the :transclusion keyword."
-    :group 'org-transclusion)
-
 ;;;; Variables
-
-(defvar-local org-transclusion-original-position nil)
 
 (defvar org-transclusion-link-open-hook
   '(org-transclusion-link-open-org-id
