@@ -133,6 +133,35 @@ See the functions delivered within org-tranclusion for the API signatures."
 
 ;;;; Commands
 
+(define-minor-mode org-transclusion-mode
+  "Toggle Org-transclusion minor mode.
+Interactively with no argument, this command toggles the mode.
+A positive prefix argument enables the mode, any other prefix
+argument disables it.  From Lisp, argument omitted or nil enables
+the mode, `toggle' toggles the state."
+  :init-value nil
+  :lighter nil
+  :global nil
+  :keymap (let ((map (make-sparse-keymap)))
+            map)
+  (cond
+   (org-transclusion-mode
+    (org-transclusion-activate))
+   (t (org-transclusion-deactivate))))
+
+(defun org-transclusion-activate ()
+  "Activate automatic transclusions in the local buffer."
+  (interactive)
+  (add-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save nil t)
+  (add-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save nil t))
+
+(defun org-transclusion-deactivate ()
+  "Deactivate automatic transclusions in the local buffer."
+  (interactive)
+  (org-transclusion-remove-all-in-buffer)
+  (remove-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save t)
+  (remove-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save t))
+
 (defun org-transclusion-add-at-point ()
   "Transclude keyword.
 Pass Org mode's link object to `org-transclusion-link-open'.
@@ -168,6 +197,7 @@ This function assumes the point is at the beginning of a link."
                        (org-transclusion-remove-keyword)
                        ;; Insert & overlay
                        (org-transclusion-insert-content keyword-values tc-type tc-content tc-beg-mkr tc-end-mkr)
+                       (org-transclusion-mode 1)
                        t)))))))
           ;; For other cases. Do nothing
           (t (message "Nothing done. Transclusion inactive or link missing.") nil))))
@@ -188,7 +218,7 @@ argument is passed."
 (defun org-transclusion-remove-at-point ()
   "Remove transclusion and the copied text at point."
   (interactive)
-  (if-let* ((ov (cdr (get-char-property-and-overlay (point)l 'tc-type)))
+  (if-let* ((ov (cdr (get-char-property-and-overlay (point) 'tc-type)))
             (beg (overlay-start ov))
             (end (overlay-end ov))
             (keyword (org-transclusion-keyword-values-to-keyword
@@ -508,7 +538,7 @@ TODO need to handle when the file does not exist."
 
 (defun org-transclusion--process-all-in-buffer-before-save ()
   "Update and remove all translusions in the current buffer `before-save-hook'."
-  (setq org-transclusion-original-position (point))
+  ;;(setq org-transclusion-original-position (point))
   (org-transclusion-remove-all-in-buffer)) ; clean up current buffer before writing to file)
 
 (defun org-transclusion--process-all-in-buffer-after-save ()
@@ -517,10 +547,10 @@ Meant to be for `after-save-hook'.  It adds all the transcluded copies back
 into the current buffer.  And then saves all the transclusion source
 buffers."
   (org-transclusion-add-all-in-buffer) ; put all tranclusions back in
-  (goto-char org-transclusion-original-position)
-  (setq org-transclusion-original-position nil)
-  (set-buffer-modified-p nil))
-
+  ;;(goto-char org-transclusion-original-position)
+  ;;(setq org-transclusion-original-position nil)
+  ;;(set-buffer-modified-p nil))
+)
 ;;-----------------------------------------------------------------------------
 ;;; Utility Functions
 
