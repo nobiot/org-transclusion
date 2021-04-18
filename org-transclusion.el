@@ -290,8 +290,8 @@ argument is passed."
       (insert (org-transclusion--format-content content)))
     ;; Put to transclusion overlay
     (setq beg-mkr (save-excursion (goto-char beg)
-                                  (org-marginalia-make-highlight-marker (point))))
-    (setq end (org-marginalia-make-highlight-marker (point)))
+                                  (org-transclusion--make-marker (point))))
+    (setq end (org-transclusion--make-marker (point)))
     (setq end-mkr (point-marker))
     (setq ov-src (make-overlay src-beg-m src-end-m sbuf t nil))
     ;;(setq ov-tc (make-overlay beg end nil t nil))
@@ -557,6 +557,16 @@ string \"nil\", return symbol t."
 (defun org-transclusion--within-transclusion-p ()
   "Return t if the current point is within a tranclusion overlay."
   (when (cdr (get-char-property-and-overlay (point) 'tc-id)) t))
+
+(defun org-transclusion--make-marker (point)
+  "Return marker of the insertion-type t for POINT.
+The insertion-type is important in order for the translusion beg
+and end markers are correctly set. This fixes the problem of
+transclude keyword not correctly removed when the keywords are
+placed without a blank line."
+  (let ((marker (set-marker (make-marker) point)))
+    (set-marker-insertion-type marker t)
+    marker))
 
 
 ;;;;-----------------------------------------------------------------------------
