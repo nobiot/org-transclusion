@@ -275,7 +275,9 @@ headlines."
     (if (org-kill-is-subtree-p content)
         (let ((level (plist-get keyword-values :level)))
           (when level (setq level level))
-          (org-transclusion-paste-subtree level (org-transclusion--format-content content) t t)) ;; one line removed from original
+          (org-transclusion-paste-subtree
+           level
+           (org-transclusion--format-content content) t t)) ;; one line removed from original
       (insert (org-transclusion--format-content content)))
     ;; Put to transclusion overlay
     (setq end (point))
@@ -351,7 +353,9 @@ This is meant for Org-ID."
           (org-with-wide-buffer
            ;;(outline-show-all)
            (goto-char marker)
-           (org-transclusion--get-org-buffer-or-element-at-point t))))
+           (if (org-before-first-heading-p)
+               (org-transclusion--get-org-buffer-or-element-at-point)
+             (org-transclusion--get-org-buffer-or-element-at-point 'only-element)))))
     (message "Nothing done. Cannot find marker for the ID.")))
 
 (defun org-transclusion--get-org-content-from-link (link &rest _arg)
@@ -368,7 +372,7 @@ This is meant for Org-ID."
          (if search-option
              (progn
                (org-link-search search-option)
-               (org-transclusion--get-org-buffer-or-element-at-point t))
+               (org-transclusion--get-org-buffer-or-element-at-point 'only-element))
            (org-transclusion--get-org-buffer-or-element-at-point)))))))
 
 (defun org-transclusion--get-org-buffer-or-element-at-point (&optional only-element)
