@@ -93,7 +93,7 @@ See the functions delivered within org-tranclusion for the API signatures."
 
 (defface org-transclusion-block
   '((((class color) (min-colors 88) (background light))
-     :background "#f8f8f8" :extend t)
+     :background "#f3f3ff" :foreground "#f8f8ff" :extend t)
     (((class color) (min-colors 88) (background dark))
      :foreground "#bfc0c4" :background "#1e1e1e" :extend t))
   "Face for transcluded block."
@@ -306,8 +306,14 @@ argument is passed."
     ;;(setq ov-tc (make-overlay beg end nil t nil))
     (setq tc-pair (list ov-src))
     ;;(overlay-put ov-tc 'tc-type type)
-    ;;(overlay-put ov-tc 'priority -50)
-    ;;(overlay-put ov-tc 'evaporate t)
+    ;; (overlay-put ov-tc 'priority -50)
+    ;; (overlay-put ov-tc 'evaporate t)
+    ;; (overlay-put ov-tc 'line-prefix (propertize
+    ;;                                  " " 'display
+    ;;                                  '(left-fringe empty-line org-transclusion-block)))
+    ;; (overlay-put ov-tc 'wrap-prefix (propertize
+    ;;                                  " " 'display
+    ;;                                   '(left-fringe empty-line org-transclusion-block)))
     ;;(overlay-put ov-tc 'face 'org-transclusion-block)
     ;; Text Property to the inserted text
     (add-text-properties beg end
@@ -321,8 +327,14 @@ argument is passed."
                                      tc-src-beg-mkr ,src-beg-m
                                      tc-pair ,tc-pair
                                      tc-orig-keyword ,keyword-values
-                                     line-prefix "| "
-                                     wrap-prefix "| "))
+                                     line-prefix ,(concat "  "
+                                                          (propertize
+                                                           "x"
+                                                           `display `(left-fringe empty-line org-transclusion-block)))
+                                     wrap-prefix ,(concat "  "
+                                                          (propertize
+                                                           "x"
+                                                           `display `(left-fringe empty-line org-transclusion-block)))))
     ;; Put to the source overlay
     (overlay-put ov-src 'tc-by beg-mkr)
     (overlay-put ov-src 'evaporate t)
