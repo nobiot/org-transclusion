@@ -176,7 +176,7 @@ This function assumes the point is at the beginning of a link."
                        ;; Remove keyword
                        (org-transclusion-remove-keyword)
                        ;; Insert & overlay
-                       (org-transclusion-insert-content keyword-values tc-type tc-content tc-beg-mkr tc-end-mkr)
+                       (org-transclusion--insert-content keyword-values tc-type tc-content tc-beg-mkr tc-end-mkr)
                        (org-transclusion-mode 1)
                        t)))))))
           ;; For other cases. Do nothing
@@ -273,7 +273,7 @@ argument is passed."
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions for inserting content
 
-(defun org-transclusion-insert-content (keyword-values type content src-beg-m src-end-m)
+(defun org-transclusion--insert-content (keyword-values type content src-beg-m src-end-m)
   "Add content and overlay."
   (let* ((sbuf (marker-buffer src-beg-m)) ;source buffer
          (beg (point)) ;; before the text is inserted
