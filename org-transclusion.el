@@ -261,6 +261,9 @@ Analogous to Occur Edit for Occur Mode."
       (overlay-put tc-ov 'evaporate t)
       (overlay-put tc-ov 'face 'org-transclusion-block-edit)
       (overlay-put tc-ov 'text-clones dups)
+      (overlay-put tc-ov 'keymap (let ((map (make-sparse-keymap)))
+                                   (define-key map (kbd "C-c C-c") #'org-transclusion-refresh-at-poiont)
+                                   map))
       (with-silent-modifications
         (remove-text-properties tc-beg tc-end '(read-only)))
       t)))
