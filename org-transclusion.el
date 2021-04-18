@@ -339,14 +339,18 @@ Analogous to Occur Edit for Occur Mode."
     ;; Put to transclusion overlay
     (setq beg-mkr (save-excursion (goto-char beg)
                                   (org-transclusion--make-marker (point))))
-    (setq end (org-transclusion--make-marker (point)))
-    (setq end-mkr (point-marker))
+    (setq end (point))
+    (setq end-mkr (org-transclusion--make-marker (point)))
     (setq ov-src (make-overlay src-beg-m src-end-m sbuf t nil))
-    ;;(setq ov-tc (make-overlay beg end nil t nil))
+    (setq ov-tc (make-overlay beg end nil t nil))
     (setq tc-pair (list ov-src))
     ;;(overlay-put ov-tc 'tc-type type)
     ;; (overlay-put ov-tc 'priority -50)
-    ;; (overlay-put ov-tc 'evaporate t)
+    (overlay-put ov-tc 'evaporate t)
+    (overlay-put ov-tc 'keymap (let ((map (make-sparse-keymap)))
+                                 (define-key map (kbd "e")
+                                   #'org-transclusion-edit-live-start-at-point)
+                                 map))
     ;; (overlay-put ov-tc 'line-prefix (propertize
     ;;                                  " " 'display
     ;;                                  '(left-fringe empty-line org-transclusion-block)))
@@ -359,9 +363,6 @@ Analogous to Occur Edit for Occur Mode."
                          `(read-only t
                                      front-sticky t
                                      rear-nonsticky t
-                                     keymap ,(let ((map (make-sparse-keymap)))
-                                               (define-key map (kbd "e") #'org-transclusion-edit-live-start-at-point)
-                                               map)
                                      tc-id ,tc-id
                                      tc-type ,type
                                      tc-beg-mkr ,beg-mkr
@@ -377,6 +378,12 @@ Analogous to Occur Edit for Occur Mode."
                                                           (propertize
                                                            "x"
                                                            `display `(left-fringe empty-line org-transclusion-block)))))
+    ;; FIXME for some reason, I cannot put the keymap to the text-property
+    ;; When you debug and step through this piece code, it works.
+    ;; Otherwise, the text property does not get the keymap property
+    (let ((map (make-sparse-keymap)))
+      (define-key map (kbd "e") 'org-transclusion-edit-live-start-at-point)
+      (put-text-property beg end 'keymap map))
     ;; Put to the source overlay
     (overlay-put ov-src 'tc-by beg-mkr)
     (overlay-put ov-src 'evaporate t)
