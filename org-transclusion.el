@@ -216,7 +216,9 @@ This is meant for Org-ID."
           (org-with-wide-buffer
            ;;(outline-show-all)
            (goto-char marker)
-           (org-transclusion--get-org-buffer-or-element-at-point t))))
+           (if (org-before-first-heading-p)
+               (org-transclusion--get-org-buffer-or-element-at-point)
+             (org-transclusion--get-org-buffer-or-element-at-point 'only-element)))))
     (message "Nothing done. Cannot find marker for the ID.")))
 
 (defun org-transclusion--get-org-content-from-link (link &rest _arg)
