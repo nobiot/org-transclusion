@@ -105,7 +105,7 @@ See the functions delivered within org-tranclusion for the API signatures."
 
 (defface org-transclusion-block
   '((((class color) (min-colors 88) (background light))
-     :background "#efefef" :extend t)
+     :background "#f8f8f8" :extend t)
     (((class color) (min-colors 88) (background dark))
      :foreground "#bfc0c4" :background "#1e1e1e" :extend t))
   "Face for transcluded block."
@@ -152,15 +152,15 @@ the mode, `toggle' toggles the state."
 (defun org-transclusion-activate ()
   "Activate automatic transclusions in the local buffer."
   (interactive)
-  (add-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save nil t)
-  (add-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save nil t))
+  (add-hook 'before-save-hook #'org-transclusion-remove-all-in-buffer nil t)
+  (add-hook 'after-save-hook #'org-transclusion-add-all-in-buffer nil t))
 
 (defun org-transclusion-deactivate ()
   "Deactivate automatic transclusions in the local buffer."
   (interactive)
   (org-transclusion-remove-all-in-buffer)
-  (remove-hook 'before-save-hook #'org-transclusion--process-all-in-buffer-before-save t)
-  (remove-hook 'after-save-hook #'org-transclusion--process-all-in-buffer-after-save t))
+  (remove-hook 'before-save-hook #'org-transclusion-remove-all-in-buffer t)
+  (remove-hook 'after-save-hook #'org-transclusion-add-all-in-buffer t))
 
 (defun org-transclusion-add-at-point ()
   "Transclude keyword.
@@ -320,8 +320,8 @@ argument is passed."
     (overlay-put ov-tc 'priority -50)
     (overlay-put ov-tc 'evaporate t)
     (overlay-put ov-tc 'face 'org-transclusion-block)
-    (overlay-put ov-tc 'line-prefix "⋮ ")
-    (overlay-put ov-tc 'wrap-prefix "⋮ ")
+    ;;(overlay-put ov-tc 'line-prefix "⋮ ")
+    ;;(overlay-put ov-tc 'wrap-prefix "⋮ ")
     (overlay-put ov-tc 'tc-pair tc-pair)
     (overlay-put ov-tc 'tc-orig-keyword keyword-values)
     ;; Text Property to the inserted text
@@ -533,24 +533,6 @@ TODO need to handle when the file does not exist."
                  :tc-beg-mkr beg
                  :tc-end-mkr end))))))
 
-;;-----------------------------------------------------------------------------
-;;;; Functions to work with before- and after- save-hooks
-
-(defun org-transclusion--process-all-in-buffer-before-save ()
-  "Update and remove all translusions in the current buffer `before-save-hook'."
-  ;;(setq org-transclusion-original-position (point))
-  (org-transclusion-remove-all-in-buffer)) ; clean up current buffer before writing to file)
-
-(defun org-transclusion--process-all-in-buffer-after-save ()
-  "Add tranclusions back into current buffer, and save source buffers.
-Meant to be for `after-save-hook'.  It adds all the transcluded copies back
-into the current buffer.  And then saves all the transclusion source
-buffers."
-  (org-transclusion-add-all-in-buffer) ; put all tranclusions back in
-  ;;(goto-char org-transclusion-original-position)
-  ;;(setq org-transclusion-original-position nil)
-  ;;(set-buffer-modified-p nil))
-)
 ;;-----------------------------------------------------------------------------
 ;;; Utility Functions
 
