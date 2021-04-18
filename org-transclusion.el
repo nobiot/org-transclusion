@@ -138,7 +138,7 @@ See the functions delivered within org-tranclusion for the API signatures."
 Pass Org mode's link object to `org-transclusion-link-open'.
 This function assumes the point is at the beginning of a link."
   (interactive)
-  (when-let* ((keyword-values (org-transclusion-get-keyword-values-at-point))
+  (when-let* ((keyword-values (org-transclusion--get-keyword-values-at-point))
               (link (org-transclusion-wrap-path-to-link
                      (plist-get keyword-values :path)))
               (type (org-element-property :type link)))
@@ -172,53 +172,53 @@ This function assumes the point is at the beginning of a link."
           ;; For other cases. Do nothing
           (t (message "Nothing done. Transclusion inactive or link missing.") nil))))
 
-(defun org-transclusion-remove-at-point ()
-  "Remove transclusion and the copied text around POS.
-When MODE is 'detatch, remove the tranclusion overlay only,
-keeping the copied text, and the original link.
-
- When MODE is 'stars, it is meant for
-`org-transclusion-metaup-down'.  The the number of STARS are
-added to the keyword when the transclusion is removed to make
-headlines."
+(defun org-transclusion-add-all-in-buffer ()
+  "Add all the transclusions in the current buffer.
+As this function should be used only on the current buffer, no
+argument is passed."
   (interactive)
-  (if-let* ((ov (cdr (get-char-property-and-overlay (point) 'tc-type)))
+  (org-with-point-at 1
+    (let ((regexp "^[ \t]*#\\+TRANSCLUDE:"))
+      (while (re-search-forward regexp nil t)
+        ;; Don't transclude if in transclusion overlay to avoid infinite
+        ;; recursion
+        (unless (org-transclusion--within-transclusion-p)
+          (org-transclusion-add-at-point))))))
+
+(defun org-transclusion-remove-at-point ()
+  "Remove transclusion and the copied text at point."
+  (interactive)
+  (if-let* ((ov (cdr (get-char-property-and-overlay (point)l 'tc-type)))
             (beg (overlay-start ov))
             (end (overlay-end ov))
             (keyword (org-transclusion-keyword-values-to-keyword
                       (overlay-get ov 'tc-orig-keyword)))
             (tc-pair (overlay-get ov 'tc-pair))
             (inhibit-read-only t))
-      (save-excursion
-        (save-restriction
-          ;; Bring back the transclusion link.
-          ;; Show all the folded parts is needed
-          ;; as the transcluded heading might have folded
-          ;; texts outside the tranclusion overlay
-          (widen)
-          ;;Remove overlays
-          (dolist (ol tc-pair)
-            (delete-overlay ol))
-          ;; TODO
-          ;; Also ensure to delete all the possible orphan overlays from the source
-          ;; When remove fn, delete the copied texts
-          ;; for when detatch-at-point is called interactively
-          ;; We want to stop adding it back again.
-          (with-silent-modifications
-            (delete-region beg end)
-            ;; Add back #+transclusion:
-            ;; Need to consider :level prop
-            (insert keyword))))
-    ;; The message below is common for all the modes
-    (message "Nothing done. No transclusion exists here.")))
+      (org-with-wide-buffer
+       (dolist (ol tc-pair)
+         (delete-overlay ol))
+       (with-silent-modifications
+         (delete-region beg end)
+         (insert keyword))))
+  (message "Nothing done. No transclusion exists here."))
+
+(defun org-transclusion-remove-all-in-buffer ()
+  "Remove all the translusion overlay and copied text in current buffer."
+  (interactive)
+  (org-with-wide-buffer
+   (dolist (ov (overlays-in (point-min) (point-max)))
+     (goto-char (overlay-start ov))
+     (when (org-transclusion--within-transclusion-p)
+       (with-silent-modifications
+         (org-transclusion-remove-at-point))))))
 
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions for Transclude Keyword
 ;;   #+transclude: t "~/path/to/file.org::1234"
 
-(defun org-transclusion-get-keyword-values-at-point ()
+(defun org-transclusion--get-keyword-values-at-point ()
   "Return the \"#+transcldue:\" keyword's values if any at point"
-  (interactive)
   (save-excursion
     (beginning-of-line)
     (let ((plist))
@@ -541,6 +541,11 @@ Checked with the extension `org'."
 It is like `org-not-nil', but when the V is non-nil or not
 string \"nil\", return symbol t."
   (when (org-not-nil v) t))
+
+(defun org-transclusion--within-transclusion-p ()
+  "Return t if the current point is within a tranclusion overlay."
+  (when (cdr (get-char-property-and-overlay (point) 'tc-type)) t))
+
 
 ;;;;-----------------------------------------------------------------------------
 ;;;; Definition of org-transclusion-paste-subtree
