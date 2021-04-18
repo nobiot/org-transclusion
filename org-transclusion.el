@@ -208,8 +208,9 @@ argument is passed."
          (delete-overlay ol))
        (org-transclusion-with-silent-modifications
          (delete-region beg end)
-         (insert keyword)))
-    (message "Nothing done. No transclusion exists here.")))
+         (insert keyword)
+         t))
+    (message "Nothing done. No transclusion exists here.") nil))
 
 (defun org-transclusion-remove-all-in-buffer ()
   "Remove all the translusion overlay and copied text in current buffer."
@@ -225,7 +226,8 @@ argument is passed."
   (interactive)
   (when (org-transclusion--within-transclusion-p)
     (org-transclusion-remove-at-point)
-    (org-transclusion-add-at-point)))
+    (org-transclusion-add-at-point)
+    t))
 
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions for Transclude Keyword
