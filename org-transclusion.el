@@ -208,8 +208,8 @@ argument is passed."
          (delete-overlay ol))
        (org-transclusion-with-silent-modifications
          (delete-region beg end)
-         (insert keyword))))
-  (message "Nothing done. No transclusion exists here."))
+         (insert keyword)))
+    (message "Nothing done. No transclusion exists here.")))
 
 (defun org-transclusion-remove-all-in-buffer ()
   "Remove all the translusion overlay and copied text in current buffer."
@@ -219,6 +219,13 @@ argument is passed."
       (forward-char -1)
       (org-transclusion-with-silent-modifications
         (org-transclusion-remove-at-point)))))
+
+(defun org-transclusion-refresh-at-poiont ()
+  "Refresh the transclusion at point."
+  (interactive)
+  (when (org-transclusion--within-transclusion-p)
+    (org-transclusion-remove-at-point)
+    (org-transclusion-add-at-point)))
 
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions for Transclude Keyword
@@ -384,7 +391,7 @@ This is meant for Org-ID."
            (search-option (org-element-property :search-option link))
            (buf (find-file-noselect path)))
       (with-current-buffer buf
-        (org-with-wide-buffer
+        (org-with-wide-buffer
          ;;(outline-show-all)
          (if search-option
              (progn
@@ -556,7 +563,7 @@ string \"nil\", return symbol t."
 
 (defun org-transclusion--within-transclusion-p ()
   "Return t if the current point is within a tranclusion overlay."
-  (when (cdr (get-char-property-and-overlay (point) 'tc-id)) t))
+  (when (get-char-property (point) 'tc-id) t))
 
 (defun org-transclusion--make-marker (point)
   "Return marker of the insertion-type t for POINT.
