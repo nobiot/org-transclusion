@@ -172,7 +172,7 @@ This function assumes the point is at the beginning of a link."
                          (eq tc-content nil))
                      (progn (message "Nothing done. No content is found through the link.") nil)
                    (save-excursion
-                     (with-silent-modifications
+                     (org-transclusion-with-silent-modifications
                        ;; Remove keyword
                        (org-transclusion-remove-keyword)
                        ;; Insert & overlay
@@ -198,17 +198,15 @@ argument is passed."
 (defun org-transclusion-remove-at-point ()
   "Remove transclusion and the copied text at point."
   (interactive)
-  (if-let* ((ov (cdr (get-char-property-and-overlay (point) 'tc-type)))
-            (beg (overlay-start ov))
-            (end (overlay-end ov))
+  (if-let* ((beg (marker-position (get-char-property (point) 'tc-beg-mkr)))
+            (end (marker-position (get-char-property (point) 'tc-end-mkr)))
             (keyword (org-transclusion-keyword-values-to-keyword
-                      (overlay-get ov 'tc-orig-keyword)))
-            (tc-pair (overlay-get ov 'tc-pair))
-            (inhibit-read-only t))
+                      (get-char-property (point) 'tc-orig-keyword)))
+            (tc-pair (get-char-property (point) 'tc-pair)))
       (org-with-wide-buffer
        (dolist (ol tc-pair)
          (delete-overlay ol))
-       (with-silent-modifications
+       (org-transclusion-with-silent-modifications
          (delete-region beg end)
          (insert keyword))))
   (message "Nothing done. No transclusion exists here."))
@@ -216,12 +214,11 @@ argument is passed."
 (defun org-transclusion-remove-all-in-buffer ()
   "Remove all the translusion overlay and copied text in current buffer."
   (interactive)
-  (org-with-wide-buffer
-   (dolist (ov (overlays-in (point-min) (point-max)))
-     (goto-char (overlay-start ov))
-     (when (org-transclusion--within-transclusion-p)
-       (with-silent-modifications
-         (org-transclusion-remove-at-point))))))
+  (org-with-point-at 1
+    (while (text-property-search-forward 'tc-id)
+      (forward-char -1)
+      (org-transclusion-with-silent-modifications
+        (org-transclusion-remove-at-point)))))
 
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions for Transclude Keyword
@@ -275,10 +272,12 @@ argument is passed."
 
 (defun org-transclusion--insert-content (keyword-values type content src-beg-m src-end-m)
   "Add content and overlay."
-  (let* ((sbuf (marker-buffer src-beg-m)) ;source buffer
+  (let* ((tc-id (substring (org-id-uuid) 0 8))
+         (sbuf (marker-buffer src-beg-m)) ;source buffer
          (beg (point)) ;; before the text is inserted
-         (beg-mkr (point-marker))
+         (beg-mkr)
          (end) ;; at the end of text content after inserting it
+         (end-mkr)
          (ov-src) ;; source-buffer
          (ov-tc) ;; transclusion-buiffer
          (tc-pair))
@@ -290,23 +289,31 @@ argument is passed."
            (org-transclusion--format-content content) t t)) ;; one line removed from original
       (insert (org-transclusion--format-content content)))
     ;; Put to transclusion overlay
-    (setq end (point))
+    (setq beg-mkr (save-excursion (goto-char beg)
+                                  (org-marginalia-make-highlight-marker (point))))
+    (setq end (org-marginalia-make-highlight-marker (point)))
+    (setq end-mkr (point-marker))
     (setq ov-src (make-overlay src-beg-m src-end-m sbuf t nil))
-    (setq ov-tc (make-overlay beg end nil t nil))
-    (setq tc-pair (list ov-src ov-tc))
-    (overlay-put ov-tc 'tc-type type)
-    (overlay-put ov-tc 'tc-beg-mkr src-beg-m)
-    (overlay-put ov-tc 'tc-end-mkr src-end-m)
-    (overlay-put ov-tc 'priority -50)
-    (overlay-put ov-tc 'evaporate t)
-    (overlay-put ov-tc 'face 'org-transclusion-block)
-    ;;(overlay-put ov-tc 'line-prefix "⋮ ")
-    ;;(overlay-put ov-tc 'wrap-prefix "⋮ ")
-    (overlay-put ov-tc 'tc-pair tc-pair)
-    (overlay-put ov-tc 'tc-orig-keyword keyword-values)
+    ;;(setq ov-tc (make-overlay beg end nil t nil))
+    (setq tc-pair (list ov-src))
+    ;;(overlay-put ov-tc 'tc-type type)
+    ;;(overlay-put ov-tc 'priority -50)
+    ;;(overlay-put ov-tc 'evaporate t)
+    ;;(overlay-put ov-tc 'face 'org-transclusion-block)
     ;; Text Property to the inserted text
-    (add-text-properties (overlay-start ov-tc) (overlay-end ov-tc)
-                         '(read-only t rear-nonsticky t))
+    (add-text-properties beg end
+                         `(read-only t
+                                     front-sticky t
+                                     rear-nonsticky t
+                                     tc-id ,tc-id
+                                     tc-type ,type
+                                     tc-beg-mkr ,beg-mkr
+                                     tc-end-mkr ,end-mkr
+                                     tc-src-beg-mkr ,src-beg-m
+                                     tc-pair ,tc-pair
+                                     tc-orig-keyword ,keyword-values
+                                     line-prefix "| "
+                                     wrap-prefix "| "))
     ;; Put to the source overlay
     (overlay-put ov-src 'tc-by beg-mkr)
     (overlay-put ov-src 'evaporate t)
@@ -514,7 +521,20 @@ TODO need to handle when the file does not exist."
                  :tc-end-mkr end))))))
 
 ;;-----------------------------------------------------------------------------
-;;; Utility Functions
+;;; Utility Functions and Macros
+
+(defmacro org-transclusion-with-silent-modifications (&rest body)
+  "It's like `with-silent-modifications' but keeps the undo list."
+  (declare (debug t) (indent 0))
+  (let ((modified (make-symbol "modified")))
+    `(let* ((,modified (buffer-modified-p))
+            (inhibit-read-only t)
+            (inhibit-modification-hooks t))
+       (unwind-protect
+           (progn
+             ,@body)
+         (unless ,modified
+           (restore-buffer-modified-p nil))))))
 
 (defun org-transclusion-wrap-path-to-link (path)
   "Take PATH string. Return Org link object."
@@ -536,7 +556,7 @@ string \"nil\", return symbol t."
 
 (defun org-transclusion--within-transclusion-p ()
   "Return t if the current point is within a tranclusion overlay."
-  (when (cdr (get-char-property-and-overlay (point) 'tc-type)) t))
+  (when (cdr (get-char-property-and-overlay (point) 'tc-id)) t))
 
 
 ;;;;-----------------------------------------------------------------------------
