@@ -99,6 +99,14 @@ See the functions delivered within org-tranclusion for the API signatures."
   "Face for transcluded block."
   :group 'org-transclusion)
 
+(defface org-transclusion-block-edit
+  '((((class color) (min-colors 88) (background light))
+     :background "#dde3f4" :extend t)
+    (((class color) (min-colors 88) (background dark))
+     :foreground "#bfc0c4" :background "#1e1e1e" :extend t))
+  "Face for transcluded block."
+  :group 'org-transclusion)
+
 ;;;; Variables
 
 (defvar org-transclusion-link-open-hook
@@ -229,6 +237,34 @@ argument is passed."
     (org-transclusion-add-at-point)
     t))
 
+(defun org-transclusion-edit-live-start-at-point ()
+  "Put overlay for edit live.
+Analogous to Occur Edit for Occur Mode."
+  (interactive)
+  (if (not (org-transclusion--within-transclusion-p))
+      (progn (message "This is not a translusion.") nil)
+    (org-transclusion-refresh-at-poiont)
+    (remove-hook 'before-save-hook #'org-transclusion-remove-all-in-buffer t)
+    (remove-hook 'after-save-hook #'org-transclusion-add-all-in-buffer t)
+    (let* ((src-ov (car (get-char-property (point) 'tc-pair)))
+           (tc-beg (get-char-property (point) 'tc-beg-mkr))
+           (tc-end (get-char-property (point) 'tc-end-mkr))
+           (tc-ov (make-overlay tc-beg tc-end nil t t)) ;; trying front-advance and rear-advance
+           (dups (list src-ov tc-ov)))
+      ;; Source Overlay
+      (overlay-put src-ov 'text-clones dups)
+      (overlay-put src-ov 'modification-hooks
+                   '(org-transclusion--text-clone--maintain))
+      ;; Transclusion Overlay
+      (overlay-put tc-ov 'modification-hooks
+                   '(org-transclusion--text-clone--maintain))
+      (overlay-put tc-ov 'evaporate t)
+      (overlay-put tc-ov 'face 'org-transclusion-block-edit)
+      (overlay-put tc-ov 'text-clones dups)
+      (with-silent-modifications
+        (remove-text-properties tc-beg tc-end '(read-only)))
+      t)))
+
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions for Transclude Keyword
 ;;   #+transclude: t "~/path/to/file.org::1234"
@@ -320,6 +356,9 @@ argument is passed."
                          `(read-only t
                                      front-sticky t
                                      rear-nonsticky t
+                                     keymap ,(let ((map (make-sparse-keymap)))
+                                               (define-key map (kbd "e") #'org-transclusion-edit-live-start-at-point)
+                                               map)
                                      tc-id ,tc-id
                                      tc-type ,type
                                      tc-beg-mkr ,beg-mkr
@@ -327,11 +366,11 @@ argument is passed."
                                      tc-src-beg-mkr ,src-beg-m
                                      tc-pair ,tc-pair
                                      tc-orig-keyword ,keyword-values
-                                     line-prefix ,(concat "  "
+                                     line-prefix ,(concat (propertize "  " `face `org-indent)
                                                           (propertize
                                                            "x"
                                                            `display `(left-fringe empty-line org-transclusion-block)))
-                                     wrap-prefix ,(concat "  "
+                                     wrap-prefix ,(concat (propertize "  " `face `org-indent)
                                                           (propertize
                                                            "x"
                                                            `display `(left-fringe empty-line org-transclusion-block)))))
@@ -709,6 +748,74 @@ When REMOVE is non-nil, remove the subtree from the clipboard."
        (org-flag-subtree t))
      (when for-yank (goto-char newend))
      (when remove (pop kill-ring)))))
+
+
+;;-----------------------------------------------------------------------------
+;; Text Clone
+;; Based on StackExchange user Tobias' code; adapted by nobiot
+;; https://emacs.stackexchange.com/questions/56201/is-there-an-emacs-package-which-can-mirror-a-region/56202#56202
+;; Since I'm not using SPREADP argument (or margin), I can simplify
+;; the code much more.
+;; Not sure if I would like to keep regex (TEXT-CLONE-SYNTAX)
+;; I think this should be handled with the add functions above.
+;; that is, leaning towards removing.
+
+(defvar org-transclusion--text-clone-maintaining nil)
+
+(defun org-transclusion--text-clone--maintain (ol1 after beg end &optional _len)
+  "Propagate the changes made under the overlay OL1 to the other clones.
+This is used on the `modification-hooks' property of text clones."
+  (when (and after ;(not undo-in-progress) ;; < nobit removed undo-in-progress
+             (not org-transclusion--text-clone-maintaining)
+             (overlay-start ol1))
+    (let ((margin (if (overlay-get ol1 'text-clone-spreadp) 1 0)))
+      (setq beg (max beg (+ (overlay-start ol1) margin)))
+      (setq end (min end (- (overlay-end ol1) margin)))
+      (when (<= beg end)
+        (save-excursion
+          (when (overlay-get ol1 'text-clone-syntax)
+            ;; Check content of the clone's text.
+            (let ((cbeg (+ (overlay-start ol1) margin))
+                  (cend (- (overlay-end ol1) margin)))
+              (goto-char cbeg)
+              (save-match-data
+                (if (not (re-search-forward
+                          (overlay-get ol1 'text-clone-syntax) cend t))
+                    ;; Mark the overlay for deletion.
+                    (setq end cbeg)
+                  (when (< (match-end 0) cend)
+                    ;; Shrink the clone at its end.
+                    (setq end (min end (match-end 0)))
+                    (move-overlay ol1 (overlay-start ol1)
+                                  (+ (match-end 0) margin)))
+                  (when (> (match-beginning 0) cbeg)
+                    ;; Shrink the clone at its beginning.
+                    (setq beg (max (match-beginning 0) beg))
+                    (move-overlay ol1 (- (match-beginning 0) margin)
+                                  (overlay-end ol1)))))))
+          ;; Now go ahead and update the clones.
+          (let ((head (- beg (overlay-start ol1)))
+                (tail (- (overlay-end ol1) end))
+                (str (buffer-substring-no-properties beg end)) ;changed to no-properties
+                (nothing-left t)
+                (org-transclusion--text-clone-maintaining t))
+            (dolist (ol2 (overlay-get ol1 'text-clones))
+              (with-current-buffer (overlay-buffer ol2) ;;< Tobias
+                (save-restriction
+                  (widen)
+                  ;(outline-show-all)
+                  (let ((oe (overlay-end ol2)))
+                    (unless (or (eq ol1 ol2) (null oe))
+                      (setq nothing-left nil)
+                      (let ((mod-beg (+ (overlay-start ol2) head)))
+                        ;;(overlay-put ol2 'modification-hooks nil)
+                        (goto-char (- (overlay-end ol2) tail))
+                        (unless (> mod-beg (point))
+                          (save-excursion (insert str))
+                          (delete-region mod-beg (point)))
+                        ;;(overlay-put ol2 'modification-hooks '(text-clone--maintain))
+                        ))))))
+            (if nothing-left (delete-overlay ol1))))))))
 
 (provide 'org-transclusion)
 ;;; org-transclusion.el ends here
