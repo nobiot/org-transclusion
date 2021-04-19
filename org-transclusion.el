@@ -329,13 +329,14 @@ Analogous to Occur Edit for Occur Mode."
          (ov-src) ;; source-buffer
          (ov-tc) ;; transclusion-buiffer
          (tc-pair))
-    (if (org-kill-is-subtree-p content)
-        (let ((level (plist-get keyword-values :level)))
-          (when level (setq level level))
-          (org-transclusion-paste-subtree
-           level
-           (org-transclusion--format-content content) t t)) ;; one line removed from original
-      (insert (org-transclusion--format-content content)))
+    (when (org-kill-is-subtree-p content)
+      (let ((level (plist-get keyword-values :level)))
+        ;; FIXME Ugly to adjust level...
+        (when level (setq level (1- level)))
+        (with-temp-buffer
+          (org-transclusion-paste-subtree level content t t) ;; one line removed from original
+          (setq content (buffer-string)))))
+    (insert (org-transclusion--format-content content))
     ;; Put to transclusion overlay
     (setq beg-mkr (save-excursion (goto-char beg)
                                   (org-transclusion--make-marker (point))))
