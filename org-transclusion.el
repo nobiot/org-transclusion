@@ -334,7 +334,7 @@ Analogous to Occur Edit for Occur Mode."
         ;; FIXME Ugly to adjust level...
         (when level (setq level (1- level)))
         (with-temp-buffer
-          (org-transclusion-paste-subtree level content t t) ;; one line removed from original
+          (org-transclusion-paste-subtree level content t t)
           (setq content (buffer-string)))))
     (insert (org-transclusion--format-content content))
     ;; Put to transclusion overlay
