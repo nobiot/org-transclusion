@@ -243,18 +243,30 @@ Analogous to Occur Edit for Occur Mode."
   (interactive)
   (if (not (org-transclusion--within-transclusion-p))
       (progn (message "This is not a translusion.") nil)
-    (org-transclusion-refresh-at-poiont)
+    (let ((current-pos (point)))
+      (org-transclusion-refresh-at-poiont)
+      (goto-char current-pos))
     (remove-hook 'before-save-hook #'org-transclusion-remove-all-in-buffer t)
     (remove-hook 'after-save-hook #'org-transclusion-add-all-in-buffer t)
     (let* ((src-ov (car (get-char-property (point) 'tc-pair)))
-           (tc-beg (get-char-property (point) 'tc-beg-mkr))
-           (tc-end (get-char-property (point) 'tc-end-mkr))
+           (src-beg (get-text-property (point) 'org-transclusion-text-beg-mkr))
+           (src-buf (marker-buffer src-beg))
+           (src-elem (with-current-buffer src-buf
+                       (goto-char src-beg)
+                       (org-element-context)))
+           (src-end (org-element-property :end src-elem))
+           (src-ov-edit (make-overlay src-beg src-end src-buf))
+           (tc-elem (org-element-context))
+           (tc-beg (org-element-property :begin tc-elem))
+           (tc-end (org-element-property :end tc-elem))
            (tc-ov (make-overlay tc-beg tc-end nil t t)) ;; trying front-advance and rear-advance
-           (dups (list src-ov tc-ov)))
+           (dups (list src-ov-edit tc-ov)))
       ;; Source Overlay
-      (overlay-put src-ov 'text-clones dups)
-      (overlay-put src-ov 'modification-hooks
+      (overlay-put src-ov-edit 'evaporate t)
+      (overlay-put src-ov-edit 'text-clones dups)
+      (overlay-put src-ov-edit 'modification-hooks
                    '(org-transclusion--text-clone--maintain))
+      (overlay-put src-ov-edit 'face 'org-transclusion-source-block)
       ;; Transclusion Overlay
       (overlay-put tc-ov 'modification-hooks
                    '(org-transclusion--text-clone--maintain))
@@ -388,7 +400,7 @@ Analogous to Occur Edit for Occur Mode."
     ;; Put to the source overlay
     (overlay-put ov-src 'tc-by beg-mkr)
     (overlay-put ov-src 'evaporate t)
-    (overlay-put ov-src 'face 'org-transclusion-source-block)
+;;    (overlay-put ov-src 'face 'org-transclusion-source-block)
     (overlay-put ov-src 'tc-pair tc-pair)))
 
 (defun org-transclusion--format-content (content)
@@ -485,11 +497,13 @@ Assume you are at the beginning of the org element to transclude."
                                 (progn
                                   (setq parse-mode nil) ; needed for table, list, block-quote, etc.
                                   (push type no-recursion)
+                                  (advice-add 'buffer-substring-no-properties :around #'org-transclusion-buffer-substring-advice)
                                   (org-element--parse-elements
                                    (org-element-property :begin el)
                                    (org-element-property :end el)
                                    nil nil 'object nil (list 'tc-paragraph nil)))
                               ;; If not only-element, then parse the entire buffer
+                              (advice-add 'buffer-substring-no-properties :around #'org-transclusion-buffer-substring-advice)
                               (org-element-parse-buffer))))
                (obj (org-element-map
                         tree
@@ -502,6 +516,7 @@ Assume you are at the beginning of the org element to transclude."
                       ;; the AST.
                       #'org-transclusion--filter-buffer
                       nil nil no-recursion nil)))
+          (advice-remove 'buffer-substring-no-properties #'org-transclusion-buffer-substring-advice)
           (setq tc-content (org-element-interpret-data obj))
           (setq tc-beg-mkr (progn (goto-char
                                    (if only-element (org-element-property :begin el)
@@ -771,7 +786,91 @@ When REMOVE is non-nil, remove the subtree from the clipboard."
 ;; I think this should be handled with the add functions above.
 ;; that is, leaning towards removing.
 
+(defun org-transclusion-after-change-function (beg end length)
+  (save-excursion
+    (goto-char beg)
+    (let* ((line-beg (line-beginning-position))
+           (m (get-text-property line-beg 'occur-target))
+           (buf (marker-buffer m))
+           col)
+      (when (and (get-text-property line-beg 'occur-prefix)
+                 (not (get-text-property end 'occur-prefix)))
+        (when (= length 0)
+          ;; Apply occur-target property to inserted (e.g. yanked) text.
+          (put-text-property beg end 'occur-target m)
+          ;; Did we insert a newline?  Occur Edit mode can't create new
+          ;; Occur entries; just discard everything after the newline.
+          (save-excursion
+            (and (search-forward "\n" end t)
+                 (delete-region (1- (point)) end))))
+        (let* ((line (- (line-number-at-pos)
+                        (line-number-at-pos (window-start))))
+               (readonly (with-current-buffer buf buffer-read-only))
+               (win (or (get-buffer-window buf)
+                        (display-buffer buf
+                                        '(nil (inhibit-same-window . t)
+                                              (inhibit-switch-frame . t)))))
+               (line-end (line-end-position))
+               (text (save-excursion
+                       (goto-char (next-single-property-change
+                                   line-beg 'occur-prefix nil
+                                   line-end))
+                       (setq col (- (point) line-beg))
+                       (buffer-substring-no-properties (point) line-end))))
+          (with-selected-window win
+            (goto-char m)
+            (recenter line)
+            (if readonly
+                (message "Buffer `%s' is read only." buf)
+              (delete-region (line-beginning-position) (line-end-position))
+              (insert text))
+            (move-to-column col)))))))
+
+
 (defvar org-transclusion--text-clone-maintaining nil)
+
+(defun org-transclusion--text-clone--maintain-chg (ol1 after beg end &optional _len)
+  "Propagate the changes made under the overlay OL1 to the other clones.
+This is used on the `modification-hooks' property of text clones."
+  (when (and after ;(not undo-in-progress) ;; < nobit removed undo-in-progress
+             (not org-transclusion--text-clone-maintaining)
+             (overlay-start ol1))
+    (let ((src-beg-mkr (get-text-property (point) 'org-transclusion-text-beg-mkr))
+          (src-end-mkr (get-text-property (point) 'org-transclusion-text-end-mkr)))
+      (when (and src-beg-mkr
+                 src-end-mkr
+                 (<= beg end))
+        (save-excursion
+          ;; Remove text-clone-syntax case; we don't use it.
+          ;; Now go ahead and update the clones.
+          (let* ((elem-beg (org-element-property :begin (org-element-context)))
+                 (elem-end (org-element-property :end (org-element-context)))
+                 (head (- beg elem-beg))
+                 (tail (- elem-end end))
+                 (str (buffer-substring-no-properties beg end)) ;changed to no-properties
+                 (nothing-left t)
+                 (org-transclusion--text-clone-maintaining t))
+            (dolist (ol2 (overlay-get ol1 'text-clones))
+              (with-current-buffer (overlay-buffer ol2) ;;< Tobias
+                (save-restriction
+                  (widen)
+                  (unless (eq ol1 ol2)
+                    (setq nothing-left nil)
+                    (let ((mod-beg (+ src-beg-mkr head)))
+                      (goto-char (- src-end-mkr tail))
+                      (unless (> mod-beg (point))
+                        (save-excursion (insert str))
+                        (delete-region mod-beg (point))))))))
+                  ;; (let ((oe (overlay-end ol2)))
+                  ;;   (unless (or (eq ol1 ol2) (null oe))
+                  ;;     (setq nothing-left nil)
+                  ;;     (let ((mod-beg (+ src-beg-mkr head)))
+                  ;;       ;;(overlay-put ol2 'modification-hooks nil)
+                  ;;       (goto-char (- (overlay-end ol2) tail))
+                  ;;       (unless (> mod-beg (point))
+                  ;;         (save-excursion (insert str))
+                  ;;         (delete-region mod-beg (point))))))
+            (if nothing-left (delete-overlay ol1))))))))
 
 (defun org-transclusion--text-clone--maintain (ol1 after beg end &optional _len)
   "Propagate the changes made under the overlay OL1 to the other clones.
@@ -784,26 +883,7 @@ This is used on the `modification-hooks' property of text clones."
       (setq end (min end (- (overlay-end ol1) margin)))
       (when (<= beg end)
         (save-excursion
-          (when (overlay-get ol1 'text-clone-syntax)
-            ;; Check content of the clone's text.
-            (let ((cbeg (+ (overlay-start ol1) margin))
-                  (cend (- (overlay-end ol1) margin)))
-              (goto-char cbeg)
-              (save-match-data
-                (if (not (re-search-forward
-                          (overlay-get ol1 'text-clone-syntax) cend t))
-                    ;; Mark the overlay for deletion.
-                    (setq end cbeg)
-                  (when (< (match-end 0) cend)
-                    ;; Shrink the clone at its end.
-                    (setq end (min end (match-end 0)))
-                    (move-overlay ol1 (overlay-start ol1)
-                                  (+ (match-end 0) margin)))
-                  (when (> (match-beginning 0) cbeg)
-                    ;; Shrink the clone at its beginning.
-                    (setq beg (max (match-beginning 0) beg))
-                    (move-overlay ol1 (- (match-beginning 0) margin)
-                                  (overlay-end ol1)))))))
+          ;; Remove text-clone-syntax case; we don't use it.
           ;; Now go ahead and update the clones.
           (let ((head (- beg (overlay-start ol1)))
                 (tail (- (overlay-end ol1) end))
@@ -828,5 +908,18 @@ This is used on the `modification-hooks' property of text clones."
                         ))))))
             (if nothing-left (delete-overlay ol1))))))))
 
+(defun org-transclusion-buffer-substring-advice (orgfn start end)
+  "Add id, copy the text-properties via `buffer-substring'"
+  ;;(unless (get-text-property start 'org-transclusion-text-beg-mkr)
+    (put-text-property start end
+                       'org-transclusion-text-beg-mkr (org-transclusion--make-marker start))
+    (put-text-property start end
+                       'org-transclusion-text-end-mkr (org-transclusion--make-marker end))
+    ;; (put-text-property start end
+    ;;                      'org-transclusion-text-id (org-id-uuid)))
+  (buffer-substring start end))
+
+;;(advice-add 'buffer-substring-no-properties :around #'org-transclusion-buffer-substring-advice)
+;;(advice-remove 'buffer-substring-no-properties #'org-transclusion-buffer-substring-advice)
 (provide 'org-transclusion)
 ;;; org-transclusion.el ends here
