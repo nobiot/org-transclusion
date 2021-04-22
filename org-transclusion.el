@@ -107,7 +107,18 @@ See the functions delivered within org-tranclusion for the API signatures."
   "Face for transcluded block."
   :group 'org-transclusion)
 
+(defface org-transclusion-fringe-indent '((t (:inherit org-hide)))
+  "Face for the indent between the fringe and transluded text.
+It's a copy of org-indent face.  It is copied here because
+`org-indent-mode' may not be loaded; in this case, org-indent
+face is not recogized.  The default is to make it look like
+whitespace.  But you may find it useful to make it ever so
+slightly different."
+  :group 'org-transclusion)
+
 ;;;; Variables
+
+(defvar-local org-transclusion-remember-point nil)
 
 (defvar org-transclusion-link-open-hook
   '(org-transclusion-link-open-org-id
@@ -141,7 +152,8 @@ the mode, `toggle' toggles the state."
   "Activate automatic transclusions in the local buffer."
   (interactive)
   (add-hook 'before-save-hook #'org-transclusion-remove-all-in-buffer nil t)
-  (add-hook 'after-save-hook #'org-transclusion-add-all-in-buffer nil t))
+  (add-hook 'after-save-hook #'org-transclusion-add-all-in-buffer nil t)
+  (add-hook 'kill-buffer-hook #'org-transclusion-remove-all-in-buffer nil t))
 
 (defun org-transclusion-deactivate ()
   "Deactivate automatic transclusions in the local buffer."
@@ -182,7 +194,9 @@ This function assumes the point is at the beginning of a link."
                    (save-excursion
                      (org-transclusion-with-silent-modifications
                        ;; Remove keyword
-                       (org-transclusion-remove-keyword)
+                       ;;(org-transclusion-remove-keyword)
+                       ;;(insert (org-transclusion-turn-off keyword-values))
+                       (forward-line 1)
                        ;; Insert & overlay
                        (org-transclusion--insert-content keyword-values tc-type tc-content tc-beg-mkr tc-end-mkr)
                        (org-transclusion-mode 1)
@@ -201,7 +215,11 @@ argument is passed."
         ;; Don't transclude if in transclusion overlay to avoid infinite
         ;; recursion
         (unless (org-transclusion--within-transclusion-p)
-          (org-transclusion-add-at-point))))))
+          (org-transclusion-add-at-point)))))
+  (when org-transclusion-remember-point
+    (goto-char org-transclusion-remember-point)
+    ;;(recenter)
+    (setq org-transclusion-remember-point nil)))
 
 (defun org-transclusion-remove-at-point ()
   "Remove transclusion and the copied text at point."
@@ -210,19 +228,28 @@ argument is passed."
             (end (marker-position (get-char-property (point) 'tc-end-mkr)))
             (keyword (org-transclusion-keyword-values-to-keyword
                       (get-char-property (point) 'tc-orig-keyword)))
-            (tc-pair (get-char-property (point) 'tc-pair)))
-      (org-with-wide-buffer
-       (dolist (ol tc-pair)
-         (delete-overlay ol))
-       (org-transclusion-with-silent-modifications
-         (delete-region beg end)
-         (insert keyword)
-         t))
+            (tc-pair-ov (get-char-property (point) 'tc-pair)))
+      (progn
+        (org-transclusion--remove-source-buffer-edit-overlay beg end)
+        (delete-overlay tc-pair-ov)
+        (org-with-wide-buffer
+         (org-transclusion-with-silent-modifications
+           (delete-region beg end)))
+        (forward-char -1) ;; back to the keyword line
+        t)
     (message "Nothing done. No transclusion exists here.") nil))
+
+(defun org-transclusion--remove-source-buffer-edit-overlay (beg end)
+  "."
+  (when-let ((src-edit-ovs (overlays-in beg end)))
+    (dolist (ov src-edit-ovs)
+      (when (string= "src-edit-ov" (overlay-get ov 'tc-type))
+        (delete-overlay (overlay-get ov 'tc-paired-src-edit-ov))))))
 
 (defun org-transclusion-remove-all-in-buffer ()
   "Remove all the translusion overlay and copied text in current buffer."
   (interactive)
+  (setq org-transclusion-remember-point (point))
   (org-with-point-at 1
     (while (text-property-search-forward 'tc-id)
       (forward-char -1)
@@ -233,8 +260,10 @@ argument is passed."
   "Refresh the transclusion at point."
   (interactive)
   (when (org-transclusion--within-transclusion-p)
-    (org-transclusion-remove-at-point)
-    (org-transclusion-add-at-point)
+    (let ((pos (point)))
+      (org-transclusion-remove-at-point)
+      (org-transclusion-add-at-point)
+      (goto-char pos))
     t))
 
 (defun org-transclusion-edit-live-start-at-point ()
@@ -243,12 +272,10 @@ Analogous to Occur Edit for Occur Mode."
   (interactive)
   (if (not (org-transclusion--within-transclusion-p))
       (progn (message "This is not a translusion.") nil)
-    (let ((current-pos (point)))
-      (org-transclusion-refresh-at-poiont)
-      (goto-char current-pos))
+    (org-transclusion-refresh-at-poiont)
     (remove-hook 'before-save-hook #'org-transclusion-remove-all-in-buffer t)
     (remove-hook 'after-save-hook #'org-transclusion-add-all-in-buffer t)
-    (let* ((src-ov (car (get-char-property (point) 'tc-pair)))
+    (let* ((src-ov (get-char-property (point) 'tc-pair))
            (src-beg (get-text-property (point) 'org-transclusion-text-beg-mkr))
            (src-buf (marker-buffer src-beg))
            (src-elem (with-current-buffer src-buf
@@ -259,7 +286,7 @@ Analogous to Occur Edit for Occur Mode."
            (tc-elem (org-element-context))
            (tc-beg (org-element-property :begin tc-elem))
            (tc-end (org-element-property :end tc-elem))
-           (tc-ov (make-overlay tc-beg tc-end nil t t)) ;; trying front-advance and rear-advance
+           (tc-ov (make-overlay tc-beg tc-end nil t t)) ;should be front-advance t
            (dups (list src-ov-edit tc-ov)))
       ;; Source Overlay
       (overlay-put src-ov-edit 'evaporate t)
@@ -271,6 +298,8 @@ Analogous to Occur Edit for Occur Mode."
       (overlay-put tc-ov 'modification-hooks
                    '(org-transclusion--text-clone--maintain))
       (overlay-put tc-ov 'evaporate t)
+      (overlay-put tc-ov 'tc-paired-src-edit-ov src-ov-edit)
+      (overlay-put tc-ov 'tc-type "src-edit-ov")
       (overlay-put tc-ov 'face 'org-transclusion-block-edit)
       (overlay-put tc-ov 'text-clones dups)
       (overlay-put tc-ov 'keymap (let ((map (make-sparse-keymap)))
@@ -316,6 +345,15 @@ Analogous to Occur Edit for Occur Mode."
          (post-blank (org-element-property :post-blank elm)))
     (delete-region beg (- end post-blank)) t))
 
+(defun org-transclusion-turn-off (values)
+  "Return the keyword string with the \":active-p\" prop removed."
+  (let ((path (plist-get values :path))
+        (level (plist-get values :level)))
+    (concat "#+transclude: "
+            " \"" path "\""
+            (when level (format " :level %d" level))
+            "\n")))
+
 (defun org-transclusion-keyword-values-to-keyword (values)
   "."
   (let ((active-p (plist-get values :active-p))
@@ -356,9 +394,9 @@ Analogous to Occur Edit for Occur Mode."
     (setq end-mkr (org-transclusion--make-marker (point)))
     (setq ov-src (make-overlay src-beg-m src-end-m sbuf t nil))
     (setq ov-tc (make-overlay beg end nil t nil))
-    (setq tc-pair (list ov-src))
+    (setq tc-pair ov-src)
     ;;(overlay-put ov-tc 'tc-type type)
-    ;; (overlay-put ov-tc 'priority -50)
+    (overlay-put ov-tc 'priority -50)
     (overlay-put ov-tc 'evaporate t)
     (overlay-put ov-tc 'keymap (let ((map (make-sparse-keymap)))
                                  (define-key map (kbd "e")
@@ -383,11 +421,11 @@ Analogous to Occur Edit for Occur Mode."
                                      tc-src-beg-mkr ,src-beg-m
                                      tc-pair ,tc-pair
                                      tc-orig-keyword ,keyword-values
-                                     line-prefix ,(concat (propertize "  " `face `org-indent)
+                                     line-prefix ,(concat (propertize "  " `face `org-transclusion-fringe-indent)
                                                           (propertize
                                                            "x"
                                                            `display `(left-fringe empty-line org-transclusion-block)))
-                                     wrap-prefix ,(concat (propertize "  " `face `org-indent)
+                                     wrap-prefix ,(concat (propertize "  " `face `org-transclusion-fringe-indent)
                                                           (propertize
                                                            "x"
                                                            `display `(left-fringe empty-line org-transclusion-block)))))
@@ -917,7 +955,35 @@ This is used on the `modification-hooks' property of text clones."
                        'org-transclusion-text-end-mkr (org-transclusion--make-marker end))
     ;; (put-text-property start end
     ;;                      'org-transclusion-text-id (org-id-uuid)))
-  (buffer-substring start end))
+    (buffer-substring start end))
+
+(defun org-transclusion-create-from-link ()
+  "."
+  ;; check if at-point is a link file or id
+  (interactive)
+  (let* ((context
+          (org-element-lineage
+           (org-element-context)'(link) t))
+         (type (org-element-property :type context)))
+    (when (or (string= type "file")
+              (string= type "id"))
+      (let ((raw-link (org-element-property :raw-link context)))
+        (org-forward-element)
+        (insert (format "\n\n#+transclude: t \"%s\"\n\n" raw-link))
+        (forward-char -3)
+        (org-transclusion-add-at-point)))))
+
+(defun org-transclusion-get-enclosing-element ()
+  "."
+  (interactive)
+  (let* ((context
+          (org-element-lineage
+           (org-element-context)'(center-block comment-block drawer dynamic-block example-block export-block fixed-width latex-environment plain-list property-drawer quote-block special-block src-block table verse-block)
+           t)))
+    ;; For a paragraph
+    (unless context
+      (setq context (org-element-at-point)))
+    context))
 
 ;;(advice-add 'buffer-substring-no-properties :around #'org-transclusion-buffer-substring-advice)
 ;;(advice-remove 'buffer-substring-no-properties #'org-transclusion-buffer-substring-advice)
