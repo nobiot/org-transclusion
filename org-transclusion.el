@@ -505,7 +505,7 @@ This is meant for Org-ID."
            (search-option (org-element-property :search-option link))
            (buf (find-file-noselect path)))
       (with-current-buffer buf
-        (org-with-wide-buffer
+        (org-with-wide-buffer
          ;;(outline-show-all)
          (if search-option
              (progn
