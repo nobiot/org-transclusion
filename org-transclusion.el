@@ -239,13 +239,6 @@ argument is passed."
         t)
     (message "Nothing done. No transclusion exists here.") nil))
 
-(defun org-transclusion--remove-source-buffer-edit-overlay (beg end)
-  "."
-  (when-let ((src-edit-ovs (overlays-in beg end)))
-    (dolist (ov src-edit-ovs)
-      (when (string= "src-edit-ov" (overlay-get ov 'tc-type))
-        (delete-overlay (overlay-get ov 'tc-paired-src-edit-ov))))))
-
 (defun org-transclusion-remove-all-in-buffer ()
   "Remove all the translusion overlay and copied text in current buffer."
   (interactive)
@@ -692,6 +685,17 @@ placed without a blank line."
     (set-marker-insertion-type marker t)
     marker))
 
+(defun org-transclusion--remove-source-buffer-edit-overlay (beg end)
+  "Remove the overlay in the source buffer being edited when applicable.
+This function checks if such overlays exist - it should support
+multiple edit overlays.  It is meant to be used in
+`org-transclusion-remove-at-point'. The overlay needs to be
+deleted before the transclusion itself is deleted; otherwise,
+live edit will try to sync the deletion, and causes an error."
+  (when-let ((src-edit-ovs (overlays-in beg end)))
+    (dolist (ov src-edit-ovs)
+      (when (string= "src-edit-ov" (overlay-get ov 'tc-type))
+        (delete-overlay (overlay-get ov 'tc-paired-src-edit-ov))))))
 
 ;;;;-----------------------------------------------------------------------------
 ;;;; Definition of org-transclusion-paste-subtree
