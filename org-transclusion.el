@@ -130,6 +130,14 @@ slightly different."
     org-transclusion--get-keyword-path-value
     org-transclusion--get-keyword-level-value))
 
+(defvar org-transclusion-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "e") #'org-transclusion-edit-live-start-at-point)
+    (define-key map (kbd "r") #'org-transclusion-refresh-at-poiont)
+    (define-key map (kbd "d") #'org-transclusion-remove-at-point)
+    (define-key map (kbd "TAB") #'org-cycle)
+    map))
+
 ;;;; Commands
 
 (define-minor-mode org-transclusion-mode
@@ -268,32 +276,19 @@ Analogous to Occur Edit for Occur Mode."
     (org-transclusion-refresh-at-poiont)
     (remove-hook 'before-save-hook #'org-transclusion-remove-all-in-buffer t)
     (remove-hook 'after-save-hook #'org-transclusion-add-all-in-buffer t)
-    (let* ((src-buf (overlay-buffer (get-text-property (point) 'tc-pair)))
-           (src-ov)
+    (let* (
            ;;(src-ov-edit (make-overlay src-beg src-end src-buf))
            (tc-elem (org-transclusion-get-enclosing-element))
-           (tc-beg (org-element-property :begin tc-elem))
-           (tc-end (org-element-property :end tc-elem))
+           (tc-beg (if (org-element-property :contents-begin tc-elem)
+                       (org-element-property :contents-begin tc-elem)
+                     (org-element-property :begin tc-elem)))
+           (tc-end (if (org-element-property :contents-end tc-elem)
+                       (org-element-property :contents-end tc-elem)
+                     (org-element-property :end tc-elem)))
            (tc-ov (make-overlay tc-beg tc-end nil t t)) ;front-advance should be t
-           (dups))
+           (src-ov (org-transclusion--find-src-ov-for-edit tc-end))
+           (dups (list src-ov tc-ov)))
       ;; Source Overlay
-      ;;; Make src-ov
-      (setq src-ov (progn
-                     (let ((src-search-beg
-                            (if (get-text-property (point) 'org-transclusion-text-beg-mkr) (get-text-property (point) 'org-transclusion-text-beg-mkr)
-                              (save-excursion
-                                (while
-                                    (not (get-text-property (point) 'org-transclusion-text-beg-mkr))
-                                  (goto-char (next-property-change (point) nil tc-end))
-                                  (get-text-property (point) 'org-transclusion-text-beg-mkr)))))
-                           (src-search-end (get-text-property (point) 'org-transclusion-text-end-mkr)))
-                       (with-current-buffer src-buf
-                         (goto-char src-search-beg)
-                         (let* ((src-elem (org-transclusion-get-enclosing-element))
-                                (src-beg (org-element-property :begin src-elem))
-                                (src-end (org-element-property :end src-elem)))
-                           (make-overlay src-beg src-end nil t t))))))
-      (setq dups (list src-ov tc-ov))
       (overlay-put src-ov 'evaporate t)
       (overlay-put src-ov 'text-clones dups)
       (overlay-put src-ov 'modification-hooks
@@ -308,11 +303,51 @@ Analogous to Occur Edit for Occur Mode."
       (overlay-put tc-ov 'face 'org-transclusion-block-edit)
       (overlay-put tc-ov 'text-clones dups)
       (overlay-put tc-ov 'keymap (let ((map (make-sparse-keymap)))
-                                   (define-key map (kbd "C-c C-c") #'org-transclusion-refresh-at-poiont)
+                                   (define-key map (kbd "C-c C-c")
+                                     #'org-transclusion-refresh-at-poiont)
                                    map))
       (with-silent-modifications
         (remove-text-properties tc-beg tc-end '(read-only)))
       t)))
+
+(defun org-transclusion--find-src-ov-for-edit (limit)
+  "."
+  (let ((src-buf (overlay-buffer (get-text-property (point) 'tc-pair)))
+        ;; I will keep src-buf to be gotten from tc-pair.
+        ;; I might not keep org-transclusion-text-beg-mkr
+        (src-search-beg
+         (get-text-property (point) 'org-transclusion-text-beg-mkr)))
+    (unless src-search-beg
+      (save-excursion
+        (goto-char (next-property-change (point) nil limit))
+        (setq src-search-beg (get-text-property (point) 'org-transclusion-text-beg-mkr))))
+    (with-current-buffer src-buf
+      (goto-char src-search-beg)
+      (let* ((src-elem (org-transclusion-get-enclosing-element))
+             (src-beg (if (org-element-property :contents-begin src-elem)
+                          (org-element-property :contents-begin src-elem)
+                        (org-element-property :begin src-elem)))
+             (src-end (if (org-element-property :contents-end src-elem)
+                          (org-element-property :contents-end src-elem)
+                        (org-element-property :end src-elem))))
+        (make-overlay src-beg src-end nil t t)))))
+
+(defun org-transclusion-create-from-link ()
+  "WIP."
+  ;; check if at-point is a link file or id
+  (interactive)
+  (let* ((context
+          (org-element-lineage
+           (org-element-context)'(link) t))
+         (type (org-element-property :type context)))
+    (when (or (string= type "file")
+              (string= type "id"))
+      (let ((raw-link (org-element-property :raw-link context)))
+        (org-forward-element)
+        (insert (format "\n\n#+transclude: t \"%s\"\n\n" raw-link))
+        (forward-char -3)
+        (org-transclusion-add-at-point)))))
+
 
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions for Transclude Keyword
@@ -398,15 +433,15 @@ Analogous to Occur Edit for Occur Mode."
     (setq end (point))
     (setq end-mkr (org-transclusion--make-marker (point)))
     (setq ov-src (make-overlay src-beg-m src-end-m sbuf t nil))
-    (setq ov-tc (make-overlay beg end nil t nil))
+;;    (setq ov-tc (make-overlay beg end nil t nil))
     (setq tc-pair ov-src)
     ;;(overlay-put ov-tc 'tc-type type)
-    (overlay-put ov-tc 'priority -50)
-    (overlay-put ov-tc 'evaporate t)
-    (overlay-put ov-tc 'keymap (let ((map (make-sparse-keymap)))
-                                 (define-key map (kbd "e")
-                                   #'org-transclusion-edit-live-start-at-point)
-                                 map))
+    ;;(overlay-put ov-tc 'priority -50)
+    ;;(overlay-put ov-tc 'evaporate t)
+    ;; (overlay-put ov-tc 'keymap (let ((map (make-sparse-keymap)))
+    ;;                              (define-key map (kbd "e")
+    ;;                                #'org-transclusion-edit-live-start-at-point)
+    ;;                              map))
     ;; (overlay-put ov-tc 'line-prefix (propertize
     ;;                                  " " 'display
     ;;                                  '(left-fringe empty-line org-transclusion-block)))
@@ -415,8 +450,13 @@ Analogous to Occur Edit for Occur Mode."
     ;;                                   '(left-fringe empty-line org-transclusion-block)))
     ;;(overlay-put ov-tc 'face 'org-transclusion-block)
     ;; Text Property to the inserted text
+    ;; (put-text-property beg end 'keymap (let ((map (make-sparse-keymap)))
+    ;;                              (define-key map (kbd "e")
+    ;;                                #'org-transclusion-edit-live-start-at-point)
+    ;;                              map))
     (add-text-properties beg end
-                         `(read-only t
+                         `(local-map ,org-transclusion-map
+                                     read-only t
                                      front-sticky t
                                      rear-nonsticky t
                                      tc-id ,tc-id
@@ -437,9 +477,6 @@ Analogous to Occur Edit for Occur Mode."
     ;; FIXME for some reason, I cannot put the keymap to the text-property
     ;; When you debug and step through this piece code, it works.
     ;; Otherwise, the text property does not get the keymap property
-    (let ((map (make-sparse-keymap)))
-      (define-key map (kbd "e") 'org-transclusion-edit-live-start-at-point)
-      (put-text-property beg end 'keymap map))
     ;; Put to the source overlay
     (overlay-put ov-src 'tc-by beg-mkr)
     (overlay-put ov-src 'evaporate t)
@@ -697,6 +734,8 @@ placed without a blank line."
     (set-marker-insertion-type marker t)
     marker))
 
+;;;; Functions for live-sync
+
 (defun org-transclusion--remove-source-buffer-edit-overlay (beg end)
   "Remove the overlay in the source buffer being edited when applicable.
 This function checks if such overlays exist - it should support
@@ -708,6 +747,35 @@ live edit will try to sync the deletion, and causes an error."
     (dolist (ov src-edit-ovs)
       (when (string= "src-edit-ov" (overlay-get ov 'tc-type))
         (delete-overlay (overlay-get ov 'tc-paired-src-edit-ov))))))
+
+(defun org-transclusion-get-enclosing-element ()
+  "."
+  (interactive)
+  (let* ((context
+          (org-element-lineage
+           (org-element-context) '(center-block comment-block
+           drawer dynamic-block example-block export-block
+           fixed-width latex-environment plain-list
+           property-drawer quote-block special-block src-block
+           table verse-block keyword) t)))
+    ;; For a paragraph
+    (unless context
+      (setq context
+            (org-element-lineage
+             (org-element-context) '(paragraph)
+             t)))
+    context))
+
+(defun org-transclusion-buffer-substring-advice (orgfn start end)
+  "Add id, copy the text-properties via `buffer-substring'"
+  ;;(unless (get-text-property start 'org-transclusion-text-beg-mkr)
+    (put-text-property start end
+                       'org-transclusion-text-beg-mkr (org-transclusion--make-marker start))
+    (put-text-property start end
+                       'org-transclusion-text-end-mkr (org-transclusion--make-marker end))
+    ;; (put-text-property start end
+    ;;                      'org-transclusion-text-id (org-id-uuid)))
+    (buffer-substring start end))
 
 ;;;;-----------------------------------------------------------------------------
 ;;;; Definition of org-transclusion-paste-subtree
@@ -962,49 +1030,5 @@ This is used on the `modification-hooks' property of text clones."
                         ))))))
             (if nothing-left (delete-overlay ol1))))))))
 
-(defun org-transclusion-buffer-substring-advice (orgfn start end)
-  "Add id, copy the text-properties via `buffer-substring'"
-  ;;(unless (get-text-property start 'org-transclusion-text-beg-mkr)
-    (put-text-property start end
-                       'org-transclusion-text-beg-mkr (org-transclusion--make-marker start))
-    (put-text-property start end
-                       'org-transclusion-text-end-mkr (org-transclusion--make-marker end))
-    ;; (put-text-property start end
-    ;;                      'org-transclusion-text-id (org-id-uuid)))
-    (buffer-substring start end))
-
-(defun org-transclusion-create-from-link ()
-  "."
-  ;; check if at-point is a link file or id
-  (interactive)
-  (let* ((context
-          (org-element-lineage
-           (org-element-context)'(link) t))
-         (type (org-element-property :type context)))
-    (when (or (string= type "file")
-              (string= type "id"))
-      (let ((raw-link (org-element-property :raw-link context)))
-        (org-forward-element)
-        (insert (format "\n\n#+transclude: t \"%s\"\n\n" raw-link))
-        (forward-char -3)
-        (org-transclusion-add-at-point)))))
-
-(defun org-transclusion-get-enclosing-element ()
-  "."
-  (interactive)
-  (let* ((context
-          (org-element-lineage
-           (org-element-context) '(center-block comment-block drawer dynamic-block example-block export-block fixed-width latex-environment plain-list property-drawer quote-block special-block src-block table verse-block)
-           t)))
-    ;; For a paragraph
-    (unless context
-      (setq context
-            (org-element-lineage
-             (org-element-context) '(paragraph)
-             t)))
-    context))
-
-;;(advice-add 'buffer-substring-no-properties :around #'org-transclusion-buffer-substring-advice)
-;;(advice-remove 'buffer-substring-no-properties #'org-transclusion-buffer-substring-advice)
 (provide 'org-transclusion)
 ;;; org-transclusion.el ends here
