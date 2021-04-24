@@ -268,30 +268,42 @@ Analogous to Occur Edit for Occur Mode."
     (org-transclusion-refresh-at-poiont)
     (remove-hook 'before-save-hook #'org-transclusion-remove-all-in-buffer t)
     (remove-hook 'after-save-hook #'org-transclusion-add-all-in-buffer t)
-    (let* ((src-ov (get-char-property (point) 'tc-pair))
-           (src-beg (get-text-property (point) 'org-transclusion-text-beg-mkr))
-           (src-buf (marker-buffer src-beg))
-           (src-elem (with-current-buffer src-buf
-                       (goto-char src-beg)
-                       (org-element-context)))
-           (src-end (org-element-property :end src-elem))
-           (src-ov-edit (make-overlay src-beg src-end src-buf))
-           (tc-elem (org-element-context))
+    (let* ((src-buf (overlay-buffer (get-text-property (point) 'tc-pair)))
+           (src-ov)
+           ;;(src-ov-edit (make-overlay src-beg src-end src-buf))
+           (tc-elem (org-transclusion-get-enclosing-element))
            (tc-beg (org-element-property :begin tc-elem))
            (tc-end (org-element-property :end tc-elem))
-           (tc-ov (make-overlay tc-beg tc-end nil t t)) ;should be front-advance t
-           (dups (list src-ov-edit tc-ov)))
+           (tc-ov (make-overlay tc-beg tc-end nil t t)) ;front-advance should be t
+           (dups))
       ;; Source Overlay
-      (overlay-put src-ov-edit 'evaporate t)
-      (overlay-put src-ov-edit 'text-clones dups)
-      (overlay-put src-ov-edit 'modification-hooks
+      ;;; Make src-ov
+      (setq src-ov (progn
+                     (let ((src-search-beg
+                            (if (get-text-property (point) 'org-transclusion-text-beg-mkr) (get-text-property (point) 'org-transclusion-text-beg-mkr)
+                              (save-excursion
+                                (while
+                                    (not (get-text-property (point) 'org-transclusion-text-beg-mkr))
+                                  (goto-char (next-property-change (point) nil tc-end))
+                                  (get-text-property (point) 'org-transclusion-text-beg-mkr)))))
+                           (src-search-end (get-text-property (point) 'org-transclusion-text-end-mkr)))
+                       (with-current-buffer src-buf
+                         (goto-char src-search-beg)
+                         (let* ((src-elem (org-transclusion-get-enclosing-element))
+                                (src-beg (org-element-property :begin src-elem))
+                                (src-end (org-element-property :end src-elem)))
+                           (make-overlay src-beg src-end nil t t))))))
+      (setq dups (list src-ov tc-ov))
+      (overlay-put src-ov 'evaporate t)
+      (overlay-put src-ov 'text-clones dups)
+      (overlay-put src-ov 'modification-hooks
                    '(org-transclusion--text-clone--maintain))
-      (overlay-put src-ov-edit 'face 'org-transclusion-source-block)
+      (overlay-put src-ov 'face 'org-transclusion-source-block)
       ;; Transclusion Overlay
       (overlay-put tc-ov 'modification-hooks
                    '(org-transclusion--text-clone--maintain))
       (overlay-put tc-ov 'evaporate t)
-      (overlay-put tc-ov 'tc-paired-src-edit-ov src-ov-edit)
+      (overlay-put tc-ov 'tc-paired-src-edit-ov src-ov)
       (overlay-put tc-ov 'tc-type "src-edit-ov")
       (overlay-put tc-ov 'face 'org-transclusion-block-edit)
       (overlay-put tc-ov 'text-clones dups)
