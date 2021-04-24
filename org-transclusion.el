@@ -994,11 +994,14 @@ This is used on the `modification-hooks' property of text clones."
   (interactive)
   (let* ((context
           (org-element-lineage
-           (org-element-context)'(center-block comment-block drawer dynamic-block example-block export-block fixed-width latex-environment plain-list property-drawer quote-block special-block src-block table verse-block)
+           (org-element-context) '(center-block comment-block drawer dynamic-block example-block export-block fixed-width latex-environment plain-list property-drawer quote-block special-block src-block table verse-block)
            t)))
     ;; For a paragraph
     (unless context
-      (setq context (org-element-at-point)))
+      (setq context
+            (org-element-lineage
+             (org-element-context) '(paragraph)
+             t)))
     context))
 
 ;;(advice-add 'buffer-substring-no-properties :around #'org-transclusion-buffer-substring-advice)
