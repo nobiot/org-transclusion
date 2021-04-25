@@ -138,6 +138,17 @@ slightly different."
     (define-key map (kbd "TAB") #'org-cycle)
     map))
 
+(define-fringe-bitmap 'org-transclusion-fringe
+  [#b11100000
+   #b11100000
+   #b11100000
+   #b11100000
+   #b11100000
+   #b11100000
+   #b11100000
+   #b11100000]
+  nil nil '(center t))
+
 ;;;; Commands
 
 (define-minor-mode org-transclusion-mode
@@ -206,7 +217,9 @@ This function assumes the point is at the beginning of a link."
                        ;;(insert (org-transclusion-turn-off keyword-values))
                        (forward-line 1)
                        ;; Insert & overlay
-                       (org-transclusion--insert-content keyword-values tc-type tc-content tc-beg-mkr tc-end-mkr)
+                       (org-transclusion--insert-content
+                        keyword-values tc-type tc-content
+                        tc-beg-mkr tc-end-mkr)
                        (org-transclusion-mode 1)
                        t)))))))
           ;; For other cases. Do nothing
@@ -427,33 +440,12 @@ Analogous to Occur Edit for Occur Mode."
           (org-transclusion-paste-subtree level content t t)
           (setq content (buffer-string)))))
     (insert (org-transclusion--format-content content))
-    ;; Put to transclusion overlay
     (setq beg-mkr (save-excursion (goto-char beg)
                                   (org-transclusion--make-marker (point))))
     (setq end (point))
     (setq end-mkr (org-transclusion--make-marker (point)))
     (setq ov-src (make-overlay src-beg-m src-end-m sbuf t nil))
-;;    (setq ov-tc (make-overlay beg end nil t nil))
     (setq tc-pair ov-src)
-    ;;(overlay-put ov-tc 'tc-type type)
-    ;;(overlay-put ov-tc 'priority -50)
-    ;;(overlay-put ov-tc 'evaporate t)
-    ;; (overlay-put ov-tc 'keymap (let ((map (make-sparse-keymap)))
-    ;;                              (define-key map (kbd "e")
-    ;;                                #'org-transclusion-edit-live-start-at-point)
-    ;;                              map))
-    ;; (overlay-put ov-tc 'line-prefix (propertize
-    ;;                                  " " 'display
-    ;;                                  '(left-fringe empty-line org-transclusion-block)))
-    ;; (overlay-put ov-tc 'wrap-prefix (propertize
-    ;;                                  " " 'display
-    ;;                                   '(left-fringe empty-line org-transclusion-block)))
-    ;;(overlay-put ov-tc 'face 'org-transclusion-block)
-    ;; Text Property to the inserted text
-    ;; (put-text-property beg end 'keymap (let ((map (make-sparse-keymap)))
-    ;;                              (define-key map (kbd "e")
-    ;;                                #'org-transclusion-edit-live-start-at-point)
-    ;;                              map))
     (add-text-properties beg end
                          `(local-map ,org-transclusion-map
                                      read-only t
@@ -466,17 +458,24 @@ Analogous to Occur Edit for Occur Mode."
                                      tc-src-beg-mkr ,src-beg-m
                                      tc-pair ,tc-pair
                                      tc-orig-keyword ,keyword-values
-                                     line-prefix ,(concat (propertize "  " `face `org-transclusion-fringe-indent)
-                                                          (propertize
-                                                           "x"
-                                                           `display `(left-fringe empty-line org-transclusion-block)))
-                                     wrap-prefix ,(concat (propertize "  " `face `org-transclusion-fringe-indent)
-                                                          (propertize
-                                                           "x"
-                                                           `display `(left-fringe empty-line org-transclusion-block)))))
-    ;; FIXME for some reason, I cannot put the keymap to the text-property
-    ;; When you debug and step through this piece code, it works.
-    ;; Otherwise, the text property does not get the keymap property
+                                     line-prefix ,(concat
+                                                   (propertize
+                                                    "  "
+                                                    `face
+                                                    `org-transclusion-fringe-indent)
+                                                   (propertize
+                                                    "x"
+                                                    `display
+                                                    `(left-fringe org-transclusion-fringe org-transclusion-block)))
+                                     wrap-prefix ,(concat
+                                                   (propertize
+                                                    "  "
+                                                    `face
+                                                    `org-transclusion-fringe-indent)
+                                                   (propertize
+                                                    "x"
+                                                    `display
+                                                    `(left-fringe org-transclusion-fringe org-transclusion-block)))))
     ;; Put to the source overlay
     (overlay-put ov-src 'tc-by beg-mkr)
     (overlay-put ov-src 'evaporate t)
@@ -734,6 +733,7 @@ placed without a blank line."
     (set-marker-insertion-type marker t)
     marker))
 
+;;-----------------------------------------------------------------------------
 ;;;; Functions for live-sync
 
 (defun org-transclusion--remove-source-buffer-edit-overlay (beg end)
@@ -788,9 +788,6 @@ live edit will try to sync the deletion, and causes an error."
 This is a Org-transclusion version of the Org Mode's standard function
 `org-paste-subtree' (based on v9.4). Only one line has been commented out.
 This is noted with a comment \";; nobiot removed\".
-
-Use of this function in Org-transclusion is still experimental.
-Use variable `org-transclusion-use-paste-subtree' to control its usage.
 ----------
 
 The entire subtree is promoted or demoted in order to match a new headline
@@ -904,95 +901,8 @@ When REMOVE is non-nil, remove the subtree from the clipboard."
 ;; https://emacs.stackexchange.com/questions/56201/is-there-an-emacs-package-which-can-mirror-a-region/56202#56202
 ;; Since I'm not using SPREADP argument (or margin), I can simplify
 ;; the code much more.
-;; Not sure if I would like to keep regex (TEXT-CLONE-SYNTAX)
-;; I think this should be handled with the add functions above.
-;; that is, leaning towards removing.
-
-(defun org-transclusion-after-change-function (beg end length)
-  (save-excursion
-    (goto-char beg)
-    (let* ((line-beg (line-beginning-position))
-           (m (get-text-property line-beg 'occur-target))
-           (buf (marker-buffer m))
-           col)
-      (when (and (get-text-property line-beg 'occur-prefix)
-                 (not (get-text-property end 'occur-prefix)))
-        (when (= length 0)
-          ;; Apply occur-target property to inserted (e.g. yanked) text.
-          (put-text-property beg end 'occur-target m)
-          ;; Did we insert a newline?  Occur Edit mode can't create new
-          ;; Occur entries; just discard everything after the newline.
-          (save-excursion
-            (and (search-forward "\n" end t)
-                 (delete-region (1- (point)) end))))
-        (let* ((line (- (line-number-at-pos)
-                        (line-number-at-pos (window-start))))
-               (readonly (with-current-buffer buf buffer-read-only))
-               (win (or (get-buffer-window buf)
-                        (display-buffer buf
-                                        '(nil (inhibit-same-window . t)
-                                              (inhibit-switch-frame . t)))))
-               (line-end (line-end-position))
-               (text (save-excursion
-                       (goto-char (next-single-property-change
-                                   line-beg 'occur-prefix nil
-                                   line-end))
-                       (setq col (- (point) line-beg))
-                       (buffer-substring-no-properties (point) line-end))))
-          (with-selected-window win
-            (goto-char m)
-            (recenter line)
-            (if readonly
-                (message "Buffer `%s' is read only." buf)
-              (delete-region (line-beginning-position) (line-end-position))
-              (insert text))
-            (move-to-column col)))))))
-
 
 (defvar org-transclusion--text-clone-maintaining nil)
-
-(defun org-transclusion--text-clone--maintain-chg (ol1 after beg end &optional _len)
-  "Propagate the changes made under the overlay OL1 to the other clones.
-This is used on the `modification-hooks' property of text clones."
-  (when (and after ;(not undo-in-progress) ;; < nobit removed undo-in-progress
-             (not org-transclusion--text-clone-maintaining)
-             (overlay-start ol1))
-    (let ((src-beg-mkr (get-text-property (point) 'org-transclusion-text-beg-mkr))
-          (src-end-mkr (get-text-property (point) 'org-transclusion-text-end-mkr)))
-      (when (and src-beg-mkr
-                 src-end-mkr
-                 (<= beg end))
-        (save-excursion
-          ;; Remove text-clone-syntax case; we don't use it.
-          ;; Now go ahead and update the clones.
-          (let* ((elem-beg (org-element-property :begin (org-element-context)))
-                 (elem-end (org-element-property :end (org-element-context)))
-                 (head (- beg elem-beg))
-                 (tail (- elem-end end))
-                 (str (buffer-substring-no-properties beg end)) ;changed to no-properties
-                 (nothing-left t)
-                 (org-transclusion--text-clone-maintaining t))
-            (dolist (ol2 (overlay-get ol1 'text-clones))
-              (with-current-buffer (overlay-buffer ol2) ;;< Tobias
-                (save-restriction
-                  (widen)
-                  (unless (eq ol1 ol2)
-                    (setq nothing-left nil)
-                    (let ((mod-beg (+ src-beg-mkr head)))
-                      (goto-char (- src-end-mkr tail))
-                      (unless (> mod-beg (point))
-                        (save-excursion (insert str))
-                        (delete-region mod-beg (point))))))))
-                  ;; (let ((oe (overlay-end ol2)))
-                  ;;   (unless (or (eq ol1 ol2) (null oe))
-                  ;;     (setq nothing-left nil)
-                  ;;     (let ((mod-beg (+ src-beg-mkr head)))
-                  ;;       ;;(overlay-put ol2 'modification-hooks nil)
-                  ;;       (goto-char (- (overlay-end ol2) tail))
-                  ;;       (unless (> mod-beg (point))
-                  ;;         (save-excursion (insert str))
-                  ;;         (delete-region mod-beg (point))))))
-            (if nothing-left (delete-overlay ol1))))))))
 
 (defun org-transclusion--text-clone--maintain (ol1 after beg end &optional _len)
   "Propagate the changes made under the overlay OL1 to the other clones.
