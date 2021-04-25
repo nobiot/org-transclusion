@@ -302,7 +302,7 @@ Analogous to Occur Edit for Occur Mode."
       (overlay-put tc-ov 'tc-type "src-edit-ov")
       (overlay-put tc-ov 'face 'org-transclusion-block-edit)
       (overlay-put tc-ov 'text-clones dups)
-      (overlay-put tc-ov 'keymap (let ((map (make-sparse-keymap)))
+      (overlay-put tc-ov 'local-map (let ((map (make-sparse-keymap)))
                                    (define-key map (kbd "C-c C-c")
                                      #'org-transclusion-refresh-at-poiont)
                                    map))
@@ -320,7 +320,8 @@ Analogous to Occur Edit for Occur Mode."
     (unless src-search-beg
       (save-excursion
         (goto-char (next-property-change (point) nil limit))
-        (setq src-search-beg (get-text-property (point) 'org-transclusion-text-beg-mkr))))
+        (setq src-search-beg (get-text-property
+                              (point) 'org-transclusion-text-beg-mkr))))
     (with-current-buffer src-buf
       (goto-char src-search-beg)
       (let* ((src-elem (org-transclusion-get-enclosing-element))
@@ -436,8 +437,8 @@ Analogous to Occur Edit for Occur Mode."
     (add-text-properties beg end
                          `(local-map ,org-transclusion-map
                                      read-only t
-                                     front-sticky t
-                                     rear-nonsticky t
+                                     front-sticky nil
+                                     rear-nonsticky nil
                                      tc-id ,tc-id
                                      tc-type ,type
                                      tc-beg-mkr ,beg-mkr
@@ -757,7 +758,27 @@ live edit will try to sync the deletion, and causes an error."
 
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for meta-left/right
+(defun org-transclusion-promote-subtree ()
+  "Promote transcluded subtree."
+  (interactive)
+  (if (not (org-transclusion--within-transclusion-p))
+      (message "Not in a transcluded headline.")
+    (let ((inhibit-read-only t)
+          (beg (get-text-property (point) 'tc-beg-mkr)))
+      (when (org-at-heading-p)
+        (org-promote-subtree)))))
 
+(defun org-transclusion-promote-or-demote-subtree (&optional demote)
+  "Promote transcluded subtree."
+  (interactive "P")
+  (if (not (org-transclusion--within-transclusion-p))
+      (message "Not in a transcluded headline.")
+    (let ((inhibit-read-only t)
+          (beg (get-text-property (point) 'tc-beg-mkr)))
+      (save-excursion
+        (goto-char beg)
+        (when (org-at-heading-p)
+          (if demote (org-demote-subtree) (org-promote-subtree)))))))
 
 ;;-----------------------------------------------------------------------------
 ;;;; Definition of org-transclusion-paste-subtree
