@@ -139,14 +139,14 @@ slightly different."
     map))
 
 (define-fringe-bitmap 'org-transclusion-fringe
-  [#b11100000
-   #b11100000
-   #b11100000
-   #b11100000
-   #b11100000
-   #b11100000
-   #b11100000
-   #b11100000]
+  [#b11000000
+   #b11000000
+   #b11000000
+   #b11000000
+   #b11000000
+   #b11000000
+   #b11000000
+   #b11000000]
   nil nil '(center t))
 
 ;;;; Commands
@@ -458,24 +458,14 @@ Analogous to Occur Edit for Occur Mode."
                                      tc-src-beg-mkr ,src-beg-m
                                      tc-pair ,tc-pair
                                      tc-orig-keyword ,keyword-values
-                                     line-prefix ,(concat
-                                                   (propertize
-                                                    "  "
-                                                    `face
-                                                    `org-transclusion-fringe-indent)
-                                                   (propertize
-                                                    "x"
-                                                    `display
-                                                    `(left-fringe org-transclusion-fringe org-transclusion-block)))
-                                     wrap-prefix ,(concat
-                                                   (propertize
-                                                    "  "
-                                                    `face
-                                                    `org-transclusion-fringe-indent)
-                                                   (propertize
-                                                    "x"
-                                                    `display
-                                                    `(left-fringe org-transclusion-fringe org-transclusion-block)))))
+                                     line-prefix ,(propertize
+                                                   "x"
+                                                   `display
+                                                   `(left-fringe org-transclusion-fringe org-transclusion-block))
+                                     wrap-prefix ,(propertize
+                                                   "x"
+                                                   `display
+                                                   `(left-fringe org-transclusion-fringe org-transclusion-block))))
     ;; Put to the source overlay
     (overlay-put ov-src 'tc-by beg-mkr)
     (overlay-put ov-src 'evaporate t)
