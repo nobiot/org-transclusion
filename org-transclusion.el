@@ -91,12 +91,8 @@ See the functions delivered within org-tranclusion for the API signatures."
   "Face for transcluded block."
   :group 'org-transclusion)
 
-(defface org-transclusion-block
-  '((((class color) (min-colors 88) (background light))
-     :background "#f3f3ff" :foreground "#f8f8ff" :extend t)
-    (((class color) (min-colors 88) (background dark))
-     :foreground "#bfc0c4" :background "#1e1e1e" :extend t))
-  "Face for transcluded block."
+(defface org-transclusion-block nil
+  "Face for transcluded block's fringe."
   :group 'org-transclusion)
 
 (defface org-transclusion-block-edit
@@ -105,15 +101,6 @@ See the functions delivered within org-tranclusion for the API signatures."
     (((class color) (min-colors 88) (background dark))
      :foreground "#bfc0c4" :background "#1e1e1e" :extend t))
   "Face for transcluded block."
-  :group 'org-transclusion)
-
-(defface org-transclusion-fringe-indent '((t (:inherit org-hide)))
-  "Face for the indent between the fringe and transluded text.
-It's a copy of org-indent face.  It is copied here because
-`org-indent-mode' may not be loaded; in this case, org-indent
-face is not recogized.  The default is to make it look like
-whitespace.  But you may find it useful to make it ever so
-slightly different."
   :group 'org-transclusion)
 
 ;;;; Variables
@@ -458,6 +445,7 @@ Analogous to Occur Edit for Occur Mode."
                                      tc-src-beg-mkr ,src-beg-m
                                      tc-pair ,tc-pair
                                      tc-orig-keyword ,keyword-values
+                                     ;; TODO Fringe is not supported for terminal
                                      line-prefix ,(propertize
                                                    "x"
                                                    `display
@@ -767,7 +755,11 @@ live edit will try to sync the deletion, and causes an error."
     ;;                      'org-transclusion-text-id (org-id-uuid)))
     (buffer-substring start end))
 
-;;;;-----------------------------------------------------------------------------
+;;-----------------------------------------------------------------------------
+;;;; Functions for meta-left/right
+
+
+;;-----------------------------------------------------------------------------
 ;;;; Definition of org-transclusion-paste-subtree
 
 
