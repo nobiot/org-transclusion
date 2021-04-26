@@ -113,13 +113,13 @@ See the functions delivered within org-tranclusion for the API signatures."
     org-transclusion-link-open-other-file-links))
 
 (defvar org-transclusion-get-keyword-values-hook
-  '(org-transclusion--get-keyword-active-p-value
-    org-transclusion--get-keyword-path-value
-    org-transclusion--get-keyword-level-value))
+  '(org-transclusion-keyword-get-value-active-p
+    org-transclusion-keyword-get-value-path
+    org-transclusion-keyword-get-value-level))
 
 (defvar org-transclusion-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "e") #'org-transclusion-edit-live-start-at-point)
+    (define-key map (kbd "e") #'org-transclusion-live-sync-start-at-point)
     (define-key map (kbd "g") #'org-transclusion-refresh-at-poiont)
     (define-key map (kbd "d") #'org-transclusion-remove-at-point)
     (define-key map (kbd "P") #'org-transclusion-promote-subtree)
@@ -175,13 +175,13 @@ the mode, `toggle' toggles the state."
 Pass Org mode's link object to `org-transclusion-link-open'.
 This function assumes the point is at the beginning of a link."
   (interactive)
-  (when-let* ((keyword-values (org-transclusion--get-keyword-values-at-point))
+  (when-let* ((keyword-plist (org-transclusion-keyword-get-string-to-plist))
               (link (org-transclusion-wrap-path-to-link
-                     (plist-get keyword-values :path)))
+                     (plist-get keyword-plist :path)))
               (type (org-element-property :type link)))
     ;; The transclusion needs to be active, and the link type needs to be
     ;; either id or file
-    (cond ((and (plist-get keyword-values :active-p)
+    (cond ((and (plist-get keyword-plist :active-p)
                 (or (string= "id" type)
                     (string= "file" type)))
            (let ((tc-params))
@@ -203,14 +203,14 @@ This function assumes the point is at the beginning of a link."
                      ;; Insert & overlay
                      (when (save-excursion
                              (end-of-line) (insert-char ?\n)
-                             (org-transclusion--insert-content
-                              keyword-values tc-type tc-content
+                             (org-transclusion-content-insert
+                              keyword-plist tc-type tc-content
                               tc-beg-mkr tc-end-mkr)
                              (delete-char 1)
                              t) ;; return t for "when caluse"
                        ;; Remove keyword after having transcluded content
                        (when (org-at-keyword-p)
-                         (org-transclusion--remove-keyword))
+                         (org-transclusion-keyword-remove))
                        (org-transclusion-mode 1))))))))
           ;; For other cases. Do nothing
           (t (message "Nothing done. Transclusion inactive or link missing.") nil))))
@@ -237,11 +237,11 @@ argument is passed."
   (interactive)
   (if-let* ((beg (marker-position (get-char-property (point) 'tc-beg-mkr)))
             (end (marker-position (get-char-property (point) 'tc-end-mkr)))
-            (keyword (org-transclusion-keyword-values-to-keyword
+            (keyword (org-transclusion-keyword-plist-to-string
                       (get-char-property (point) 'tc-orig-keyword)))
             (tc-pair-ov (get-char-property (point) 'tc-pair)))
       (progn
-        (org-transclusion--remove-source-buffer-edit-overlay beg end)
+        (org-transclusion-live-sync-source-remove-overlayay beg end)
         (delete-overlay tc-pair-ov)
         (outline-show-all)
         (org-transclusion-with-silent-modifications
@@ -284,7 +284,7 @@ This only exists to support easy definition of local-map."
   (interactive)
   (org-transclusion-promote-or-demote-subtree 'demote))
 
-(defun org-transclusion-edit-live-start-at-point ()
+(defun org-transclusion-live-sync-start-at-point ()
   "Put overlay for edit live.
 Analogous to Occur Edit for Occur Mode.
 
@@ -325,7 +325,7 @@ may or may not be useful. This needs to be thought through."
                        (org-element-property :contents-end tc-elem)
                      (org-element-property :end tc-elem)))
            (tc-ov (make-overlay tc-beg tc-end nil t t)) ;front-advance should be t
-           (src-ov (org-transclusion--find-src-ov-for-edit tc-end))
+           (src-ov (org-transclusion-live-sync-source-make-overlay tc-end))
            (dups (list src-ov tc-ov)))
       (display-buffer (overlay-buffer src-ov))
       ;; Source Overlay
@@ -350,30 +350,6 @@ may or may not be useful. This needs to be thought through."
         (remove-text-properties tc-beg tc-end '(read-only)))
       t)))
 
-(defun org-transclusion--find-src-ov-for-edit (limit)
-  "."
-  (let ((src-buf (overlay-buffer (get-text-property (point) 'tc-pair)))
-        ;; I will keep src-buf to be gotten from tc-pair.
-        ;; I might not keep org-transclusion-text-beg-mkr
-        (src-search-beg
-         (get-text-property (point) 'org-transclusion-text-beg-mkr)))
-    (unless src-search-beg
-      (save-excursion
-        (goto-char (next-property-change (point) nil limit))
-        (setq src-search-beg (get-text-property
-                              (point) 'org-transclusion-text-beg-mkr))))
-
-    (with-current-buffer src-buf
-      (goto-char src-search-beg)
-      (let* ((src-elem (org-transclusion-get-enclosing-element))
-             (src-beg (if (org-element-property :contents-begin src-elem)
-                          (org-element-property :contents-begin src-elem)
-                        (org-element-property :begin src-elem)))
-             (src-end (if (org-element-property :contents-end src-elem)
-                          (org-element-property :contents-end src-elem)
-                        (org-element-property :end src-elem))))
-        (make-overlay src-beg src-end nil t t)))))
-
 (defun org-transclusion-create-from-link ()
   "WIP."
   ;; check if at-point is a link file or id
@@ -390,12 +366,11 @@ may or may not be useful. This needs to be thought through."
         (forward-char -3)
         (org-transclusion-add-at-point)))))
 
-
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions for Transclude Keyword
 ;;   #+transclude: t "~/path/to/file.org::1234"
 
-(defun org-transclusion--get-keyword-values-at-point ()
+(defun org-transclusion-keyword-get-string-to-plist ()
   "Return the \"#+transcldue:\" keyword's values if any at point"
   (save-excursion
     (beginning-of-line)
@@ -408,19 +383,19 @@ may or may not be useful. This needs to be thought through."
                   (setq plist (append plist (funcall fn value)))))
         plist))))
 
-(defun org-transclusion--get-keyword-active-p-value (value)
+(defun org-transclusion-keyword-get-value-active-p (value)
   (when (string-match "^\\(t\\|nil\\).*$" value)
     (list :active-p (org-transclusion--not-nil (match-string 1 value)))))
 
-(defun org-transclusion--get-keyword-path-value (value)
+(defun org-transclusion-keyword-get-value-path (value)
   (when (string-match "\\(\".+?\"\\)" value)
     (list :path (org-strip-quotes (match-string 0 value)))))
 
-(defun org-transclusion--get-keyword-level-value (value)
+(defun org-transclusion-keyword-get-value-level (value)
   (when (string-match ":level *\\([1-9]\\)" value)
     (list :level (string-to-number (org-strip-quotes (match-string 1 value))))))
 
-(defun org-transclusion--remove-keyword ()
+(defun org-transclusion-keyword-remove ()
   "Remove keyword element at point.
 It assumes that point is at a keyword."
   (let* ((elm (org-element-at-point))
@@ -429,17 +404,17 @@ It assumes that point is at a keyword."
          (post-blank (org-element-property :post-blank elm)))
     (delete-region beg (- end post-blank)) t))
 
-(defun org-transclusion--turn-off-keyword (values)
-  "Return the keyword string with the \":active-p\" prop removed.
-Not used..."
-  (let ((path (plist-get values :path))
-        (level (plist-get values :level)))
-    (concat "#+transclude: "
-            " \"" path "\""
-            (when level (format " :level %d" level))
-            "\n")))
+;; (defun org-transclusion--turn-off-keyword (values)
+;;   "Return the keyword string with the \":active-p\" prop removed.
+;; Not used..."
+;;   (let ((path (plist-get values :path))
+;;         (level (plist-get values :level)))
+;;     (concat "#+transclude: "
+;;             " \"" path "\""
+;;             (when level (format " :level %d" level))
+;;             "\n")))
 
-(defun org-transclusion-keyword-values-to-keyword (values)
+(defun org-transclusion-keyword-plist-to-string (values)
   "."
   (let ((active-p (plist-get values :active-p))
         (path (plist-get values :path))
@@ -453,7 +428,7 @@ Not used..."
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions for inserting content
 
-(defun org-transclusion--insert-content (keyword-values type content src-beg-m src-end-m)
+(defun org-transclusion-content-insert (keyword-values type content src-beg-m src-end-m)
   "Add content and overlay."
   (let* ((tc-id (substring (org-id-uuid) 0 8))
          (sbuf (marker-buffer src-beg-m)) ;source buffer
@@ -471,7 +446,7 @@ Not used..."
         (with-temp-buffer
           (org-transclusion-paste-subtree level content t t)
           (setq content (buffer-string)))))
-    (insert (org-transclusion--format-content content))
+    (insert (org-transclusion-content-format content))
     (setq beg-mkr (save-excursion (goto-char beg)
                                   (org-transclusion--make-marker (point))))
     (setq end (point))
@@ -506,7 +481,7 @@ Not used..."
     (overlay-put ov-src 'tc-pair tc-pair)
     t))
 
-(defun org-transclusion--format-content (content)
+(defun org-transclusion-content-format (content)
   "Format text CONTENT from source before transcluding.
 Return content modified (or unmodified, if not applicable).
 Currently it only re-aligns table with links in the content."
@@ -532,7 +507,7 @@ Return nil if not found."
       (if mkr (progn
                 (setq tc-params (list :tc-type "org-id"
                                       :tc-arg mkr
-                                      :tc-fn #'org-transclusion--get-org-content-from-marker)))
+                                      :tc-fn #'org-transclusion-content-get-from-org-marker)))
         (message "No transclusion done for this ID. Ensure it works.")))))
 
 (defun org-transclusion-link-open-org-file-links (tc-params link)
@@ -540,13 +515,13 @@ Return nil if not found."
   (when (org-transclusion--org-file-p (org-element-property :path link))
    (setq tc-params (list :tc-type "org-link"
                          :tc-arg link
-                         :tc-fn #'org-transclusion--get-org-content-from-link))))
+                         :tc-fn #'org-transclusion-content-get-from-org-link))))
 
 (defun org-transclusion-link-open-other-file-links (tc-params link)
      ;; For non-Org files
      ((setq tc-params (org-transclusion--get-custom-tc-params link))))
 
-(defun org-transclusion--get-org-content-from-marker (marker)
+(defun org-transclusion-content-get-from-org-marker (marker)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from MARKER.
 This is meant for Org-ID."
   (if (and marker (marker-buffer marker)
@@ -557,11 +532,11 @@ This is meant for Org-ID."
            ;;(outline-show-all)
            (goto-char marker)
            (if (org-before-first-heading-p)
-               (org-transclusion--get-org-buffer-or-element-at-point)
-             (org-transclusion--get-org-buffer-or-element-at-point 'only-element)))))
+               (org-transclusion-content-get-org-buffer-or-element-at-point)
+             (org-transclusion-content-get-org-buffer-or-element-at-point 'only-element)))))
     (message "Nothing done. Cannot find marker for the ID.")))
 
-(defun org-transclusion--get-org-content-from-link (link &rest _arg)
+(defun org-transclusion-content-get-from-org-link (link &rest _arg)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from LINK."
   (save-excursion
     ;; First visit the buffer and go to the relevant elelement if id or
@@ -575,10 +550,10 @@ This is meant for Org-ID."
          (if search-option
              (progn
                (org-link-search search-option)
-               (org-transclusion--get-org-buffer-or-element-at-point 'only-element))
-           (org-transclusion--get-org-buffer-or-element-at-point)))))))
+               (org-transclusion-content-get-org-buffer-or-element-at-point 'only-element))
+           (org-transclusion-content-get-org-buffer-or-element-at-point)))))))
 
-(defun org-transclusion--get-org-buffer-or-element-at-point (&optional only-element)
+(defun org-transclusion-content-get-org-buffer-or-element-at-point (&optional only-element)
   "Return content for transclusion.
 When ONLY-ELEMENT is t, only the element.  If nil, the whole buffer.
 Assume you are at the beginning of the org element to transclude."
@@ -617,7 +592,7 @@ Assume you are at the beginning of the org element to transclude."
                       ;; sections; headlines contain section) Want to remove
                       ;; the elements of the types included in the list from
                       ;; the AST.
-                      #'org-transclusion--filter-buffer
+                      #'org-transclusion-content-filter-org-buffer
                       nil nil no-recursion nil)))
           (advice-remove 'buffer-substring-no-properties #'org-transclusion-buffer-substring-advice)
           (setq tc-content (org-element-interpret-data obj))
@@ -634,12 +609,12 @@ Assume you are at the beginning of the org element to transclude."
                 :tc-end-mkr tc-end-mkr)))
     (message "Nothing done. Content is empty.")))
 
-(defun org-transclusion--filter-buffer (data)
+(defun org-transclusion-content-filter-org-buffer (data)
   "Filter DATA before transcluding its content.
 DATA is meant to be a parse tree for ‘org-element.el'.
 
 This function is used within
-`org-transclusion--get-org-buffer-or-element-at-point'.
+`org-transclusion-content-get-org-buffer-or-element-at-point'.
 
 Use `org-transclusion-exclude-elements' variable to specify which
 elements to remove from the transcluded copy.
@@ -760,7 +735,30 @@ placed without a blank line."
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for live-sync
 
-(defun org-transclusion--remove-source-buffer-edit-overlay (beg end)
+(defun org-transclusion-live-sync-source-make-overlay (limit)
+  "."
+  (let ((src-buf (overlay-buffer (get-text-property (point) 'tc-pair)))
+        ;; I will keep src-buf to be gotten from tc-pair.
+        ;; I might not keep org-transclusion-text-beg-mkr
+        (src-search-beg
+         (get-text-property (point) 'org-transclusion-text-beg-mkr)))
+    (unless src-search-beg
+      (save-excursion
+        (goto-char (next-property-change (point) nil limit))
+        (setq src-search-beg (get-text-property
+                              (point) 'org-transclusion-text-beg-mkr))))
+    (with-current-buffer src-buf
+      (goto-char src-search-beg)
+      (let* ((src-elem (org-transclusion-get-enclosing-element))
+             (src-beg (if (org-element-property :contents-begin src-elem)
+                          (org-element-property :contents-begin src-elem)
+                        (org-element-property :begin src-elem)))
+             (src-end (if (org-element-property :contents-end src-elem)
+                          (org-element-property :contents-end src-elem)
+                        (org-element-property :end src-elem))))
+        (make-overlay src-beg src-end nil t t)))))
+
+(defun org-transclusion-live-sync-source-remove-overlayay (beg end)
   "Remove the overlay in the source buffer being edited when applicable.
 This function checks if such overlays exist - it should support
 multiple edit overlays.  It is meant to be used in
@@ -804,7 +802,7 @@ live edit will try to sync the deletion, and causes an error."
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for meta-left/right: promote/demote a transcluded subtree
 
-(defun org-transclusion--adjust-after-promote()
+(defun org-transclusion-promote-adjust-after ()
   "Adjust the level information after promote/demote."
   ;; find tc-beg-mkr. If the point is directly on the starts, you need to find
   ;; it in the headline title.
@@ -821,8 +819,8 @@ live edit will try to sync the deletion, and causes an error."
       (org-transclusion-refresh-at-poiont))))
 
 (defun org-transclusion-promote-or-demote-subtree (&optional demote)
-  "Promote transcluded subtree."
-  (interactive "P")
+  "Promote or demote transcluded subtree.
+When DEMOTE is non-nil, demote."
   (if (not (org-transclusion--within-transclusion-p))
       (message "Not in a transcluded headline.")
     (let ((inhibit-read-only t)
@@ -832,7 +830,7 @@ live edit will try to sync the deletion, and causes an error."
           (goto-char beg)
           (when (org-at-heading-p)
             (if demote (org-demote-subtree) (org-promote-subtree))
-            (org-transclusion--adjust-after-promote)))
+            (org-transclusion-promote-adjust-after)))
         (goto-char pos)))))
 
 ;;-----------------------------------------------------------------------------
