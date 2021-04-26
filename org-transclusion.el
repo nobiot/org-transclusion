@@ -200,7 +200,7 @@ This function assumes the point is at the beginning of a link."
                    (save-excursion
                      (org-transclusion-with-silent-modifications
                        ;; Remove keyword
-                       ;;(org-transclusion-remove-keyword)
+                       ;;(org-transclusion-remove--keyword)
                        ;;(insert (org-transclusion-turn-off keyword-values))
                        (forward-line 1)
                        ;; Insert & overlay
@@ -242,8 +242,11 @@ argument is passed."
         (delete-overlay tc-pair-ov)
         (org-with-wide-buffer
          (org-transclusion-with-silent-modifications
-           (delete-region beg end)))
-        (forward-char -1) ;; back to the keyword line
+           (delete-region beg end)
+           (forward-char -1) ;; back to the keyword line
+           (when (org-at-keyword-p)
+             (org-transclusion--remove-keyword)
+             (insert keyword))))
         t)
     (message "Nothing done. No transclusion exists here.") nil))
 
@@ -399,7 +402,8 @@ may or may not be useful. This needs to be thought through."
   (when (string-match ":level *\\([1-9]\\)" value)
     (list :level (string-to-number (org-strip-quotes (match-string 1 value))))))
 
-(defun org-transclusion-remove-keyword ()
+(defun org-transclusion--remove-keyword ()
+  "."
   (let* ((elm (org-element-at-point))
          (beg (org-element-property :begin elm))
          (end (org-element-property :end elm))
@@ -778,8 +782,27 @@ live edit will try to sync the deletion, and causes an error."
 
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for meta-left/right
+
+(defun org-transclusion--adjust-after-promote()
+  "Adjust the level information after promote/demote."
+  ;; find tc-beg-mkr. If the point is directly on the starts, you need to find
+  ;; it in the headline title.
+  ;; Assume point at beginning of the subtree after promote/demote
+  (let* ((pos (next-property-change (point) nil (line-end-position)))
+         (keyword-plist (get-text-property pos 'tc-orig-keyword))
+         (level (car (org-heading-components))))
+    ;; adjust keyword :level prop
+    (setq keyword-plist (plist-put keyword-plist :level level))
+    (put-text-property (point) (line-end-position) 'tc-orig-keyword keyword-plist)
+    ;; refresh to get the text-prop corrected.
+    (save-excursion
+      (goto-char pos)
+      (org-transclusion-refresh-at-poiont))))
+
 (defun org-transclusion-promote-subtree ()
-  "Promote transcluded subtree."
+  "Promote transcluded subtree.
+
+org-after-demote-entry-hook"
   (interactive)
   (if (not (org-transclusion--within-transclusion-p))
       (message "Not in a transcluded headline.")
@@ -798,7 +821,8 @@ live edit will try to sync the deletion, and causes an error."
       (save-excursion
         (goto-char beg)
         (when (org-at-heading-p)
-          (if demote (org-demote-subtree) (org-promote-subtree)))))))
+          (if demote (org-demote-subtree) (org-promote-subtree))
+          (org-transclusion--adjust-after-promote))))))
 
 ;;-----------------------------------------------------------------------------
 ;;;; Definition of org-transclusion-paste-subtree
