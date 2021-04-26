@@ -203,7 +203,17 @@ This function assumes the point is at the beginning of a link."
                      (org-transclusion-with-silent-modifications
                        ;; Remove keyword
                        ;;(org-transclusion-remove--keyword)
-                       ;;(insert (org-transclusion-turn-off keyword-values))
+                       ;;(insert (org-transclusion--turn-off-keyword keyword-values))
+                       ;; Test
+                       (add-text-properties (line-beginning-position) (line-end-position)
+                                            '(read-only t
+                                                        fron-sticky nil
+                                                        rear-nonsticky nil))
+                       (put-text-property (line-beginning-position) (line-end-position)
+                                          'line-prefix (propertize
+                                                        "x"
+                                                        'display
+                                                        '(left-fringe org-transclusion-fringe org-transclusion-block)))
                        (forward-line 1)
                        ;; Insert & overlay
                        (org-transclusion--insert-content
@@ -247,6 +257,8 @@ argument is passed."
            (delete-region beg end)
            (forward-char -1) ;; back to the keyword line
            (when (org-at-keyword-p)
+             ;; Testing
+             (put-text-property (line-beginning-position) (line-end-position) 'read-only nil)
              (org-transclusion--remove-keyword)
              (insert keyword))))
         t)
@@ -417,8 +429,9 @@ It assumes that point is at a keyword."
          (post-blank (org-element-property :post-blank elm)))
     (delete-region beg (- end post-blank)) t))
 
-(defun org-transclusion-turn-off (values)
-  "Return the keyword string with the \":active-p\" prop removed."
+(defun org-transclusion--turn-off-keyword (values)
+  "Return the keyword string with the \":active-p\" prop removed.
+Not used..."
   (let ((path (plist-get values :path))
         (level (plist-get values :level)))
     (concat "#+transclude: "
@@ -468,7 +481,7 @@ It assumes that point is at a keyword."
     (add-text-properties beg end
                          `(local-map ,org-transclusion-map
                                      read-only t
-                                     front-sticky nil
+                                     front-sticky t ;;< this is to prevent edit between keyword and content
                                      rear-nonsticky nil
                                      tc-id ,tc-id
                                      tc-type ,type
@@ -836,6 +849,9 @@ This only exists to support easy definition of local-map."
 ;;-----------------------------------------------------------------------------
 ;;;; Definition of org-transclusion-paste-subtree
 
+;;;; TODO this function seems to
+;;;; have an issue of inserting some extra spaces between headline stars and
+;;;; its title. Further investigation is required
 
 (defun org-transclusion-paste-subtree (&optional level tree for-yank remove)
   "Paste the clipboard as a subtree, with modification of headline level.
