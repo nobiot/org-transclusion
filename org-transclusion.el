@@ -199,28 +199,19 @@ This function assumes the point is at the beginning of a link."
                  (if (or (string= tc-content "")
                          (eq tc-content nil))
                      (progn (message "Nothing done. No content is found through the link.") nil)
-                   (save-excursion
-                     (org-transclusion-with-silent-modifications
-                       ;; Remove keyword
-                       ;;(org-transclusion-remove--keyword)
-                       ;;(insert (org-transclusion--turn-off-keyword keyword-values))
-                       ;; Test
-                       (add-text-properties (line-beginning-position) (line-end-position)
-                                            '(read-only t
-                                                        fron-sticky nil
-                                                        rear-nonsticky nil))
-                       (put-text-property (line-beginning-position) (line-end-position)
-                                          'line-prefix (propertize
-                                                        "x"
-                                                        'display
-                                                        '(left-fringe org-transclusion-fringe org-transclusion-block)))
-                       (forward-line 1)
-                       ;; Insert & overlay
-                       (org-transclusion--insert-content
-                        keyword-values tc-type tc-content
-                        tc-beg-mkr tc-end-mkr)
-                       (org-transclusion-mode 1)
-                       t)))))))
+                   (org-transclusion-with-silent-modifications
+                     ;; Insert & overlay
+                     (when (save-excursion
+                             (end-of-line) (insert-char ?\n)
+                             (org-transclusion--insert-content
+                              keyword-values tc-type tc-content
+                              tc-beg-mkr tc-end-mkr)
+                             (delete-char 1)
+                             t) ;; return t for "when caluse"
+                       ;; Remove keyword after having transcluded content
+                       (when (org-at-keyword-p)
+                         (org-transclusion--remove-keyword))
+                       (org-transclusion-mode 1))))))))
           ;; For other cases. Do nothing
           (t (message "Nothing done. Transclusion inactive or link missing.") nil))))
 
@@ -252,15 +243,11 @@ argument is passed."
       (progn
         (org-transclusion--remove-source-buffer-edit-overlay beg end)
         (delete-overlay tc-pair-ov)
-        (org-with-wide-buffer
-         (org-transclusion-with-silent-modifications
-           (delete-region beg end)
-           (forward-char -1) ;; back to the keyword line
-           (when (org-at-keyword-p)
-             ;; Testing
-             (put-text-property (line-beginning-position) (line-end-position) 'read-only nil)
-             (org-transclusion--remove-keyword)
-             (insert keyword))))
+        (outline-show-all)
+        (org-transclusion-with-silent-modifications
+          (save-excursion
+            (delete-region beg end)
+            (insert keyword)))
         t)
     (message "Nothing done. No transclusion exists here.") nil))
 
@@ -268,11 +255,12 @@ argument is passed."
   "Remove all the translusion overlay and copied text in current buffer."
   (interactive)
   (setq org-transclusion-remember-point (point))
-  (org-with-point-at 1
-    (while (text-property-search-forward 'tc-id)
-      (forward-char -1)
-      (org-transclusion-with-silent-modifications
-        (org-transclusion-remove-at-point)))))
+  (outline-show-all)
+  (goto-char (point-min))
+  (while (text-property-search-forward 'tc-id)
+    (forward-char -1)
+    (org-transclusion-with-silent-modifications
+      (org-transclusion-remove-at-point))))
 
 (defun org-transclusion-refresh-at-poiont ()
   "Refresh the transclusion at point."
@@ -481,7 +469,7 @@ Not used..."
     (add-text-properties beg end
                          `(local-map ,org-transclusion-map
                                      read-only t
-                                     front-sticky t ;;< this is to prevent edit between keyword and content
+                                     front-sticky nil
                                      rear-nonsticky nil
                                      tc-id ,tc-id
                                      tc-type ,type
@@ -503,7 +491,8 @@ Not used..."
     (overlay-put ov-src 'tc-by beg-mkr)
     (overlay-put ov-src 'evaporate t)
 ;;    (overlay-put ov-src 'face 'org-transclusion-source-block)
-    (overlay-put ov-src 'tc-pair tc-pair)))
+    (overlay-put ov-src 'tc-pair tc-pair)
+    t))
 
 (defun org-transclusion--format-content (content)
   "Format text CONTENT from source before transcluding.
