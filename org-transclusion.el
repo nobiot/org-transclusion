@@ -91,15 +91,23 @@ See the functions delivered within org-tranclusion for the API signatures."
   "Face for transcluded block."
   :group 'org-transclusion)
 
+(defface org-transclusion-source-block-edit
+  '((((class color) (min-colors 88) (background light))
+     :background "#ebf6fa" :extend t)
+    (((class color) (min-colors 88) (background dark))
+     :background "#041529" :extend t))
+  "Face for transcluded block."
+  :group 'org-transclusion)
+
 (defface org-transclusion-block nil
   "Face for transcluded block's fringe."
   :group 'org-transclusion)
 
 (defface org-transclusion-block-edit
   '((((class color) (min-colors 88) (background light))
-     :background "#dde3f4" :extend t)
+     :background "#fff3da" :extend t)
     (((class color) (min-colors 88) (background dark))
-     :foreground "#bfc0c4" :background "#1e1e1e" :extend t))
+     :background "##221000" :extend t))
   "Face for transcluded block."
   :group 'org-transclusion)
 
@@ -124,6 +132,7 @@ See the functions delivered within org-tranclusion for the API signatures."
     (define-key map (kbd "d") #'org-transclusion-remove-at-point)
     (define-key map (kbd "P") #'org-transclusion-promote-subtree)
     (define-key map (kbd "D") #'org-transclusion-demote-subtree)
+    (define-key map (kbd "o") #'org-transclusion-open-source)
     (define-key map (kbd "TAB") #'org-cycle)
     map))
 
@@ -358,7 +367,8 @@ may or may not be useful. This needs to be thought through."
       (overlay-put src-ov 'text-clones dups)
       (overlay-put src-ov 'modification-hooks
                    '(org-transclusion--text-clone--maintain))
-      (overlay-put src-ov 'face 'org-transclusion-source-block)
+      (overlay-put src-ov 'face 'org-transclusion-source-block-edit)
+      (overlay-put src-ov 'priority 50)
       ;; Transclusion Overlay
       (overlay-put tc-ov 'modification-hooks
                    '(org-transclusion--text-clone--maintain))
@@ -502,7 +512,8 @@ It assumes that point is at a keyword."
     ;; Put to the source overlay
     (overlay-put ov-src 'tc-by beg-mkr)
     (overlay-put ov-src 'evaporate t)
-;;    (overlay-put ov-src 'face 'org-transclusion-source-block)
+    ;;(overlay-put ov-src 'face 'org-transclusion-source-block)
+    (overlay-put ov-src 'priority -50)
     (overlay-put ov-src 'tc-pair tc-pair)
     t))
 
