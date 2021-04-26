@@ -171,9 +171,25 @@ the mode, `toggle' toggles the state."
   (remove-hook 'after-save-hook #'org-transclusion-add-all-in-buffer t))
 
 (defun org-transclusion-add-at-point ()
-  "Transclude keyword.
-Pass Org mode's link object to `org-transclusion-link-open'.
-This function assumes the point is at the beginning of a link."
+  "Transclude text content where #+transclude at point points.
+
+Examples of acceptable formats are as below:
+
+- \"#+transclude: t/nil \"file:path/to/file.org::search-option\" :level n\"
+- \"#+transclude: t/nil \"id:uuid\" :level n\"
+
+The file path or id are tranlated to the normal Org Mode link
+format such as [[file:path/tofile.org::*Heading]] or [[id:uuid]]
+to copy the text content of the link target.
+
+A transcluded text region is read-only, but you can activate the
+live-sync edit mode by calling `org-transclusion-live-sync-start-at-point'. This edit mode is analogous to Occur Edit
+for Occur Mode.  As such, following keys can be used on the
+read-only text within a transcluded region.
+
+You can customize the keymap with using `org-transclusion-map':
+
+\\{org-transclusion-map}"
   (interactive)
   (when-let* ((keyword-plist (org-transclusion-keyword-get-string-to-plist))
               (link (org-transclusion-wrap-path-to-link
@@ -216,9 +232,7 @@ This function assumes the point is at the beginning of a link."
           (t (message "Nothing done. Transclusion inactive or link missing.") nil))))
 
 (defun org-transclusion-add-all-in-buffer ()
-  "Add all the transclusions in the current buffer.
-As this function should be used only on the current buffer, no
-argument is passed."
+  "Add all active transclusions in the current buffer."
   (interactive)
   (org-with-point-at 1
     (let ((regexp "^[ \t]*#\\+TRANSCLUDE:"))
@@ -233,7 +247,7 @@ argument is passed."
     (setq org-transclusion-remember-point nil)))
 
 (defun org-transclusion-remove-at-point ()
-  "Remove transclusion and the copied text at point."
+  "Remove transcluded text at point."
   (interactive)
   (if-let* ((beg (marker-position (get-char-property (point) 'tc-beg-mkr)))
             (end (marker-position (get-char-property (point) 'tc-end-mkr)))
@@ -252,7 +266,7 @@ argument is passed."
     (message "Nothing done. No transclusion exists here.") nil))
 
 (defun org-transclusion-remove-all-in-buffer ()
-  "Remove all the translusion overlay and copied text in current buffer."
+  "Remove all transluded text regions in the current buffer."
   (interactive)
   (setq org-transclusion-remember-point (point))
   (outline-show-all)
@@ -263,7 +277,7 @@ argument is passed."
       (org-transclusion-remove-at-point))))
 
 (defun org-transclusion-refresh-at-poiont ()
-  "Refresh the transclusion at point."
+  "Refresh the transcluded text at point."
   (interactive)
   (when (org-transclusion--within-transclusion-p)
     (let ((pos (point)))
@@ -273,21 +287,32 @@ argument is passed."
     t))
 
 (defun org-transclusion-promote-subtree ()
-  "Promote transcluded subtree.
-This only exists to support easy definition of local-map."
+  "Promote transcluded subtree at point."
   (interactive)
   (org-transclusion-promote-or-demote-subtree))
 
 (defun org-transclusion-demote-subtree ()
-  "Demote transcluded subtree.
-This only exists to support easy definition of local-map."
+  "Demote transcluded subtree at point."
   (interactive)
   (org-transclusion-promote-or-demote-subtree 'demote))
 
-(defun org-transclusion-live-sync-start-at-point ()
-  "Put overlay for edit live.
-Analogous to Occur Edit for Occur Mode.
+(defun org-transclusion-open-source (&optional arg)
+  "Open the source buffer of transclusion at point When ARG is
+non-nil (e.g. \\[universal-argument]), the point will remain in
+the source buffer for further editing. "
+  (interactive "P")
+  (when-let* ((src-buf (overlay-buffer (get-text-property (point) 'tc-pair)))
+              (src-beg-mkr (get-text-property
+                            (point) 'org-transclusion-text-beg-mkr))
+              (buf (current-buffer)))
+    (unwind-protect
+        (progn (pop-to-buffer src-buf)
+               (goto-char src-beg-mkr)
+               (recenter-top-bottom))
+      (unless arg (pop-to-buffer buf)))))
 
+(defun org-transclusion-live-sync-start-at-point ()
+  "Put overlay for start live sync edit on the transclusion at point.
 
 TODO: this causes a problem when property drawer is excluded, but
 has another drawer for headling. Removed: It temporarily remove the filter
