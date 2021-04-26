@@ -272,6 +272,18 @@ argument is passed."
       (goto-char pos))
     t))
 
+(defun org-transclusion-promote-subtree ()
+  "Promote transcluded subtree.
+This only exists to support easy definition of local-map."
+  (interactive)
+  (org-transclusion-promote-or-demote-subtree))
+
+(defun org-transclusion-demote-subtree ()
+  "Demote transcluded subtree.
+This only exists to support easy definition of local-map."
+  (interactive)
+  (org-transclusion-promote-or-demote-subtree 'demote))
+
 (defun org-transclusion-edit-live-start-at-point ()
   "Put overlay for edit live.
 Analogous to Occur Edit for Occur Mode.
@@ -807,18 +819,6 @@ live edit will try to sync the deletion, and causes an error."
     (save-excursion
       (goto-char pos)
       (org-transclusion-refresh-at-poiont))))
-
-(defun org-transclusion-promote-subtree ()
-  "Promote transcluded subtree.
-This only exists to support easy definition of local-map."
-  (interactive)
-  (org-transclusion-promote-or-demote-subtree))
-
-(defun org-transclusion-demote-subtree ()
-  "Demote transcluded subtree.
-This only exists to support easy definition of local-map."
-  (interactive)
-  (org-transclusion-promote-or-demote-subtree 'demote))
 
 (defun org-transclusion-promote-or-demote-subtree (&optional demote)
   "Promote transcluded subtree."
