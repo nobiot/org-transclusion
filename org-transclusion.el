@@ -120,7 +120,7 @@ See the functions delivered within org-tranclusion for the API signatures."
 (defvar org-transclusion-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "e") #'org-transclusion-edit-live-start-at-point)
-    (define-key map (kbd "r") #'org-transclusion-refresh-at-poiont)
+    (define-key map (kbd "g") #'org-transclusion-refresh-at-poiont)
     (define-key map (kbd "d") #'org-transclusion-remove-at-point)
     (define-key map (kbd "TAB") #'org-cycle)
     map))
@@ -269,16 +269,34 @@ argument is passed."
 
 (defun org-transclusion-edit-live-start-at-point ()
   "Put overlay for edit live.
-Analogous to Occur Edit for Occur Mode."
+Analogous to Occur Edit for Occur Mode.
+
+It temporarily remove the filter so that all the elements get
+transcluded. This is necessary to ensure that both the source and
+transcluded elements have exactly the same content.
+
+The issue of filter is present for example when a block quote
+contains a keyword. Filtering out the keyword will misalign the
+source block quote and the transcluded one.
+
+While live sync is on, before- and after-save-hooks to remove/add
+transclusions are also temporariliy disabled. This prevents
+auto-save from getting in the way of live sync.
+
+TODO State management of live sync together with more explicit
+managemetn of before- and after-save-buffer-hooks.
+
+TODO source buffer opens when it is not open. The line position
+may or may not be useful. This needs to be thought through."
   (interactive)
   (if (not (org-transclusion--within-transclusion-p))
       (progn (message "This is not a translusion.") nil)
-    (org-transclusion-refresh-at-poiont)
+    ;; Temporarily deactivate filter
+    (let ((org-transclusion-exclude-elements nil))
+      (org-transclusion-refresh-at-poiont))
     (remove-hook 'before-save-hook #'org-transclusion-remove-all-in-buffer t)
     (remove-hook 'after-save-hook #'org-transclusion-add-all-in-buffer t)
-    (let* (
-           ;;(src-ov-edit (make-overlay src-beg src-end src-buf))
-           (tc-elem (org-transclusion-get-enclosing-element))
+    (let* ((tc-elem (org-transclusion-get-enclosing-element))
            (tc-beg (if (org-element-property :contents-begin tc-elem)
                        (org-element-property :contents-begin tc-elem)
                      (org-element-property :begin tc-elem)))
@@ -288,6 +306,7 @@ Analogous to Occur Edit for Occur Mode."
            (tc-ov (make-overlay tc-beg tc-end nil t t)) ;front-advance should be t
            (src-ov (org-transclusion--find-src-ov-for-edit tc-end))
            (dups (list src-ov tc-ov)))
+      (display-buffer (overlay-buffer src-ov))
       ;; Source Overlay
       (overlay-put src-ov 'evaporate t)
       (overlay-put src-ov 'text-clones dups)
@@ -322,6 +341,7 @@ Analogous to Occur Edit for Occur Mode."
         (goto-char (next-property-change (point) nil limit))
         (setq src-search-beg (get-text-property
                               (point) 'org-transclusion-text-beg-mkr))))
+
     (with-current-buffer src-buf
       (goto-char src-search-beg)
       (let* ((src-elem (org-transclusion-get-enclosing-element))
