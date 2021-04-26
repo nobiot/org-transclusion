@@ -122,6 +122,8 @@ See the functions delivered within org-tranclusion for the API signatures."
     (define-key map (kbd "e") #'org-transclusion-edit-live-start-at-point)
     (define-key map (kbd "g") #'org-transclusion-refresh-at-poiont)
     (define-key map (kbd "d") #'org-transclusion-remove-at-point)
+    (define-key map (kbd "P") #'org-transclusion-promote-subtree)
+    (define-key map (kbd "D") #'org-transclusion-demote-subtree)
     (define-key map (kbd "TAB") #'org-cycle)
     map))
 
@@ -274,9 +276,12 @@ argument is passed."
   "Put overlay for edit live.
 Analogous to Occur Edit for Occur Mode.
 
-It temporarily remove the filter so that all the elements get
-transcluded. This is necessary to ensure that both the source and
-transcluded elements have exactly the same content.
+
+TODO: this causes a problem when property drawer is excluded, but
+has another drawer for headling. Removed: It temporarily remove the filter
+so that all the elements get transcluded. This is necessary to
+ensure that both the source and transcluded elements have exactly
+the same content.
 
 The issue of filter is present for example when a block quote
 contains a keyword. Filtering out the keyword will misalign the
@@ -295,8 +300,9 @@ may or may not be useful. This needs to be thought through."
   (if (not (org-transclusion--within-transclusion-p))
       (progn (message "This is not a translusion.") nil)
     ;; Temporarily deactivate filter
-    (let ((org-transclusion-exclude-elements nil))
-      (org-transclusion-refresh-at-poiont))
+    ;;    (let ((org-transclusion-exclude-elements nil))
+    ;;     (org-transclusion-refresh-at-poiont))
+    (org-transclusion-refresh-at-poiont)
     (remove-hook 'before-save-hook #'org-transclusion-remove-all-in-buffer t)
     (remove-hook 'after-save-hook #'org-transclusion-add-all-in-buffer t)
     (let* ((tc-elem (org-transclusion-get-enclosing-element))
@@ -403,7 +409,8 @@ may or may not be useful. This needs to be thought through."
     (list :level (string-to-number (org-strip-quotes (match-string 1 value))))))
 
 (defun org-transclusion--remove-keyword ()
-  "."
+  "Remove keyword element at point.
+It assumes that point is at a keyword."
   (let* ((elm (org-element-at-point))
          (beg (org-element-property :begin elm))
          (end (org-element-property :end elm))
@@ -781,7 +788,7 @@ live edit will try to sync the deletion, and causes an error."
     (buffer-substring start end))
 
 ;;-----------------------------------------------------------------------------
-;;;; Functions for meta-left/right
+;;;; Functions for meta-left/right: promote/demote a transcluded subtree
 
 (defun org-transclusion--adjust-after-promote()
   "Adjust the level information after promote/demote."
@@ -801,15 +808,15 @@ live edit will try to sync the deletion, and causes an error."
 
 (defun org-transclusion-promote-subtree ()
   "Promote transcluded subtree.
-
-org-after-demote-entry-hook"
+This only exists to support easy definition of local-map."
   (interactive)
-  (if (not (org-transclusion--within-transclusion-p))
-      (message "Not in a transcluded headline.")
-    (let ((inhibit-read-only t)
-          (beg (get-text-property (point) 'tc-beg-mkr)))
-      (when (org-at-heading-p)
-        (org-promote-subtree)))))
+  (org-transclusion-promote-or-demote-subtree))
+
+(defun org-transclusion-demote-subtree ()
+  "Demote transcluded subtree.
+This only exists to support easy definition of local-map."
+  (interactive)
+  (org-transclusion-promote-or-demote-subtree 'demote))
 
 (defun org-transclusion-promote-or-demote-subtree (&optional demote)
   "Promote transcluded subtree."
@@ -818,11 +825,13 @@ org-after-demote-entry-hook"
       (message "Not in a transcluded headline.")
     (let ((inhibit-read-only t)
           (beg (get-text-property (point) 'tc-beg-mkr)))
-      (save-excursion
-        (goto-char beg)
-        (when (org-at-heading-p)
-          (if demote (org-demote-subtree) (org-promote-subtree))
-          (org-transclusion--adjust-after-promote))))))
+      (let ((pos (point)))
+        (save-excursion
+          (goto-char beg)
+          (when (org-at-heading-p)
+            (if demote (org-demote-subtree) (org-promote-subtree))
+            (org-transclusion--adjust-after-promote)))
+        (goto-char pos)))))
 
 ;;-----------------------------------------------------------------------------
 ;;;; Definition of org-transclusion-paste-subtree
