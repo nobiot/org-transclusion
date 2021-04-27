@@ -842,7 +842,7 @@ live edit will try to sync the deletion, and causes an error."
   "Add id, copy the text-properties via `buffer-substring'"
   ;;(unless (get-text-property start 'org-transclusion-text-beg-mkr)
   (if (not org-transclusion-substring-advice-enabled)
-      (funcall oldfn start end)
+      (funcall orgfn start end)
     (put-text-property start end
                        'org-transclusion-text-beg-mkr (org-transclusion--make-marker start))
     (put-text-property start end
