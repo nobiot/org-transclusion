@@ -350,11 +350,11 @@ may or may not be useful. This needs to be thought through."
     (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
     (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
     (let* ((tc-elem (org-transclusion-get-enclosing-element))
-           (tc-beg (if (org-element-property :contents-begin tc-elem)
-                       (org-element-property :contents-begin tc-elem)
+           (tc-beg (if-let ((beg (org-element-property :contents-begin tc-elem)))
+                       beg
                      (org-element-property :begin tc-elem)))
-           (tc-end (if (org-element-property :contents-end tc-elem)
-                       (org-element-property :contents-end tc-elem)
+           (tc-end (if-let ((end (org-element-property :contents-end tc-elem)))
+                       end
                      (- (org-element-property :end tc-elem)
                         (org-element-property :post-blank tc-elem))))
            (tc-ov (make-overlay tc-beg tc-end nil t t)) ;front-advance should be t
