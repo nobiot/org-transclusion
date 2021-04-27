@@ -172,7 +172,8 @@ the mode, `toggle' toggles the state."
   (interactive)
   (add-hook 'before-save-hook #'org-transclusion-before-save-buffer nil t)
   (add-hook 'after-save-hook #'org-transclusion-after-save-buffer nil t)
-  (add-hook 'kill-buffer-hook #'org-transclusion-before-save-buffer nil t))
+  (add-hook 'kill-buffer-hook #'org-transclusion-before-save-buffer nil t)
+  (add-hook 'kill-emacs-hook #'org-transclusion-before-save-buffer nil t))
 
 (defun org-transclusion-deactivate ()
   "Deactivate automatic transclusions in the local buffer."
@@ -180,7 +181,8 @@ the mode, `toggle' toggles the state."
   (org-transclusion-remove-all-in-buffer)
   (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
   (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
-  (remove-hook 'kill-buffer-hook #'org-transclusion-before-save-buffer t))
+  (remove-hook 'kill-buffer-hook #'org-transclusion-before-save-buffer t)
+  (remove-hook 'kill-emacs-hook #'org-transclusion-before-save-buffer t))
 
 (defun org-transclusion-add-at-point ()
   "Transclude text content where #+transclude at point points.
