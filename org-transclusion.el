@@ -805,7 +805,7 @@ placed without a blank line."
       (goto-char src-search-beg)
       (let* ((src-elem (org-transclusion-get-enclosing-element))
              (src-beg (org-transclusion-element-get-beg-or-end 'beg src-elem))
-             (src-end (org-transclusion-element-get-beg-or-end 'end src-elem))
+             (src-end (org-transclusion-element-get-beg-or-end 'end src-elem)))
         (make-overlay src-beg src-end nil t t)))))
 
 (defun org-transclusion-live-sync-source-remove-overlayay (beg end)
@@ -852,7 +852,18 @@ live edit will try to sync the deletion, and causes an error."
     (buffer-substring start end)))
 
 (defun org-transclusion-element-get-beg-or-end (beg-or-end element)
-  "."
+  "Returns appropriate beg or end of an element.
+This for when we need to find exactly the same sets of beg and
+end for source and transclusion elements (e.g. live-sync).
+
+Call BEG-OR-END passing either 'beg or 'end and the ELEMENT in
+question.
+
+We are usually interested in :contents-begin and :contents-end,
+qbut some greater elements such as src-block do not have them. In
+that case, we use :begin and :end. The :end prop needs to be too
+large; we need to sutract :post-blank from it. All these props
+are integers (points or number of blank lines.)"
   (let ((val
          (if (eq beg-or-end 'beg)
              (if-let ((val (org-element-property :contents-begin element)))
