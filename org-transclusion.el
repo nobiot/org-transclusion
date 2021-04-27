@@ -387,10 +387,11 @@ may or may not be useful. This needs to be thought through."
         (remove-text-properties tc-beg tc-end '(read-only)))
       t)))
 
-(defun org-transclusion-create-from-link ()
-  "WIP."
+(defun org-transclusion-create-from-link (&optional arg)
+  "Create a transclusion keyword in the first empty line below.
+When ARG (\\[universal-argument]) is non-nil, add the transcluded text as well."
   ;; check if at-point is a link file or id
-  (interactive)
+  (interactive "P")
   (let* ((context
           (org-element-lineage
            (org-element-context)'(link) t))
@@ -398,10 +399,14 @@ may or may not be useful. This needs to be thought through."
     (when (or (string= type "file")
               (string= type "id"))
       (let ((raw-link (org-element-property :raw-link context)))
-        (org-forward-element)
-        (insert (format "\n\n#+transclude: t \"%s\"\n\n" raw-link))
-        (forward-char -3)
-        (org-transclusion-add-at-point)))))
+        (save-excursion
+        (while (and (not (eq (line-beginning-position) (line-end-position)))
+                    (not (eobp)))
+          (forward-line))
+        (insert (format "\n#+transclude: t \"%s\"\n" raw-link))
+        (when arg
+          (forward-line -1)
+          (org-transclusion-add-at-point)))))))
 
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions for Transclude Keyword
