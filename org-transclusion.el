@@ -355,7 +355,8 @@ may or may not be useful. This needs to be thought through."
                      (org-element-property :begin tc-elem)))
            (tc-end (if (org-element-property :contents-end tc-elem)
                        (org-element-property :contents-end tc-elem)
-                     (org-element-property :end tc-elem)))
+                     (- (org-element-property :end tc-elem)
+                        (org-element-property :post-blank tc-elem))))
            (tc-ov (make-overlay tc-beg tc-end nil t t)) ;front-advance should be t
            (src-ov (org-transclusion-live-sync-source-make-overlay tc-end))
            (dups (list src-ov tc-ov)))
@@ -811,7 +812,8 @@ placed without a blank line."
                         (org-element-property :begin src-elem)))
              (src-end (if (org-element-property :contents-end src-elem)
                           (org-element-property :contents-end src-elem)
-                        (org-element-property :end src-elem))))
+                        (- (org-element-property :end src-elem)
+                           (org-element-property :post-blank src-elem)))))
         (make-overlay src-beg src-end nil t t)))))
 
 (defun org-transclusion-live-sync-source-remove-overlayay (beg end)
