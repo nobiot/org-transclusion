@@ -170,16 +170,17 @@ the mode, `toggle' toggles the state."
 (defun org-transclusion-activate ()
   "Activate automatic transclusions in the local buffer."
   (interactive)
-  (add-hook 'before-save-hook #'org-transclusion-remove-all-in-buffer nil t)
-  (add-hook 'after-save-hook #'org-transclusion-add-all-in-buffer nil t)
-  (add-hook 'kill-buffer-hook #'org-transclusion-remove-all-in-buffer nil t))
+  (add-hook 'before-save-hook #'org-transclusion-before-save-buffer nil t)
+  (add-hook 'after-save-hook #'org-transclusion-after-save-buffer nil t)
+  (add-hook 'kill-buffer-hook #'org-transclusion-before-save-buffer nil t))
 
 (defun org-transclusion-deactivate ()
   "Deactivate automatic transclusions in the local buffer."
   (interactive)
   (org-transclusion-remove-all-in-buffer)
-  (remove-hook 'before-save-hook #'org-transclusion-remove-all-in-buffer t)
-  (remove-hook 'after-save-hook #'org-transclusion-add-all-in-buffer t))
+  (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
+  (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
+  (remove-hook 'kill-buffer-hook #'org-transclusion-before-save-buffer t))
 
 (defun org-transclusion-add-at-point ()
   "Transclude text content where #+transclude at point points.
@@ -251,11 +252,7 @@ You can customize the keymap with using `org-transclusion-map':
         ;; Don't transclude if in transclusion overlay to avoid infinite
         ;; recursion
         (unless (org-transclusion--within-transclusion-p)
-          (org-transclusion-add-at-point)))))
-  (when org-transclusion-remember-point
-    (goto-char org-transclusion-remember-point)
-    ;;(recenter)
-    (setq org-transclusion-remember-point nil)))
+          (org-transclusion-add-at-point))))))
 
 (defun org-transclusion-remove-at-point ()
   "Remove transcluded text at point."
@@ -279,7 +276,6 @@ You can customize the keymap with using `org-transclusion-map':
 (defun org-transclusion-remove-all-in-buffer ()
   "Remove all transluded text regions in the current buffer."
   (interactive)
-  (setq org-transclusion-remember-point (point))
   (outline-show-all)
   (goto-char (point-min))
   (while (text-property-search-forward 'tc-id)
@@ -351,8 +347,8 @@ may or may not be useful. This needs to be thought through."
     ;;    (let ((org-transclusion-exclude-elements nil))
     ;;     (org-transclusion-refresh-at-poiont))
     (org-transclusion-refresh-at-poiont)
-    (remove-hook 'before-save-hook #'org-transclusion-remove-all-in-buffer t)
-    (remove-hook 'after-save-hook #'org-transclusion-add-all-in-buffer t)
+    (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
+    (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
     (let* ((tc-elem (org-transclusion-get-enclosing-element))
            (tc-beg (if (org-element-property :contents-begin tc-elem)
                        (org-element-property :contents-begin tc-elem)
@@ -727,6 +723,22 @@ TODO need to handle when the file does not exist."
            (list :tc-content content
                  :tc-beg-mkr beg
                  :tc-end-mkr end))))))
+
+;;-----------------------------------------------------------------------------
+;;; Supporting functions for buffer clean up
+
+(defun org-transclusion-before-save-buffer ()
+  "."
+  (setq org-transclusion-remember-point (point))
+  (org-transclusion-remove-all-in-buffer))
+
+(defun org-transclusion-after-save-buffer ()
+  "."
+  (org-transclusion-add-all-in-buffer)
+  (when org-transclusion-remember-point
+    (goto-char org-transclusion-remember-point)
+    ;;(recenter)
+    (setq org-transclusion-remember-point nil)))
 
 ;;-----------------------------------------------------------------------------
 ;;; Utility Functions and Macros
