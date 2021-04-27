@@ -113,6 +113,8 @@ See the functions delivered within org-tranclusion for the API signatures."
 
 ;;;; Variables
 
+(defvar-local org-transclusion-substring-advice-enabled nil)
+
 (defvar-local org-transclusion-remember-point nil)
 
 (defvar org-transclusion-link-open-hook
@@ -606,7 +608,8 @@ Assume you are at the beginning of the org element to transclude."
           ;; for dedicated darget = paragraph, parse-mode should be nil to
           ;; avoid getting the whole section
           (setq parse-mode nil))
-        (let* ((tree (progn (if only-element
+        (let* ((org-transclusion-substring-advice-enabled t)
+               (tree (progn (if only-element
                                 ;; Parse only the element in question (headline, table, paragraph, etc.)
                                 (progn
                                   (setq parse-mode nil) ; needed for table, list, block-quote, etc.
@@ -827,13 +830,16 @@ live edit will try to sync the deletion, and causes an error."
 (defun org-transclusion-buffer-substring-advice (orgfn start end)
   "Add id, copy the text-properties via `buffer-substring'"
   ;;(unless (get-text-property start 'org-transclusion-text-beg-mkr)
+  (if (not org-transclusion-substring-advice-enabled)
+      (funcall oldfn start end)
     (put-text-property start end
                        'org-transclusion-text-beg-mkr (org-transclusion--make-marker start))
     (put-text-property start end
                        'org-transclusion-text-end-mkr (org-transclusion--make-marker end))
     ;; (put-text-property start end
     ;;                      'org-transclusion-text-id (org-id-uuid)))
-    (buffer-substring start end))
+    (buffer-substring start end)))
+
 
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for meta-left/right: promote/demote a transcluded subtree
