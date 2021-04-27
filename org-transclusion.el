@@ -352,13 +352,8 @@ may or may not be useful. This needs to be thought through."
     (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
     (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
     (let* ((tc-elem (org-transclusion-get-enclosing-element))
-           (tc-beg (if-let ((beg (org-element-property :contents-begin tc-elem)))
-                       beg
-                     (org-element-property :begin tc-elem)))
-           (tc-end (if-let ((end (org-element-property :contents-end tc-elem)))
-                       end
-                     (- (org-element-property :end tc-elem)
-                        (org-element-property :post-blank tc-elem))))
+           (tc-beg (org-transclusion-element-get-beg-or-end 'beg tc-elem))
+           (tc-end (org-transclusion-element-get-beg-or-end 'end tc-elem))
            (tc-ov (make-overlay tc-beg tc-end nil t t)) ;front-advance should be t
            (src-ov (org-transclusion-live-sync-source-make-overlay tc-end))
            (dups (list src-ov tc-ov)))
@@ -809,13 +804,8 @@ placed without a blank line."
     (with-current-buffer src-buf
       (goto-char src-search-beg)
       (let* ((src-elem (org-transclusion-get-enclosing-element))
-             (src-beg (if (org-element-property :contents-begin src-elem)
-                          (org-element-property :contents-begin src-elem)
-                        (org-element-property :begin src-elem)))
-             (src-end (if (org-element-property :contents-end src-elem)
-                          (org-element-property :contents-end src-elem)
-                        (- (org-element-property :end src-elem)
-                           (org-element-property :post-blank src-elem)))))
+             (src-beg (org-transclusion-element-get-beg-or-end 'beg src-elem))
+             (src-end (org-transclusion-element-get-beg-or-end 'end src-elem))
         (make-overlay src-beg src-end nil t t)))))
 
 (defun org-transclusion-live-sync-source-remove-overlayay (beg end)
@@ -861,6 +851,19 @@ live edit will try to sync the deletion, and causes an error."
     ;;                      'org-transclusion-text-id (org-id-uuid)))
     (buffer-substring start end)))
 
+(defun org-transclusion-element-get-beg-or-end (beg-or-end element)
+  "."
+  (let ((val
+         (if (eq beg-or-end 'beg)
+             (if-let ((val (org-element-property :contents-begin element)))
+                 val
+               (org-element-property :begin element))
+           (when (eq beg-or-end 'end)
+             (if-let ((val (org-element-property :contents-end element)))
+                 val
+               (- (org-element-property :end element)
+                  (org-element-property :post-blank element)))))))
+    val))
 
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for meta-left/right: promote/demote a transcluded subtree
