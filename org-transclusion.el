@@ -477,9 +477,8 @@ It assumes that point is at a keyword."
          (tc-pair))
     (when (org-kill-is-subtree-p content)
       (let ((level (plist-get keyword-values :level)))
-        ;; FIXME Ugly to adjust level...
-        (when level (setq level (1- level)))
         (with-temp-buffer
+          (delay-mode-hooks (org-mode))
           (org-transclusion-paste-subtree level content t t)
           (setq content (buffer-string)))))
     (insert (org-transclusion-content-format content))
