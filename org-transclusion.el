@@ -83,32 +83,60 @@ See the functions delivered within org-tranclusion for the API signatures."
 
 ;;;; Faces
 
-(defface org-transclusion-source-block
+(defface org-transclusion-source-fringe
+  '((((class color) (min-colors 88) (background light)))
+    (((class color) (min-colors 88) (background dark)))
+    (t ))
+  "Face for source region's fringe being transcluded in another
+buffer."
+  :group 'org-transclusion)
+
+(defface org-transclusion-source
   '((((class color) (min-colors 88) (background light))
      :background "#ebf6fa" :extend t)
     (((class color) (min-colors 88) (background dark))
-     :background "#041529" :extend t))
-  "Face for transcluded block."
+     :background "#041529" :extend t)
+    (t
+     :foreground "darkgray"))
+  "Face for source region being transcluded in another buffer."
   :group 'org-transclusion)
 
-(defface org-transclusion-source-block-edit
-  '((((class color) (min-colors 88) (background light))
-     :background "#ebf6fa" :extend t)
-    (((class color) (min-colors 88) (background dark))
-     :background "#041529" :extend t))
-  "Face for transcluded block."
-  :group 'org-transclusion)
-
-(defface org-transclusion-block nil
-  "Face for transcluded block's fringe."
-  :group 'org-transclusion)
-
-(defface org-transclusion-block-edit
+(defface org-transclusion-source-edit
   '((((class color) (min-colors 88) (background light))
      :background "#fff3da" :extend t)
     (((class color) (min-colors 88) (background dark))
-     :background "##221000" :extend t))
-  "Face for transcluded block."
+     :background "##221000" :extend t)
+        (t
+     :background "chocolate4" :extend t))
+  "Face for element in the source being edited by another
+buffer."
+  :group 'org-transclusion)
+
+(defface org-transclusion-fringe
+  '((((class color) (min-colors 88) (background light)))
+    (((class color) (min-colors 88) (background dark)))
+    (t ))
+  "Face for transcluded region's fringe in the transcluding
+buffer."
+  :group 'org-transclusion)
+
+(defface org-transclusion
+  '((((class color) (min-colors 88) (background light))
+     :background "#ebf6fa" :extend t)
+    (((class color) (min-colors 88) (background dark))
+     :background "#041529" :extend t)
+    (t ))
+  "Face for transcluded region in the transcluding buffer."
+  :group 'org-transclusion)
+
+(defface org-transclusion-edit
+  '((((class color) (min-colors 88) (background light))
+     :background "#ebf6fa" :extend t)
+    (((class color) (min-colors 88) (background dark))
+     :background "#041529" :extend t)
+    (t
+     :background "forest green" :extend t))
+  "Face for element in the transcluding buffer in the edit mode."
   :group 'org-transclusion)
 
 ;;;; Variables
@@ -138,7 +166,7 @@ See the functions delivered within org-tranclusion for the API signatures."
     (define-key map (kbd "TAB") #'org-cycle)
     map))
 
-(define-fringe-bitmap 'org-transclusion-fringe
+(define-fringe-bitmap 'org-transclusion-fringe-bitmap
   [#b11000000
    #b11000000
    #b11000000
@@ -368,7 +396,7 @@ TODO: At the moment, only Org Mode files are supported."
       (overlay-put src-ov 'text-clones dups)
       (overlay-put src-ov 'modification-hooks
                    '(org-transclusion--text-clone--maintain))
-      (overlay-put src-ov 'face 'org-transclusion-source-block-edit)
+      (overlay-put src-ov 'face 'org-transclusion-source-edit)
       (overlay-put src-ov 'priority 50)
       ;; Transclusion Overlay
       (overlay-put tc-ov 'modification-hooks
@@ -376,7 +404,7 @@ TODO: At the moment, only Org Mode files are supported."
       (overlay-put tc-ov 'evaporate t)
       (overlay-put tc-ov 'tc-paired-src-edit-ov src-ov)
       (overlay-put tc-ov 'tc-type "src-edit-ov")
-      (overlay-put tc-ov 'face 'org-transclusion-block-edit)
+      (overlay-put tc-ov 'face 'org-transclusion-edit)
       (overlay-put tc-ov 'text-clones dups)
       (overlay-put tc-ov 'local-map (let ((map (make-sparse-keymap)))
                                    (define-key map (kbd "C-c C-c")
@@ -527,18 +555,13 @@ It assumes that point is at a keyword."
                                      tc-pair ,tc-pair
                                      tc-orig-keyword ,keyword-values
                                      ;; TODO Fringe is not supported for terminal
-                                     line-prefix ,(propertize
-                                                   "x"
-                                                   `display
-                                                   `(left-fringe org-transclusion-fringe org-transclusion-block))
-                                     wrap-prefix ,(propertize
-                                                   "x"
-                                                   `display
-                                                   `(left-fringe org-transclusion-fringe org-transclusion-block))))
+                                     line-prefix ,(org-transclusion-propertize-transclusion)
+                                     wrap-prefix ,(org-transclusion-propertize-transclusion)))
     ;; Put to the source overlay
     (overlay-put ov-src 'tc-by beg-mkr)
     (overlay-put ov-src 'evaporate t)
-    ;;(overlay-put ov-src 'face 'org-transclusion-source-block)
+    (overlay-put ov-src 'line-prefix (org-transclusion-propertize-source))
+    (overlay-put ov-src 'wrap-prefix (org-transclusion-propertize-source))
     (overlay-put ov-src 'priority -50)
     (overlay-put ov-src 'tc-pair tc-pair)
     t))
@@ -811,6 +834,26 @@ placed without a blank line."
   (let ((marker (set-marker (make-marker) point)))
     (set-marker-insertion-type marker t)
     marker))
+
+(defun org-transclusion-propertize-transclusion ()
+  "."
+  (if (not (display-graphic-p))
+      (propertize "| " 'face 'org-transclusion)
+    (propertize
+     "x"
+     'display
+     '(left-fringe org-transclusion-fringe-bitmap
+                   org-transclusion-fringe))))
+
+(defun org-transclusion-propertize-source ()
+  "."
+    (if (not (display-graphic-p))
+        (propertize "| " 'face 'org-transclusion-source)
+      (propertize
+       "x"
+       `display
+       `(left-fringe empty-line
+                     org-transclusion-source-fringe))))
 
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for live-sync
