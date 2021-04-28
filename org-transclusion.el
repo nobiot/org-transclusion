@@ -124,7 +124,7 @@ See the functions delivered within org-tranclusion for the API signatures."
 
 (defvar org-transclusion-get-keyword-values-hook
   '(org-transclusion-keyword-get-value-active-p
-    org-transclusion-keyword-get-value-path
+    org-transclusion-keyword-get-value-link
     org-transclusion-keyword-get-value-level))
 
 (defvar org-transclusion-map
@@ -189,12 +189,15 @@ the mode, `toggle' toggles the state."
 
 Examples of acceptable formats are as below:
 
-- \"#+transclude: t/nil \"file:path/to/file.org::search-option\" :level n\"
-- \"#+transclude: t/nil \"id:uuid\" :level n\"
+- \"#+transclude: t[nil] [[file:path/to/file.org::search-option][optional desc]] :level n\"
+- \"#+transclude: t[nil] [[id:uuid]] :level n\"
 
 The file path or id are tranlated to the normal Org Mode link
 format such as [[file:path/tofile.org::*Heading]] or [[id:uuid]]
 to copy the text content of the link target.
+
+TODO: id:uuid without brackets [[]] is a valid link within Org
+Mode. This is not supported yet.
 
 A transcluded text region is read-only, but you can activate the
 live-sync edit mode by calling `org-transclusion-live-sync-start-at-point'. This edit mode is analogous to Occur Edit
@@ -207,7 +210,7 @@ You can customize the keymap with using `org-transclusion-map':
   (interactive)
   (when-let* ((keyword-plist (org-transclusion-keyword-get-string-to-plist))
               (link (org-transclusion-wrap-path-to-link
-                     (plist-get keyword-plist :path)))
+                     (plist-get keyword-plist :link)))
               (type (org-element-property :type link)))
     ;; The transclusion needs to be active, and the link type needs to be
     ;; either id or file
@@ -341,7 +344,9 @@ TODO State management of live sync together with more explicit
 managemetn of before- and after-save-buffer-hooks.
 
 TODO source buffer opens when it is not open. The line position
-may or may not be useful. This needs to be thought through."
+may or may not be useful. This needs to be thought through.
+
+TODO: At the moment, only Org Mode files are supported."
   (interactive)
   (if (not (org-transclusion--within-transclusion-p))
       (progn (message "This is not a translusion.") nil)
@@ -382,25 +387,44 @@ may or may not be useful. This needs to be thought through."
       t)))
 
 (defun org-transclusion-create-from-link (&optional arg)
-  "Create a transclusion keyword in the first empty line below.
-When ARG (\\[universal-argument]) is non-nil, add the transcluded text as well."
+  "Create a transclusion keyword from a link at point.
+The resultant transclusion keyword will be placed in the first
+empty line below.
+
+TODO: At the moment, the empty line needs to be clear of spaces
+and tabs.
+
+When `org-transclusion-mode' is active, this function
+automatically transclude the text content; when it is inactive,
+it simply adds \"#+transclude t [[link]]\" for the link.
+
+You can pass a prefix ARGument with using
+`digit-argument' (e.g. C-1, C-2, or C-u 3, so on). If you pass a
+positive number 1-9, then this function automatically inserts the
+:level property of the resultant transclusion."
   ;; check if at-point is a link file or id
   (interactive "P")
-  (let* ((context
-          (org-element-lineage
-           (org-element-context)'(link) t))
+  (let* ((context (org-element-lineage
+                   (org-element-context)'(link) t))
          (type (org-element-property :type context)))
     (when (or (string= type "file")
               (string= type "id"))
-      (let ((raw-link (org-element-property :raw-link context)))
+      (let* ((contents-beg (org-element-property :contents-begin context))
+             (contents-end (org-element-property :contents-end context))
+             (contents (when contents-beg (buffer-substring-no-properties contents-beg contents-end)))
+             (link (org-element-link-interpreter context contents)))
         (save-excursion
-        (while (and (not (eq (line-beginning-position) (line-end-position)))
-                    (not (eobp)))
-          (forward-line))
-        (insert (format "\n#+transclude: t \"%s\"\n" raw-link))
-        (when arg
+          (while (and (not (eq (line-beginning-position) (line-end-position)))
+                      (not (eobp)))
+            (forward-line))
+          (insert (format "#+transclude: t %s\n" link))
           (forward-line -1)
-          (org-transclusion-add-at-point)))))))
+          (when (and (numberp arg)
+                     (> arg 0)
+                     (<= arg 9))
+            (end-of-line)
+            (insert (format " :level %d" arg)))
+          (when org-transclusion-mode (org-transclusion-add-at-point)))))))
 
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions for Transclude Keyword
@@ -420,14 +444,26 @@ When ARG (\\[universal-argument]) is non-nil, add the transcluded text as well."
         plist))))
 
 (defun org-transclusion-keyword-get-value-active-p (value)
+  "It is a utility function used converting a keyword string to
+plist. It is meant to be used by
+`org-transclusion-get-string-to-plist'.  It needs to be set in
+`org-transclusion-get-keyword-values-hook'."
   (when (string-match "^\\(t\\|nil\\).*$" value)
     (list :active-p (org-transclusion--not-nil (match-string 1 value)))))
 
-(defun org-transclusion-keyword-get-value-path (value)
-  (when (string-match "\\(\".+?\"\\)" value)
-    (list :path (org-strip-quotes (match-string 0 value)))))
+(defun org-transclusion-keyword-get-value-link (value)
+  "It is a utility function used converting a keyword string to
+plist. It is meant to be used by
+`org-transclusion-get-string-to-plist'.  It needs to be set in
+`org-transclusion-get-keyword-values-hook'."
+  (when (string-match "\\(\\[\\[.+?\\]\\]\\)" value)
+    (list :link (org-strip-quotes (match-string 0 value)))))
 
 (defun org-transclusion-keyword-get-value-level (value)
+  "It is a utility function used converting a keyword string to
+plist. It is meant to be used by
+`org-transclusion-get-string-to-plist'.  It needs to be set in
+`org-transclusion-get-keyword-values-hook'."
   (when (string-match ":level *\\([1-9]\\)" value)
     (list :level (string-to-number (org-strip-quotes (match-string 1 value))))))
 
@@ -440,24 +476,14 @@ It assumes that point is at a keyword."
          (post-blank (org-element-property :post-blank elm)))
     (delete-region beg (- end post-blank)) t))
 
-;; (defun org-transclusion--turn-off-keyword (values)
-;;   "Return the keyword string with the \":active-p\" prop removed.
-;; Not used..."
-;;   (let ((path (plist-get values :path))
-;;         (level (plist-get values :level)))
-;;     (concat "#+transclude: "
-;;             " \"" path "\""
-;;             (when level (format " :level %d" level))
-;;             "\n")))
-
-(defun org-transclusion-keyword-plist-to-string (values)
+(defun org-transclusion-keyword-plist-to-string (plist)
   "."
-  (let ((active-p (plist-get values :active-p))
-        (path (plist-get values :path))
-        (level (plist-get values :level)))
+  (let ((active-p (plist-get plist :active-p))
+        (link (plist-get plist :link))
+        (level (plist-get plist :level)))
     (concat "#+transclude: "
             (symbol-name active-p)
-            " \"" path "\""
+            " " link
             (when level (format " :level %d" level))
             "\n")))
 
@@ -555,7 +581,7 @@ Return nil if not found."
 
 (defun org-transclusion-link-open-other-file-links (tc-params link)
      ;; For non-Org files
-     ((setq tc-params (org-transclusion--get-custom-tc-params link))))
+     (setq tc-params (org-transclusion--get-custom-tc-params link)))
 
 (defun org-transclusion-content-get-from-org-marker (marker)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from MARKER.
@@ -756,7 +782,8 @@ TODO need to handle when the file does not exist."
 (defun org-transclusion-wrap-path-to-link (path)
   "Take PATH string. Return Org link object."
   (with-temp-buffer
-    (insert (concat "[[" path "]]"))
+    (delay-mode-hooks (org-mode))
+    (insert path)
     (org-element-context)))
 
 (defun org-transclusion--org-file-p (path)
@@ -789,7 +816,8 @@ placed without a blank line."
 ;;;; Functions for live-sync
 
 (defun org-transclusion-live-sync-source-make-overlay (limit)
-  "."
+  ".
+TODO: At the moment, only Org Mode files are supported."
   (let ((src-buf (overlay-buffer (get-text-property (point) 'tc-pair)))
         ;; I will keep src-buf to be gotten from tc-pair.
         ;; I might not keep org-transclusion-text-beg-mkr
