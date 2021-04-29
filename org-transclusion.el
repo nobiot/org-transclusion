@@ -891,22 +891,55 @@ live edit will try to sync the deletion, and causes an error."
         (delete-overlay (overlay-get ov 'tc-paired-src-edit-ov))))))
 
 (defun org-transclusion-get-enclosing-element ()
-  "."
+  "Returns org element for live-sync.
+This assumes the point is within the element (at point).
+
+This function works in a temporary org buffer to isolate the
+transcluded region and source region from the rest of the
+original buffer. This is required especially when translusion is
+for a paragraph, which can be right next to another paragraph
+without a blank space; thus, subsumed by the surrounding
+paragraph.
+
+TODO: For source buffer, this function works on overlay. It feels a bit
+fragile, and inconsistent with the way translused region works.
+"
   (interactive)
-  (let* ((context
-          (org-element-lineage
-           (org-element-context) '(center-block comment-block
-           drawer dynamic-block example-block export-block
-           fixed-width latex-environment plain-list
-           property-drawer quote-block special-block src-block
-           table verse-block keyword) t)))
-    ;; For a paragraph
-    (unless context
-      (setq context
-            (org-element-lineage
-             (org-element-context) '(paragraph)
-             t)))
-    context))
+  (let* ((beg (or (when-let ((m (get-char-property (point) 'tc-beg-mkr)))
+                    (marker-position m))
+                  (overlay-start (get-char-property (point) 'tc-pair))))
+         (end (or (when-let ((m (get-char-property (point) 'tc-end-mkr)))
+                    (marker-position m))
+                  (overlay-end (get-char-property (point) 'tc-pair))))
+         (content (buffer-substring beg end))
+         (pos (point)))
+    (if (or (not content)
+            (string= content ""))
+        (message "Live sync cannot start here.")
+      (with-temp-buffer
+        (delay-mode-hooks (org-mode))
+        ;; Calibrate the start position "Move" to the beg - 1 (buffer position
+        ;; with 1, not 0)
+        (insert-char ?\n (1- beg))
+        (insert content)
+        (goto-char pos)
+        (let ((context
+               (or (org-element-lineage (org-element-context)
+                                        '(center-block
+                                          comment-block drawer
+                                          dynamic-block
+                                          example-block
+                                          export-block fixed-width
+                                          latex-environment
+                                          plain-list
+                                          property-drawer
+                                          quote-block special-block
+                                          src-block table
+                                          verse-block keyword) 'with-self)
+                   ;; For a paragraph
+                   (org-element-lineage
+                    (org-element-context) '(paragraph) 'with-self))))
+          context)))))
 
 (defun org-transclusion-buffer-substring-advice (orgfn start end)
   "Add id, copy the text-properties via `buffer-substring'"
