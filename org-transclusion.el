@@ -902,8 +902,7 @@ without a blank space; thus, subsumed by the surrounding
 paragraph.
 
 TODO: For source buffer, this function works on overlay. It feels a bit
-fragile, and inconsistent with the way translused region works.
-"
+fragile, and inconsistent with the way transcluded region works."
   (interactive)
   (let* ((beg (or (when-let ((m (get-char-property (point) 'tc-beg-mkr)))
                     (marker-position m))
