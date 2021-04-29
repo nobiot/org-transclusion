@@ -212,6 +212,46 @@ the mode, `toggle' toggles the state."
   (remove-hook 'kill-buffer-hook #'org-transclusion-before-save-buffer t)
   (remove-hook 'kill-emacs-hook #'org-transclusion-before-save-buffer t))
 
+(defun org-transclusion-create-from-link (&optional arg)
+  "Create a transclusion keyword from a link at point.
+The resultant transclusion keyword will be placed in the first
+empty line below.
+
+TODO: At the moment, the empty line needs to be clear of spaces
+and tabs.
+
+When `org-transclusion-mode' is active, this function
+automatically transclude the text content; when it is inactive,
+it simply adds \"#+transclude t [[link]]\" for the link.
+
+You can pass a prefix ARGument with using
+`digit-argument' (e.g. C-1, C-2, or C-u 3, so on). If you pass a
+positive number 1-9, then this function automatically inserts the
+:level property of the resultant transclusion."
+  ;; check if at-point is a link file or id
+  (interactive "P")
+  (let* ((context (org-element-lineage
+                   (org-element-context)'(link) t))
+         (type (org-element-property :type context)))
+    (when (or (string= type "file")
+              (string= type "id"))
+      (let* ((contents-beg (org-element-property :contents-begin context))
+             (contents-end (org-element-property :contents-end context))
+             (contents (when contents-beg (buffer-substring-no-properties contents-beg contents-end)))
+             (link (org-element-link-interpreter context contents)))
+        (save-excursion
+          (while (and (not (eq (line-beginning-position) (line-end-position)))
+                      (not (eobp)))
+            (forward-line))
+          (insert (format "#+transclude: t %s\n" link))
+          (forward-line -1)
+          (when (and (numberp arg)
+                     (> arg 0)
+                     (<= arg 9))
+            (end-of-line)
+            (insert (format " :level %d" arg)))
+          (when org-transclusion-mode (org-transclusion-add-at-point)))))))
+
 (defun org-transclusion-add-at-point ()
   "Transclude text content where #+transclude at point points.
 
@@ -413,46 +453,6 @@ TODO: At the moment, only Org Mode files are supported."
       (with-silent-modifications
         (remove-text-properties tc-beg tc-end '(read-only)))
       t)))
-
-(defun org-transclusion-create-from-link (&optional arg)
-  "Create a transclusion keyword from a link at point.
-The resultant transclusion keyword will be placed in the first
-empty line below.
-
-TODO: At the moment, the empty line needs to be clear of spaces
-and tabs.
-
-When `org-transclusion-mode' is active, this function
-automatically transclude the text content; when it is inactive,
-it simply adds \"#+transclude t [[link]]\" for the link.
-
-You can pass a prefix ARGument with using
-`digit-argument' (e.g. C-1, C-2, or C-u 3, so on). If you pass a
-positive number 1-9, then this function automatically inserts the
-:level property of the resultant transclusion."
-  ;; check if at-point is a link file or id
-  (interactive "P")
-  (let* ((context (org-element-lineage
-                   (org-element-context)'(link) t))
-         (type (org-element-property :type context)))
-    (when (or (string= type "file")
-              (string= type "id"))
-      (let* ((contents-beg (org-element-property :contents-begin context))
-             (contents-end (org-element-property :contents-end context))
-             (contents (when contents-beg (buffer-substring-no-properties contents-beg contents-end)))
-             (link (org-element-link-interpreter context contents)))
-        (save-excursion
-          (while (and (not (eq (line-beginning-position) (line-end-position)))
-                      (not (eobp)))
-            (forward-line))
-          (insert (format "#+transclude: t %s\n" link))
-          (forward-line -1)
-          (when (and (numberp arg)
-                     (> arg 0)
-                     (<= arg 9))
-            (end-of-line)
-            (insert (format " :level %d" arg)))
-          (when org-transclusion-mode (org-transclusion-add-at-point)))))))
 
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions for Transclude Keyword
