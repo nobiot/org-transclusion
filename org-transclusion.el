@@ -145,7 +145,20 @@ buffer."
 
 (defvar-local org-transclusion-remember-point nil)
 
-(defvar-local org-transclusion-temp-window-config nil)
+(defvar-local org-transclusion-temp-window-config nil
+  "Rember window config (the arrangment of windows) for the
+  current buffer. This is for live-sync.
+
+Analogous to `org-edit-src-code'.")
+
+(defvar org-transclusion-live-sync-marker nil
+  "Marker to keep track of the single live-sync buffer and
+  point.
+
+The live-sync edit should be a focused and deliberate
+action. It's easy to forget the fact live-sync is on. The intent
+of this global variable is to make the live-sync location a
+\"singleton\" -- only one available in an Emacs session.")
 
 (defvar org-transclusion-link-open-hook
   '(org-transclusion-link-open-org-id
@@ -423,7 +436,9 @@ TODO: At the moment, only Org Mode files are supported."
     ;; Temporarily deactivate filter
     ;;    (let ((org-transclusion-exclude-elements nil))
     ;;     (org-transclusion-refresh-at-poiont))
+    (org-transclusion-live-sync-remove-others)
     (org-transclusion-refresh-at-poiont)
+    (setq org-transclusion-live-sync-marker (org-transclusion--make-marker (point)))
     (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
     (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
     (let* ((tc-elem (org-transclusion-get-enclosing-element))
@@ -455,20 +470,6 @@ TODO: At the moment, only Org Mode files are supported."
       (with-silent-modifications
 	(remove-text-properties tc-beg tc-end '(read-only)))
       t)))
-
-(defun org-transclusion-live-sync-display-buffer (buffer)
-  (setq org-transclusion-temp-window-config (current-window-configuration))
-  (delete-other-windows)
-  (display-buffer buffer))
-
-(defun org-transclusion-live-sync-exit-at-poiont ()
-  "Exit live-sync at point."
-  (interactive)
-  (org-transclusion-refresh-at-poiont)
-  (when org-transclusion-temp-window-config
-    (unwind-protect
-	(set-window-configuration org-transclusion-temp-window-config)
-      (setq org-transclusion-temp-window-config nil))))
 
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions for Transclude Keyword
@@ -993,6 +994,44 @@ are integers (points or number of blank lines.)"
 	       (- (org-element-property :end element)
 		  (org-element-property :post-blank element)))))))
     val))
+
+(defun org-transclusion-live-sync-remove-others ()
+  "Remove other live-sync regions in other buffers.
+This is deliberately done -- a single live-sync edit region
+globally in an Emacs session."
+  (when-let ((m org-transclusion-live-sync-marker))
+    (with-current-buffer (marker-buffer m)
+      (org-with-wide-buffer
+       (goto-char m)
+       (org-transclusion-refresh-at-poiont)))))
+
+(defun org-transclusion-live-sync-display-buffer (buffer)
+  "Display the source buffer upon entering live-sync edit.
+It rembembers the current arrangement of windows (window
+configuration), deletes the other windows, and displays
+BUFFER (intended to be the source buffer being edited in
+live-sync.)
+
+This is analogous to `org-edit-src-code' -- by default, it
+layouts the edit and original buffers side-by-side.
+
+Upon exiting live-sync, `org-transclusion-live-sync-at-point'
+attempts to bring back the original window configuration."
+  (setq org-transclusion-temp-window-config (current-window-configuration))
+  (delete-other-windows)
+  (display-buffer buffer))
+
+(defun org-transclusion-live-sync-exit-at-poiont ()
+  "Exit live-sync at point.
+It attemps to re-arrange the windows for the current buffer to
+the state before live-sync started."
+  (interactive)
+  (org-transclusion-refresh-at-poiont)
+  (setq org-transclusion-live-sync-marker nil)
+  (when org-transclusion-temp-window-config
+    (unwind-protect
+	(set-window-configuration org-transclusion-temp-window-config)
+      (setq org-transclusion-temp-window-config nil))))
 
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for meta-left/right: promote/demote a transcluded subtree
