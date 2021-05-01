@@ -8,6 +8,12 @@ file:https://img.shields.io/badge/License-GPLv3-blue.svg]]
 
 Transclusion is the ability to include content from one file into another by reference. Org-transclusion lets you do this in your Org file. 
 
+#+caption: Figure 1. Animation to show creation of a transclusion from an ID link
+[[./resources/2021-05-01-org-transclusion-0.1.0-create.gif]]
+
+#+caption: Figure 2. Animation to show live sync from transclusion to source
+[[./resources/2021-05-01-org-transclusion-0.1.0-live-sync.gif]]
+
 When I start writing a long-form material, I want to begin with looking through my note and assemble relevant notes to form a basis of the final outcome quickly. As I organise my notes in a repository, I also want to avoid having multiple copies of notes flying around.
 
 Transclusion should let me do this.
@@ -15,12 +21,6 @@ Transclusion should let me do this.
 I am dabbling in the Zettelkasten method with using [[https://www.orgroam.com/][Org-roam]] to feed my ideas into the repository. As such, although Org-transclusion is a standalone package, I would like to keep workflow seamless between Org-roam and Org-transclusion.
 
 This package is an attempt to enable transclusion with Org Mode in Emacs. It is my take on the [[*Original idea by John Kitchin][idea by John Kitchin]].
-
-* Screenshots
-
-This screenshot shows how to frobnicate the fripulator:
-
-[[screenshot1.png]]
 
 * Contents                                                         :noexport:
 :PROPERTIES:
@@ -65,6 +65,10 @@ To transclude content via a reference, use one of the following commands:
 - =org-transclusion-create-from-link=
 - =org-transclusion-add-at-point=
 - =org-transclusion-add-all-in-buffer=
+
+=[[id:20210501T171427.051019]Bertrand Russell]]=
+
+=#+transclude: t [[id:20210501T171427.051019][Bertrand Russell]]=
 
 The minor mode is automatically turned on through one of these commands. All it does is to call =org-transclusion-activate=  to activate hooks to keep file in the filesystem clean and clear of the transcluded content. 
 
