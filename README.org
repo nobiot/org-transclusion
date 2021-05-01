@@ -56,40 +56,183 @@ Download or clone this repo, put this file in your load-path, and put something 
 :TOC:      :depth 0
 :END:
 
-  Run one of these commands:
+** Starting Org-transclusion local minor mode
 
-  + =package-name-command=: Frobnicate the flange.
+Org-transclusion is an Emacs local minor mode. It is design to be used in your Org file together with Org Mode. As it is a local minor mode, you turn it on and off for each buffer.
 
-** Tips
+To transclude content via a reference, use one of the following commands:
 
-+ You can customize settings in the =package-name= group.
+- =org-transclusion-create-from-link=
+- =org-transclusion-add-at-point=
+- =org-transclusion-add-all-in-buffer=
+
+The minor mode is automatically turned on through one of these commands. All it does is to call =org-transclusion-activate=  to activate hooks to keep file in the filesystem clean and clear of the transcluded content. 
+
+Turn off the minor mode, or use =org-transclusion-deactivate=
+
+The minor mode is just a conveniet wrapper to toggle =activate= and =deactivate= commands. 
+
+** Transclude text content
+
+Use one of these commands to transclude text content.
+
+- =org-transclusion-create-from-link=  
+- =org-transclusion-add-at-point=
+- =org-transclusion-add-all-in-buffer=
+
+Transclusion works for:
+
+- =ID= links (=Org-ID=) to Org files
+- =file= links to Org files and non-Org text files
+
+For links to Org files, options also work such as links to a headline or paragraph via =dedicated target=. Refer to [[*Org links supported][Org links supported]].
+
+Transcluded text region will be read-only.
+
+Refer to [[*Live-sync edit (experimental)][Live-sync edit]] for Org-translusion's edit feature.
+
+You can customize the local keybindings for transclusions by =org-transclusion-map=. If you use vim keybindings (e.g. =evil-mode=), it is advised that you review the default keybindings.
+
+*** COMMENT =org-transclusion-map=                                 :noexport:
+
+#+begin_src elisp
+(substitute-command-keys "\\{org-transclusion-map}")
+#+end_src
+
+#+RESULTS:
+#+begin_example
+key             binding
+---             -------
+
+TAB		org-cycle
+D		org-transclusion-demote-subtree
+P		org-transclusion-promote-subtree
+d		org-transclusion-remove-at-point
+e		org-transclusion-live-sync-start-at-point
+g		org-transclusion-refresh-at-poiont
+o		org-transclusion-open-source
+
+#+end_example
+
+
+- =org-transclusion-remove-at-point=
+- =org-transclusion-remove-all-in-buffer=
+
+- =org-transclusion-refresh-at-point=
+
+- =org-transclusion-promote-subtree=
+- =org-transclusion-demote-subtree=
+
+- =org-transclusion-open-source=
+
+** Live-sync edit (experimental)
+
+You can start live-sync edit by pressing <kbd>e</kbd> (by default) on a text element you want to edit. This will put a colored overlay on top of the region being live-synced and brings up another buffer that visits the source file of the transclusion. The source buffer will also have a corresponding overlay to the region being edited and live-synced.
+
+If you have other windows open, they will be temporarily hidden -- Org-transclusion will remembers your current window layout and attempts to recover it when you exit live-sync edit.
+
+In the live-sync edit region, you can freely type to edit the tranclusion or source regions; they will sync simultaneously.
+
+One done editing, press <kbd>C-c C-c</kbd> to exit live-sync edit. The key is bound to =org-transclusion-live-sync-exit-at-point=. It will turn off the live sync edit but keep the transclusion on. 
+
+In the live-sync edit region, the normal =yank= command (=C-y=) is replaced with a special command =org-transclusion-live-sync-paste=. This command lets the pasted text inherit the text-properties of the transcluded region correctly; the normal yank does not have this feature and thus causes some inconvenience in live-sync edit. If you use vim keybindings (e.g. =evil-mode=), it is advised that you review the default keybindings. You can customize the local keybindings for the live-sync region by =org-transclusion-live-sync-map=. 
+
+**Note**: that during live-sync edit, file's content gets saved to the filesystem as is -- i.e. the transcluded text will be saved instead of the =#+transclude:= keyword. If you kill buffer or quit Emacs, other hooks will still remove the transclusion to keep the file clear of the transcluded copy, leaving only the keyword in the file system.
+
+*** COMMENT =org-transclusion-live-sync-map=                       :noexport:
+
+#+begin_src elisp
+(substitute-command-keys "\\{org-transclusion-live-sync-map}")
+#+end_src
+
+
+ 
+** Commands
+
+- =org-transclusion-activate= ::
+  Toggle Org-transclusion minor mode.
+  
+- =org-transclusion-deactivate= :: 
+
+- =org-transclusion-create-from-link= ::
+  
+- =org-transclusion-add-at-point= ::
+- =org-transclusion-add-all-in-buffer= ::
+- =org-transclusion-remove-at-point= :: 
+- =org-transclusion-remove-all-in-buffer= :: 
+- =org-transclusion-refresh-at-point= :: 
+- =org-transclusion-promote-subtree= :: 
+- =org-transclusion-demote-subtree= :: 
+- =org-transclusion-open-source= :: 
+- =org-transclusion-live-sync-start-at-point= :: 
+- =org-transclusion-live-sync-exit-at-poiont= :: 
+- =org-transclusion-live-sync-paste= ::
+
+
+** Org links supported
+
+Transclusion has been tested to work for the following types of links:
+
+- File link for an entire org file/buffer; e.g. =[[file:~/org/file.org][My Org Notes]]=
+- File link with =::*heading=
+- File link with =::#custom-id=
+- File link with =::name= for blocks (e.g. blocked quotations), tables, and links
+- File link with =::dedicated-target=; this is intended for linking to a paragraph. See below.
+- ID link =id:uuid=
+- File link for non-org files (tested with =.txt= and =.md=); for these, the whole buffer gets transcluded
+
+For transcluding a specific paragraph, Org-transclusion relies on Org mode's [[https://orgmode.org/manual/Internal-Links.html#Internal-Links][dedicated-target]]. The target paragraph must be identifiable by a dedicated target with a =<<paragraph-id>>=: 
+
+#+begin_example
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Suspendisse ac velit fermentum, sodales nunc in,
+tincidunt quam. <<paragraph-id>>
+#+end_example
+
+It is generally assumed that the paragraph-id is placed after its content, but it is not an absolute requirement; it can be in the beginning (before the content) or in the middle of it.
+ 
+* Customizing
+
+- You can customize settings in the =org-transclusion= group.
+
+** Customizable filter to exclude certain Org elements
+
+Set customizable variable =org-transclusion-exclude-elements= to define which elements to be **excluded** in the transclusion.
+
+The filter works for all supported types of links within an Org file when transcluding an entire Org file, and parts of it (headlines, custom ID, etc.). There is no filter for non-Org files.
+
+It is a list of symbols, and the default is =(property-drawer)=. The accepted values are the ones defined by =org-element-all-elements= (Org's standard set of elements; refer to its documentation for an exhaustive list).
+
+How to use it is demonstrated in [[https://youtu.be/hz92vaO8IgQ][YouTube video #5]] as well.
+
+** Include the section before the first headline (Org file only)
+
+You can now include the first section (section before the first headline) of an Org file. It is toggled via customizing variable =org-transclusion-include-first-section=. Its default value is =nil=. Set it to =t= (or non-nil) to transclude the first section. It works when the first section is followed by headlines (only lightly tested; I will appreciate your testing. I might need to consider retracting this feature if it proves to be too buggy).
+
+** Faces & fringe bitmap
+- org-transclusion-source-fringe
+- org-transclusion-source
+- org-transclusion-source-edit
+- org-transclusion-fringe
+- org-transclusion
+- org-transclusion-edit
+
+I do not know if bitmap can be customizable after it's been defined (TBC).
+- org-transclusion-fringe-bitmap ::
+  It is used for the fringe that indicates the transcluded region. It works only in a graphical environment (not in terminal).
+
+** Keybindings
+
+- =org-transclusion-map=
+- =org-transclusion-live-sync-map=
 
 * Changelog
 :PROPERTIES:
 :TOC:      :depth 0
 :END:
 
-** 1.1.0
-
-*Additions*
-+  Add command =package-name-debarnacle= to de-barnacle the hull.
-
-*Changes*
-+ Command =package-name-anchor= now takes an argument, =weigh= or =let-go=.
-
-*Internal*
-+  Rewrote input parsing.
-+  Factored out anchor-weighing.
-
-** 1.0.1
-
-*Fixes*
-+  Ensure anchor is secure before returning from =package-name-anchor=.
-
-** 1.0.0
-
-Initial release.
-
+** 0.1.0
+As described in this version.
 * Credits
 
 ** Original idea by John Kitchin
