@@ -181,6 +181,12 @@ of this global variable is to make the live-sync location a
     (define-key map (kbd "TAB") #'org-cycle)
     map))
 
+(defvar org-transclusion-live-edit-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-c") #'org-transclusion-live-sync-exit-at-poiont)
+    (define-key map (kbd "C-y") #'org-transclusion-live-sync-paste)
+    map))
+
 (define-fringe-bitmap 'org-transclusion-fringe-bitmap
   [#b11000000
    #b11000000
@@ -464,10 +470,7 @@ TODO: At the moment, only Org Mode files are supported."
       (overlay-put tc-ov 'tc-type "src-edit-ov")
       (overlay-put tc-ov 'face 'org-transclusion-edit)
       (overlay-put tc-ov 'text-clones dups)
-      (overlay-put tc-ov 'local-map (let ((map (make-sparse-keymap)))
-				   (define-key map (kbd "C-c C-c")
-				     #'org-transclusion-live-sync-exit-at-poiont)
-				   map))
+      (overlay-put tc-ov 'local-map org-transclusion-live-edit-map)
       (with-silent-modifications
 	(remove-text-properties tc-beg tc-end '(read-only)))
       (setq org-transclusion-live-sync-marker (org-transclusion--make-marker (point)))
