@@ -1,4 +1,4 @@
-file:https://img.shields.io/badge/License-GPLv3-blue.svg]]
+[[file:https://img.shields.io/badge/License-GPLv3-blue.svg]]
 
 #+title: Org-transclusion
 
