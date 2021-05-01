@@ -95,7 +95,7 @@ For links to Org files, options also work such as links to a headline or paragra
 
 Transcluded text region will be read-only.
 
-Refer to [[live-sync-edit][Live-sync edit]] for Org-translusion's edit feature.
+Refer to [[#live-sync-edit][Live-sync edit]] for Org-translusion's edit feature.
 
 You can customize the local keybindings for transclusions by =org-transclusion-map=. If you use vim keybindings (e.g. =evil-mode=), it is advised that you review the default keybindings.
 
