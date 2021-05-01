@@ -14,7 +14,7 @@ Transclusion helps me do this.
 
 I am dabbling in the Zettelkasten method with using [[https://www.orgroam.com/][Org-roam]] to feed my ideas into the repository. As such, although Org-transclusion is a standalone package, I would like to keep workflow seamless between Org-roam and Org-transclusion.
 
-This package is an attempt to enable transclusion with Org Mode in Emacs. It is my take on the [[#john-kitchin][idea by John Kitchin]].
+This package is an attempt to enable transclusion with Org Mode in Emacs. It is my take on the [[#original-idea-by-john-kitchin][idea by John Kitchin]].
 
 #+caption: Figure 1. Animation to show creation of a transclusion from an ID link
 [[./resources/2021-05-01-org-transclusion-0.1.0-create.gif]]
@@ -131,18 +131,18 @@ o		org-transclusion-open-source
 
 - =org-transclusion-open-source=
 
-** Live-sync edit (experimental)
+** Live-sync edit
 :PROPERTIES:
 :CUSTOM_ID: live-sync-edit
 :END:
 
-You can start live-sync edit by pressing <kbd>e</kbd> (by default) on a text element you want to edit. This will put a colored overlay on top of the region being live-synced and brings up another buffer that visits the source file of the transclusion. The source buffer will also have a corresponding overlay to the region being edited and live-synced.
+**Experimental.** You can start live-sync edit by pressing =e= (by default) on a text element you want to edit. This will put a colored overlay on top of the region being live-synced and brings up another buffer that visits the source file of the transclusion. The source buffer will also have a corresponding overlay to the region being edited and live-synced.
 
 If you have other windows open, they will be temporarily hidden -- Org-transclusion will remembers your current window layout and attempts to recover it when you exit live-sync edit.
 
 In the live-sync edit region, you can freely type to edit the tranclusion or source regions; they will sync simultaneously.
 
-One done editing, press <kbd>C-c C-c</kbd> to exit live-sync edit. The key is bound to =org-transclusion-live-sync-exit-at-point=. It will turn off the live sync edit but keep the transclusion on. 
+One done editing, press =C-c C-c= to exit live-sync edit. The key is bound to =org-transclusion-live-sync-exit-at-point=. It will turn off the live sync edit but keep the transclusion on. 
 
 In the live-sync edit region, the normal =yank= command (=C-y=) is replaced with a special command =org-transclusion-live-sync-paste=. This command lets the pasted text inherit the text-properties of the transcluded region correctly; the normal yank does not have this feature and thus causes some inconvenience in live-sync edit. If you use vim keybindings (e.g. =evil-mode=), it is advised that you review the default keybindings. You can customize the local keybindings for the live-sync region by =org-transclusion-live-sync-map=. 
 
