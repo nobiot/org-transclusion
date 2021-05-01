@@ -234,9 +234,6 @@ of this global variable is to make the live-sync location a
 The resultant transclusion keyword will be placed in the first
 empty line below.
 
-TODO: At the moment, the empty line needs to be clear of spaces
-and tabs.
-
 When `org-transclusion-mode' is active, this function
 automatically transclude the text content; when it is inactive,
 it simply adds \"#+transclude t [[link]]\" for the link.
@@ -257,9 +254,7 @@ positive number 1-9, then this function automatically inserts the
 	     (contents (when contents-beg (buffer-substring-no-properties contents-beg contents-end)))
 	     (link (org-element-link-interpreter context contents)))
 	(save-excursion
-	  (while (and (not (eq (line-beginning-position) (line-end-position)))
-		      (not (eobp)))
-	    (forward-line))
+	  (org-transclusion-search-or-add-next-empty-line)
 	  (insert (format "#+transclude: t %s\n" link))
 	  (forward-line -1)
 	  (when (and (numberp arg)
@@ -267,7 +262,19 @@ positive number 1-9, then this function automatically inserts the
 		     (<= arg 9))
 	    (end-of-line)
 	    (insert (format " :level %d" arg)))
-	  (when org-transclusion-mode (org-transclusion-add-at-point)))))))
+	  (when (or (equal arg '(4)) org-transclusion-mode)
+	    (org-transclusion-add-at-point)))))))
+
+(defun org-transclusion-search-or-add-next-empty-line ()
+  "Search the next empty line.  Start with the next line. If the
+current line is the bottom of the line, add a new empty line."
+  (let ((beg (line-beginning-position)))
+    ;; beginning-of-line 2 moves to the next line if possible
+    (beginning-of-line 2)
+    (if (eobp)(insert "\n")
+      (while (not (looking-at-p "[ \t]*$"))
+	(beginning-of-line 2))
+      (if (eobp)(insert "\n")))))
 
 (defun org-transclusion-add-at-point ()
   "Transclude text content where #+transclude at point points.
