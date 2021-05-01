@@ -1026,10 +1026,19 @@ are integers (points or number of blank lines.)"
 This is deliberately done -- a single live-sync edit region
 globally in an Emacs session."
   (when-let ((m org-transclusion-live-sync-marker))
-    (with-current-buffer (marker-buffer m)
-      (org-with-wide-buffer
-       (goto-char m)
-       (org-transclusion-refresh-at-point)))))
+    (if (not (eq (marker-buffer m) (current-buffer)))
+	(with-current-buffer (marker-buffer m)
+	  (org-with-wide-buffer
+	   (goto-char m)
+	   (org-transclusion-refresh-at-point)
+	   t))
+      ;; save-excursion somehow brings the point back to the point m is
+      ;; pointing to
+      (let ((pos (point)))
+	(goto-char m)
+	(org-transclusion-refresh-at-point)
+	(goto-char pos)
+	t))))
 
 (defun org-transclusion-live-sync-display-buffer (buffer)
   "Display the source buffer upon entering live-sync edit.
