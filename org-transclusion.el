@@ -173,7 +173,7 @@ of this global variable is to make the live-sync location a
 (defvar org-transclusion-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "e") #'org-transclusion-live-sync-start-at-point)
-    (define-key map (kbd "g") #'org-transclusion-refresh-at-poiont)
+    (define-key map (kbd "g") #'org-transclusion-refresh-at-point)
     (define-key map (kbd "d") #'org-transclusion-remove-at-point)
     (define-key map (kbd "P") #'org-transclusion-promote-subtree)
     (define-key map (kbd "D") #'org-transclusion-demote-subtree)
@@ -181,7 +181,7 @@ of this global variable is to make the live-sync location a
     (define-key map (kbd "TAB") #'org-cycle)
     map))
 
-(defvar org-transclusion-live-edit-map
+(defvar org-transclusion-live-sync-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-c") #'org-transclusion-live-sync-exit-at-poiont)
     (define-key map (kbd "C-y") #'org-transclusion-live-sync-paste)
@@ -201,11 +201,7 @@ of this global variable is to make the live-sync location a
 ;;;; Commands
 
 (define-minor-mode org-transclusion-mode
-  "Toggle Org-transclusion minor mode.
-Interactively with no argument, this command toggles the mode.
-A positive prefix argument enables the mode, any other prefix
-argument disables it.  From Lisp, argument omitted or nil enables
-the mode, `toggle' toggles the state."
+  "Toggle Org-transclusion minor mode."
   :init-value nil
   :lighter nil
   :global nil
@@ -377,7 +373,7 @@ You can customize the keymap with using `org-transclusion-map':
     (org-transclusion-with-silent-modifications
       (org-transclusion-remove-at-point))))
 
-(defun org-transclusion-refresh-at-poiont ()
+(defun org-transclusion-refresh-at-point ()
   "Refresh the transcluded text at point."
   (interactive)
   (when (org-transclusion--within-transclusion-p)
@@ -441,9 +437,9 @@ TODO: At the moment, only Org Mode files are supported."
       (progn (message "This is not a translusion.") nil)
     ;; Temporarily deactivate filter
     ;;    (let ((org-transclusion-exclude-elements nil))
-    ;;     (org-transclusion-refresh-at-poiont))
+    ;;     (org-transclusion-refresh-at-point))
     (org-transclusion-live-sync-remove-others)
-    (org-transclusion-refresh-at-poiont)
+    (org-transclusion-refresh-at-point)
     (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
     (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
     (let* ((tc-elem (org-transclusion-get-enclosing-element))
@@ -470,11 +466,30 @@ TODO: At the moment, only Org Mode files are supported."
       (overlay-put tc-ov 'tc-type "src-edit-ov")
       (overlay-put tc-ov 'face 'org-transclusion-edit)
       (overlay-put tc-ov 'text-clones dups)
-      (overlay-put tc-ov 'local-map org-transclusion-live-edit-map)
+      (overlay-put tc-ov 'local-map org-transclusion-live-sync-map)
       (with-silent-modifications
 	(remove-text-properties tc-beg tc-end '(read-only)))
       (setq org-transclusion-live-sync-marker (org-transclusion--make-marker (point)))
       t)))
+
+(defun org-transclusion-live-sync-exit-at-poiont ()
+  "Exit live-sync at point.
+It attemps to re-arrange the windows for the current buffer to
+the state before live-sync started."
+  (interactive)
+  (org-transclusion-activate) ;; re-activating hooks inactive during live-sync
+  (org-transclusion-refresh-at-point)
+  (setq org-transclusion-live-sync-marker nil)
+  (when org-transclusion-temp-window-config
+    (unwind-protect
+	(set-window-configuration org-transclusion-temp-window-config)
+      (setq org-transclusion-temp-window-config nil))))
+
+(defun org-transclusion-live-sync-paste ()
+  "Paste text content from kill-ring and inherit the text
+properties of the live-sync overlay correctly.  This function is meant to be used as part of `org-transclusion-live-sync-map'"
+  (interactive)
+  (insert-and-inherit (current-kill 0)))
 
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions for Transclude Keyword
@@ -1008,7 +1023,7 @@ globally in an Emacs session."
     (with-current-buffer (marker-buffer m)
       (org-with-wide-buffer
        (goto-char m)
-       (org-transclusion-refresh-at-poiont)))))
+       (org-transclusion-refresh-at-point)))))
 
 (defun org-transclusion-live-sync-display-buffer (buffer)
   "Display the source buffer upon entering live-sync edit.
@@ -1025,24 +1040,6 @@ attempts to bring back the original window configuration."
   (setq org-transclusion-temp-window-config (current-window-configuration))
   (delete-other-windows)
   (display-buffer buffer))
-
-(defun org-transclusion-live-sync-exit-at-poiont ()
-  "Exit live-sync at point.
-It attemps to re-arrange the windows for the current buffer to
-the state before live-sync started."
-  (interactive)
-  (org-transclusion-activate) ;; re-activating hooks inactive during live-sync
-  (org-transclusion-refresh-at-poiont)
-  (setq org-transclusion-live-sync-marker nil)
-  (when org-transclusion-temp-window-config
-    (unwind-protect
-	(set-window-configuration org-transclusion-temp-window-config)
-      (setq org-transclusion-temp-window-config nil))))
-
-(defun org-transclusion-live-sync-paste ()
-  "."
-  (interactive)
-  (insert-and-inherit (current-kill 0)))
 
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for meta-left/right: promote/demote a transcluded subtree
@@ -1061,7 +1058,7 @@ the state before live-sync started."
     ;; refresh to get the text-prop corrected.
     (save-excursion
       (goto-char pos)
-      (org-transclusion-refresh-at-poiont))))
+      (org-transclusion-refresh-at-point))))
 
 (defun org-transclusion-promote-or-demote-subtree (&optional demote)
   "Promote or demote transcluded subtree.
