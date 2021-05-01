@@ -1,0 +1,131 @@
+file:https://img.shields.io/badge/License-GPLv3-blue.svg]]
+
+#+title: Org-transclusion
+
+#+property: LOGGING nil
+
+# Note: I use the readme template that alphapapa shares on his GitHub repo <https://github.com/alphapapa/emacs-package-dev-handbook#template>. It works with the org-make-toc <https://github.com/alphapapa/org-make-toc> package, which automatically updates the table of contents.
+
+Transclusion is the ability to include content from one file into another by reference. Org-transclusion lets you do this in your Org file. 
+
+When I start writing a long-form material, I want to begin with looking through my note and assemble relevant notes to form a basis of the final outcome quickly. As I organise my notes in a repository, I also want to avoid having multiple copies of notes flying around.
+
+Transclusion should let me do this.
+
+I am dabbling in the Zettelkasten method with using [[https://www.orgroam.com/][Org-roam]] to feed my ideas into the repository. As such, although Org-transclusion is a standalone package, I would like to keep workflow seamless between Org-roam and Org-transclusion.
+
+This package is an attempt to enable transclusion with Org Mode in Emacs. It is my take on the [[*Original idea by John Kitchin][idea by John Kitchin]].
+
+* Screenshots
+
+This screenshot shows how to frobnicate the fripulator:
+
+[[screenshot1.png]]
+
+* Contents                                                         :noexport:
+:PROPERTIES:
+:TOC:      :include siblings
+:END:
+:CONTENTS:
+  -  [[#installation][Installation]]
+  -  [[#usage][Usage]]
+  -  [[#changelog][Changelog]]
+  -  [[#credits][Credits]]
+  -  [[#development][Development]]
+  -  [[#license][License]]
+:END:
+
+* Installation
+:PROPERTIES:
+:TOC:      :depth 0
+:END:
+
+This package is not available on MELPA or ELPA. Manual installation is required.
+
+Download or clone this repo, put this file in your load-path, and put something like this in your init file.
+
+#+BEGIN_SRC elisp
+  (with-eval-after-load 'org
+    (add-to-list  'load-path "path/to/org-transclusion/")
+    (require 'org-transclusion)
+    (define-key global-map (kbd "<f12>") #'org-transclusion-mode))
+#+END_SRC
+
+* Usage
+:PROPERTIES:
+:TOC:      :depth 0
+:END:
+
+  Run one of these commands:
+
+  + =package-name-command=: Frobnicate the flange.
+
+** Tips
+
++ You can customize settings in the =package-name= group.
+
+* Changelog
+:PROPERTIES:
+:TOC:      :depth 0
+:END:
+
+** 1.1.0
+
+*Additions*
++  Add command =package-name-debarnacle= to de-barnacle the hull.
+
+*Changes*
++ Command =package-name-anchor= now takes an argument, =weigh= or =let-go=.
+
+*Internal*
++  Rewrote input parsing.
++  Factored out anchor-weighing.
+
+** 1.0.1
+
+*Fixes*
++  Ensure anchor is secure before returning from =package-name-anchor=.
+
+** 1.0.0
+
+Initial release.
+
+* Credits
+
+** Original idea by John Kitchin
+
+https://github.com/alphapapa/transclusion-in-emacs#org-mode
+
+#+begin_quote
+{O} transcluding some org-elements in multiple places
+[2016-12-09 Fri] John Kitchin asks:
+
+I have an idea for how I could transclude “copies” or links to org-elements in multiple places and keep them up to date. A prototypical example of this is I have a set of org-contacts in one place, and I want to create a new list of people for a committee in a new place made of “copies” of the contact headlines. But I do not really want to duplicate the headlines, and if I modify one, I want it reflected in the other places. I do not want just links to those contacts, because then I can not do things with org-map-entries, and other org-machinery which needs the actual headlines/properties present. Another example might be I want a table in two places, but the contents of them should stay synchronized, ditto for a code block.
+
+This idea was inspired by https://github.com/gregdetre/emacs-freex.
+
+The idea starts with creating (wait for it…) a new link ;) In a document where I want to transclude a headline, I would enter something like:
+
+transclude:some-file.org::*headline title
+
+Then, I would rely on the font-lock system to replace that link with the headline and its contents (via the :activate-func link property), and to put an overlay on it with a bunch of useful properties, including modification hooks that would update the source if I change the the element in this document, and some visual indication that it is transcluded (e.g. light gray background/tooltip).
+
+I would create a kill-buffer hook function that would replace that transcluded content with the original link. A focus-in hook function would make sure the transcluded content is updated when you enter the frame. So when the file is not open, there is just a transclude link indicating what should be put there, and when it is open, the overlay modification hooks and focus hook should ensure everything stays synchronized (as long as external processes are not modifying the contents).
+
+It seems like this could work well for headlines, and named tables, src blocks, and probably any other element that can be addressed by a name/ID.
+#+end_quote
+
+* Development
+
+Bug reports, feature requests, suggestions — /oh my/!
+
+* License
+
+This work is licensed under a GPLv3 license. For a full copy of the licese, refer to [[./LICENSE][LICENSE]].
+
+# Local Variables:
+# eval: (require 'org-make-toc)
+# before-save-hook: org-make-toc
+# org-export-with-properties: ()
+# org-export-with-title: t
+# End:
