@@ -8,19 +8,21 @@
 
 Transclusion is the ability to include content from one file into another by reference. Org-transclusion lets you do this in your Org file. 
 
-#+caption: Figure 1. Animation to show creation of a transclusion from an ID link
-[[./resources/2021-05-01-org-transclusion-0.1.0-create.gif]]
-
-#+caption: Figure 2. Animation to show live sync from transclusion to source
-[[./resources/2021-05-01-org-transclusion-0.1.0-live-sync.gif]]
-
 When I start writing a long-form material, I want to begin with looking through my note and assemble relevant notes to form a basis of the final outcome quickly. As I organise my notes in a repository, I also want to avoid having multiple copies of notes flying around.
 
-Transclusion should let me do this.
+Transclusion helps me do this.
 
 I am dabbling in the Zettelkasten method with using [[https://www.orgroam.com/][Org-roam]] to feed my ideas into the repository. As such, although Org-transclusion is a standalone package, I would like to keep workflow seamless between Org-roam and Org-transclusion.
 
-This package is an attempt to enable transclusion with Org Mode in Emacs. It is my take on the [[*Original idea by John Kitchin][idea by John Kitchin]].
+This package is an attempt to enable transclusion with Org Mode in Emacs. It is my take on the [[#john-kitchin][idea by John Kitchin]].
+
+#+caption: Figure 1. Animation to show creation of a transclusion from an ID link
+[[./resources/2021-05-01-org-transclusion-0.1.0-create.gif]]
+**Figure 1**. Animation to show creation of a transclusion from an ID link
+
+#+caption: Figure 2. Animation to show live sync from transclusion to source
+[[./resources/2021-05-01-org-transclusion-0.1.0-live-sync.gif]]
+**Figure 2**. Animation to show live sync from transclusion to source
 
 * Contents                                                         :noexport:
 :PROPERTIES:
@@ -89,11 +91,11 @@ Transclusion works for:
 - =ID= links (=Org-ID=) to Org files
 - =file= links to Org files and non-Org text files
 
-For links to Org files, options also work such as links to a headline or paragraph via =dedicated target=. Refer to [[*Org links supported][Org links supported]].
+For links to Org files, options also work such as links to a headline or paragraph via =dedicated target=. Refer to [[#org-links-supported][Org links supported]].
 
 Transcluded text region will be read-only.
 
-Refer to [[*Live-sync edit (experimental)][Live-sync edit]] for Org-translusion's edit feature.
+Refer to [[live-sync-edit][Live-sync edit]] for Org-translusion's edit feature.
 
 You can customize the local keybindings for transclusions by =org-transclusion-map=. If you use vim keybindings (e.g. =evil-mode=), it is advised that you review the default keybindings.
 
@@ -130,6 +132,9 @@ o		org-transclusion-open-source
 - =org-transclusion-open-source=
 
 ** Live-sync edit (experimental)
+:PROPERTIES:
+:CUSTOM_ID: live-sync-edit
+:END:
 
 You can start live-sync edit by pressing <kbd>e</kbd> (by default) on a text element you want to edit. This will put a colored overlay on top of the region being live-synced and brings up another buffer that visits the source file of the transclusion. The source buffer will also have a corresponding overlay to the region being edited and live-synced.
 
@@ -174,6 +179,9 @@ In the live-sync edit region, the normal =yank= command (=C-y=) is replaced with
 
 
 ** Org links supported
+:PROPERTIES:
+:CUSTOM_ID: org-links-supported
+:END:
 
 Transclusion has been tested to work for the following types of links:
 
@@ -240,6 +248,10 @@ As described in this version.
 * Credits
 
 ** Original idea by John Kitchin
+:PROPERTIES:
+:CUSTOM_ID: john-kitchin
+:END:
+
 
 https://github.com/alphapapa/transclusion-in-emacs#org-mode
 
@@ -264,7 +276,11 @@ It seems like this could work well for headlines, and named tables, src blocks, 
 
 * Development
 
-Bug reports, feature requests, suggestions — /oh my/!
+- Get involved in a discussion in [[https://org-roam.discourse.group/t/prototype-transclusion-block-reference-with-emacs-org-mode/830][Org-roam forum]] (the package is originally aimed for its users, me included)
+
+- Create issues, discussion, and/or pull requests. All weclome.
+
+Thank you!
 
 * License
 
