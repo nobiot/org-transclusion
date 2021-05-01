@@ -438,11 +438,12 @@ TODO: At the moment, only Org Mode files are supported."
     ;;     (org-transclusion-refresh-at-poiont))
     (org-transclusion-live-sync-remove-others)
     (org-transclusion-refresh-at-poiont)
-    (setq org-transclusion-live-sync-marker (org-transclusion--make-marker (point)))
     (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
     (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
     (let* ((tc-elem (org-transclusion-get-enclosing-element))
 	   (tc-beg (org-transclusion-element-get-beg-or-end 'beg tc-elem))
+	   ;; FIXME: tc-end likely fails to find the element when the point is
+	   ;; right at the end of the transcluded region.
 	   (tc-end (org-transclusion-element-get-beg-or-end 'end tc-elem))
 	   (tc-ov (make-overlay tc-beg tc-end nil t t)) ;front-advance should be t
 	   (src-ov (org-transclusion-live-sync-source-make-overlay tc-end))
@@ -469,6 +470,7 @@ TODO: At the moment, only Org Mode files are supported."
 				   map))
       (with-silent-modifications
 	(remove-text-properties tc-beg tc-end '(read-only)))
+      (setq org-transclusion-live-sync-marker (org-transclusion--make-marker (point)))
       t)))
 
 ;;;;-----------------------------------------------------------------------------
@@ -1026,12 +1028,18 @@ attempts to bring back the original window configuration."
 It attemps to re-arrange the windows for the current buffer to
 the state before live-sync started."
   (interactive)
+  (org-transclusion-activate) ;; re-activating hooks inactive during live-sync
   (org-transclusion-refresh-at-poiont)
   (setq org-transclusion-live-sync-marker nil)
   (when org-transclusion-temp-window-config
     (unwind-protect
 	(set-window-configuration org-transclusion-temp-window-config)
       (setq org-transclusion-temp-window-config nil))))
+
+(defun org-transclusion-live-sync-paste ()
+  "."
+  (interactive)
+  (insert-and-inherit (current-kill 0)))
 
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for meta-left/right: promote/demote a transcluded subtree
