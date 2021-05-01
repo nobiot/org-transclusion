@@ -55,7 +55,7 @@ This package is an attempt to enable transclusion with Org Mode in Emacs. It is 
 
 This package is not available on MELPA or ELPA. Manual installation is required.
 
-Download or clone this repo, put this file in your load-path, and put something like this in your init file.
+Download or clone this repo, put =org-transclusion.el= in your load-path, and put something like this in your init file.
 
 #+BEGIN_SRC elisp
   (with-eval-after-load 'org
