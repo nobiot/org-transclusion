@@ -18,11 +18,11 @@ This package is an attempt to enable transclusion with Org Mode in Emacs. It is 
 
 #+caption: Figure 1. Animation to show creation of a transclusion from an ID link
 [[./resources/2021-05-01-org-transclusion-0.1.0-create.gif]]
-**Figure 1**. Animation to show creation of a transclusion from an ID link
+*Figure 1*. Animation to show creation of a transclusion from an ID link
 
 #+caption: Figure 2. Animation to show live sync from transclusion to source
 [[./resources/2021-05-01-org-transclusion-0.1.0-live-sync.gif]]
-**Figure 2**. Animation to show live sync from transclusion to source
+*Figure 2*. Animation to show live sync from transclusion to source
 
 * Contents                                                         :noexport:
 :PROPERTIES:
@@ -136,7 +136,7 @@ o		org-transclusion-open-source
 :CUSTOM_ID: live-sync-edit
 :END:
 
-**Experimental.** You can start live-sync edit by pressing =e= (by default) on a text element you want to edit. This will put a colored overlay on top of the region being live-synced and brings up another buffer that visits the source file of the transclusion. The source buffer will also have a corresponding overlay to the region being edited and live-synced.
+*Experimental.* You can start live-sync edit by pressing =e= (by default) on a text element you want to edit. This will put a colored overlay on top of the region being live-synced and brings up another buffer that visits the source file of the transclusion. The source buffer will also have a corresponding overlay to the region being edited and live-synced.
 
 If you have other windows open, they will be temporarily hidden -- Org-transclusion will remembers your current window layout and attempts to recover it when you exit live-sync edit.
 
