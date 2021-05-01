@@ -825,12 +825,12 @@ TODO need to handle when the file does not exist."
 (defun org-transclusion-search-or-add-next-empty-line ()
   "Search the next empty line.  Start with the next line. If the
 current line is the bottom of the line, add a new empty line."
-       ;; beginning-of-line 2 moves to the next line if possible
-       (beginning-of-line 2)
-       (if (eobp)(insert "\n")
-	 (while (not (looking-at-p "[ \t]*$"))
-	   (beginning-of-line 2))
-	 (if (eobp)(insert "\n"))))
+  ;; beginning-of-line 2 moves to the next line if possible
+  (beginning-of-line 2)
+  (if (eobp)(insert "\n")
+    (while (not (looking-at-p "[ \t]*$"))
+      (beginning-of-line 2))
+    (if (eobp)(insert "\n"))))
 
 (defmacro org-transclusion-with-silent-modifications (&rest body)
   "It's like `with-silent-modifications' but keeps the undo list."
