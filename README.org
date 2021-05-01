@@ -29,12 +29,23 @@ This package is an attempt to enable transclusion with Org Mode in Emacs. It is 
 :TOC:      :include siblings
 :END:
 :CONTENTS:
-  -  [[#installation][Installation]]
-  -  [[#usage][Usage]]
-  -  [[#changelog][Changelog]]
-  -  [[#credits][Credits]]
-  -  [[#development][Development]]
-  -  [[#license][License]]
+- [[#installation][Installation]]
+- [[#usage][Usage]]
+  - [[#starting-org-transclusion-local-minor-mode][Starting Org-transclusion local minor mode]]
+  - [[#transclude-text-content][Transclude text content]]
+  - [[#live-sync-edit][Live-sync edit]]
+  - [[#commands][Commands]]
+  - [[#org-links-supported][Org links supported]]
+- [[#customizing][Customizing]]
+  - [[#customizable-filter-to-exclude-certain-org-elements][Customizable filter to exclude certain Org elements]]
+  - [[#include-the-section-before-the-first-headline-org-file-only][Include the section before the first headline (Org file only)]]
+  - [[#faces--fringe-bitmap][Faces & fringe bitmap]]
+  - [[#keybindings][Keybindings]]
+- [[#changelog][Changelog]]
+- [[#credits][Credits]]
+  - [[#original-idea-by-john-kitchin][Original idea by John Kitchin]]
+- [[#development][Development]]
+- [[#license][License]]
 :END:
 
 * Installation
@@ -54,9 +65,6 @@ Download or clone this repo, put this file in your load-path, and put something 
 #+END_SRC
 
 * Usage
-:PROPERTIES:
-:TOC:      :depth 0
-:END:
 
 ** Starting Org-transclusion local minor mode
 
