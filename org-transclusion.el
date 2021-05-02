@@ -444,29 +444,33 @@ TODO: At the moment, only Org Mode files are supported."
 	   ;; right at the end of the transcluded region.
 	   (tc-end (org-transclusion-element-get-beg-or-end 'end tc-elem))
 	   (tc-ov (make-overlay tc-beg tc-end nil t t)) ;front-advance should be t
+	   (tc-ov-len (- (overlay-end tc-ov) (overlay-start tc-ov)))
 	   (src-ov (org-transclusion-live-sync-source-make-overlay tc-end))
+	   (src-ov-len (- (overlay-end src-ov) (overlay-start src-ov)))
 	   (dups (list src-ov tc-ov)))
-      (org-transclusion-live-sync-display-buffer (overlay-buffer src-ov))
-      ;; Source Overlay
-      (overlay-put src-ov 'evaporate t)
-      (overlay-put src-ov 'text-clones dups)
-      (overlay-put src-ov 'modification-hooks
-		   '(org-transclusion--text-clone--maintain))
-      (overlay-put src-ov 'face 'org-transclusion-source-edit)
-      (overlay-put src-ov 'priority 50)
-      ;; Transclusion Overlay
-      (overlay-put tc-ov 'modification-hooks
-		   '(org-transclusion--text-clone--maintain))
-      (overlay-put tc-ov 'evaporate t)
-      (overlay-put tc-ov 'tc-paired-src-edit-ov src-ov)
-      (overlay-put tc-ov 'tc-type "src-edit-ov")
-      (overlay-put tc-ov 'face 'org-transclusion-edit)
-      (overlay-put tc-ov 'text-clones dups)
-      (overlay-put tc-ov 'local-map org-transclusion-live-sync-map)
-      (with-silent-modifications
-	(remove-text-properties tc-beg tc-end '(read-only)))
-      (setq org-transclusion-live-sync-marker (org-transclusion--make-marker (point)))
-      t)))
+      (if (/= tc-ov-len src-ov-len)
+	  (user-error "Live sync did not start. The lenths are not identical")
+	(org-transclusion-live-sync-display-buffer (overlay-buffer src-ov))
+	;; Source Overlay
+	(overlay-put src-ov 'evaporate t)
+	(overlay-put src-ov 'text-clones dups)
+	(overlay-put src-ov 'modification-hooks
+		     '(org-transclusion--text-clone--maintain))
+	(overlay-put src-ov 'face 'org-transclusion-source-edit)
+	(overlay-put src-ov 'priority 50)
+	;; Transclusion Overlay
+	(overlay-put tc-ov 'modification-hooks
+		     '(org-transclusion--text-clone--maintain))
+	(overlay-put tc-ov 'evaporate t)
+	(overlay-put tc-ov 'tc-paired-src-edit-ov src-ov)
+	(overlay-put tc-ov 'tc-type "src-edit-ov")
+	(overlay-put tc-ov 'face 'org-transclusion-edit)
+	(overlay-put tc-ov 'text-clones dups)
+	(overlay-put tc-ov 'local-map org-transclusion-live-sync-map)
+	(with-silent-modifications
+	  (remove-text-properties tc-beg tc-end '(read-only)))
+	(setq org-transclusion-live-sync-marker (org-transclusion--make-marker (point)))
+	t))))
 
 (defun org-transclusion-live-sync-exit-at-poiont ()
   "Exit live-sync at point.
@@ -1050,8 +1054,9 @@ live-sync.)
 This is analogous to `org-edit-src-code' -- by default, it
 layouts the edit and original buffers side-by-side.
 
-Upon exiting live-sync, `org-transclusion-live-sync-at-point'
-attempts to bring back the original window configuration."
+Upon exiting live-sync,
+`org-transclusion-live-sync-exit-at-poiont' attempts to bring
+back the original window configuration."
   (setq org-transclusion-temp-window-config (current-window-configuration))
   (delete-other-windows)
   (display-buffer buffer))
