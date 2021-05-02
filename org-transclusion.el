@@ -215,7 +215,9 @@ of this global variable is to make the live-sync location a
 	    map)
   (cond
    (org-transclusion-mode
-    (org-transclusion-activate))
+    (org-transclusion-activate)
+    (when org-transclusion-add-all-on-activate
+      (org-transclusion-add-all-in-buffer)))
    (t (org-transclusion-deactivate))))
 
 (defun org-transclusion-create-from-link (&optional arg)
@@ -252,7 +254,7 @@ positive number 1-9, then this function automatically inserts the
 	    (end-of-line)
 	    (insert (format " :level %d" arg)))
 	  (when (or (equal arg '(4)) org-transclusion-mode)
-	    (org-transclusion-add-at-point)))))))
+	    (org-transclusion-activate)))))))
 
 (defun org-transclusion-add-at-point ()
   "Transclude text content where #+transclude at point points.
@@ -314,9 +316,9 @@ You can customize the keymap with using `org-transclusion-map':
 		       ;; Remove keyword after having transcluded content
 		       (when (org-at-keyword-p)
 			 (org-transclusion-keyword-remove))
-		       (org-transclusion-mode 1))))))))
+		       (org-transclusion-activate))))))))
 	  ;; For other cases. Do nothing
-	  (t (message "Nothing done. Transclusion inactive or link missing.") nil))))
+	  (t (message "Nothing done. Transclusion inactive or link missing at %d" (point)) nil))))
 
 (defun org-transclusion-add-all-in-buffer ()
   "Add all active transclusions in the current buffer."
@@ -488,8 +490,6 @@ properties of the live-sync overlay correctly.  This function is meant to be use
 
 (defun org-transclusion-activate ()
   "Activate automatic transclusions in the local buffer."
-  (when org-transclusion-add-all-on-activate
-    (org-transclusion-add-all-in-buffer))
   (add-hook 'before-save-hook #'org-transclusion-before-save-buffer nil t)
   (add-hook 'after-save-hook #'org-transclusion-after-save-buffer nil t)
   (add-hook 'kill-buffer-hook #'org-transclusion-before-save-buffer nil t)
