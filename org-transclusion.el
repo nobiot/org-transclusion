@@ -443,7 +443,7 @@ TODO: At the moment, only Org Mode files are supported."
 	   (src-ov-len (- (overlay-end src-ov) (overlay-start src-ov)))
 	   (dups (list src-ov tc-ov)))
       (if (/= tc-ov-len src-ov-len)
-	  (user-error "Live sync did not start. The lenths are not identical")
+	  (user-error "Live sync did not start. The lengths are not identical")
 	(org-transclusion-live-sync-display-buffer (overlay-buffer src-ov))
 	;; Source Overlay
 	(overlay-put src-ov 'evaporate t)
