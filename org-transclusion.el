@@ -218,25 +218,6 @@ of this global variable is to make the live-sync location a
     (org-transclusion-activate))
    (t (org-transclusion-deactivate))))
 
-(defun org-transclusion-activate ()
-  "Activate automatic transclusions in the local buffer."
-  (interactive)
-  (when org-transclusion-add-all-on-activate
-    (org-transclusion-add-all-in-buffer))
-  (add-hook 'before-save-hook #'org-transclusion-before-save-buffer nil t)
-  (add-hook 'after-save-hook #'org-transclusion-after-save-buffer nil t)
-  (add-hook 'kill-buffer-hook #'org-transclusion-before-save-buffer nil t)
-  (add-hook 'kill-emacs-hook #'org-transclusion-before-save-buffer nil t))
-
-(defun org-transclusion-deactivate ()
-  "Deactivate automatic transclusions in the local buffer."
-  (interactive)
-  (org-transclusion-remove-all-in-buffer)
-  (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
-  (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
-  (remove-hook 'kill-buffer-hook #'org-transclusion-before-save-buffer t)
-  (remove-hook 'kill-emacs-hook #'org-transclusion-before-save-buffer t))
-
 (defun org-transclusion-create-from-link (&optional arg)
   "Create a transclusion keyword from a link at point.
 The resultant transclusion keyword will be placed in the first
@@ -503,6 +484,39 @@ properties of the live-sync overlay correctly.  This function is meant to be use
   (insert-and-inherit (current-kill 0)))
 
 ;;;;-----------------------------------------------------------------------------
+;;;; Functions for Activate / Deactiveate / save-buffer hooks
+
+(defun org-transclusion-activate ()
+  "Activate automatic transclusions in the local buffer."
+  (when org-transclusion-add-all-on-activate
+    (org-transclusion-add-all-in-buffer))
+  (add-hook 'before-save-hook #'org-transclusion-before-save-buffer nil t)
+  (add-hook 'after-save-hook #'org-transclusion-after-save-buffer nil t)
+  (add-hook 'kill-buffer-hook #'org-transclusion-before-save-buffer nil t)
+  (add-hook 'kill-emacs-hook #'org-transclusion-before-save-buffer nil t))
+
+(defun org-transclusion-deactivate ()
+  "Deactivate automatic transclusions in the local buffer."
+  (org-transclusion-remove-all-in-buffer)
+  (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
+  (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
+  (remove-hook 'kill-buffer-hook #'org-transclusion-before-save-buffer t)
+  (remove-hook 'kill-emacs-hook #'org-transclusion-before-save-buffer t))
+
+(defun org-transclusion-before-save-buffer ()
+  "."
+  (setq org-transclusion-remember-point (point))
+  (org-transclusion-remove-all-in-buffer))
+
+(defun org-transclusion-after-save-buffer ()
+  "."
+  (org-transclusion-add-all-in-buffer)
+  (when org-transclusion-remember-point
+    (goto-char org-transclusion-remember-point)
+    ;;(recenter)
+    (setq org-transclusion-remember-point nil)))
+
+;;;;-----------------------------------------------------------------------------
 ;;;; Functions for Transclude Keyword
 ;;   #+transclude: t "~/path/to/file.org::1234"
 
@@ -532,8 +546,11 @@ plist. It is meant to be used by
 plist. It is meant to be used by
 `org-transclusion-get-string-to-plist'.  It needs to be set in
 `org-transclusion-get-keyword-values-hook'."
-  (when (string-match "\\(\\[\\[.+?\\]\\]\\)" value)
-    (list :link (org-strip-quotes (match-string 0 value)))))
+  (if (string-match "\\(\\[\\[.+?\\]\\]\\)" value)
+      (list :link (org-strip-quotes (match-string 0 value)))
+    ;; link mandatory
+    (user-error "Error. Link in #+transclude is mandatory at %d" (point))
+    nil))
 
 (defun org-transclusion-keyword-get-value-level (value)
   "It is a utility function used converting a keyword string to
@@ -817,22 +834,6 @@ TODO need to handle when the file does not exist."
 	   (list :tc-content content
 		 :tc-beg-mkr beg
 		 :tc-end-mkr end))))))
-
-;;-----------------------------------------------------------------------------
-;;; Supporting functions for buffer clean up
-
-(defun org-transclusion-before-save-buffer ()
-  "."
-  (setq org-transclusion-remember-point (point))
-  (org-transclusion-remove-all-in-buffer))
-
-(defun org-transclusion-after-save-buffer ()
-  "."
-  (org-transclusion-add-all-in-buffer)
-  (when org-transclusion-remember-point
-    (goto-char org-transclusion-remember-point)
-    ;;(recenter)
-    (setq org-transclusion-remember-point nil)))
 
 ;;-----------------------------------------------------------------------------
 ;;; Utility Functions and Macros
