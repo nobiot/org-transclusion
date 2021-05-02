@@ -53,6 +53,12 @@
   :prefix "org-translusion-"
   :link '(url-link :tag "Github" "https://github.com/nobiot/org-transclusion"))
 
+(defcustom org-transclusion-add-all-on-activate t
+  "Define whether to add all the transclusions on activation.
+When non-nil, automatically add all on `org-transclusion-activate'."
+  :type 'boolean
+  :group 'org-transclusion)
+
 (defcustom org-transclusion-exclude-elements (list 'property-drawer)
   "Define the Org elements that are excluded from transcluded copies.
 It is a list of elements to be filtered out.
@@ -215,6 +221,8 @@ of this global variable is to make the live-sync location a
 (defun org-transclusion-activate ()
   "Activate automatic transclusions in the local buffer."
   (interactive)
+  (when org-transclusion-add-all-on-activate
+    (org-transclusion-add-all-in-buffer))
   (add-hook 'before-save-hook #'org-transclusion-before-save-buffer nil t)
   (add-hook 'after-save-hook #'org-transclusion-after-save-buffer nil t)
   (add-hook 'kill-buffer-hook #'org-transclusion-before-save-buffer nil t)
@@ -332,13 +340,16 @@ You can customize the keymap with using `org-transclusion-map':
 (defun org-transclusion-add-all-in-buffer ()
   "Add all active transclusions in the current buffer."
   (interactive)
-  (org-with-point-at 1
-    (let ((regexp "^[ \t]*#\\+TRANSCLUDE:"))
-      (while (re-search-forward regexp nil t)
-	;; Don't transclude if in transclusion overlay to avoid infinite
-	;; recursion
-	(unless (org-transclusion--within-transclusion-p)
-	  (org-transclusion-add-at-point))))))
+  (let ((pos (point)))
+    (org-with-point-at 1
+      (let ((regexp "^[ \t]*#\\+TRANSCLUDE:"))
+	(while (re-search-forward regexp nil t)
+	  ;; Don't transclude if in transclusion overlay to avoid infinite
+	  ;; recursion
+	  (unless (org-transclusion--within-transclusion-p)
+	    (org-transclusion-add-at-point)))))
+    (goto-char pos)
+    t))
 
 (defun org-transclusion-remove-at-point ()
   "Remove transcluded text at point."
