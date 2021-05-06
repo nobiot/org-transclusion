@@ -166,6 +166,18 @@ action. It's easy to forget the fact live-sync is on. The intent
 of this global variable is to make the live-sync location a
 \"singleton\" -- only one available in an Emacs session.")
 
+(defvar org-transclusion-yank-excluded-properties '(tc-id tc-type
+							  tc-beg-mkr
+							  tc-end-mkr
+							  tc-src-beg-mkr
+							  tc-pair
+							  tc-orig-keyword
+							  org-transclusion-text-beg-mkr
+							  org-transclusion-text-end-mkr))
+
+(defvar org-transclusion-yank-excluded-line-prefix nil)
+(defvar org-transclusion-yank-excluded-wrap-prefix nil)
+
 (defvar org-transclusion-link-open-hook
   '(org-transclusion-link-open-org-id
     org-transclusion-link-open-org-file-links
@@ -493,7 +505,20 @@ properties of the live-sync overlay correctly.  This function is meant to be use
   (add-hook 'before-save-hook #'org-transclusion-before-save-buffer nil t)
   (add-hook 'after-save-hook #'org-transclusion-after-save-buffer nil t)
   (add-hook 'kill-buffer-hook #'org-transclusion-before-save-buffer nil t)
-  (add-hook 'kill-emacs-hook #'org-transclusion-before-save-buffer nil t))
+  (add-hook 'kill-emacs-hook #'org-transclusion-before-save-buffer nil t)
+  ;; Ensure this happens only once until deactivation
+  (unless (memq 'tc-id yank-excluded-properties)
+    ;; Return t if 'wrap-prefix is already in `yank-excluded-properties'
+    ;; if not push to elm the list
+    (setq org-transclusion-yank-excluded-wrap-prefix
+	  (if (memq 'wrap-prefix yank-excluded-properties) t
+	    (push 'wrap-prefix yank-excluded-properties) nil))
+    (setq org-transclusion-yank-excluded-line-prefix
+	  (if (memq 'line-prefix yank-excluded-properties) t
+	    (push 'line-prefix yank-excluded-properties) nil)))
+  (unless (memq 'tc-id yank-excluded-properties)
+    (setq yank-excluded-properties
+	  (append yank-excluded-properties org-transclusion-yank-excluded-properties))))
 
 (defun org-transclusion-deactivate ()
   "Deactivate automatic transclusions in the local buffer."
@@ -501,7 +526,16 @@ properties of the live-sync overlay correctly.  This function is meant to be use
   (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
   (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
   (remove-hook 'kill-buffer-hook #'org-transclusion-before-save-buffer t)
-  (remove-hook 'kill-emacs-hook #'org-transclusion-before-save-buffer t))
+  (remove-hook 'kill-emacs-hook #'org-transclusion-before-save-buffer t)
+  (when (memq 'tc-id yank-excluded-properties)
+    ;; Ensure it's called only once until next activation
+    (dolist (obj (append org-transclusion-yank-excluded-properties '(line-prefix wrap-prefix)))
+      ;; 'line-prefix and 'wrap-prefix need to be set to the user's set values
+      (unless (or (and (eq obj 'line-prefix)
+		       org-transclusion-yank-excluded-line-prefix)
+		  (and (eq obj 'wrap-prefix)
+		       org-transclusion-yank-excluded-wrap-prefix))
+	(setq yank-excluded-properties (delq obj yank-excluded-properties))))))
 
 (defun org-transclusion-before-save-buffer ()
   "."
