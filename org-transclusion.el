@@ -202,7 +202,7 @@ of this global variable is to make the live-sync location a
 (defvar org-transclusion-live-sync-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map org-mode-map)
-    (define-key map (kbd "C-c C-c") #'org-transclusion-live-sync-exit-at-poiont)
+    (define-key map (kbd "C-c C-c") #'org-transclusion-live-sync-exit-at-point)
     (define-key map (kbd "C-y") #'org-transclusion-live-sync-paste)
     map))
 
@@ -461,7 +461,7 @@ TODO: At the moment, only Org Mode files are supported.
 `org-transclusion-live-sync-map' inherits `org-mode-map' and adds
 a couple of org-transclusion specific keybindings; namely:
 - `org-transclusion-live-sync-paste'
-- `org-transclusion-live-sync-exit-at-poiont'
+- `org-transclusion-live-sync-exit-at-point'
 \\{org-transclusion-live-sync-map}"
   (interactive)
   (if (not (org-transclusion--within-transclusion-p))
@@ -507,7 +507,7 @@ a couple of org-transclusion specific keybindings; namely:
 	(setq org-transclusion-live-sync-marker (org-transclusion--make-marker (point)))
 	t))))
 
-(defun org-transclusion-live-sync-exit-at-poiont ()
+(defun org-transclusion-live-sync-exit-at-point ()
   "Exit live-sync at point.
 It attemps to re-arrange the windows for the current buffer to
 the state before live-sync started."
@@ -1152,7 +1152,7 @@ This is analogous to `org-edit-src-code' -- by default, it
 layouts the edit and original buffers side-by-side.
 
 Upon exiting live-sync,
-`org-transclusion-live-sync-exit-at-poiont' attempts to bring
+`org-transclusion-live-sync-exit-at-point' attempts to bring
 back the original window configuration."
   (setq org-transclusion-temp-window-config (current-window-configuration))
   (delete-other-windows)
