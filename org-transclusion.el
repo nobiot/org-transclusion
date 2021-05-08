@@ -451,7 +451,7 @@ TODO: At the moment, only Org Mode files are supported."
 	   (tc-end (org-transclusion-element-get-beg-or-end 'end tc-elem))
 	   (tc-ov (make-overlay tc-beg tc-end nil t t)) ;front-advance should be t
 	   (tc-ov-len (- (overlay-end tc-ov) (overlay-start tc-ov)))
-	   (src-ov (org-transclusion-live-sync-source-make-overlay tc-end))
+	   (src-ov (org-transclusion-live-sync-source-make-overlay tc-beg tc-end))
 	   (src-ov-len (- (overlay-end src-ov) (overlay-start src-ov)))
 	   (dups (list src-ov tc-ov)))
       (if (/= tc-ov-len src-ov-len)
@@ -951,25 +951,35 @@ placed without a blank line."
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for live-sync
 
-(defun org-transclusion-live-sync-source-make-overlay (limit)
+(defun org-transclusion-live-sync-source-make-overlay (beg end)
   ".
+Search range BEG and END.
 TODO: At the moment, only Org Mode files are supported."
   (let ((src-buf (overlay-buffer (get-text-property (point) 'tc-pair)))
 	;; I will keep src-buf to be gotten from tc-pair.
 	;; I might not keep org-transclusion-text-beg-mkr
-	(src-search-beg
-	 (get-text-property (point) 'org-transclusion-text-beg-mkr)))
+	(src-search-beg (get-text-property (point) 'org-transclusion-text-beg-mkr)))
+    ;; If point is not on a text with the property, it still may be
+    ;; found within the same element Search the text-prop up to
+    ;; LIMIT.
     (unless src-search-beg
       (save-excursion
-	(goto-char (next-property-change (point) nil limit))
-	(setq src-search-beg (get-text-property
-			      (point) 'org-transclusion-text-beg-mkr))))
-    (with-current-buffer src-buf
-      (goto-char src-search-beg)
-      (let* ((src-elem (org-transclusion-get-enclosing-element))
-	     (src-beg (org-transclusion-element-get-beg-or-end 'beg src-elem))
-	     (src-end (org-transclusion-element-get-beg-or-end 'end src-elem)))
-	(make-overlay src-beg src-end nil t t)))))
+	(when-let ((match (or
+			   (text-property-search-forward
+			    'org-transclusion-text-beg-mkr)
+			   (text-property-search-backward
+			    'org-transclusion-text-beg-mkr))))
+	  ;; Point must be between beg and end (inclusive)
+	  (when (and (<= beg (point)) (<= (point) end))
+	    (setq src-search-beg (prop-match-value match))))))
+    (if (not src-search-beg)
+	(user-error "No live-sync can be started at: %d" (point))
+      (with-current-buffer src-buf
+	(goto-char src-search-beg)
+	(let* ((src-elem (org-transclusion-get-enclosing-element))
+	       (src-beg (org-transclusion-element-get-beg-or-end 'beg src-elem))
+	       (src-end (org-transclusion-element-get-beg-or-end 'end src-elem)))
+	  (make-overlay src-beg src-end nil t t))))))
 
 (defun org-transclusion-live-sync-source-remove-overlayay (beg end)
   "Remove the overlay in the source buffer being edited when applicable.
