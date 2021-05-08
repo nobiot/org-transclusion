@@ -201,6 +201,7 @@ of this global variable is to make the live-sync location a
 
 (defvar org-transclusion-live-sync-map
   (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map org-mode-map)
     (define-key map (kbd "C-c C-c") #'org-transclusion-live-sync-exit-at-poiont)
     (define-key map (kbd "C-y") #'org-transclusion-live-sync-paste)
     map))
