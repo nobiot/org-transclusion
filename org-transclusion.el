@@ -402,14 +402,37 @@ non-nil (e.g. \\[universal-argument]), the point will remain in
 the source buffer for further editing. "
   (interactive "P")
   (when-let* ((src-buf (overlay-buffer (get-text-property (point) 'tc-pair)))
-	      (src-beg-mkr (get-text-property
-			    (point) 'org-transclusion-text-beg-mkr))
+	      (tc-elem (org-transclusion-get-enclosing-element))
+	      (tc-beg (org-transclusion-element-get-beg-or-end 'beg tc-elem))
+	      (tc-end (org-transclusion-element-get-beg-or-end 'end tc-elem))
+	      (src-beg-mkr (org-transclusion-find-source-marker tc-beg tc-end))
 	      (buf (current-buffer)))
     (unwind-protect
 	(progn (pop-to-buffer src-buf)
 	       (goto-char src-beg-mkr)
 	       (recenter-top-bottom))
       (unless arg (pop-to-buffer buf)))))
+
+(defun org-transclusion-find-source-marker (beg end)
+  "Find marker that points to the beginning of source.
+The search range is limited between BEG and END (both points
+inclusive).  When not found, return nil.
+
+It is meant to be used within a transclusion region."
+  (let ((m (get-text-property (point) 'org-transclusion-text-beg-mkr)))
+    ;; If point is not on a text with the property, it still may be
+    ;; found within the same element Search the text-prop up to
+    ;; LIMIT.
+    (unless m
+      (save-excursion
+	(when-let ((match (or (text-property-search-forward
+			       'org-transclusion-text-beg-mkr)
+			      (text-property-search-backward
+			       'org-transclusion-text-beg-mkr))))
+	  ;; Point must be between beg and end (inclusive)
+	  (when (and (<= beg (point)) (<= (point) end))
+	    (setq m (prop-match-value match))))))
+  m))
 
 (defun org-transclusion-live-sync-start-at-point ()
   "Put overlay for start live sync edit on the transclusion at point.
@@ -984,20 +1007,7 @@ TODO: At the moment, only Org Mode files are supported."
   (let ((src-buf (overlay-buffer (get-text-property (point) 'tc-pair)))
 	;; I will keep src-buf to be gotten from tc-pair.
 	;; I might not keep org-transclusion-text-beg-mkr
-	(src-search-beg (get-text-property (point) 'org-transclusion-text-beg-mkr)))
-    ;; If point is not on a text with the property, it still may be
-    ;; found within the same element Search the text-prop up to
-    ;; LIMIT.
-    (unless src-search-beg
-      (save-excursion
-	(when-let ((match (or
-			   (text-property-search-forward
-			    'org-transclusion-text-beg-mkr)
-			   (text-property-search-backward
-			    'org-transclusion-text-beg-mkr))))
-	  ;; Point must be between beg and end (inclusive)
-	  (when (and (<= beg (point)) (<= (point) end))
-	    (setq src-search-beg (prop-match-value match))))))
+	(src-search-beg (org-transclusion-find-source-marker beg end)))
     (if (not src-search-beg)
 	(user-error "No live-sync can be started at: %d" (point))
       (with-current-buffer src-buf
