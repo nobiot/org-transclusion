@@ -528,8 +528,8 @@ properties of the live-sync overlay correctly.  This function is meant to be use
   "Activate automatic transclusions in the local buffer."
   (add-hook 'before-save-hook #'org-transclusion-before-save-buffer nil t)
   (add-hook 'after-save-hook #'org-transclusion-after-save-buffer nil t)
-  (add-hook 'kill-buffer-hook #'org-transclusion-before-save-buffer nil t)
-  (add-hook 'kill-emacs-hook #'org-transclusion-before-save-buffer nil t)
+  (add-hook 'kill-buffer-hook #'org-transclusion-remove-all-in-buffer nil t)
+  (add-hook 'kill-emacs-hook #'org-transclusion-remove-all-in-buffer nil t)
   (org-transclusion-yank-excluded-properties-set))
 
 (defun org-transclusion-deactivate ()
@@ -537,8 +537,8 @@ properties of the live-sync overlay correctly.  This function is meant to be use
   (org-transclusion-remove-all-in-buffer)
   (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
   (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
-  (remove-hook 'kill-buffer-hook #'org-transclusion-before-save-buffer t)
-  (remove-hook 'kill-emacs-hook #'org-transclusion-before-save-buffer t)
+  (remove-hook 'kill-buffer-hook #'org-transclusion-remove-all-in-buffer t)
+  (remove-hook 'kill-emacs-hook #'org-transclusion-remove-all-in-buffer t)
   (org-transclusion-yank-excluded-properties-remove))
 
 (defun org-transclusion-yank-excluded-properties-set ()
@@ -1306,7 +1306,6 @@ When REMOVE is non-nil, remove the subtree from the clipboard."
        (org-flag-subtree t))
      (when for-yank (goto-char newend))
      (when remove (pop kill-ring)))))
-
 
 ;;-----------------------------------------------------------------------------
 ;; Text Clone
