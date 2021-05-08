@@ -200,7 +200,7 @@ of this global variable is to make the live-sync location a
     map))
 
 (defvar org-transclusion-live-sync-map
-  (let ((map org-mode-map)) ;; copy.
+  (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-c") #'org-transclusion-live-sync-exit-at-poiont)
     (define-key map (kbd "C-y") #'org-transclusion-live-sync-paste)
     map))
@@ -506,6 +506,27 @@ properties of the live-sync overlay correctly.  This function is meant to be use
   (add-hook 'after-save-hook #'org-transclusion-after-save-buffer nil t)
   (add-hook 'kill-buffer-hook #'org-transclusion-before-save-buffer nil t)
   (add-hook 'kill-emacs-hook #'org-transclusion-before-save-buffer nil t)
+  (org-transclusion-yank-excluded-properties-set))
+
+(defun org-transclusion-deactivate ()
+  "Deactivate automatic transclusions in the local buffer."
+  (org-transclusion-remove-all-in-buffer)
+  (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
+  (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
+  (remove-hook 'kill-buffer-hook #'org-transclusion-before-save-buffer t)
+  (remove-hook 'kill-emacs-hook #'org-transclusion-before-save-buffer t)
+  (org-transclusion-yank-excluded-properties-remove))
+
+(defun org-transclusion-yank-excluded-properties-set ()
+  "Set `yank-excluded-properties' for pasting transcluded text.
+This way, the pasted text will not inherit the text props that
+are required for live-sync and other transclusion-specific
+functions.
+
+`org-transclusion-yank-excluded-line-prefix' and
+`org-transclusion-yank-excluded-wrap-prefix' are used to ensure
+the settings revert to the user's setting prior to
+`org-transclusion-activate'."
   ;; Ensure this happens only once until deactivation
   (unless (memq 'tc-id yank-excluded-properties)
     ;; Return t if 'wrap-prefix is already in `yank-excluded-properties'
@@ -515,27 +536,29 @@ properties of the live-sync overlay correctly.  This function is meant to be use
 	    (push 'wrap-prefix yank-excluded-properties) nil))
     (setq org-transclusion-yank-excluded-line-prefix
 	  (if (memq 'line-prefix yank-excluded-properties) t
-	    (push 'line-prefix yank-excluded-properties) nil)))
-  (unless (memq 'tc-id yank-excluded-properties)
+	    (push 'line-prefix yank-excluded-properties) nil))
     (setq yank-excluded-properties
 	  (append yank-excluded-properties org-transclusion-yank-excluded-properties))))
 
-(defun org-transclusion-deactivate ()
-  "Deactivate automatic transclusions in the local buffer."
-  (org-transclusion-remove-all-in-buffer)
-  (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
-  (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
-  (remove-hook 'kill-buffer-hook #'org-transclusion-before-save-buffer t)
-  (remove-hook 'kill-emacs-hook #'org-transclusion-before-save-buffer t)
+(defun org-transclusion-yank-excluded-properties-remove ()
+  "Remove transclusion-specific text props from `yank-excluded-properties'.
+`org-transclusion-yank-excluded-line-prefix' and
+`org-transclusion-yank-excluded-wrap-prefix' are used to ensure
+the settings revert to the user's setting prior to
+`org-transclusion-activate'."
   (when (memq 'tc-id yank-excluded-properties)
     ;; Ensure it's called only once until next activation
-    (dolist (obj (append org-transclusion-yank-excluded-properties '(line-prefix wrap-prefix)))
+    (dolist (obj org-transclusion-yank-excluded-properties)
       ;; 'line-prefix and 'wrap-prefix need to be set to the user's set values
-      (unless (or (and (eq obj 'line-prefix)
-		       org-transclusion-yank-excluded-line-prefix)
-		  (and (eq obj 'wrap-prefix)
-		       org-transclusion-yank-excluded-wrap-prefix))
-	(setq yank-excluded-properties (delq obj yank-excluded-properties))))))
+      (setq yank-excluded-properties (delq obj yank-excluded-properties)))
+    ;; Ensure `yank-excluded-properties' will revert to the user's setting
+    ;; for line-prefix and wrap-prefix
+    (unless  org-transclusion-yank-excluded-line-prefix
+      (setq yank-excluded-properties
+	    (delq 'line-prefix yank-excluded-properties)))
+    (unless org-transclusion-yank-excluded-wrap-prefix
+      (setq yank-excluded-properties
+	    (delq 'wrap-prefix yank-excluded-properties)))))
 
 (defun org-transclusion-before-save-buffer ()
   "."
