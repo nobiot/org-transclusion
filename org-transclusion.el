@@ -631,6 +631,8 @@ It assumes that point is at a keyword."
     (when (org-kill-is-subtree-p content)
       (let ((level (plist-get keyword-values :level)))
 	(with-temp-buffer
+	  ;; This temp buffer needs to be in Org Mode
+	  ;; Otherwise, subtree won't be recognized as a Org subtree
 	  (delay-mode-hooks (org-mode))
 	  (org-transclusion-paste-subtree level content t t)
 	  (setq content (buffer-string)))))
