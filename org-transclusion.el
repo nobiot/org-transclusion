@@ -457,7 +457,12 @@ managemetn of before- and after-save-buffer-hooks.
 TODO source buffer opens when it is not open. The line position
 may or may not be useful. This needs to be thought through.
 
-TODO: At the moment, only Org Mode files are supported."
+TODO: At the moment, only Org Mode files are supported.
+`org-transclusion-live-sync-map' inherits `org-mode-map' and adds
+a couple of org-transclusion specific keybindings; namely:
+- `org-transclusion-live-sync-paste'
+- `org-transclusion-live-sync-exit-at-poiont'
+\\{org-transclusion-live-sync-map}"
   (interactive)
   (if (not (org-transclusion--within-transclusion-p))
       (progn (message "This is not a translusion.") nil)
