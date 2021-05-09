@@ -478,42 +478,47 @@ a couple of org-transclusion specific keybindings; namely:
 	   ;; FIXME: tc-end likely fails to find the element when the point is
 	   ;; right at the end of the transcluded region.
 	   (tc-end (org-transclusion-element-get-beg-or-end 'end tc-elem))
-	   (tc-ov (make-overlay tc-beg tc-end nil nil t)) ;front-advance should be nil
-	   (tc-ov-len (- (overlay-end tc-ov) (overlay-start tc-ov)))
+	   (src-content (org-transclusion-live-sync-get-source-content tc-beg tc-end))
 	   (src-ov (org-transclusion-live-sync-source-make-overlay tc-beg tc-end))
-	   (src-ov-len (- (overlay-end src-ov) (overlay-start src-ov)))
-	   (dups (list src-ov tc-ov)))
-      (if (/= tc-ov-len src-ov-len)
-	  (user-error "Live sync did not start. The lengths are not identical")
-	(org-transclusion-live-sync-display-buffer (overlay-buffer src-ov))
-	;; Source Overlay
-	(overlay-put src-ov 'evaporate t)
-	(overlay-put src-ov 'text-clones dups)
-	(overlay-put src-ov 'modification-hooks
-		     '(org-transclusion--text-clone--maintain))
-	(overlay-put src-ov 'insert-in-front-hooks
-		     '(org-transclusion--text-clone--maintain))
-	(overlay-put src-ov 'insert-behind-hooks
-		     '(org-transclusion--text-clone--maintain))
-	(overlay-put src-ov 'face 'org-transclusion-source-edit)
-	(overlay-put src-ov 'priority -50)
-	;; Transclusion Overlay
-	(overlay-put tc-ov 'modification-hooks
-		     '(org-transclusion--text-clone--maintain))
-	(overlay-put tc-ov 'insert-in-front-hooks
-		     '(org-transclusion--text-clone--maintain))
-	(overlay-put tc-ov 'insert-behind-hooks
-		     '(org-transclusion--text-clone--maintain))
-	(overlay-put tc-ov 'evaporate t)
-	(overlay-put tc-ov 'tc-paired-src-edit-ov src-ov)
-	(overlay-put tc-ov 'tc-type "src-edit-ov")
-	(overlay-put tc-ov 'face 'org-transclusion-edit)
-	(overlay-put tc-ov 'text-clones dups)
-	(overlay-put tc-ov 'local-map org-transclusion-live-sync-map)
-	(with-silent-modifications
-	  (remove-text-properties (1- tc-beg) tc-end '(read-only)))
-	(setq org-transclusion-live-sync-marker (org-transclusion--make-marker (point)))
-	t))))
+	   (tc-ov)(tc-ov-len)(dups))
+      ;; replace the region as a copy of the src-overlay region
+      (save-excursion
+	(let ((inhibit-read-only t))
+	  (goto-char tc-beg)
+	  (delete-region tc-beg tc-end)
+	  (insert-and-inherit src-content)
+	  (setq tc-end (point))))
+      (setq tc-ov (make-overlay tc-beg tc-end nil nil t)) ;front-advance should be nil
+      (setq dups (list src-ov tc-ov))
+      (org-transclusion-live-sync-display-buffer (overlay-buffer src-ov))
+      ;; Source Overlay
+      (overlay-put src-ov 'evaporate t)
+      (overlay-put src-ov 'text-clones dups)
+      (overlay-put src-ov 'modification-hooks
+		   '(org-transclusion--text-clone--maintain))
+      (overlay-put src-ov 'insert-in-front-hooks
+		   '(org-transclusion--text-clone--maintain))
+      (overlay-put src-ov 'insert-behind-hooks
+		   '(org-transclusion--text-clone--maintain))
+      (overlay-put src-ov 'face 'org-transclusion-source-edit)
+      (overlay-put src-ov 'priority -50)
+      ;; Transclusion Overlay
+      (overlay-put tc-ov 'modification-hooks
+		   '(org-transclusion--text-clone--maintain))
+      (overlay-put tc-ov 'insert-in-front-hooks
+		   '(org-transclusion--text-clone--maintain))
+      (overlay-put tc-ov 'insert-behind-hooks
+		   '(org-transclusion--text-clone--maintain))
+      (overlay-put tc-ov 'evaporate t)
+      (overlay-put tc-ov 'tc-paired-src-edit-ov src-ov)
+      (overlay-put tc-ov 'tc-type "src-edit-ov")
+      (overlay-put tc-ov 'face 'org-transclusion-edit)
+      (overlay-put tc-ov 'text-clones dups)
+      (overlay-put tc-ov 'local-map org-transclusion-live-sync-map)
+      (with-silent-modifications
+	(remove-text-properties (1- tc-beg) tc-end '(read-only)))
+      (setq org-transclusion-live-sync-marker (org-transclusion--make-marker (point)))
+      t)))
 
 (defun org-transclusion-live-sync-exit-at-point ()
   "Exit live-sync at point.
@@ -1013,6 +1018,23 @@ placed without a blank line."
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for live-sync
 
+(defun org-transclusion-live-sync-get-source-content (beg end)
+  ".
+Search range BEG and END.
+TODO: At the moment, only Org Mode files are supported."
+  (let ((src-buf (overlay-buffer (get-text-property (point) 'tc-pair)))
+	;; I will keep src-buf to be gotten from tc-pair.
+	;; I might not keep org-transclusion-text-beg-mkr
+	(src-search-beg (org-transclusion-find-source-marker beg end)))
+    (if (not src-search-beg)
+	(user-error "No live-sync can be started at: %d" (point))
+      (with-current-buffer src-buf
+	(goto-char src-search-beg)
+	(let* ((src-elem (org-transclusion-get-enclosing-element))
+	       (src-beg (org-transclusion-element-get-beg-or-end 'beg src-elem))
+	       (src-end (org-transclusion-element-get-beg-or-end 'end src-elem)))
+	  (buffer-substring-no-properties src-beg src-end))))))
+
 (defun org-transclusion-live-sync-source-make-overlay (beg end)
   ".
 Search range BEG and END.
@@ -1077,7 +1099,8 @@ fragile, and inconsistent with the way transcluded region works."
 	(let ((context
 	       (or (org-element-lineage (org-element-context)
 					'(center-block
-					  comment-block drawer
+					  ;;comment-block does not work well
+					  drawer
 					  dynamic-block
 					  example-block
 					  export-block fixed-width
