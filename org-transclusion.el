@@ -465,10 +465,8 @@ a couple of org-transclusion specific keybindings; namely:
 \\{org-transclusion-live-sync-map}"
   (interactive)
   (if (not (org-transclusion--within-transclusion-p))
-      (progn (message "This is not a translusion.") nil)
-    ;; Temporarily deactivate filter
-    ;;    (let ((org-transclusion-exclude-elements nil))
-    ;;     (org-transclusion-refresh-at-point))
+      (progn (message (format "Nothing done. Not a translusion at %d" (point)))
+	     nil)
     (org-transclusion-live-sync-remove-others)
     (org-transclusion-refresh-at-point)
     (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
