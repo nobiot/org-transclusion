@@ -416,7 +416,22 @@ the source buffer for further editing. "
       (unless arg (pop-to-buffer buf)))))
 
 (defun org-transclusion-find-source-marker (beg end)
-  "Return marker that popints to the beginning of source"
+  "Return marker that popints to source beginning for transclusion.
+It works on the transclusion region at point.  BEG and END is
+used to limit the `text-property-search' -- as it does not have
+an argument to limit the search, this is done by looking at the
+output point and compare it with BEG and END.
+
+This function critically relies on the fact that `org-element'
+puts a \":parent\" text property to the elements obtained by
+using `org-element-parse-buffer' and
+`org-element--parse-elements' Some elements such as comment-block
+does not seem to add :parent, which makes live-sync not working
+for them.
+
+Text properties are addeb by `org-element-put-property' which in
+turn uses `org-add-props' macro. If any of this substantially
+changes, the logic in this function will need to reviewed."
   (let ((parent (get-text-property (point) ':parent))
 	(src-buf (marker-buffer
 		  (get-text-property (point) 'tc-src-beg-mkr)))
