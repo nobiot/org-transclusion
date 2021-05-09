@@ -231,6 +231,25 @@ of this global variable is to make the live-sync location a
       (org-transclusion-add-all-in-buffer)))
    (t (org-transclusion-deactivate))))
 
+(defun org-transclusion-activate ()
+  "Activate automatic transclusions in the local buffer."
+  (interactive)
+  (add-hook 'before-save-hook #'org-transclusion-before-save-buffer nil t)
+  (add-hook 'after-save-hook #'org-transclusion-after-save-buffer nil t)
+  (add-hook 'kill-buffer-hook #'org-transclusion-remove-all-in-buffer nil t)
+  (add-hook 'kill-emacs-hook #'org-transclusion-remove-all-in-buffer nil t)
+  (org-transclusion-yank-excluded-properties-set))
+
+(defun org-transclusion-deactivate ()
+  "Deactivate automatic transclusions in the local buffer."
+  (interactive)
+  (org-transclusion-remove-all-in-buffer)
+  (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
+  (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
+  (remove-hook 'kill-buffer-hook #'org-transclusion-remove-all-in-buffer t)
+  (remove-hook 'kill-emacs-hook #'org-transclusion-remove-all-in-buffer t)
+  (org-transclusion-yank-excluded-properties-remove))
+
 (defun org-transclusion-make-from-link (&optional arg)
   "Make a transclusion keyword from a link at point.
 The resultant transclusion keyword will be placed in the first
@@ -552,23 +571,6 @@ meant to be used as part of `org-transclusion-live-sync-map'"
 
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions for Activate / Deactiveate / save-buffer hooks
-
-(defun org-transclusion-activate ()
-  "Activate automatic transclusions in the local buffer."
-  (add-hook 'before-save-hook #'org-transclusion-before-save-buffer nil t)
-  (add-hook 'after-save-hook #'org-transclusion-after-save-buffer nil t)
-  (add-hook 'kill-buffer-hook #'org-transclusion-remove-all-in-buffer nil t)
-  (add-hook 'kill-emacs-hook #'org-transclusion-remove-all-in-buffer nil t)
-  (org-transclusion-yank-excluded-properties-set))
-
-(defun org-transclusion-deactivate ()
-  "Deactivate automatic transclusions in the local buffer."
-  (org-transclusion-remove-all-in-buffer)
-  (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
-  (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
-  (remove-hook 'kill-buffer-hook #'org-transclusion-remove-all-in-buffer t)
-  (remove-hook 'kill-emacs-hook #'org-transclusion-remove-all-in-buffer t)
-  (org-transclusion-yank-excluded-properties-remove))
 
 (defun org-transclusion-yank-excluded-properties-set ()
   "Set `yank-excluded-properties' for pasting transcluded text.
