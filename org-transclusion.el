@@ -401,6 +401,8 @@ You can customize the keymap with using `org-transclusion-map':
 non-nil (e.g. \\[universal-argument]), the point will remain in
 the source buffer for further editing. "
   (interactive "P")
+  (unless (overlay-buffer (get-text-property (point) 'tc-pair))
+    (org-transclusion-refresh-at-point))
   (when-let* ((src-buf (overlay-buffer (get-text-property (point) 'tc-pair)))
 	      (tc-elem (org-transclusion-get-enclosing-element))
 	      (tc-beg (org-transclusion-element-get-beg-or-end 'beg tc-elem))
@@ -408,9 +410,11 @@ the source buffer for further editing. "
 	      (src-beg-mkr (org-transclusion-find-source-marker tc-beg tc-end))
 	      (buf (current-buffer)))
     (unwind-protect
-	(progn (pop-to-buffer src-buf)
-	       (goto-char src-beg-mkr)
-	       (recenter-top-bottom))
+	(progn
+	  (pop-to-buffer src-buf
+			 '(display-buffer-reuse-window . '(inhibit-same-window)))
+	  (goto-char src-beg-mkr)
+	  (recenter-top-bottom))
       (unless arg (pop-to-buffer buf)))))
 
 (defun org-transclusion-find-source-marker (beg end)
@@ -1118,10 +1122,11 @@ fragile, and inconsistent with the way transcluded region works."
   ;;(unless (get-text-property start 'org-transclusion-text-beg-mkr)
   (if (not org-transclusion-substring-advice-enabled)
       (funcall orgfn start end)
-    (put-text-property start end
-		       'org-transclusion-text-beg-mkr (org-transclusion--make-marker start))
-    (put-text-property start end
-		       'org-transclusion-text-end-mkr (org-transclusion--make-marker end))
+    (with-silent-modifications
+      (put-text-property start end
+			 'org-transclusion-text-beg-mkr (org-transclusion--make-marker start))
+      (put-text-property start end
+			 'org-transclusion-text-end-mkr (org-transclusion--make-marker end)))
     ;; (put-text-property start end
     ;;                      'org-transclusion-text-id (org-id-uuid)))
     (buffer-substring start end)))
@@ -1185,7 +1190,10 @@ Upon exiting live-sync,
 back the original window configuration."
   (setq org-transclusion-temp-window-config (current-window-configuration))
   (delete-other-windows)
-  (display-buffer buffer))
+  (let ((win (selected-window)))
+    (pop-to-buffer buffer)
+    (recenter-top-bottom)
+    (select-window win)))
 
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for meta-left/right: promote/demote a transcluded subtree
