@@ -478,7 +478,7 @@ a couple of org-transclusion specific keybindings; namely:
 	   ;; FIXME: tc-end likely fails to find the element when the point is
 	   ;; right at the end of the transcluded region.
 	   (tc-end (org-transclusion-element-get-beg-or-end 'end tc-elem))
-	   (tc-ov (make-overlay tc-beg tc-end nil nil t)) ;front-advance should be t?
+	   (tc-ov (make-overlay tc-beg tc-end nil nil t)) ;front-advance should be nil
 	   (tc-ov-len (- (overlay-end tc-ov) (overlay-start tc-ov)))
 	   (src-ov (org-transclusion-live-sync-source-make-overlay tc-beg tc-end))
 	   (src-ov-len (- (overlay-end src-ov) (overlay-start src-ov)))
@@ -504,7 +504,6 @@ a couple of org-transclusion specific keybindings; namely:
 		     '(org-transclusion--text-clone--maintain))
 	(overlay-put tc-ov 'insert-behind-hooks
 		     '(org-transclusion--text-clone--maintain))
-	(overlay-put tc-ov 'evaporate t)
 	(overlay-put tc-ov 'evaporate t)
 	(overlay-put tc-ov 'tc-paired-src-edit-ov src-ov)
 	(overlay-put tc-ov 'tc-type "src-edit-ov")
@@ -1029,7 +1028,7 @@ TODO: At the moment, only Org Mode files are supported."
 	(let* ((src-elem (org-transclusion-get-enclosing-element))
 	       (src-beg (org-transclusion-element-get-beg-or-end 'beg src-elem))
 	       (src-end (org-transclusion-element-get-beg-or-end 'end src-elem)))
-	  (make-overlay src-beg src-end nil nil t)))))) ;front-advanced should be t?
+	  (make-overlay src-beg src-end nil nil t)))))) ;front-advanced should be nil
 
 (defun org-transclusion-live-sync-source-remove-overlayay (beg end)
   "Remove the overlay in the source buffer being edited when applicable.
