@@ -44,6 +44,10 @@
 (require 'org)
 (require 'org-element)
 (require 'org-id)
+(declare-function org-at-keyword-p 'org)
+(declare-function text-property-search-forward 'text-property-search)
+(declare-function text-property-search-backward 'text-property-search)
+(declare-function prop-match-value 'text-property-search)
 
 ;;;; Customization
 
@@ -156,13 +160,12 @@ buffer."
 Analogous to `org-edit-src-code'.")
 
 (defvar org-transclusion-live-sync-marker nil
-  "Marker to keep track of the single live-sync buffer and
-  point.
+  "Marker to keep track of the single live-sync buffer and point.
 
-The live-sync edit should be a focused and deliberate
-action. It's easy to forget the fact live-sync is on. The intent
-of this global variable is to make the live-sync location a
-\"singleton\" -- only one available in an Emacs session.")
+The live-sync edit should be a focused and deliberate action.
+It's easy to forget the fact live-sync is on.  The intent of this
+global variable is to make the live-sync location a \"singleton\"
+-- only one available in an Emacs session.")
 
 (defvar org-transclusion-yank-excluded-properties '(tc-id tc-type
 							  tc-beg-mkr
@@ -253,13 +256,12 @@ of this global variable is to make the live-sync location a
 (defun org-transclusion-make-from-link (&optional arg)
   "Make a transclusion keyword from a link at point.
 The resultant transclusion keyword will be placed in the first
-empty line below.
 
 When `org-transclusion-mode' is active, this function
 automatically transclude the text content; when it is inactive,
 it simply adds \"#+transclude t [[link]]\" for the link.
 
-You can pass a prefix ARGument with using
+You can pass a prefix ument (ARG) with using
 `digit-argument' (e.g. C-1, C-2, or C-u 3, so on). If you pass a
 positive number 1-9, then this function automatically inserts the
 :level property of the resultant transclusion."
@@ -292,7 +294,7 @@ positive number 1-9, then this function automatically inserts the
 
 Examples of acceptable formats are as below:
 
-- \"#+transclude: t[nil] [[file:path/to/file.org::search-option][optional desc]] :level n\"
+- \"#+transclude: t[nil] [[file:path/file.org::search-option][desc]]:level n\"
 - \"#+transclude: t[nil] [[id:uuid]] :level n\"
 
 The file path or id are tranlated to the normal Org Mode link
@@ -323,7 +325,7 @@ You can customize the keymap with using `org-transclusion-map':
 		    (string= "file" type)))
 	   (let ((tc-params))
 	     (setq tc-params (run-hook-with-args-until-success
-			      'org-transclusion-link-open-hook tc-params link))
+			      'org-transclusion-link-open-hook link))
 	     (if (not tc-params)
 		 (progn (message "No transclusion added.") nil) ; return nil)
 	       (let* ((tc-type (plist-get tc-params :tc-type))
@@ -418,9 +420,9 @@ You can customize the keymap with using `org-transclusion-map':
   (org-transclusion-promote-or-demote-subtree 'demote))
 
 (defun org-transclusion-open-source (&optional arg)
-  "Open the source buffer of transclusion at point When ARG is
-non-nil (e.g. \\[universal-argument]), the point will remain in
-the source buffer for further editing. "
+  "Open the source buffer of transclusion at point.
+When ARG is non-nil (e.g. \\[universal-argument]), the point will
+remain in the source buffer for further editing."
   (interactive "P")
   (unless (overlay-buffer (get-text-property (point) 'tc-pair))
     (org-transclusion-refresh-at-point))
@@ -438,47 +440,11 @@ the source buffer for further editing. "
 	  (recenter-top-bottom))
       (unless arg (pop-to-buffer buf)))))
 
-(defun org-transclusion-find-source-marker (beg end)
-  "Return marker that popints to source beginning for transclusion.
-It works on the transclusion region at point.  BEG and END is
-used to limit the `text-property-search' -- as it does not have
-an argument to limit the search, this is done by looking at the
-output point and compare it with BEG and END.
-
-This function critically relies on the fact that `org-element'
-puts a \":parent\" text property to the elements obtained by
-using `org-element-parse-buffer' and
-`org-element--parse-elements' Some elements such as comment-block
-does not seem to add :parent, which makes live-sync not working
-for them.
-
-Text properties are addeb by `org-element-put-property' which in
-turn uses `org-add-props' macro. If any of this substantially
-changes, the logic in this function will need to reviewed."
-  (let ((parent (get-text-property (point) ':parent))
-	(src-buf (marker-buffer
-		  (get-text-property (point) 'tc-src-beg-mkr)))
-	(m))
-    (unless parent
-      (save-excursion
-	(when-let ((match (or (text-property-search-forward
-			       ':parent)
-			      (text-property-search-backward
-			       ':parent))))
-	  ;; Point must be between beg and end (inclusive)
-	  (when (and (<= beg (point)) (<= (point) end))
-	    (setq parent (prop-match-value match))))))
-    (setq m (set-marker (make-marker)
-			(or (org-element-property :contents-begin parent)
-			    (org-element-property :begin parent))
-			src-buf))
-    m))
-
 (defun org-transclusion-live-sync-start-at-point ()
   "Put overlay for start live sync edit on the transclusion at point.
 
 While live sync is on, before- and after-save-hooks to remove/add
-transclusions are also temporariliy disabled. This prevents
+transclusions are also temporariliy disabled.  This prevents
 auto-save from getting in the way of live sync.
 
 TODO: At the moment, only Org Mode files are supported.
@@ -509,7 +475,7 @@ a couple of org-transclusion specific keybindings; namely:
 			 src-beg-mkr src-end-mkr))
 	   (src-ov (org-transclusion-live-sync-source-overlay-make
 		    src-beg-mkr src-end-mkr))
-	   (tc-ov)(tc-ov-len)(dups))
+	   (tc-ov)(dups))
       ;; replace the region as a copy of the src-overlay region
       (save-excursion
 	(let ((inhibit-read-only t))
@@ -563,9 +529,9 @@ the state before live-sync started."
       (setq org-transclusion-temp-window-config nil))))
 
 (defun org-transclusion-live-sync-paste ()
-  "Paste text content from kill-ring and inherit the text
-properties of the live-sync overlay correctly.  This function is
-meant to be used as part of `org-transclusion-live-sync-map'"
+  "Paste text content from `kill-ring' and inherit the text props.
+This is meant to be used within live-sync overlay.  This function
+is meant to be used as part of `org-transclusion-live-sync-map'"
   (interactive)
   (insert-and-inherit (current-kill 0)))
 
@@ -633,47 +599,47 @@ the settings revert to the user's setting prior to
 ;;   #+transclude: t "~/path/to/file.org::1234"
 
 (defun org-transclusion-keyword-get-string-to-plist ()
-  "Return the \"#+transcldue:\" keyword's values if any at point"
+  "Return the \"#+transcldue:\" keyword's values if any at point."
   (save-excursion
     (beginning-of-line)
     (let ((plist))
       (when (string= "TRANSCLUDE" (org-element-property :key (org-element-at-point)))
 	;; #+transclude: keyword exists.
 	;; Further checking the value
-	(when-let ((value (org-element-property :value (org-element-at-point))))
+	(when-let ((str (org-element-property :value (org-element-at-point))))
 	  (dolist (fn org-transclusion-get-keyword-values-hook) plist
-		  (setq plist (append plist (funcall fn value)))))
+		  (setq plist (append plist (funcall fn str)))))
 	plist))))
 
-(defun org-transclusion-keyword-get-value-active-p (value)
-  "It is a utility function used converting a keyword string to
-plist. It is meant to be used by
-`org-transclusion-get-string-to-plist'.  It needs to be set in
+(defun org-transclusion-keyword-get-value-active-p (string)
+  "It is a utility function used converting a keyword STRING to plist.
+It is meant to be used by `org-transclusion-get-string-to-plist'.
+It needs to be set in
 `org-transclusion-get-keyword-values-hook'."
-  (when (string-match "^\\(t\\|nil\\).*$" value)
-    (list :active-p (org-transclusion--not-nil (match-string 1 value)))))
+  (when (string-match "^\\(t\\|nil\\).*$" string)
+    (list :active-p (org-transclusion--not-nil (match-string 1 string)))))
 
-(defun org-transclusion-keyword-get-value-link (value)
-  "It is a utility function used converting a keyword string to
-plist. It is meant to be used by
+(defun org-transclusion-keyword-get-value-link (string)
+  "It is a utility function used converting a keyword STRING to plist.
+It is meant to be used by
 `org-transclusion-get-string-to-plist'.  It needs to be set in
 `org-transclusion-get-keyword-values-hook'."
-  (if (string-match "\\(\\[\\[.+?\\]\\]\\)" value)
-      (list :link (org-strip-quotes (match-string 0 value)))
+  (if (string-match "\\(\\[\\[.+?\\]\\]\\)" string)
+      (list :link (org-strip-quotes (match-string 0 string)))
     ;; link mandatory
-    (user-error "Error. Link in #+transclude is mandatory at %d" (point))
+    (user-error "Error.  Link in #+transclude is mandatory at %d" (point))
     nil))
 
-(defun org-transclusion-keyword-get-value-level (value)
-  "It is a utility function used converting a keyword string to
-plist. It is meant to be used by
-`org-transclusion-get-string-to-plist'.  It needs to be set in
+(defun org-transclusion-keyword-get-value-level (string)
+  "It is a utility function used converting a keyword STRING to plist.
+It is meant to be used by `org-transclusion-get-string-to-plist'.
+It needs to be set in
 `org-transclusion-get-keyword-values-hook'."
-  (when (string-match ":level *\\([1-9]\\)" value)
-    (list :level (string-to-number (org-strip-quotes (match-string 1 value))))))
+  (when (string-match ":level *\\([1-9]\\)" string)
+    (list :level (string-to-number (org-strip-quotes (match-string 1 string))))))
 
 (defun org-transclusion-keyword-remove ()
-  "Remove keyword element at point.
+  "Remove the keyword element at point.
 It assumes that point is at a keyword."
   (let* ((elm (org-element-at-point))
 	 (beg (org-element-property :begin elm))
@@ -682,7 +648,7 @@ It assumes that point is at a keyword."
     (delete-region beg (- end post-blank)) t))
 
 (defun org-transclusion-keyword-plist-to-string (plist)
-  "."
+  "Convert a keyword PLIST to a string."
   (let ((active-p (plist-get plist :active-p))
 	(link (plist-get plist :link))
 	(level (plist-get plist :level)))
@@ -696,7 +662,12 @@ It assumes that point is at a keyword."
 ;;;; Functions for inserting content
 
 (defun org-transclusion-content-insert (keyword-values type content src-beg-m src-end-m)
-  "Add content and overlay."
+  "Add content and overlay.
+- KEYWORD-VALUES :: TBD
+- TYPE :: TBD
+- CONTENT :: TBD
+- SRC-BEG-M :: TBD
+- SRC-END-M :: TBD."
   (let* ((tc-id (substring (org-id-uuid) 0 8))
 	 (sbuf (marker-buffer src-beg-m)) ;source buffer
 	 (beg (point)) ;; before the text is inserted
@@ -704,7 +675,6 @@ It assumes that point is at a keyword."
 	 (end) ;; at the end of text content after inserting it
 	 (end-mkr)
 	 (ov-src) ;; source-buffer
-	 (ov-tc) ;; transclusion-buiffer
 	 (tc-pair))
     (when (org-kill-is-subtree-p content)
       (let ((level (plist-get keyword-values :level)))
@@ -761,29 +731,31 @@ Currently it only re-aligns table with links in the content."
 	(setq point (search-forward "|" (point-max) t))))
     (buffer-string)))
 
-(defun org-transclusion-link-open-org-id (tc-params link)
-  "For Org-id.
+(defun org-transclusion-link-open-org-id (link)
+  "Return a list for Org-ID LINK object.
 Return nil if not found."
   (when (string= "id" (org-element-property :type link))
     ;; when type is id, the value of path is the id
     (let* ((id (org-element-property :path link))
 	   (mkr (ignore-errors (org-id-find id t))))
-      (if mkr (progn
-		(setq tc-params (list :tc-type "org-id"
-				      :tc-arg mkr
-				      :tc-fn #'org-transclusion-content-get-from-org-marker)))
+      (if mkr
+	  (list :tc-type "org-id"
+		:tc-arg mkr
+		:tc-fn #'org-transclusion-content-get-from-org-marker)
 	(message "No transclusion done for this ID. Ensure it works.")))))
 
-(defun org-transclusion-link-open-org-file-links (tc-params link)
-  ;; Other Org file links
+(defun org-transclusion-link-open-org-file-links (link)
+    "Return a list for Org file LINK object.
+Return nil if not found."
   (when (org-transclusion--org-file-p (org-element-property :path link))
-   (setq tc-params (list :tc-type "org-link"
-			 :tc-arg link
-			 :tc-fn #'org-transclusion-content-get-from-org-link))))
+   (list :tc-type "org-link"
+	 :tc-arg link
+	 :tc-fn #'org-transclusion-content-get-from-org-link)))
 
-(defun org-transclusion-link-open-other-file-links (tc-params link)
-     ;; For non-Org files
-     (setq tc-params (org-transclusion--get-custom-tc-params link)))
+(defun org-transclusion-link-open-other-file-links (link)
+    "Return a list for non-Org file LINK object.
+Return nil if not found."
+     (org-transclusion--get-custom-tc-params link))
 
 (defun org-transclusion-content-get-from-org-marker (marker)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from MARKER.
@@ -952,9 +924,47 @@ TODO need to handle when the file does not exist."
 ;;-----------------------------------------------------------------------------
 ;;; Utility Functions and Macros
 
+(defun org-transclusion-find-source-marker (beg end)
+  "Return marker that popints to source begin point for transclusion.
+It works on the transclusion region at point.  BEG and END are
+meant to be transclusion region's begin and end used to limit the
+`text-property-search' -- as it does not have an argument to
+limit the search, this is done by looking at the output point and
+compare it with BEG and END.
+
+This function critically relies on the fact that `org-element'
+puts a \":parent\" text property to the elements obtained by
+using `org-element-parse-buffer' and
+`org-element--parse-elements' Some elements such as comment-block
+does not seem to add :parent, which makes live-sync not working
+for them.
+
+Text properties are addeb by `org-element-put-property' which in
+turn uses `org-add-props' macro. If any of this substantially
+changes, the logic in this function will need to reviewed."
+  (let ((parent (get-text-property (point) ':parent))
+	(src-buf (marker-buffer
+		  (get-text-property (point) 'tc-src-beg-mkr)))
+	(m))
+    (unless parent
+      (save-excursion
+	(when-let ((match (or (text-property-search-forward
+			       ':parent)
+			      (text-property-search-backward
+			       ':parent))))
+	  ;; Point must be between beg and end (inclusive)
+	  (when (and (<= beg (point)) (<= (point) end))
+	    (setq parent (prop-match-value match))))))
+    (setq m (set-marker (make-marker)
+			(or (org-element-property :contents-begin parent)
+			    (org-element-property :begin parent))
+			src-buf))
+    m))
+
 (defun org-transclusion-search-or-add-next-empty-line ()
-  "Search the next empty line.  Start with the next line. If the
-current line is the bottom of the line, add a new empty line."
+  "Search the next empty line.
+Start with the next line.  If the current line is the bottom of
+the line, add a new empty line."
   ;; beginning-of-line 2 moves to the next line if possible
   (beginning-of-line 2)
   (if (eobp)(insert "\n")
@@ -963,7 +973,8 @@ current line is the bottom of the line, add a new empty line."
     (if (eobp)(insert "\n"))))
 
 (defmacro org-transclusion-with-silent-modifications (&rest body)
-  "It's like `with-silent-modifications' but keeps the undo list."
+  "Run BODY silently.
+It's like `with-silent-modifications' but keeps the undo list."
   (declare (debug t) (indent 0))
   (let ((modified (make-symbol "modified")))
     `(let* ((,modified (buffer-modified-p))
@@ -976,7 +987,7 @@ current line is the bottom of the line, add a new empty line."
 	   (restore-buffer-modified-p nil))))))
 
 (defun org-transclusion-wrap-path-to-link (path)
-  "Take PATH string. Return Org link object."
+  "Return Org link object for PATH string."
   (with-temp-buffer
     (delay-mode-hooks (org-mode))
     (insert path)
@@ -1001,7 +1012,7 @@ string \"nil\", return symbol t."
 (defun org-transclusion--make-marker (point)
   "Return marker of the insertion-type t for POINT.
 The insertion-type is important in order for the translusion beg
-and end markers are correctly set. This fixes the problem of
+and end markers are correctly set.  This fixes the problem of
 transclude keyword not correctly removed when the keywords are
 placed without a blank line."
   (let ((marker (set-marker (make-marker) point)))
@@ -1062,10 +1073,11 @@ BEG and END are assumed to be markers for the transclusion's source buffer."
     (make-overlay beg end nil nil t)))
 
 (defun org-transclusion-live-sync-source-remove-overlayay (beg end)
-  "Remove the overlay in the source buffer being edited when applicable.
+  "Remove the overlaies between BEG and END in the source buffer.
+The source buffer to be looked at is being live-sync edited.
 This function checks if such overlays exist - it should support
 multiple edit overlays.  It is meant to be used in
-`org-transclusion-remove-at-point'. The overlay needs to be
+`org-transclusion-remove-at-point'.  The overlay needs to be
 deleted before the transclusion itself is deleted; otherwise,
 live edit will try to sync the deletion, and causes an error."
   (when-let ((src-edit-ovs (overlays-in beg end)))
@@ -1074,18 +1086,26 @@ live edit will try to sync the deletion, and causes an error."
 	(delete-overlay (overlay-get ov 'tc-paired-src-edit-ov))))))
 
 (defun org-transclusion-get-enclosing-element ()
-  "Returns org element for live-sync.
+  "Return an enclosing Org element for live-sync.
 This assumes the point is within the element (at point).
+
+This function first looks for the following elements:
+
+  center-block example-block export-block fixed-width latex-environment
+  plain-list property-drawer quote-block special-block src-block table
+  verse-block keyword
+
+*comment-block does not work well drawer dynamic-block
+
+If none of them found, this function identifies the paragraph at
+point to return.
 
 This function works in a temporary org buffer to isolate the
 transcluded region and source region from the rest of the
-original buffer. This is required especially when translusion is
+original buffer.  This is required especially when translusion is
 for a paragraph, which can be right next to another paragraph
 without a blank space; thus, subsumed by the surrounding
-paragraph.
-
-TODO: For source buffer, this function works on overlay. It feels a bit
-fragile, and inconsistent with the way transcluded region works."
+paragraph."
   (interactive)
   (let* ((beg (or (when-let ((m (get-char-property (point) 'tc-beg-mkr)))
 		    (marker-position m))
@@ -1125,7 +1145,7 @@ fragile, and inconsistent with the way transcluded region works."
 	  context)))))
 
 (defun org-transclusion-element-get-beg-or-end (beg-or-end element)
-  "Returns appropriate beg or end of an element.
+  "Return appropriate beg-or-end of an element.
 This for when we need to find exactly the same sets of beg and
 end for source and transclusion elements (e.g. live-sync).
 
@@ -1133,9 +1153,9 @@ Call BEG-OR-END passing either 'beg or 'end and the ELEMENT in
 question.
 
 We are usually interested in :contents-begin and :contents-end,
-qbut some greater elements such as src-block do not have them. In
-that case, we use :begin and :end. The :end prop needs to be too
-large; we need to sutract :post-blank from it. All these props
+but some greater elements such as src-block do not have them.  In
+that case, we use :begin and :end.  The :end prop needs to be too
+large; we need to sutract :post-blank from it.  All these props
 are integers (points or number of blank lines.)"
   (let ((val
 	 (if (eq beg-or-end 'beg)
@@ -1232,8 +1252,10 @@ When DEMOTE is non-nil, demote."
 (defvar org-transclusion--text-clone-maintaining nil)
 
 (defun org-transclusion--text-clone--maintain (ol1 after beg end &optional _len)
-  "Propagate the changes made under the overlay OL1 to the other clones.
-This is used on the `modification-hooks' property of text clones."
+  "Propagate the change made under the overlay OL1 to the other paired clone.
+This is used on the `modification-hooks' property of text clones.
+AFTER, BEG, and END are the fixed args for `modification-hooks'
+and friends in an overlay."
   (when (and after ;(not undo-in-progress) ;; < nobit removed undo-in-progress
 	     (not org-transclusion--text-clone-maintaining)
 	     (overlay-start ol1))
@@ -1264,11 +1286,11 @@ This is used on the `modification-hooks' property of text clones."
 			    (progn
 			      (save-excursion (insert str))
 			      (delete-region mod-beg (point)))
-			  (user-error "No live-sync. The source and transclusion are not identical."))
+			  (user-error "No live-sync.  The source and transclusion are not identical"))
 			;;(overlay-put ol2 'modification-hooks '(text-clone--maintain))
 			))))))
 	    (if nothing-left
-		(progn (delete-overlay ol1) (delete-overlay ol2)))))))))
+		(progn (delete-overlay ol1)))))))))
 
 (provide 'org-transclusion)
 ;;; org-transclusion.el ends here
