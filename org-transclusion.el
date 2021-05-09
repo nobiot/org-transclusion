@@ -473,11 +473,15 @@ a couple of org-transclusion specific keybindings; namely:
     (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
     (let* ((tc-elem (org-transclusion-get-enclosing-element))
 	   (tc-beg (org-transclusion-element-get-beg-or-end 'beg tc-elem))
-	   ;; FIXME: tc-end likely fails to find the element when the point is
-	   ;; right at the end of the transcluded region.
 	   (tc-end (org-transclusion-element-get-beg-or-end 'end tc-elem))
-	   (src-content (org-transclusion-live-sync-get-source-content tc-beg tc-end))
-	   (src-ov (org-transclusion-live-sync-source-make-overlay tc-beg tc-end))
+	   (src-range-mkrs (org-transclusion-live-sync-source-range-markers-get
+			    tc-beg tc-end))
+	   (src-beg-mkr (car src-range-mkrs))
+	   (src-end-mkr (cdr src-range-mkrs))
+	   (src-content (org-transclusion-live-sync-source-content-get
+			 src-beg-mkr src-end-mkr))
+	   (src-ov (org-transclusion-live-sync-source-overlay-make
+		    src-beg-mkr src-end-mkr))
 	   (tc-ov)(tc-ov-len)(dups))
       ;; replace the region as a copy of the src-overlay region
       (save-excursion
@@ -1016,39 +1020,35 @@ placed without a blank line."
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for live-sync
 
-(defun org-transclusion-live-sync-get-source-content (beg end)
-  ".
-Search range BEG and END.
-TODO: At the moment, only Org Mode files are supported."
+(defun org-transclusion-live-sync-source-range-markers-get (beg end)
+  "Find and return source range based on transclusion's BEG and END.
+Return \"(src-beg-mkr . src-end-mkr)\"."
   (let ((src-buf (overlay-buffer (get-text-property (point) 'tc-pair)))
-	;; I will keep src-buf to be gotten from tc-pair.
-	;; I might not keep org-transclusion-text-beg-mkr
 	(src-search-beg (org-transclusion-find-source-marker beg end)))
     (if (not src-search-beg)
 	(user-error "No live-sync can be started at: %d" (point))
       (with-current-buffer src-buf
 	(goto-char src-search-beg)
-	(let* ((src-elem (org-transclusion-get-enclosing-element))
-	       (src-beg (org-transclusion-element-get-beg-or-end 'beg src-elem))
-	       (src-end (org-transclusion-element-get-beg-or-end 'end src-elem)))
-	  (buffer-substring-no-properties src-beg src-end))))))
+	(when-let* ((src-elem (org-transclusion-get-enclosing-element))
+		    (src-beg (org-transclusion-element-get-beg-or-end 'beg src-elem))
+		    (src-end (org-transclusion-element-get-beg-or-end 'end src-elem)))
+	  (cons
+	   (set-marker (make-marker) src-beg)
+	   (set-marker (make-marker) src-end)))))))
 
-(defun org-transclusion-live-sync-source-make-overlay (beg end)
-  ".
-Search range BEG and END.
-TODO: At the moment, only Org Mode files are supported."
-  (let ((src-buf (overlay-buffer (get-text-property (point) 'tc-pair)))
-	;; I will keep src-buf to be gotten from tc-pair.
-	;; I might not keep org-transclusion-text-beg-mkr
-	(src-search-beg (org-transclusion-find-source-marker beg end)))
-    (if (not src-search-beg)
-	(user-error "No live-sync can be started at: %d" (point))
-      (with-current-buffer src-buf
-	(goto-char src-search-beg)
-	(let* ((src-elem (org-transclusion-get-enclosing-element))
-	       (src-beg (org-transclusion-element-get-beg-or-end 'beg src-elem))
-	       (src-end (org-transclusion-element-get-beg-or-end 'end src-elem)))
-	  (make-overlay src-beg src-end nil nil t)))))) ;front-advanced should be nil
+(defun org-transclusion-live-sync-source-content-get (beg end)
+  "Return text content between BEG and END.
+BEG and END are assumed to be markers for the transclusion's source buffer."
+  (when (markerp beg)
+    (with-current-buffer (marker-buffer beg)
+      (buffer-substring-no-properties beg end))))
+
+(defun org-transclusion-live-sync-source-overlay-make (beg end)
+  "Return source overlay.
+BEG and END are assumed to be markers for the transclusion's source buffer."
+  (with-current-buffer (marker-buffer beg)
+    ;; front-advanced should be nil
+    (make-overlay beg end nil nil t)))
 
 (defun org-transclusion-live-sync-source-remove-overlayay (beg end)
   "Remove the overlay in the source buffer being edited when applicable.
