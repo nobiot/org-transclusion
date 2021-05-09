@@ -712,7 +712,7 @@ It assumes that point is at a keyword."
 	  ;; This temp buffer needs to be in Org Mode
 	  ;; Otherwise, subtree won't be recognized as a Org subtree
 	  (delay-mode-hooks (org-mode))
-	  (org-paste-subtree level content t t)
+	  (org-paste-subtree level content t nil)
 	  (setq content (buffer-string)))))
     (insert (org-transclusion-content-format content))
     (setq beg-mkr (save-excursion (goto-char beg)
