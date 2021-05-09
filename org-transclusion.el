@@ -231,8 +231,8 @@ of this global variable is to make the live-sync location a
       (org-transclusion-add-all-in-buffer)))
    (t (org-transclusion-deactivate))))
 
-(defun org-transclusion-create-from-link (&optional arg)
-  "Create a transclusion keyword from a link at point.
+(defun org-transclusion-make-from-link (&optional arg)
+  "Make a transclusion keyword from a link at point.
 The resultant transclusion keyword will be placed in the first
 empty line below.
 
