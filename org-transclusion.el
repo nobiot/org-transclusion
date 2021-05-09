@@ -441,31 +441,18 @@ It is meant to be used within a transclusion region."
 (defun org-transclusion-live-sync-start-at-point ()
   "Put overlay for start live sync edit on the transclusion at point.
 
-TODO: this causes a problem when property drawer is excluded, but
-has another drawer for headling. Removed: It temporarily remove the filter
-so that all the elements get transcluded. This is necessary to
-ensure that both the source and transcluded elements have exactly
-the same content.
-
-The issue of filter is present for example when a block quote
-contains a keyword. Filtering out the keyword will misalign the
-source block quote and the transcluded one.
-
 While live sync is on, before- and after-save-hooks to remove/add
 transclusions are also temporariliy disabled. This prevents
 auto-save from getting in the way of live sync.
 
-TODO State management of live sync together with more explicit
-managemetn of before- and after-save-buffer-hooks.
-
-TODO source buffer opens when it is not open. The line position
-may or may not be useful. This needs to be thought through.
-
 TODO: At the moment, only Org Mode files are supported.
+
 `org-transclusion-live-sync-map' inherits `org-mode-map' and adds
 a couple of org-transclusion specific keybindings; namely:
+
 - `org-transclusion-live-sync-paste'
 - `org-transclusion-live-sync-exit-at-point'
+
 \\{org-transclusion-live-sync-map}"
   (interactive)
   (if (not (org-transclusion--within-transclusion-p))
