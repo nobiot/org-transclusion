@@ -478,7 +478,7 @@ a couple of org-transclusion specific keybindings; namely:
 	   ;; FIXME: tc-end likely fails to find the element when the point is
 	   ;; right at the end of the transcluded region.
 	   (tc-end (org-transclusion-element-get-beg-or-end 'end tc-elem))
-	   (tc-ov (make-overlay tc-beg tc-end nil t t)) ;front-advance should be t
+	   (tc-ov (make-overlay tc-beg tc-end nil nil t)) ;front-advance should be t?
 	   (tc-ov-len (- (overlay-end tc-ov) (overlay-start tc-ov)))
 	   (src-ov (org-transclusion-live-sync-source-make-overlay tc-beg tc-end))
 	   (src-ov-len (- (overlay-end src-ov) (overlay-start src-ov)))
@@ -491,11 +491,20 @@ a couple of org-transclusion specific keybindings; namely:
 	(overlay-put src-ov 'text-clones dups)
 	(overlay-put src-ov 'modification-hooks
 		     '(org-transclusion--text-clone--maintain))
+	(overlay-put src-ov 'insert-in-front-hooks
+		     '(org-transclusion--text-clone--maintain))
+	(overlay-put src-ov 'insert-behind-hooks
+		     '(org-transclusion--text-clone--maintain))
 	(overlay-put src-ov 'face 'org-transclusion-source-edit)
-	(overlay-put src-ov 'priority 50)
+	(overlay-put src-ov 'priority -50)
 	;; Transclusion Overlay
 	(overlay-put tc-ov 'modification-hooks
 		     '(org-transclusion--text-clone--maintain))
+	(overlay-put tc-ov 'insert-in-front-hooks
+		     '(org-transclusion--text-clone--maintain))
+	(overlay-put tc-ov 'insert-behind-hooks
+		     '(org-transclusion--text-clone--maintain))
+	(overlay-put tc-ov 'evaporate t)
 	(overlay-put tc-ov 'evaporate t)
 	(overlay-put tc-ov 'tc-paired-src-edit-ov src-ov)
 	(overlay-put tc-ov 'tc-type "src-edit-ov")
@@ -503,7 +512,7 @@ a couple of org-transclusion specific keybindings; namely:
 	(overlay-put tc-ov 'text-clones dups)
 	(overlay-put tc-ov 'local-map org-transclusion-live-sync-map)
 	(with-silent-modifications
-	  (remove-text-properties tc-beg tc-end '(read-only)))
+	  (remove-text-properties (1- tc-beg) tc-end '(read-only)))
 	(setq org-transclusion-live-sync-marker (org-transclusion--make-marker (point)))
 	t))))
 
@@ -1020,7 +1029,7 @@ TODO: At the moment, only Org Mode files are supported."
 	(let* ((src-elem (org-transclusion-get-enclosing-element))
 	       (src-beg (org-transclusion-element-get-beg-or-end 'beg src-elem))
 	       (src-end (org-transclusion-element-get-beg-or-end 'end src-elem)))
-	  (make-overlay src-beg src-end nil t t))))))
+	  (make-overlay src-beg src-end nil nil t)))))) ;front-advanced should be t?
 
 (defun org-transclusion-live-sync-source-remove-overlayay (beg end)
   "Remove the overlay in the source buffer being edited when applicable.
@@ -1357,7 +1366,8 @@ This is used on the `modification-hooks' property of text clones."
 			  (user-error "No live-sync. The source and transclusion are not identical."))
 			;;(overlay-put ol2 'modification-hooks '(text-clone--maintain))
 			))))))
-	    (if nothing-left (delete-overlay ol1))))))))
+	    (if nothing-left
+		(progn (delete-overlay ol1) (delete-overlay ol2)))))))))
 
 (provide 'org-transclusion)
 ;;; org-transclusion.el ends here
