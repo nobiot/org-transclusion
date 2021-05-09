@@ -253,7 +253,8 @@ positive number 1-9, then this function automatically inserts the
 	      (string= type "id"))
       (let* ((contents-beg (org-element-property :contents-begin context))
 	     (contents-end (org-element-property :contents-end context))
-	     (contents (when contents-beg (buffer-substring-no-properties contents-beg contents-end)))
+	     (contents (when contents-beg
+			 (buffer-substring-no-properties contents-beg contents-end)))
 	     (link (org-element-link-interpreter context contents)))
 	(save-excursion
 	  (org-transclusion-search-or-add-next-empty-line)
@@ -283,9 +284,10 @@ TODO: id:uuid without brackets [[]] is a valid link within Org
 Mode. This is not supported yet.
 
 A transcluded text region is read-only, but you can activate the
-live-sync edit mode by calling `org-transclusion-live-sync-start-at-point'. This edit mode is analogous to Occur Edit
-for Occur Mode.  As such, following keys can be used on the
-read-only text within a transcluded region.
+live-sync edit mode by calling
+`org-transclusion-live-sync-start-at-point'. This edit mode is
+analogous to Occur Edit for Occur Mode.  As such, following keys
+can be used on the read-only text within a transcluded region.
 
 You can customize the keymap with using `org-transclusion-map':
 
@@ -314,7 +316,8 @@ You can customize the keymap with using `org-transclusion-map':
 		      (tc-content (plist-get tc-payload :tc-content)))
 		 (if (or (string= tc-content "")
 			 (eq tc-content nil))
-		     (progn (message "Nothing done. No content is found through the link.") nil)
+		     (progn (message "Nothing done. No content is found through the link.")
+			    nil)
 		   (org-transclusion-with-silent-modifications
 		     ;; Insert & overlay
 		     (when (save-excursion
@@ -329,7 +332,8 @@ You can customize the keymap with using `org-transclusion-map':
 			 (org-transclusion-keyword-remove))
 		       (org-transclusion-activate))))))))
 	  ;; For other cases. Do nothing
-	  (t (message "Nothing done. Transclusion inactive or link missing at %d" (point)) nil))))
+	  (t (message "Nothing done. Transclusion inactive or link missing at %d" (point))
+	     nil))))
 
 (defun org-transclusion-add-all-in-buffer ()
   "Add all active transclusions in the current buffer."
@@ -541,7 +545,8 @@ the state before live-sync started."
 
 (defun org-transclusion-live-sync-paste ()
   "Paste text content from kill-ring and inherit the text
-properties of the live-sync overlay correctly.  This function is meant to be used as part of `org-transclusion-live-sync-map'"
+properties of the live-sync overlay correctly.  This function is
+meant to be used as part of `org-transclusion-live-sync-map'"
   (interactive)
   (insert-and-inherit (current-kill 0)))
 
@@ -828,15 +833,19 @@ Assume you are at the beginning of the org element to transclude."
 	  ;; avoid getting the whole section
 	  (setq parse-mode nil))
 	(let* ((tree (progn (if only-element
-				;; Parse only the element in question (headline, table, paragraph, etc.)
+				;; Parse only the element in question
+				;; (headline, table, paragraph, etc.)
 				(progn
-				  (setq parse-mode nil) ; needed for table, list, block-quote, etc.
+				  (setq parse-mode nil)
+					;; needed for table, list,
+					;; block-quote, etc.
 				  (push type no-recursion)
 				  (org-element--parse-elements
 				   (org-element-property :begin el)
 				   (org-element-property :end el)
 				   nil nil 'object nil (list 'tc-paragraph nil)))
-			      ;; If not only-element, then parse the entire buffer
+			      ;; If not only-element, then parse the entire
+			      ;; buffer
 			      (org-element-parse-buffer))))
 	       (obj (org-element-map
 			tree
@@ -1112,20 +1121,6 @@ fragile, and inconsistent with the way transcluded region works."
 		   (org-element-lineage
 		    (org-element-context) '(paragraph) 'with-self))))
 	  context)))))
-
-(defun org-transclusion-buffer-substring-advice (orgfn start end)
-  "Add id, copy the text-properties via `buffer-substring'"
-  ;;(unless (get-text-property start 'org-transclusion-text-beg-mkr)
-  (if (not org-transclusion-substring-advice-enabled)
-      (funcall orgfn start end)
-    (with-silent-modifications
-      (put-text-property start end
-			 'org-transclusion-text-beg-mkr (org-transclusion--make-marker start))
-      (put-text-property start end
-			 'org-transclusion-text-end-mkr (org-transclusion--make-marker end)))
-    ;; (put-text-property start end
-    ;;                      'org-transclusion-text-id (org-id-uuid)))
-    (buffer-substring start end)))
 
 (defun org-transclusion-element-get-beg-or-end (beg-or-end element)
   "Returns appropriate beg or end of an element.
