@@ -1,0 +1,343 @@
+[[file:https://img.shields.io/badge/License-GPLv3-blue.svg]]
+
+#+title: Org-transclusion
+
+#+property: LOGGING nil
+
+# Note: I use the readme template that alphapapa shares on his GitHub repo <https://github.com/alphapapa/emacs-package-dev-handbook#template>. It works with the org-make-toc <https://github.com/alphapapa/org-make-toc> package, which automatically updates the table of contents.
+
+Transclusion is the ability to include content from one file into another by reference. Org-transclusion lets you do this in your Org file. 
+
+When I start writing a long-form material, I want to begin with looking through my note and assemble relevant notes to form a basis of the first draft quickly. As I organise my notes in a repository, I also want to avoid having multiple copies of notes flying around.
+
+Transclusion helps me do this.
+
+I am dabbling in the [[https://writingcooperative.com/zettelkasten-how-one-german-scholar-was-so-freakishly-productive-997e4e0ca125][Zettelkasten method]] with using [[https://www.orgroam.com/][Org-roam]] to feed my ideas into the repository. As such, although Org-transclusion is a standalone package, I would like to keep workflow seamless between Org-roam and Org-transclusion.
+
+This package is an attempt to enable transclusion with Org Mode in Emacs. It is my take on the [[#original-idea-by-john-kitchin][idea by John Kitchin]].
+
+#+caption: Figure 1. Animation to show creation of a transclusion from an ID link
+[[./resources/2021-05-01-org-transclusion-0.1.0-create.gif]]
+*Figure 1*. Animation to show creation of a transclusion from an ID link
+
+#+caption: Figure 2. Animation to show live sync from transclusion to source
+[[./resources/2021-05-01-org-transclusion-0.1.0-live-sync.gif]]
+*Figure 2*. Animation to show live sync from transclusion to source
+
+* Contents                                                         :noexport:
+:PROPERTIES:
+:TOC:      :include siblings
+:END:
+:CONTENTS:
+- [[#installation][Installation]]
+- [[#getting-started][Getting Started]]
+- [[#usage][Usage]]
+  - [[#live-sync-edit][Live-sync edit]]
+  - [[#commands][Commands]]
+  - [[#org-links-supported][Org links supported]]
+- [[#customizing][Customizing]]
+  - [[#customizable-filter-to-exclude-certain-org-elements][Customizable filter to exclude certain Org elements]]
+  - [[#include-the-section-before-the-first-headline-org-file-only][Include the section before the first headline (Org file only)]]
+  - [[#faces--fringe-bitmap][Faces & fringe bitmap]]
+  - [[#keybindings][Keybindings]]
+- [[#changelog][Changelog]]
+- [[#credits][Credits]]
+  - [[#original-idea-by-john-kitchin][Original idea by John Kitchin]]
+- [[#development][Development]]
+- [[#license][License]]
+:END:
+
+* Installation
+:PROPERTIES:
+:TOC:      :depth 0
+:END:
+
+This package is not available on MELPA or ELPA. Manual installation is required.
+
+Download or clone this repo, put =org-transclusion.el= in your load-path, and put something like this in your init file.
+
+#+BEGIN_SRC elisp
+  (with-eval-after-load 'org
+    (add-to-list  'load-path "path/to/org-transclusion/")
+    (require 'org-transclusion)
+    (define-key global-map (kbd "<f12>") #'org-transclusion-mode))
+#+END_SRC
+
+* Getting Started
+
+The basic idea of Org-transclusion is simple: insert a copy of text content via a file link or ID link within a Org file. This is an Org Mode version of [[https://en.wikipedia.org/wiki/Transclusion][transclusion]]. 
+
+To transclude content via a reference, use one of the following commands:
+
+- =org-transclusion-make-from-link=
+- =org-transclusion-add-at-point=
+- =org-transclusion-add-all-in-buffer=
+
+For example, if you have an ID link in your Org file like this:
+
+=[[id:20210501T171427.051019][Bertrand Russell]]=
+
+Put your cursor somewhere on this link and call  =M-x org-transclusion-make-from-link=. That inserts a "transclusion" keyword like this:
+
+=#+transclude: t [[id:20210501T171427.051019][Bertrand Russell]]=
+
+Put your cursor somewhere on this keyword line and call =M-x org-transclusion-add-at-point=, and you will see the content the ID points to (probably a whole headline) copied over, replacing the =transclude= keyword.
+
+[[./resources/2021-05-09T190918.png]]
+
+The transcluded text is read-only but you can copy it and export it as normal text. Org-transclusion retains where it has transcluded from (its source buffer). There are a number of useful commands you can call by a single letter (by default). You can learn more about these in this README below.
+
+You can press =o= to open the source buffer of the transclusion at point. Or press =e= to start a live-sync edit. For more detail, inspect the documentation of each command.
+
+#+begin_example
+=org-transclusion-map= (default)
+Adapt it to your liking, especially if you use vim keybindings with Evil Mode, etc.
+
+key             binding
+---             -------
+
+TAB		org-cycle
+D		org-transclusion-demote-subtree
+P		org-transclusion-promote-subtree
+d		org-transclusion-remove-at-point
+e		org-transclusion-live-sync-start-at-point
+g		org-transclusion-refresh-at-poiont
+o		org-transclusion-open-source
+
+#+end_example
+
+* Usage
+
+** COMMENT Starting Org-transclusion local minor mode
+
+The minor mode is automatically turned on through one of these commands. All it does is to call =org-transclusion-activate=  to activate hooks to keep file in the filesystem clean and clear of the transcluded content. 
+
+Turn off the minor mode, or use =org-transclusion-deactivate=
+
+The minor mode is just a conveniet wrapper to toggle =activate= and =deactivate= commands. 
+
+** COMMENT Transclude text content
+
+Use one of these commands to transclude text content.
+
+- =org-transclusion-create-from-link=  
+- =org-transclusion-add-at-point=
+- =org-transclusion-add-all-in-buffer=
+
+Transclusion works for:
+
+- =ID= links (=Org-ID=) to Org files
+- =file= links to Org files and non-Org text files
+
+For links to Org files, options also work such as links to a headline or paragraph via =dedicated target=. Refer to [[#org-links-supported][Org links supported]].
+
+Transcluded text region will be read-only.
+
+Refer to [[#live-sync-edit][Live-sync edit]] for Org-translusion's edit feature.
+
+You can customize the local keybindings for transclusions by =org-transclusion-map=. If you use vim keybindings (e.g. =evil-mode=), it is advised that you review the default keybindings.
+
+*** COMMENT =org-transclusion-map=                                 :noexport:
+
+#+begin_src elisp
+(substitute-command-keys "\\{org-transclusion-map}")
+#+end_src
+
+#+RESULTS:
+#+begin_example
+key             binding
+---             -------
+
+TAB		org-cycle
+D		org-transclusion-demote-subtree
+P		org-transclusion-promote-subtree
+d		org-transclusion-remove-at-point
+e		org-transclusion-live-sync-start-at-point
+g		org-transclusion-refresh-at-poiont
+o		org-transclusion-open-source
+
+#+end_example
+
+
+- =org-transclusion-remove-at-point=
+- =org-transclusion-remove-all-in-buffer=
+
+- =org-transclusion-refresh-at-point=
+
+- =org-transclusion-promote-subtree=
+- =org-transclusion-demote-subtree=
+
+- =org-transclusion-open-source=
+
+** Live-sync edit
+:PROPERTIES:
+:CUSTOM_ID: live-sync-edit
+:END:
+
+*Experimental.* You can start live-sync edit by pressing =e= (by default) on a text element you want to edit. This will put a colored overlay on top of the region being live-synced and brings up another buffer that visits the source file of the transclusion. The source buffer will also have a corresponding overlay to the region being edited and live-synced.
+
+If you have other windows open, they will be temporarily hidden -- Org-transclusion will remembers your current window layout and attempts to recover it when you exit live-sync edit.
+
+In the live-sync edit region, you can freely type to edit the tranclusion or source regions; they will sync simultaneously.
+
+Once done with editing, press =C-c C-c= to exit live-sync edit. The key is bound to =org-transclusion-live-sync-exit-at-point=. It will turn off the live sync edit but keep the transclusion on. 
+
+In the live-sync edit region, the normal =yank= command (=C-y=) is replaced with a special command =org-transclusion-live-sync-paste=. This command lets the pasted text inherit the text-properties of the transcluded region correctly; the normal yank does not have this feature and thus causes some inconvenience in live-sync edit. If you use vim keybindings (e.g. =evil-mode=), it is advised that you review the default keybindings. You can customize the local keybindings for the live-sync region by =org-transclusion-live-sync-map=. 
+
+*Note*: that during live-sync edit, file's content gets saved to the filesystem as is -- i.e. the transcluded text will be saved instead of the =#+transclude:= keyword. If you kill buffer or quit Emacs, other hooks will still remove the transclusion to keep the file clear of the transcluded copy, leaving only the keyword in the file system.
+
+- Indentation at the beginning of paragraphs should be removed / adjusted manually
+- =org-line-mode= not recommended
+
+*** COMMENT =org-transclusion-live-sync-map=                       :noexport:
+
+#+begin_src elisp
+  (substitute-command-keys "\\{org-transclusion-live-sync-map}")
+#+end_src
+
+#+begin_example
+#+RESULTS:
+: key                   binding
+: ---                   -------
+: 
+: C-c			Prefix Command
+: C-y			org-transclusion-live-sync-paste
+: 
+: C-c C-c		org-transclusion-live-sync-exit-at-poiont
+: 
+#+end_example
+ 
+** Commands
+
+- =org-transclusion-mode= ::
+- =org-transclusion-make-from-link= ::
+- =org-transclusion-add-at-point= ::
+- =org-transclusion-add-all-in-buffer= ::
+- =org-transclusion-remove-at-point= :: 
+- =org-transclusion-remove-all-in-buffer= :: 
+- =org-transclusion-refresh-at-point= :: 
+- =org-transclusion-promote-subtree= :: 
+- =org-transclusion-demote-subtree= :: 
+- =org-transclusion-open-source= :: 
+- =org-transclusion-live-sync-start-at-point= :: 
+- =org-transclusion-live-sync-exit-at-poiont= :: 
+- =org-transclusion-live-sync-paste= ::
+
+** Org links supported
+:PROPERTIES:
+:CUSTOM_ID: org-links-supported
+:END:
+
+Transclusion has been tested to work for the following types of links:
+
+- File link for an entire org file/buffer; e.g. =[[file:~/org/file.org][My Org Notes]]=
+- File link with =::*heading=
+- File link with =::#custom-id=
+- File link with =::name= for blocks (e.g. blocked quotations), tables, and links
+- File link with =::dedicated-target=; this is intended for linking to a paragraph. See below.
+- ID link =id:uuid=
+- File link for non-org files (tested with =.txt= and =.md=); for these, the whole buffer gets transcluded
+
+For transcluding a specific paragraph, Org-transclusion relies on Org mode's [[https://orgmode.org/manual/Internal-Links.html#Internal-Links][dedicated-target]]. The target paragraph must be identifiable by a dedicated target with a =<<paragraph-id>>=: 
+
+#+begin_example
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Suspendisse ac velit fermentum, sodales nunc in,
+tincidunt quam. <<paragraph-id>>
+#+end_example
+
+It is generally assumed that the paragraph-id is placed after its content, but it is not an absolute requirement; it can be in the beginning (before the content) or in the middle of it.
+ 
+* Customizing
+
+You can customize settings in the =org-transclusion= group.
+
+- =org-transclusion-add-all-on-activate= :: Defines whether or not all the active transclusions (with =t=) get automatically transcluded on minor mode activation (=org-transclusion-mode=). This does not affect the manual activation when you directly call =org-transclusion-activate=
+- =org-transclusion-exclude-elements= :: See below
+- =org-transclusion-include-first-section= :: See below
+- =org-transclusion-add-at-point-functions= :: (WIP)
+
+** Customizable filter to exclude certain Org elements
+
+Set customizable variable =org-transclusion-exclude-elements= to define which elements to be **excluded** in the transclusion.
+
+The filter works for all supported types of links within an Org file when transcluding an entire Org file, and parts of it (headlines, custom ID, etc.). There is no filter for non-Org files.
+
+It is a list of symbols, and the default is =(property-drawer)=. The accepted values are the ones defined by =org-element-all-elements= (Org's standard set of elements; refer to its documentation for an exhaustive list).
+
+How to use it is demonstrated in [[https://youtu.be/hz92vaO8IgQ][YouTube video #5]] as well.
+
+** Include the section before the first headline (Org file only)
+
+You can now include the first section (section before the first headline) of an Org file. It is toggled via customizing variable =org-transclusion-include-first-section=. Its default value is =nil=. Set it to =t= (or non-nil) to transclude the first section. It works when the first section is followed by headlines (only lightly tested; I will appreciate your testing. I might need to consider retracting this feature if it proves to be too buggy).
+
+** Faces & fringe bitmap
+- org-transclusion-source-fringe
+- org-transclusion-source
+- org-transclusion-source-edit
+- org-transclusion-fringe
+- org-transclusion
+- org-transclusion-edit
+
+I do not know if bitmap can be customizable after it's been defined (TBC).
+- org-transclusion-fringe-bitmap ::
+  It is used for the fringe that indicates the transcluded region. It works only in a graphical environment (not in terminal).
+
+** Keybindings
+
+- =org-transclusion-map=
+- =org-transclusion-live-sync-map=
+
+* Changelog
+:PROPERTIES:
+:TOC:      :depth 0
+:END:
+
+** 0.1.0
+As described in this version.
+* Credits
+
+** Original idea by John Kitchin
+:PROPERTIES:
+:CUSTOM_ID: john-kitchin
+:END:
+
+https://github.com/alphapapa/transclusion-in-emacs#org-mode
+
+#+begin_quote
+{O} transcluding some org-elements in multiple places
+[2016-12-09 Fri] John Kitchin asks:
+
+I have an idea for how I could transclude “copies” or links to org-elements in multiple places and keep them up to date. A prototypical example of this is I have a set of org-contacts in one place, and I want to create a new list of people for a committee in a new place made of “copies” of the contact headlines. But I do not really want to duplicate the headlines, and if I modify one, I want it reflected in the other places. I do not want just links to those contacts, because then I can not do things with org-map-entries, and other org-machinery which needs the actual headlines/properties present. Another example might be I want a table in two places, but the contents of them should stay synchronized, ditto for a code block.
+
+This idea was inspired by https://github.com/gregdetre/emacs-freex.
+
+The idea starts with creating (wait for it…) a new link ;) In a document where I want to transclude a headline, I would enter something like:
+
+transclude:some-file.org::*headline title
+
+Then, I would rely on the font-lock system to replace that link with the headline and its contents (via the :activate-func link property), and to put an overlay on it with a bunch of useful properties, including modification hooks that would update the source if I change the the element in this document, and some visual indication that it is transcluded (e.g. light gray background/tooltip).
+
+I would create a kill-buffer hook function that would replace that transcluded content with the original link. A focus-in hook function would make sure the transcluded content is updated when you enter the frame. So when the file is not open, there is just a transclude link indicating what should be put there, and when it is open, the overlay modification hooks and focus hook should ensure everything stays synchronized (as long as external processes are not modifying the contents).
+
+It seems like this could work well for headlines, and named tables, src blocks, and probably any other element that can be addressed by a name/ID.
+#+end_quote
+
+* Development
+
+- Get involved in a discussion in [[https://org-roam.discourse.group/t/prototype-transclusion-block-reference-with-emacs-org-mode/830][Org-roam forum]] (the package is originally aimed for its users, me included)
+
+- Create issues, discussion, and/or pull requests. All weclome.
+
+Thank you!
+
+* License
+
+This work is licensed under a GPLv3 license. For a full copy of the licese, refer to [[./LICENSE][LICENSE]].
+
+# Local Variables:
+# eval: (require 'org-make-toc)
+# before-save-hook: org-make-toc
+# org-export-with-properties: ()
+# org-export-with-title: t
+# End:
