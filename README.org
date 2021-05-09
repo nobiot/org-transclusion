@@ -250,9 +250,12 @@ It is generally assumed that the paragraph-id is placed after its content, but i
  
 * Customizing
 
-- You can customize settings in the =org-transclusion= group.
+You can customize settings in the =org-transclusion= group.
 
-=org-transclusion-add-all-on-activate=
+- =org-transclusion-add-all-on-activate= :: Defines whether or not all the active transclusions (with =t=) get automatically transcluded on minor mode activation (=org-transclusion-mode=). This does not affect the manual activation when you directly call =org-transclusion-activate=
+- =org-transclusion-exclude-elements= :: See below
+- =org-transclusion-include-first-section= :: See below
+- =org-transclusion-add-at-point-functions= :: (WIP)
 
 ** Customizable filter to exclude certain Org elements
 
