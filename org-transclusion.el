@@ -147,8 +147,6 @@ buffer."
 
 ;;;; Variables
 
-(defvar-local org-transclusion-substring-advice-enabled nil)
-
 (defvar-local org-transclusion-remember-point nil)
 
 (defvar-local org-transclusion-temp-window-config nil
@@ -418,25 +416,25 @@ the source buffer for further editing. "
       (unless arg (pop-to-buffer buf)))))
 
 (defun org-transclusion-find-source-marker (beg end)
-  "Find marker that points to the beginning of source.
-The search range is limited between BEG and END (both points
-inclusive).  When not found, return nil.
-
-It is meant to be used within a transclusion region."
-  (let ((m (get-text-property (point) 'org-transclusion-text-beg-mkr)))
-    ;; If point is not on a text with the property, it still may be
-    ;; found within the same element Search the text-prop up to
-    ;; LIMIT.
-    (unless m
+  "Return marker that popints to the beginning of source"
+  (let ((parent (get-text-property (point) ':parent))
+	(src-buf (marker-buffer
+		  (get-text-property (point) 'tc-src-beg-mkr)))
+	(m))
+    (unless parent
       (save-excursion
 	(when-let ((match (or (text-property-search-forward
-			       'org-transclusion-text-beg-mkr)
+			       ':parent)
 			      (text-property-search-backward
-			       'org-transclusion-text-beg-mkr))))
+			       ':parent))))
 	  ;; Point must be between beg and end (inclusive)
 	  (when (and (<= beg (point)) (<= (point) end))
-	    (setq m (prop-match-value match))))))
-  m))
+	    (setq parent (prop-match-value match))))))
+    (setq m (set-marker (make-marker)
+			(or (org-element-property :contents-begin parent)
+			    (org-element-property :begin parent))
+			src-buf))
+    m))
 
 (defun org-transclusion-live-sync-start-at-point ()
   "Put overlay for start live sync edit on the transclusion at point.
@@ -814,19 +812,16 @@ Assume you are at the beginning of the org element to transclude."
 	  ;; for dedicated darget = paragraph, parse-mode should be nil to
 	  ;; avoid getting the whole section
 	  (setq parse-mode nil))
-	(let* ((org-transclusion-substring-advice-enabled t)
-	       (tree (progn (if only-element
+	(let* ((tree (progn (if only-element
 				;; Parse only the element in question (headline, table, paragraph, etc.)
 				(progn
 				  (setq parse-mode nil) ; needed for table, list, block-quote, etc.
 				  (push type no-recursion)
-				  (advice-add 'buffer-substring-no-properties :around #'org-transclusion-buffer-substring-advice)
 				  (org-element--parse-elements
 				   (org-element-property :begin el)
 				   (org-element-property :end el)
 				   nil nil 'object nil (list 'tc-paragraph nil)))
 			      ;; If not only-element, then parse the entire buffer
-			      (advice-add 'buffer-substring-no-properties :around #'org-transclusion-buffer-substring-advice)
 			      (org-element-parse-buffer))))
 	       (obj (org-element-map
 			tree
@@ -839,16 +834,15 @@ Assume you are at the beginning of the org element to transclude."
 		      ;; the AST.
 		      #'org-transclusion-content-filter-org-buffer
 		      nil nil no-recursion nil)))
-	  (advice-remove 'buffer-substring-no-properties #'org-transclusion-buffer-substring-advice)
 	  (setq tc-content (org-element-interpret-data obj))
 	  (setq tc-beg-mkr (progn (goto-char
 				   (if only-element (org-element-property :begin el)
 				     (point-min))) ;; for the entire buffer
-				   (point-marker)))
+				  (point-marker)))
 	  (setq tc-end-mkr (progn (goto-char
 				   (if only-element (org-element-property :end el)
 				     (point-max))) ;; for the entire buffer
-				   (point-marker)))
+				  (point-marker)))
 	  (list :tc-content tc-content
 		:tc-beg-mkr tc-beg-mkr
 		:tc-end-mkr tc-end-mkr)))
