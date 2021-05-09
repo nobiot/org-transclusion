@@ -180,7 +180,7 @@ If you have other windows open, they will be temporarily hidden -- Org-transclus
 
 In the live-sync edit region, you can freely type to edit the tranclusion or source regions; they will sync simultaneously.
 
-One done editing, press =C-c C-c= to exit live-sync edit. The key is bound to =org-transclusion-live-sync-exit-at-point=. It will turn off the live sync edit but keep the transclusion on. 
+Once done with editing, press =C-c C-c= to exit live-sync edit. The key is bound to =org-transclusion-live-sync-exit-at-point=. It will turn off the live sync edit but keep the transclusion on. 
 
 In the live-sync edit region, the normal =yank= command (=C-y=) is replaced with a special command =org-transclusion-live-sync-paste=. This command lets the pasted text inherit the text-properties of the transcluded region correctly; the normal yank does not have this feature and thus causes some inconvenience in live-sync edit. If you use vim keybindings (e.g. =evil-mode=), it is advised that you review the default keybindings. You can customize the local keybindings for the live-sync region by =org-transclusion-live-sync-map=. 
 
