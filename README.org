@@ -8,11 +8,11 @@
 
 Transclusion is the ability to include content from one file into another by reference. Org-transclusion lets you do this in your Org file. 
 
-When I start writing a long-form material, I want to begin with looking through my note and assemble relevant notes to form a basis of the final outcome quickly. As I organise my notes in a repository, I also want to avoid having multiple copies of notes flying around.
+When I start writing a long-form material, I want to begin with looking through my note and assemble relevant notes to form a basis of the first draft quickly. As I organise my notes in a repository, I also want to avoid having multiple copies of notes flying around.
 
 Transclusion helps me do this.
 
-I am dabbling in the Zettelkasten method with using [[https://www.orgroam.com/][Org-roam]] to feed my ideas into the repository. As such, although Org-transclusion is a standalone package, I would like to keep workflow seamless between Org-roam and Org-transclusion.
+I am dabbling in the [[https://writingcooperative.com/zettelkasten-how-one-german-scholar-was-so-freakishly-productive-997e4e0ca125][Zettelkasten method]] with using [[https://www.orgroam.com/][Org-roam]] to feed my ideas into the repository. As such, although Org-transclusion is a standalone package, I would like to keep workflow seamless between Org-roam and Org-transclusion.
 
 This package is an attempt to enable transclusion with Org Mode in Emacs. It is my take on the [[#original-idea-by-john-kitchin][idea by John Kitchin]].
 
@@ -30,9 +30,8 @@ This package is an attempt to enable transclusion with Org Mode in Emacs. It is 
 :END:
 :CONTENTS:
 - [[#installation][Installation]]
+- [[#getting-started][Getting Started]]
 - [[#usage][Usage]]
-  - [[#starting-org-transclusion-local-minor-mode][Starting Org-transclusion local minor mode]]
-  - [[#transclude-text-content][Transclude text content]]
   - [[#live-sync-edit][Live-sync edit]]
   - [[#commands][Commands]]
   - [[#org-links-supported][Org links supported]]
@@ -64,21 +63,52 @@ Download or clone this repo, put =org-transclusion.el= in your load-path, and pu
     (define-key global-map (kbd "<f12>") #'org-transclusion-mode))
 #+END_SRC
 
-* Usage
+* Getting Started
 
-** Starting Org-transclusion local minor mode
-
-Org-transclusion is an Emacs local minor mode. It is design to be used in your Org file together with Org Mode. As it is a local minor mode, you turn it on and off for each buffer.
+The basic idea of Org-transclusion is simple: insert a copy of text content via a file link or ID link within a Org file. This is an Org Mode version of [[https://en.wikipedia.org/wiki/Transclusion][transclusion]]. 
 
 To transclude content via a reference, use one of the following commands:
 
-- =org-transclusion-create-from-link=
+- =org-transclusion-make-from-link=
 - =org-transclusion-add-at-point=
 - =org-transclusion-add-all-in-buffer=
 
-=[[id:20210501T171427.051019]Bertrand Russell]]=
+For example, if you have an ID link in your Org file like this:
+
+=[[id:20210501T171427.051019][Bertrand Russell]]=
+
+Put your cursor somewhere on this link and call  =M-x org-transclusion-make-from-link=. That inserts a "transclusion" keyword like this:
 
 =#+transclude: t [[id:20210501T171427.051019][Bertrand Russell]]=
+
+Put your cursor somewhere on this keyword line and call =M-x org-transclusion-add-at-point=, and you will see the content the ID points to (probably a whole headline) copied over, replacing the =transclude= keyword.
+
+[[./resources/2021-05-09T190918.png]]
+
+The transcluded text is read-only but you can copy it and export it as normal text. Org-transclusion retains where it has transcluded from (its source buffer). There are a number of useful commands you can call by a single letter (by default). You can learn more about these in this README below.
+
+You can press =o= to open the source buffer of the transclusion at point. Or press =e= to start a live-sync edit. For more detail, inspect the documentation of each command.
+
+#+begin_example
+=org-transclusion-map= (default)
+Adapt it to your liking, especially if you use vim keybindings with Evil Mode, etc.
+
+key             binding
+---             -------
+
+TAB		org-cycle
+D		org-transclusion-demote-subtree
+P		org-transclusion-promote-subtree
+d		org-transclusion-remove-at-point
+e		org-transclusion-live-sync-start-at-point
+g		org-transclusion-refresh-at-poiont
+o		org-transclusion-open-source
+
+#+end_example
+
+* Usage
+
+** COMMENT Starting Org-transclusion local minor mode
 
 The minor mode is automatically turned on through one of these commands. All it does is to call =org-transclusion-activate=  to activate hooks to keep file in the filesystem clean and clear of the transcluded content. 
 
@@ -86,7 +116,7 @@ Turn off the minor mode, or use =org-transclusion-deactivate=
 
 The minor mode is just a conveniet wrapper to toggle =activate= and =deactivate= commands. 
 
-** Transclude text content
+** COMMENT Transclude text content
 
 Use one of these commands to transclude text content.
 
@@ -154,25 +184,33 @@ One done editing, press =C-c C-c= to exit live-sync edit. The key is bound to =o
 
 In the live-sync edit region, the normal =yank= command (=C-y=) is replaced with a special command =org-transclusion-live-sync-paste=. This command lets the pasted text inherit the text-properties of the transcluded region correctly; the normal yank does not have this feature and thus causes some inconvenience in live-sync edit. If you use vim keybindings (e.g. =evil-mode=), it is advised that you review the default keybindings. You can customize the local keybindings for the live-sync region by =org-transclusion-live-sync-map=. 
 
-**Note**: that during live-sync edit, file's content gets saved to the filesystem as is -- i.e. the transcluded text will be saved instead of the =#+transclude:= keyword. If you kill buffer or quit Emacs, other hooks will still remove the transclusion to keep the file clear of the transcluded copy, leaving only the keyword in the file system.
+*Note*: that during live-sync edit, file's content gets saved to the filesystem as is -- i.e. the transcluded text will be saved instead of the =#+transclude:= keyword. If you kill buffer or quit Emacs, other hooks will still remove the transclusion to keep the file clear of the transcluded copy, leaving only the keyword in the file system.
+
+- Indentation at the beginning of paragraphs should be removed / adjusted manually
+- =org-line-mode= not recommended
 
 *** COMMENT =org-transclusion-live-sync-map=                       :noexport:
 
 #+begin_src elisp
-(substitute-command-keys "\\{org-transclusion-live-sync-map}")
+  (substitute-command-keys "\\{org-transclusion-live-sync-map}")
 #+end_src
 
-
+#+begin_example
+#+RESULTS:
+: key                   binding
+: ---                   -------
+: 
+: C-c			Prefix Command
+: C-y			org-transclusion-live-sync-paste
+: 
+: C-c C-c		org-transclusion-live-sync-exit-at-poiont
+: 
+#+end_example
  
 ** Commands
 
-- =org-transclusion-activate= ::
-  Toggle Org-transclusion minor mode.
-  
-- =org-transclusion-deactivate= :: 
-
-- =org-transclusion-create-from-link= ::
-  
+- =org-transclusion-mode= ::
+- =org-transclusion-make-from-link= ::
 - =org-transclusion-add-at-point= ::
 - =org-transclusion-add-all-in-buffer= ::
 - =org-transclusion-remove-at-point= :: 
@@ -184,7 +222,6 @@ In the live-sync edit region, the normal =yank= command (=C-y=) is replaced with
 - =org-transclusion-live-sync-start-at-point= :: 
 - =org-transclusion-live-sync-exit-at-poiont= :: 
 - =org-transclusion-live-sync-paste= ::
-
 
 ** Org links supported
 :PROPERTIES:
@@ -214,6 +251,8 @@ It is generally assumed that the paragraph-id is placed after its content, but i
 * Customizing
 
 - You can customize settings in the =org-transclusion= group.
+
+=org-transclusion-add-all-on-activate=
 
 ** Customizable filter to exclude certain Org elements
 
@@ -259,7 +298,6 @@ As described in this version.
 :PROPERTIES:
 :CUSTOM_ID: john-kitchin
 :END:
-
 
 https://github.com/alphapapa/transclusion-in-emacs#org-mode
 
