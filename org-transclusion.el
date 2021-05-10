@@ -352,7 +352,10 @@ You can customize the keymap with using `org-transclusion-map':
              (setq tc-params (run-hook-with-args-until-success
                               'org-transclusion-link-open-hook link))
              (if (not tc-params)
-                 (progn (message "No transclusion added.") nil) ; return nil)
+                 (progn (message (format
+                                  "No transclusion added. Check the link at point %d, line %d"
+                                  (point) (org-current-line)))
+                        nil) ; return nil)
                (let* ((tc-type (plist-get tc-params :tc-type))
                       (tc-arg (plist-get tc-params :tc-arg))
                       (tc-fn (plist-get tc-params :tc-fn))
@@ -362,7 +365,9 @@ You can customize the keymap with using `org-transclusion-map':
                       (tc-content (plist-get tc-payload :tc-content)))
                  (if (or (string= tc-content "")
                          (eq tc-content nil))
-                     (progn (message "Nothing done. No content is found through the link.")
+                     (progn (message
+                             (format "Nothing done. No content is found through the link at point %d, line %d"
+                                     (point) (org-current-line)))
                             nil)
                    (org-transclusion-with-silent-modifications
                      ;; Insert & overlay
@@ -767,7 +772,9 @@ Return nil if not found."
           (list :tc-type "org-id"
                 :tc-arg mkr
                 :tc-fn #'org-transclusion-content-get-from-org-marker)
-        (message "No transclusion done for this ID. Ensure it works.")))))
+        (message (format "No transclusion done for this ID. Ensure it works at point %d, line %d"
+                         (point) (org-current-line)))
+        nil))))
 
 (defun org-transclusion-link-open-org-file-links (link)
     "Return a list for Org file LINK object.
