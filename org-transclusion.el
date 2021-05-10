@@ -218,6 +218,23 @@ global variable is to make the live-sync location a \"singleton\"
    #b11000000]
   nil nil '(center t))
 
+;;;; Macro
+;;;; Definining macros before they are used in the rest of package
+;;;; Flycheck warns with "macro X defined too late"
+(defmacro org-transclusion-with-silent-modifications (&rest body)
+  "Run BODY silently.
+It's like `with-silent-modifications' but keeps the undo list."
+  (declare (debug t) (indent 0))
+  (let ((modified (make-symbol "modified")))
+    `(let* ((,modified (buffer-modified-p))
+            (inhibit-read-only t)
+            (inhibit-modification-hooks t))
+       (unwind-protect
+           (progn
+             ,@body)
+         (unless ,modified
+           (restore-buffer-modified-p nil))))))
+
 ;;;; Commands
 
 (define-minor-mode org-transclusion-mode
@@ -971,20 +988,6 @@ the line, add a new empty line."
     (while (not (looking-at-p "[ \t]*$"))
       (beginning-of-line 2))
     (if (eobp)(insert "\n"))))
-
-(defmacro org-transclusion-with-silent-modifications (&rest body)
-  "Run BODY silently.
-It's like `with-silent-modifications' but keeps the undo list."
-  (declare (debug t) (indent 0))
-  (let ((modified (make-symbol "modified")))
-    `(let* ((,modified (buffer-modified-p))
-            (inhibit-read-only t)
-            (inhibit-modification-hooks t))
-       (unwind-protect
-           (progn
-             ,@body)
-         (unless ,modified
-           (restore-buffer-modified-p nil))))))
 
 (defun org-transclusion-wrap-path-to-link (path)
   "Return Org link object for PATH string."
