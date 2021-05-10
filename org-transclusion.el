@@ -272,16 +272,24 @@ It's like `with-silent-modifications' but keeps the undo list."
 
 (defun org-transclusion-make-from-link (&optional arg)
   "Make a transclusion keyword from a link at point.
+
 The resultant transclusion keyword will be placed in the first
+empty line.  If there is no empty line until the bottom of the
+buffer, add a new empty line.
 
-When `org-transclusion-mode' is active, this function
-automatically transclude the text content; when it is inactive,
-it simply adds \"#+transclude t [[link]]\" for the link.
+When `org-transclusion-mode' is active, this function automatically transclude
+the text content; when it is inactive, it simply adds \"#+transclude t
+[[link]]\" for the link.
 
-You can pass a prefix ument (ARG) with using
-`digit-argument' (e.g. C-1, C-2, or C-u 3, so on). If you pass a
-positive number 1-9, then this function automatically inserts the
-:level property of the resultant transclusion."
+You can pass a prefix argument (ARG) with using
+`digit-argument' (e.g. C-1 or C-2; or \\[universal-argument] 3,
+so on) or `universal-argument' (\\[universal-argument]).
+
+If you pass a positive number 1-9 with `digit-argument', this function
+automatically inserts the :level property of the resultant transclusion.
+
+If you pass a `universal-argument', this function automatically triggers
+transclusion by calling `org-transclusion-add-at-point'."
   ;; check if at-point is a link file or id
   (interactive "P")
   (let* ((context (org-element-lineage
