@@ -304,7 +304,7 @@ positive number 1-9, then this function automatically inserts the
             (end-of-line)
             (insert (format " :level %d" arg)))
           (when (or (equal arg '(4)) org-transclusion-mode)
-            (org-transclusion-activate)))))))
+            (org-transclusion-add-at-point)))))))
 
 (defun org-transclusion-add-at-point ()
   "Transclude text content where #+transclude at point points.
