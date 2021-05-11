@@ -508,11 +508,18 @@ a couple of org-transclusion specific keybindings; namely:
            (tc-ov)(dups))
       ;; replace the region as a copy of the src-overlay region
       (save-excursion
-        (let ((inhibit-read-only t))
+        ;; TODO neeed to fix properly for paragraphs and elements
+        (let* ((inhibit-read-only t)
+               (props)
+               (m (get-text-property tc-beg 'tc-beg-mkr))
+               (beg (marker-position m)))
           (goto-char tc-beg)
+          (setq props (text-properties-at tc-beg))
           (delete-region tc-beg tc-end)
           (insert-and-inherit src-content)
-          (setq tc-end (point))))
+          (setq tc-end (point))
+          (add-text-properties tc-beg tc-end props)
+          (move-marker m beg)))
       (setq tc-ov (make-overlay tc-beg tc-end nil nil t)) ;front-advance should be nil
       (setq dups (list src-ov tc-ov))
       (org-transclusion-live-sync-display-buffer (overlay-buffer src-ov))
