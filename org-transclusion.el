@@ -520,7 +520,7 @@ a couple of org-transclusion specific keybindings; namely:
 	  (setq tc-end (point))
 	  (add-text-properties tc-beg tc-end props)
 	  (move-marker m beg)))
-      (setq tc-ov (make-overlay tc-beg tc-end nil nil t)) ;front-advance should be nil
+      (setq tc-ov (org-transclusion-make-overlay tc-beg tc-end))
       (setq dups (list src-ov tc-ov))
       (org-transclusion-live-sync-display-buffer (overlay-buffer src-ov))
       ;; Source Overlay
@@ -726,12 +726,12 @@ It assumes that point is at a keyword."
 				  (org-transclusion--make-marker (point))))
     (setq end (point))
     (setq end-mkr (org-transclusion--make-marker (point)))
-    (setq ov-src (make-overlay src-beg-m src-end-m sbuf t nil))
+    (setq ov-src (org-transclusion-make-overlay src-beg-m src-end-m sbuf))
     (setq tc-pair ov-src)
     (add-text-properties beg end
 			 `(local-map ,org-transclusion-map
 				     read-only t
-				     front-sticky nil
+				     front-sticky t
 				     rear-nonsticky nil
 				     tc-id ,tc-id
 				     tc-type ,type
@@ -950,10 +950,16 @@ TODO need to handle when the file does not exist."
 	       :tc-end-mkr end))))))
 
 ;;-----------------------------------------------------------------------------
-;;; Utility Functions and Macros
+;;; Utility Functions
+
+(defun org-transclusion-make-overlay (beg end &optional buf)
+  "Wrapper for make-ovelay.
+BEG and END can be point or marker. Optionally BUF can be passed.
+FRONT-ADVANCE is nil, and REAR-ADVANCE is t."
+ (make-overlay beg end buf nil t))
 
 (defun org-transclusion-find-source-marker (beg end)
-  "Return marker that popints to source begin point for transclusion.
+  "Return marker that points to source begin point for transclusion.
 It works on the transclusion region at point.  BEG and END are
 meant to be transclusion region's begin and end used to limit the
 `text-property-search' -- as it does not have an argument to
@@ -1084,7 +1090,7 @@ BEG and END are assumed to be markers for the transclusion's source buffer."
 BEG and END are assumed to be markers for the transclusion's source buffer."
   (with-current-buffer (marker-buffer beg)
     ;; front-advanced should be nil
-    (make-overlay beg end nil nil t)))
+    (org-transclusion-make-overlay beg end)))
 
 (defun org-transclusion-live-sync-source-remove-overlayay (beg end)
   "Remove the overlaies between BEG and END in the source buffer.
