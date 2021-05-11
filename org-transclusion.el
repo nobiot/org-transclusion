@@ -409,7 +409,7 @@ You can customize the keymap with using `org-transclusion-map':
 		      (get-char-property (point) 'tc-orig-keyword)))
 	    (tc-pair-ov (get-char-property (point) 'tc-pair)))
       (progn
-	(org-transclusion-live-sync-source-remove-overlayay beg end)
+	(org-transclusion-live-sync-remove-overlays-maybe beg end)
 	(delete-overlay tc-pair-ov)
 	(outline-show-all)
 	(org-transclusion-with-silent-modifications
@@ -723,7 +723,7 @@ It assumes that point is at a keyword."
 	  (setq content (buffer-string)))))
     (insert (org-transclusion-content-format content))
     (setq beg-mkr (save-excursion (goto-char beg)
-				  (org-transclusion--make-marker (point))))
+				  (set-marker (make-marker) (point))))
     (setq end (point))
     (setq end-mkr (org-transclusion--make-marker (point)))
     (setq ov-src (org-transclusion-make-overlay src-beg-m src-end-m sbuf))
@@ -1031,10 +1031,14 @@ string \"nil\", return symbol t."
 
 (defun org-transclusion--make-marker (point)
   "Return marker of the insertion-type t for POINT.
-The insertion-type is important in order for the translusion beg
-and end markers are correctly set.  This fixes the problem of
+The insertion-type is important in order for the translusion
+end marker is correctly set.  This fixes the problem of
 transclude keyword not correctly removed when the keywords are
-placed without a blank line."
+placed without a blank line.
+
+TODO: Now to fix another bigger problem, transclusion marker is
+created without insertion-type. This has created another issue --
+you cannot have transclusion side-by-side."
   (let ((marker (set-marker (make-marker) point)))
     (set-marker-insertion-type marker t)
     marker))
@@ -1092,7 +1096,7 @@ BEG and END are assumed to be markers for the transclusion's source buffer."
     ;; front-advanced should be nil
     (org-transclusion-make-overlay beg end)))
 
-(defun org-transclusion-live-sync-source-remove-overlayay (beg end)
+(defun org-transclusion-live-sync-remove-overlays-maybe (beg end)
   "Remove the overlaies between BEG and END in the source buffer.
 The source buffer to be looked at is being live-sync edited.
 This function checks if such overlays exist - it should support
@@ -1103,7 +1107,8 @@ live edit will try to sync the deletion, and causes an error."
   (when-let ((src-edit-ovs (overlays-in beg end)))
     (dolist (ov src-edit-ovs)
       (when (string= "src-edit-ov" (overlay-get ov 'tc-type))
-	(delete-overlay (overlay-get ov 'tc-paired-src-edit-ov))))))
+	(delete-overlay (overlay-get ov 'tc-paired-src-edit-ov))
+	(delete-overlay ov)))))
 
 (defun org-transclusion-get-enclosing-element ()
   "Return an enclosing Org element for live-sync.
