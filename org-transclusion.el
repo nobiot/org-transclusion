@@ -1227,7 +1227,8 @@ back the original window configuration."
   (setq org-transclusion-temp-window-config (current-window-configuration))
   (delete-other-windows)
   (let ((win (selected-window)))
-    (pop-to-buffer buffer)
+    (pop-to-buffer buffer
+		   '(display-buffer-pop-up-window . '(inhibit-same-window)))
     (recenter-top-bottom)
     (select-window win)))
 
