@@ -415,7 +415,9 @@ You can customize the keymap with using `org-transclusion-map':
 	(org-transclusion-with-silent-modifications
 	  (save-excursion
 	    (delete-region beg end)
-	    (insert keyword)))
+	    (insert-before-markers keyword))
+	  ;; Go back to the beginning of the inserted keyword line
+	  (goto-char beg))
 	t)
     (message "Nothing done. No transclusion exists here.") nil))
 
