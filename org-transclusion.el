@@ -415,7 +415,7 @@ You can customize the keymap with using `org-transclusion-map':
 	(org-transclusion-with-silent-modifications
 	  (save-excursion
 	    (delete-region beg end)
-	    (insert keyword)))
+	    (insert-before-markers keyword)))
 	t)
     (message "Nothing done. No transclusion exists here.") nil))
 
@@ -1034,11 +1034,7 @@ string \"nil\", return symbol t."
 The insertion-type is important in order for the translusion
 end marker is correctly set.  This fixes the problem of
 transclude keyword not correctly removed when the keywords are
-placed without a blank line.
-
-TODO: Now to fix another bigger problem, transclusion marker is
-created without insertion-type. This has created another issue --
-you cannot have transclusion side-by-side."
+placed without a blank line."
   (let ((marker (set-marker (make-marker) point)))
     (set-marker-insertion-type marker t)
     marker))
