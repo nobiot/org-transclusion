@@ -159,7 +159,7 @@ buffer."
 
 Analogous to `org-edit-src-code'.")
 
-(defvar org-transclusion-live-sync-marker nil
+(defvar org-transclusion-live-sync-overlay-pair nil
   "Marker to keep track of the single live-sync buffer and point.
 
 The live-sync edit should be a focused and deliberate action.
@@ -551,8 +551,15 @@ a couple of org-transclusion specific keybindings; namely:
       (overlay-put tc-ov 'local-map org-transclusion-live-sync-map)
       (with-silent-modifications
         (remove-text-properties (1- tc-beg) tc-end '(read-only)))
-      (setq org-transclusion-live-sync-marker (org-transclusion--make-marker (point)))
+      (setq org-transclusion-live-sync-overlay-pair (list tc-ov src-ov))
+      (add-hook 'post-command-hook #'org-transclusion-live-sync-post-command-h nil t)
       t)))
+
+(defun org-transclusion-live-sync-delete-overlays ()
+  (when org-transclusion-live-sync-overlay-pair
+    (dolist (ov org-transclusion-live-sync-overlay-pair)
+      (delete-overlay ov))
+    (setq org-transclusion-live-sync-overlay-pair nil)))
 
 (defun org-transclusion-live-sync-exit-at-point ()
   "Exit live-sync at point.
@@ -561,11 +568,14 @@ the state before live-sync started."
   (interactive)
   (org-transclusion-activate) ;; re-activating hooks inactive during live-sync
   (org-transclusion-refresh-at-point)
-  (setq org-transclusion-live-sync-marker nil)
+  (org-transclusion-live-sync-delete-overlays)
   (when org-transclusion-temp-window-config
     (unwind-protect
         (set-window-configuration org-transclusion-temp-window-config)
-      (setq org-transclusion-temp-window-config nil))))
+      (progn
+        (setq org-transclusion-temp-window-config nil)
+        (remove-hook 'post-command-hook
+                     #'org-transclusion-live-sync-post-command-h t)))))
 
 (defun org-transclusion-live-sync-paste ()
   "Paste text content from `kill-ring' and inherit the text props.
@@ -1192,24 +1202,37 @@ are integers (points or number of blank lines.)"
                   (org-element-property :post-blank element)))))))
     val))
 
+(defun org-transclusion-live-sync-post-command-h ()
+  "Delete both of the overlays for live-sync when either one is not present."
+  (when-let ((ovs org-transclusion-live-sync-overlay-pair))
+    (let ((delete-bothp nil))
+      (dolist (ov ovs)
+        (unless (or delete-bothp
+                    (overlay-buffer ov))
+          (setq delete-bothp t)))
+      (when delete-bothp
+        (unwind-protect
+            (dolist (ov ovs)
+              (delete-overlay ov))
+          (remove-hook 'post-command-hook
+                     #'org-transclusion-live-sync-post-command-h t))))))
+
 (defun org-transclusion-live-sync-remove-others ()
   "Remove other live-sync regions in other buffers.
 This is deliberately done -- a single live-sync edit region
 globally in an Emacs session."
-  (when-let ((m org-transclusion-live-sync-marker))
-    (if (not (eq (marker-buffer m) (current-buffer)))
-        (with-current-buffer (marker-buffer m)
-          (org-with-wide-buffer
-           (goto-char m)
-           (org-transclusion-refresh-at-point)
-           t))
-      ;; save-excursion somehow brings the point back to the point m is
-      ;; pointing to
-      (let ((pos (point)))
-        (goto-char m)
-        (org-transclusion-refresh-at-point)
-        (goto-char pos)
-        t))))
+  (when-let ((ovs org-transclusion-live-sync-overlay-pair))
+    (dolist (ov ovs)
+      (let ((p (overlay-start ov))
+            (buf (overlay-buffer ov)))
+        (if (not buf) (delete-overlay ov)
+          (with-current-buffer buf
+            (let ((pos (point)))
+              (org-with-wide-buffer
+               (goto-char p)
+               (org-transclusion-refresh-at-point))
+              (goto-char pos))
+            t))))))
 
 (defun org-transclusion-live-sync-display-buffer (buffer)
   "Display the source buffer upon entering live-sync edit.
