@@ -160,7 +160,9 @@ buffer."
 Analogous to `org-edit-src-code'.")
 
 (defvar org-transclusion-live-sync-overlay-pair nil
-  "Marker to keep track of the single live-sync buffer and point.
+  "Global variable to keep track of the pair of live-sync overlays.
+One of the pair is the overlay for a given transclusion, and the
+other, the one for source of the transclusion.
 
 The live-sync edit should be a focused and deliberate action.
 It's easy to forget the fact live-sync is on.  The intent of this
@@ -199,14 +201,24 @@ global variable is to make the live-sync location a \"singleton\"
     (define-key map (kbd "D") #'org-transclusion-demote-subtree)
     (define-key map (kbd "o") #'org-transclusion-open-source)
     (define-key map (kbd "TAB") #'org-cycle)
-    map))
+    map)
+  "It is the local-map used within a transclusion.
+As the transcluded text content is read-only, these keybindings
+are meant to be a sort of contextual menu to trigger different
+functions on the transclusion.")
 
 (defvar org-transclusion-live-sync-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map org-mode-map)
     (define-key map (kbd "C-c C-c") #'org-transclusion-live-sync-exit-at-point)
     (define-key map (kbd "C-y") #'org-transclusion-live-sync-paste)
-    map))
+    map)
+  "It is the local-map used within the live-sync overlay.
+It inherits `org-mode-map' and adds a couple of org-transclusion
+specific keybindings; namely:
+
+- `org-transclusion-live-sync-paste'
+- `org-transclusion-live-sync-exit-at-point'")
 
 (define-fringe-bitmap 'org-transclusion-fringe-bitmap
   [#b11000000
@@ -559,6 +571,7 @@ a couple of org-transclusion specific keybindings; namely:
       t)))
 
 (defun org-transclusion-live-sync-delete-overlays ()
+  "Delete the pair of live-sync overlays."
   (when org-transclusion-live-sync-overlay-pair
     (dolist (ov org-transclusion-live-sync-overlay-pair)
       (delete-overlay ov))
@@ -982,7 +995,7 @@ TODO need to handle when the file does not exist."
 
 (defun org-transclusion-make-overlay (beg end &optional buf)
   "Wrapper for make-ovelay.
-BEG and END can be point or marker. Optionally BUF can be passed.
+BEG and END can be point or marker.  Optionally BUF can be passed.
 FRONT-ADVANCE is nil, and REAR-ADVANCE is t."
  (make-overlay beg end buf nil t))
 
