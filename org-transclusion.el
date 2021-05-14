@@ -187,7 +187,8 @@ global variable is to make the live-sync location a \"singleton\"
 (defvar org-transclusion-get-keyword-values-hook
   '(org-transclusion-keyword-get-value-active-p
     org-transclusion-keyword-get-value-link
-    org-transclusion-keyword-get-value-level))
+    org-transclusion-keyword-get-value-level
+    org-transclusion-keyword-get-current-indentation))
 
 (defvar org-transclusion-map
   (let ((map (make-sparse-keymap)))
@@ -405,8 +406,9 @@ You can customize the keymap with using `org-transclusion-map':
   (interactive)
   (if-let* ((beg (marker-position (get-char-property (point) 'tc-beg-mkr)))
             (end (marker-position (get-char-property (point) 'tc-end-mkr)))
-            (keyword (org-transclusion-keyword-plist-to-string
-                      (get-char-property (point) 'tc-orig-keyword)))
+            (keyword-plist (get-char-property (point) 'tc-orig-keyword))
+            (indent (plist-get keyword-plist :current-indentation))
+            (keyword (org-transclusion-keyword-plist-to-string keyword-plist))
             (tc-pair-ov (get-char-property (point) 'tc-pair)))
       (progn
         (org-transclusion-live-sync-remove-overlays-maybe beg end)
@@ -415,6 +417,7 @@ You can customize the keymap with using `org-transclusion-map':
         (org-transclusion-with-silent-modifications
           (save-excursion
             (delete-region beg end)
+            (when (> indent 0) (indent-to indent))
             (insert-before-markers keyword))
           ;; Go back to the beginning of the inserted keyword line
           (goto-char beg))
@@ -686,6 +689,13 @@ It needs to be set in
 `org-transclusion-get-keyword-values-hook'."
   (when (string-match ":level *\\([1-9]\\)" string)
     (list :level (string-to-number (org-strip-quotes (match-string 1 string))))))
+
+(defun org-transclusion-keyword-get-current-indentation (_)
+  "It is a utility function used converting a keyword STRING to plist.
+It is meant to be used by `org-transclusion-get-string-to-plist'.
+It needs to be set in
+`org-transclusion-get-keyword-values-hook'."
+    (list :current-indentation (current-indentation)))
 
 (defun org-transclusion-keyword-remove ()
   "Remove the keyword element at point.
