@@ -257,8 +257,8 @@ It's like `with-silent-modifications' but keeps the undo list."
   (interactive)
   (add-hook 'before-save-hook #'org-transclusion-before-save-buffer nil t)
   (add-hook 'after-save-hook #'org-transclusion-after-save-buffer nil t)
-  (add-hook 'kill-buffer-hook #'org-transclusion-remove-all-in-buffer nil t)
-  (add-hook 'kill-emacs-hook #'org-transclusion-remove-all-in-buffer nil t)
+  (add-hook 'kill-buffer-hook #'org-transclusion-before-kill nil t)
+  (add-hook 'kill-emacs-hook #'org-transclusion-before-kill nil t)
   (org-transclusion-yank-excluded-properties-set))
 
 (defun org-transclusion-deactivate ()
@@ -267,8 +267,8 @@ It's like `with-silent-modifications' but keeps the undo list."
   (org-transclusion-remove-all-in-buffer)
   (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
   (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
-  (remove-hook 'kill-buffer-hook #'org-transclusion-remove-all-in-buffer t)
-  (remove-hook 'kill-emacs-hook #'org-transclusion-remove-all-in-buffer t)
+  (remove-hook 'kill-buffer-hook #'org-transclusion-before-kill t)
+  (remove-hook 'kill-emacs-hook #'org-transclusion-before-kill t)
   (org-transclusion-yank-excluded-properties-remove))
 
 (defun org-transclusion-make-from-link (&optional arg)
@@ -645,6 +645,12 @@ the settings revert to the user's setting prior to
     (goto-char org-transclusion-remember-point)
     ;;(recenter)
     (setq org-transclusion-remember-point nil)))
+
+(defun org-transclusion-before-kill ()
+  "."
+  (org-transclusion-remove-all-in-buffer)
+  (set-buffer-modified-p t)
+  (save-buffer))
 
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions for Transclude Keyword
