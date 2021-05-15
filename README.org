@@ -60,7 +60,7 @@ Download or clone this repo, put =org-transclusion.el= in your load-path, and pu
   (with-eval-after-load 'org
     (add-to-list  'load-path "path/to/org-transclusion/")
     (require 'org-transclusion)
-    (define-key global-map (kbd "<f12>") #'org-transclusion-mode))
+    (define-key global-map (kbd "<f12>") #'org-transclusion-add-at-point))
 #+END_SRC
 
 * Getting Started
