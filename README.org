@@ -24,6 +24,9 @@ This package is an attempt to enable transclusion with Org Mode in Emacs. It is 
 [[./resources/2021-05-01-org-transclusion-0.1.0-live-sync.gif]]
 *Figure 2*. Animation to show live sync from transclusion to source
 
+[[https://youtu.be/idlFzWeygwA][[[./resources/demo7-title.png]]]]
+*Figure 3*. [[https://youtu.be/idlFzWeygwA][Video demo on v0.1.1 on YouTube]]
+
 * Contents                                                         :noexport:
 :PROPERTIES:
 :TOC:      :include siblings
@@ -89,9 +92,10 @@ The transcluded text is read-only but you can copy it and export it as normal te
 
 You can press =o= to open the source buffer of the transclusion at point. Or press =e= to start a live-sync edit. For more detail, inspect the documentation of each command.
 
+#+name: org-transclusion-map
 #+begin_example
 =org-transclusion-map= (default)
-Adapt it to your liking, especially if you use vim keybindings with Evil Mode, etc.
+Adapt it to your liking, especially if you use vim keybindings with Evil Mode, etc. editing. 
 
 key             binding
 ---             -------
@@ -195,16 +199,17 @@ In the live-sync edit region, the normal =yank= command (=C-y=) is replaced with
   (substitute-command-keys "\\{org-transclusion-live-sync-map}")
 #+end_src
 
+#+name: org-transclusion-live-sync-map
 #+begin_example
-#+RESULTS:
-: key                   binding
-: ---                   -------
-: 
-: C-c			Prefix Command
-: C-y			org-transclusion-live-sync-paste
-: 
-: C-c C-c		org-transclusion-live-sync-exit-at-poiont
-: 
+ key                   binding
+ ---                   -------
+ 
+ C-c			Prefix Command
+ C-y			org-transclusion-live-sync-paste
+ 
+ C-c C-c		org-transclusion-live-sync-exit-at-poiont
+
+ *Also inherits ‘org-mode-map’
 #+end_example
  
 ** Commands
