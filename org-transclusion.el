@@ -151,7 +151,24 @@ buffer."
 
 ;;;; Variables
 
-(defvar-local org-transclusion-remember-point nil)
+(defvar-local org-transclusion-remember-point nil
+  "This variable is used to remember the current just before `save-buffer'.
+It is meant to be used to remember and return to the current
+point after `before-save-hook' and `after-save-hook' pair;
+`org-transclusion-before-save-buffer' and
+`org-transclusion-after-save-buffer' use this variable.")
+
+(defvar-local org-transclusion-before-save-transclusions nil
+  "This variable is used to remember the active transclusions before `save-buffer'.
+It is meant to be used to keep the file the current buffer is
+visiting clear of the transcluded text content.  Instead of
+blindly deactivate and activate all transclusions with t flag,
+this variable is meant to provide mechanism to
+deactivate/activate only the transclusions currently used to copy
+a text content.
+
+`org-transclusion-before-save-buffer' and
+`org-transclusion-after-save-buffer' use this variable.")
 
 (defvar-local org-transclusion-temp-window-config nil
   "Rember window config (the arrangment of windows) for the
@@ -414,7 +431,8 @@ You can customize the keymap with using `org-transclusion-map':
     t))
 
 (defun org-transclusion-remove-at-point ()
-  "Remove transcluded text at point."
+  "Remove transcluded text at point.
+When success, return the beginning point of the keyword re-inserted."
   (interactive)
   (if-let* ((beg (marker-position (get-char-property (point) 'tc-beg-mkr)))
             (end (marker-position (get-char-property (point) 'tc-end-mkr)))
@@ -433,18 +451,24 @@ You can customize the keymap with using `org-transclusion-map':
             (insert-before-markers keyword))
           ;; Go back to the beginning of the inserted keyword line
           (goto-char beg))
-        t)
+        beg)
     (message "Nothing done. No transclusion exists here.") nil))
 
 (defun org-transclusion-remove-all-in-buffer ()
-  "Remove all transluded text regions in the current buffer."
+  "Remove all transluded text regions in the current buffer.
+Return the list of points for the transclusion keywords re-inserted.
+It is assumed that the list is ordered in descending order.
+The list is intended to be used in `org-transclusion-before-save-buffer'."
   (interactive)
   (outline-show-all)
   (goto-char (point-min))
-  (while (text-property-search-forward 'tc-id)
-    (forward-char -1)
-    (org-transclusion-with-silent-modifications
-      (org-transclusion-remove-at-point))))
+  (let ((point)(list))
+    (while (text-property-search-forward 'tc-id)
+      (forward-char -1)
+      (org-transclusion-with-silent-modifications
+        (setq point (org-transclusion-remove-at-point))
+        (when point (push point list))))
+    list))
 
 (defun org-transclusion-refresh-at-point ()
   "Refresh the transcluded text at point."
@@ -652,16 +676,26 @@ the settings revert to the user's setting prior to
 
 (defun org-transclusion-before-save-buffer ()
   "."
+  (setq org-transclusion-before-save-transclusions nil)
   (setq org-transclusion-remember-point (point))
-  (org-transclusion-remove-all-in-buffer))
+  (setq org-transclusion-before-save-transclusions
+        (org-transclusion-remove-all-in-buffer)))
 
 (defun org-transclusion-after-save-buffer ()
   "."
-  (org-transclusion-add-all-in-buffer)
-  (when org-transclusion-remember-point
-    (goto-char org-transclusion-remember-point)
-    ;;(recenter)
-    (setq org-transclusion-remember-point nil)))
+  (unwind-protect
+      (progn
+        ;; Assume the list is in descending order.
+        ;; pop and do from the bottom of buffer
+        (dolist (p org-transclusion-before-save-transclusions)
+          (save-excursion
+            (goto-char p)
+            (org-transclusion-add-at-point)))
+        (when org-transclusion-remember-point
+          (goto-char org-transclusion-remember-point))
+    (progn
+      (setq org-transclusion-remember-point nil)
+      (setq org-transclusion-before-save-transclusions nil)))))
 
 (defun org-transclusion-before-kill ()
   "."
