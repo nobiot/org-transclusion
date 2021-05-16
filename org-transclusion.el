@@ -473,19 +473,23 @@ remain in the source buffer for further editing."
   (interactive "P")
   (unless (overlay-buffer (get-text-property (point) 'tc-pair))
     (org-transclusion-refresh-at-point))
-  (when-let* ((src-buf (overlay-buffer (get-text-property (point) 'tc-pair)))
-              (tc-elem (org-transclusion-get-enclosing-element))
-              (tc-beg (org-transclusion-element-get-beg-or-end 'beg tc-elem))
-              (tc-end (org-transclusion-element-get-beg-or-end 'end tc-elem))
-              (src-beg-mkr (org-transclusion-find-source-marker tc-beg tc-end))
-              (buf (current-buffer)))
-    (unwind-protect
-        (progn
-          (pop-to-buffer src-buf
-                         '(display-buffer-reuse-window . '(inhibit-same-window)))
-          (goto-char src-beg-mkr)
-          (recenter-top-bottom))
-      (unless arg (pop-to-buffer buf)))))
+  (let* ((src-buf (overlay-buffer (get-text-property (point) 'tc-pair)))
+         (tc-elem (org-transclusion-get-enclosing-element))
+         (tc-beg (org-transclusion-element-get-beg-or-end 'beg tc-elem))
+         (tc-end (org-transclusion-element-get-beg-or-end 'end tc-elem))
+         (src-beg-mkr
+          (or (org-transclusion-find-source-marker tc-beg tc-end)
+              (get-text-property (point) 'tc-src-beg-mkr)))
+         (buf (current-buffer)))
+    (if (not src-buf)
+        (user-error (format "No paired source buffer found here: at %d" (point)))
+      (unwind-protect
+          (progn
+            (pop-to-buffer src-buf
+                           '(display-buffer-reuse-window . '(inhibit-same-window)))
+            (goto-char src-beg-mkr)
+            (recenter-top-bottom))
+        (unless arg (pop-to-buffer buf))))))
 
 (defun org-transclusion-live-sync-start-at-point ()
   "Put overlay for start live sync edit on the transclusion at point.
@@ -714,7 +718,7 @@ It needs to be set in
 It is meant to be used by `org-transclusion-get-string-to-plist'.
 It needs to be set in
 `org-transclusion-get-keyword-values-hook'."
-    (list :current-indentation (current-indentation)))
+  (list :current-indentation (current-indentation)))
 
 (defun org-transclusion-keyword-remove ()
   "Remove the keyword element at point.
@@ -997,7 +1001,7 @@ TODO need to handle when the file does not exist."
   "Wrapper for make-ovelay.
 BEG and END can be point or marker.  Optionally BUF can be passed.
 FRONT-ADVANCE is nil, and REAR-ADVANCE is t."
- (make-overlay beg end buf nil t))
+  (make-overlay beg end buf nil t))
 
 (defun org-transclusion-find-source-marker (beg end)
   "Return marker that points to source begin point for transclusion.
@@ -1006,6 +1010,8 @@ meant to be transclusion region's begin and end used to limit the
 `text-property-search' -- as it does not have an argument to
 limit the search, this is done by looking at the output point and
 compare it with BEG and END.
+
+Return nil when :parent text-prop cannot be found.
 
 This function critically relies on the fact that `org-element'
 puts a \":parent\" text property to the elements obtained by
@@ -1030,10 +1036,11 @@ changes, the logic in this function will need to reviewed."
           ;; Point must be between beg and end (inclusive)
           (when (and (<= beg (point)) (<= (point) end))
             (setq parent (prop-match-value match))))))
-    (setq m (set-marker (make-marker)
-                        (or (org-element-property :contents-begin parent)
-                            (org-element-property :begin parent))
-                        src-buf))
+    (when parent
+      (setq m (set-marker (make-marker)
+                          (or (org-element-property :contents-begin parent)
+                              (org-element-property :begin parent))
+                          src-buf)))
     m))
 
 (defun org-transclusion-search-or-add-next-empty-line ()
@@ -1153,14 +1160,15 @@ This assumes the point is within the element (at point).
 
 This function first looks for the following elements:
 
-  center-block example-block export-block fixed-width latex-environment
-  plain-list property-drawer quote-block special-block src-block table
-  verse-block keyword
-
-*comment-block does not work well drawer dynamic-block
+  center-block drawer dynamic-block example-block export-block
+  fixed-width latex-environment plain-list property-drawer
+  quote-block special-block table verse-block
 
 If none of them found, this function identifies the paragraph at
 point to return.
+
+*comment-block, src-block, keyword do not work well as they
+ don't seem t have :parent prop from `org-element'.
 
 This function works in a temporary org buffer to isolate the
 transcluded region and source region from the rest of the
@@ -1179,7 +1187,7 @@ paragraph."
          (pos (point)))
     (if (or (not content)
             (string= content ""))
-        (message "Live sync cannot start here.")
+        (user-error (format "Live sync cannot start here: point %d" (point)))
       (with-temp-buffer
         (delay-mode-hooks (org-mode))
         ;; Calibrate the start position "Move" to the beg - 1 (buffer position
@@ -1190,21 +1198,25 @@ paragraph."
         (let ((context
                (or (org-element-lineage (org-element-context)
                                         '(center-block
-                                          ;;comment-block does not work well
+                                          ;; comment-block
                                           drawer
                                           dynamic-block
                                           example-block
                                           export-block fixed-width
+                                          ;; keyword
                                           latex-environment
                                           plain-list
                                           property-drawer
                                           quote-block special-block
-                                          src-block table
-                                          verse-block keyword) 'with-self)
+                                          ;; src-block
+                                          table
+                                          verse-block) 'with-self)
                    ;; For a paragraph
                    (org-element-lineage
                     (org-element-context) '(paragraph) 'with-self))))
-          context)))))
+          (if context context
+            (user-error (format "Live sync cannot start here: point %d"
+                                (point)))))))))
 
 (defun org-transclusion-element-get-beg-or-end (beg-or-end element)
   "Return appropriate beg-or-end of an element.
@@ -1244,7 +1256,7 @@ are integers (points or number of blank lines.)"
             (dolist (ov ovs)
               (delete-overlay ov))
           (remove-hook 'post-command-hook
-                     #'org-transclusion-live-sync-post-command-h t))))))
+                       #'org-transclusion-live-sync-post-command-h t))))))
 
 (defun org-transclusion-live-sync-remove-others ()
   "Remove other live-sync regions in other buffers.
