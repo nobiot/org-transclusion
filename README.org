@@ -95,7 +95,7 @@ You can press =o= to open the source buffer of the transclusion at point. Or pre
 #+name: org-transclusion-map
 #+begin_example
 =org-transclusion-map= (default)
-Adapt it to your liking, especially if you use vim keybindings with Evil Mode, etc. editing. 
+Adapt it to your liking, especially if you use vim keybindings with Evil Mode, etc.
 
 key             binding
 ---             -------
