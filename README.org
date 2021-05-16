@@ -24,7 +24,7 @@ This package is an attempt to enable transclusion with Org Mode in Emacs. It is 
 [[./resources/2021-05-01-org-transclusion-0.1.0-live-sync.gif]]
 *Figure 2*. Animation to show live sync from transclusion to source
 
-[[https://youtu.be/idlFzWeygwA][[[./resources/demo7-title.png]]]]
+[[./resources/demo7-title.png]]
 *Figure 3*. [[https://youtu.be/idlFzWeygwA][Video demo on v0.1.1 on YouTube]]
 
 * Contents                                                         :noexport:
