@@ -305,16 +305,14 @@ I do not know if bitmap can be customizable after it's been defined (TBC).
 Note this section is still incomplete, far from being exhaustive for "known" limitations.
 
 - =org-indent-mode= may not work well with Org-transclusion ::
-  It should not break anything, but both packages uses `line-prefix` and `wrap-prefix` text-properties for modifying the visual appearance of text. =org-indent-mode=
+  It should not break anything, but both packages uses =line-prefix= and =wrap-prefix= text-properties for modifying the visual appearance of text. =org-indent-mode= uses them to make the text's indententation appears aligned; Org-transclusion uses them for the fringes to indicate transclusion and source regions. 
 
 - Doom's customizing may interfere with Org-transclusion ::
    Refer to [[https://github.com/nobiot/org-transclusion/issues/52][this issue]]. The symptom is that in your Doom and you get an error message that includes this: "progn: ‘recenter’ing a window that does not display current-buffer." Adding this in your configuration has been reported to fix the issue:
 
- ```
- (advice-remove 'org-link-search '+org--recenter-after-follow-link-a)
- ```  
+=(advice-remove 'org-link-search '+org--recenter-after-follow-link-a)=
 
-It is probably a rather drastic measure. I will appreciate it if you find a less drastic way that works. Thank you.
+It is probably rather drastic a measure. I will appreciate it if you find a less drastic way that works. Thank you.
 
 * Changelog
 :PROPERTIES:
