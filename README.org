@@ -43,6 +43,7 @@ This package is an attempt to enable transclusion with Org Mode in Emacs. It is 
   - [[#include-the-section-before-the-first-headline-org-file-only][Include the section before the first headline (Org file only)]]
   - [[#faces--fringe-bitmap][Faces & fringe bitmap]]
   - [[#keybindings][Keybindings]]
+- [[#known-limitations][Known Limitations]]
 - [[#changelog][Changelog]]
 - [[#credits][Credits]]
   - [[#original-idea-by-john-kitchin][Original idea by John Kitchin]]
@@ -105,7 +106,7 @@ D		org-transclusion-demote-subtree
 P		org-transclusion-promote-subtree
 d		org-transclusion-remove-at-point
 e		org-transclusion-live-sync-start-at-point
-g		org-transclusion-refresh-at-poiont
+g		org-transclusion-refresh-at-point
 o		org-transclusion-open-source
 
 #+end_example
@@ -118,7 +119,7 @@ The minor mode is automatically turned on through one of these commands. All it 
 
 Turn off the minor mode, or use =org-transclusion-deactivate=
 
-The minor mode is just a conveniet wrapper to toggle =activate= and =deactivate= commands. 
+The minor mode is just a convenient wrapper to toggle =activate= and =deactivate= commands. 
 
 ** COMMENT Transclude text content
 
@@ -157,7 +158,7 @@ D		org-transclusion-demote-subtree
 P		org-transclusion-promote-subtree
 d		org-transclusion-remove-at-point
 e		org-transclusion-live-sync-start-at-point
-g		org-transclusion-refresh-at-poiont
+g		org-transclusion-refresh-at-point
 o		org-transclusion-open-source
 
 #+end_example
@@ -190,9 +191,6 @@ In the live-sync edit region, the normal =yank= command (=C-y=) is replaced with
 
 *Note*: that during live-sync edit, file's content gets saved to the filesystem as is -- i.e. the transcluded text will be saved instead of the =#+transclude:= keyword. If you kill buffer or quit Emacs, other hooks will still remove the transclusion to keep the file clear of the transcluded copy, leaving only the keyword in the file system.
 
-- Indentation at the beginning of paragraphs should be removed / adjusted manually
-- =org-line-mode= not recommended
-
 *** COMMENT =org-transclusion-live-sync-map=                       :noexport:
 
 #+begin_src elisp
@@ -207,7 +205,7 @@ In the live-sync edit region, the normal =yank= command (=C-y=) is replaced with
  C-c			Prefix Command
  C-y			org-transclusion-live-sync-paste
  
- C-c C-c		org-transclusion-live-sync-exit-at-poiont
+ C-c C-c		org-transclusion-live-sync-exit-at-point
 
  *Also inherits ‘org-mode-map’
 #+end_example
@@ -225,7 +223,7 @@ In the live-sync edit region, the normal =yank= command (=C-y=) is replaced with
 - =org-transclusion-demote-subtree= :: 
 - =org-transclusion-open-source= :: 
 - =org-transclusion-live-sync-start-at-point= :: 
-- =org-transclusion-live-sync-exit-at-poiont= :: 
+- =org-transclusion-live-sync-exit-at-point= :: 
 - =org-transclusion-live-sync-paste= ::
 
 ** Org links supported
@@ -277,13 +275,24 @@ How to use it is demonstrated in [[https://youtu.be/hz92vaO8IgQ][YouTube video #
 You can now include the first section (section before the first headline) of an Org file. It is toggled via customizing variable =org-transclusion-include-first-section=. Its default value is =nil=. Set it to =t= (or non-nil) to transclude the first section. It works when the first section is followed by headlines (only lightly tested; I will appreciate your testing. I might need to consider retracting this feature if it proves to be too buggy).
 
 ** Faces & fringe bitmap
+
+If the fringes that indicate transcluding and source regions are not visible in your system (e.g. Doom), try adding background and/or foreground colors to these custom faces.
+
 - org-transclusion-source-fringe
+- org-transclusion-fringe
+
+Here is an example image from [[https://github.com/nobiot/org-transclusion/issues/75][this issue]]:
+
+[[https://user-images.githubusercontent.com/12507865/118443158-de6a2480-b6eb-11eb-81d0-a2778ed5f779.png]]
+
+
+Other faces:
 - org-transclusion-source
 - org-transclusion-source-edit
-- org-transclusion-fringe
 - org-transclusion
 - org-transclusion-edit
 
+ 
 I do not know if bitmap can be customizable after it's been defined (TBC).
 - org-transclusion-fringe-bitmap ::
   It is used for the fringe that indicates the transcluded region. It works only in a graphical environment (not in terminal).
@@ -292,6 +301,20 @@ I do not know if bitmap can be customizable after it's been defined (TBC).
 
 - =org-transclusion-map=
 - =org-transclusion-live-sync-map=
+* Known Limitations
+Note this section is still incomplete, far from being exhaustive for "known" limitations.
+
+- =org-indent-mode= may not work well with Org-transclusion ::
+  It should not break anything, but both packages uses `line-prefix` and `wrap-prefix` text-properties for modifying the visual appearance of text. =org-indent-mode=
+
+- Doom's customizing may interfere with Org-transclusion ::
+   Refer to [[https://github.com/nobiot/org-transclusion/issues/52][this issue]]. The symptom is that in your Doom and you get an error message that includes this: "progn: ‘recenter’ing a window that does not display current-buffer." Adding this in your configuration has been reported to fix the issue:
+
+ ```
+ (advice-remove 'org-link-search '+org--recenter-after-follow-link-a)
+ ```  
+
+It is probably a rather drastic measure. I will appreciate it if you find a less drastic way that works. Thank you.
 
 * Changelog
 :PROPERTIES:
@@ -332,13 +355,13 @@ It seems like this could work well for headlines, and named tables, src blocks, 
 
 - Get involved in a discussion in [[https://org-roam.discourse.group/t/prototype-transclusion-block-reference-with-emacs-org-mode/830][Org-roam forum]] (the package is originally aimed for its users, me included)
 
-- Create issues, discussion, and/or pull requests. All weclome.
+- Create issues, discussion, and/or pull requests. All welcome.
 
 Thank you!
 
 * License
 
-This work is licensed under a GPLv3 license. For a full copy of the licese, refer to [[./LICENSE][LICENSE]].
+This work is licensed under a GPLv3 license. For a full copy of the license, refer to [[./LICENSE][LICENSE]].
 
 # Local Variables:
 # eval: (require 'org-make-toc)
