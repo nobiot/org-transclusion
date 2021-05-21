@@ -115,7 +115,7 @@ buffer."
   '((((class color) (min-colors 88) (background light))
      :background "#fff3da" :extend t)
     (((class color) (min-colors 88) (background dark))
-     :background "##221000" :extend t)
+     :background "#221000" :extend t)
     (t
      :background "chocolate4" :extend t))
   "Face for element in the source being edited by another
