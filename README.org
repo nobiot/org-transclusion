@@ -285,6 +285,16 @@ Here is an example image from [[https://github.com/nobiot/org-transclusion/issue
 
 [[https://user-images.githubusercontent.com/12507865/118443158-de6a2480-b6eb-11eb-81d0-a2778ed5f779.png]]
 
+To customize a face, it's probably the easiest to use =M-x customze-face=. If you want to use Elisp for some reason (e.g. on Doom), something like this below should set faces. Experiment with the colors of your choice. By default, the faces above have no values.
+
+#+begin_src elisp
+  (set-face-attribute
+   'org-transclusion-fringe nil
+   :foreground "green"
+   :background "green")
+#+end_src
+
+For colors, where "green" is,  you can also use something like "#62c86a" (Emacs calls it "RGB triple"; you can refer to in-system manual Emacs > Colors). You might also like to refer to a list of currently defined faces in your Emacs by =list-faces-display=.
 
 Other faces:
 - org-transclusion-source
