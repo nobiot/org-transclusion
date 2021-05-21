@@ -40,46 +40,78 @@ This function also works during undo in progress; that is, when
                           (delete-region mod-beg (point)))
                       (user-error "No live-sync done. The text strings in the overlays are not identical"))))))))))))
 
-(defun text-clone-create-overlays (src-beg src-end src-buf)
-      (let* ((src-ov (with-current-buffer src-buf
-                       ;; front-advanced should be nil
-                       (org-transclusion-make-overlay src-beg src-end)))
-             (tc-ov (org-transclusion-make-overlay (point) (+ (point) src-end)))
-             (dups (list src-ov tc-ov)))
-        (put 'text-clone-overlay 'type "source")
-        (put 'text-clone-overlay 'evaporate t)
-        ;; Source Overlay
-        (overlay-put src-ov 'category 'text-clone-overlay)
-        ;;(overlay-put src-ov 'evaporate t)
-        (overlay-put src-ov 'text-clones dups)
-        (overlay-put src-ov 'modification-hooks
+(defun text-clone-make-overlay (beg end &optional buf)
+  "Wrapper for make-ovelay.
+BEG and END can be point or marker.  Optionally BUF can be passed.
+FRONT-ADVANCE is nil, and REAR-ADVANCE is t."
+  (make-overlay beg end buf nil t))
+
+(defun text-clone-source-overlay-make (beg end)
+  "Return source overlay.
+BEG and END are assumed to be markers for the transclusion's source buffer."
+  (with-current-buffer (marker-buffer beg)
+    ;; front-advanced should be nil
+    (org-transclusion-make-overlay beg end)))
+
+(defvar text-clone-original-overlay-function nil
+  "Argument passsed is the single original overlay.")
+
+(add-hook 'text-clone-original-overlay-function
+          (lambda (oov)
+            (overlay-put oov 'face 'org-transclusion-source-edit)))
+            ;; (overlay-put tc-ov 'tc-type "src-edit-ov")
+            ;; (overlay-put tc-ov 'tc-paired-src-edit-ov src-ov)
+
+(defvar text-clone-clone-overlays-function nil
+  "Argument passed is a list of clone overlays.")
+
+(add-hook 'text-clone-clone-overlays-function
+          (lambda (covs)
+            (overlay-put (car covs) 'face 'org-transclusion-edit)
+            (overlay-put (car (cdr covs)) 'face 'org-transclusion-edit)))
+
+(defun text-clone-create-overlays (oov &rest covs)
+  "
+
+OOV :: Overlay for Original (original overlay)
+COVS :: Overlays for Clone (clone overlay)
+
+The distinction can be arbitary but can differentiate the
+original overlay from the clones passed to this function. For
+instance, if you would like to put a different faces for them to
+visually differentiate them."
+  (if (or (not covs)
+          (not (listp covs)))
+      (user-error "Nothing done. Wrong types of argument passed")
+    (run-hook-with-args 'text-clone-original-overlay-function oov)
+    (run-hook-with-args 'text-clone-clone-overlays-function covs)
+    (let ((text-clone-overlays (append (list oov) covs)))
+      (dolist (ov text-clone-overlays)
+        (overlay-put ov 'evaporate t)
+        (overlay-put ov 'text-clones text-clone-overlays)
+        (overlay-put ov 'modification-hooks
                      '(text-clone-live-sync))
-        (overlay-put src-ov 'insert-in-front-hooks
+        (overlay-put ov 'insert-in-front-hooks
                      '(text-clone-live-sync))
-        (overlay-put src-ov 'insert-behind-hooks
+        (overlay-put ov 'insert-behind-hooks
                      '(text-clone-live-sync))
-        (overlay-put src-ov 'face 'org-transclusion-source-edit)
-        (overlay-put src-ov 'priority -50)
-        ;; Transclusion Overlay
-        (overlay-put tc-ov 'modification-hooks
-                     '(text-clone-live-sync))
-        (overlay-put tc-ov 'insert-in-front-hooks
-                     '(text-clone-live-sync))
-        (overlay-put tc-ov 'insert-behind-hooks
-                     '(text-clone-live-sync))
-        (overlay-put tc-ov 'evaporate t)
-        (overlay-put tc-ov 'tc-paired-src-edit-ov src-ov)
-        (overlay-put tc-ov 'tc-type "src-edit-ov")
-        (overlay-put tc-ov 'face 'org-transclusion-edit)
-        (overlay-put tc-ov 'text-clones dups)))
+        (overlay-put ov 'priority -50)))))
 
 (defun test-text-clone ()
   (interactive)
-  (let ((buf (find-file-noselect "./test.txt"))
-        (src-beg) (src-end) (content))
-    (with-current-buffer buf
+  (let ((src-buf (find-file-noselect "./test.txt"))
+        (cbuf2 (find-file-noselect "./test-clone-2.txt"))
+        src-beg src-end src-content src-ov clone-ov
+        cov2)
+    (with-current-buffer src-buf
+      ;; front-advanced should be nil
       (setq src-beg (point-min))
       (setq src-end (point-max))
-      (setq content (buffer-string)))
-    (save-excursion (insert content))
-    (text-clone-create-overlays src-beg src-end buf)))
+      (setq src-content (buffer-string))
+      (setq src-ov (text-clone-make-overlay src-beg src-end)))
+    (with-current-buffer cbuf2
+      (insert src-content)
+      (setq cov2 (text-clone-make-overlay (point-min) (+ (point-min) src-end))))
+    (setq clone-ov (text-clone-make-overlay (point) (+ (point) src-end)))
+    (save-excursion (insert src-content))
+    (text-clone-create-overlays src-ov clone-ov cov2)))
