@@ -53,24 +53,21 @@ BEG and END are assumed to be markers for the transclusion's source buffer."
     ;; front-advanced should be nil
     (org-transclusion-make-overlay beg end)))
 
-(defvar text-clone-original-overlay-function nil
-  "Argument passsed is the single original overlay.")
+;; (overlay-put tc-ov 'tc-type "src-edit-ov")
+;; (overlay-put tc-ov 'tc-paired-src-edit-ov src-ov)
 
-(add-hook 'text-clone-original-overlay-function
-          (lambda (oov)
-            (overlay-put oov 'face 'org-transclusion-source-edit)))
-            ;; (overlay-put tc-ov 'tc-type "src-edit-ov")
-            ;; (overlay-put tc-ov 'tc-paired-src-edit-ov src-ov)
-
-(defvar text-clone-clone-overlays-function nil
+(defvar text-clone-overlays-function nil
   "Argument passed is a list of clone overlays.")
 
-(add-hook 'text-clone-clone-overlays-function
-          (lambda (covs)
-            (overlay-put (car covs) 'face 'org-transclusion-edit)
-            (overlay-put (car (cdr covs)) 'face 'org-transclusion-edit)))
+(add-hook 'text-clone-overlays-function 'my/add-overlays)
 
-(defun text-clone-create-overlays (oov &rest covs)
+(defun my/add-overlays (ovs)
+  (let ((overlays ovs))
+    (overlay-put (pop overlays) 'face 'org-transclusion-source-edit)
+    (dolist (overlay overlays)
+      (overlay-put overlay 'face 'org-transclusion-edit))))
+
+(defun text-clone-create-overlays (&rest overlays)
   "
 
 OOV :: Overlay for Original (original overlay)
@@ -80,22 +77,20 @@ The distinction can be arbitary but can differentiate the
 original overlay from the clones passed to this function. For
 instance, if you would like to put a different faces for them to
 visually differentiate them."
-  (if (or (not covs)
-          (not (listp covs)))
+  (if (or (not overlays)
+          (> 2 (length overlays)))
       (user-error "Nothing done. Wrong types of argument passed")
-    (run-hook-with-args 'text-clone-original-overlay-function oov)
-    (run-hook-with-args 'text-clone-clone-overlays-function covs)
-    (let ((text-clone-overlays (append (list oov) covs)))
-      (dolist (ov text-clone-overlays)
-        (overlay-put ov 'evaporate t)
-        (overlay-put ov 'text-clones text-clone-overlays)
-        (overlay-put ov 'modification-hooks
-                     '(text-clone-live-sync))
-        (overlay-put ov 'insert-in-front-hooks
-                     '(text-clone-live-sync))
-        (overlay-put ov 'insert-behind-hooks
-                     '(text-clone-live-sync))
-        (overlay-put ov 'priority -50)))))
+    (run-hook-with-args 'text-clone-overlays-function overlays)
+    (dolist (ov overlays)
+      (overlay-put ov 'evaporate t)
+      (overlay-put ov 'text-clones overlays)
+      (overlay-put ov 'modification-hooks
+                   '(text-clone-live-sync))
+      (overlay-put ov 'insert-in-front-hooks
+                   '(text-clone-live-sync))
+      (overlay-put ov 'insert-behind-hooks
+                   '(text-clone-live-sync))
+      (overlay-put ov 'priority -50))))
 
 (defun test-text-clone ()
   (interactive)
