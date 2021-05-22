@@ -19,7 +19,8 @@ No copy is produced.
 
 This function also refreshes `text-clone-overlays' as a
 side-effect to keep track of the current text-clone overlays,
-which is primarily used for clean up when you exit live-sync.
+which is primarily used to clean up text-clone overlays with
+`text-clone-delete-overlays'.
 
 This function does not explicitly differentiate overlays for the
 orginal text region and its clones.  Where such distinction is
