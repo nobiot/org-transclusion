@@ -405,7 +405,8 @@ You can customize the keymap with using `org-transclusion-map':
                  (if (or (string= tc-content "")
                          (eq tc-content nil))
                      (progn (message
-                             (format "Nothing done. No content is found through the link at point %d, line %d"
+                             (format "Nothing done.  \
+No content is found through the link at point %d, line %d"
                                      (point) (org-current-line)))
                             nil)
                    (org-transclusion-with-silent-modifications
@@ -554,38 +555,48 @@ a couple of org-transclusion specific keybindings; namely:
     (org-transclusion-refresh-at-point)
     (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
     (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
-    (let* ((tc-elem (org-transclusion-get-enclosing-element))
-           (tc-beg (org-transclusion-element-get-beg-or-end 'beg tc-elem))
-           (tc-end (org-transclusion-element-get-beg-or-end 'end tc-elem))
-           (src-range-mkrs (org-transclusion-live-sync-source-range-markers-get
-                            tc-beg tc-end))
-           (src-beg-mkr (car src-range-mkrs))
-           (src-end-mkr (cdr src-range-mkrs))
-           (src-buf (marker-buffer src-beg-mkr))
-           (src-content (org-transclusion-live-sync-source-content-get
-                         src-beg-mkr src-end-mkr))
-           (src-ov (text-clone-make-overlay
-                    src-beg-mkr src-end-mkr src-buf))
-           (tc-ov))
-      ;; replace the region as a copy of the src-overlay region
-      (save-excursion
-        (let* ((inhibit-read-only t)
-               (props)
-               (m (get-text-property tc-beg 'tc-beg-mkr))
-               (beg (marker-position m)))
-          (goto-char tc-beg)
-          (setq props (text-properties-at tc-beg))
-          (delete-region tc-beg tc-end)
-          (insert-and-inherit src-content)
-          (setq tc-end (point))
-          (add-text-properties tc-beg tc-end props)
-          (move-marker m beg)))
-      (setq tc-ov (org-transclusion-make-overlay tc-beg tc-end))
+    (let* ((ovs (org-transclusion-live-sync-src-buffers-org-get))
+           (src-ov (car ovs))
+           (tc-ov (cdr ovs))
+           (tc-beg (overlay-start tc-ov))
+           (tc-end (overlay-end tc-ov)))
       (org-transclusion-live-sync-display-buffer (overlay-buffer src-ov))
       (org-transclusions-live-sync-modify-overlays (text-clone-set-overlays src-ov tc-ov))
       (with-silent-modifications
         (remove-text-properties (1- tc-beg) tc-end '(read-only)))
       t)))
+
+(defun org-transclusion-live-sync-src-buffers-org-get ()
+  "Return cons cell of overlays for source and trasnclusion.
+    (src-ov . tc-ov)"
+  (let* ((tc-elem (org-transclusion-get-enclosing-element))
+         (tc-beg (org-transclusion-element-get-beg-or-end 'beg tc-elem))
+         (tc-end (org-transclusion-element-get-beg-or-end 'end tc-elem))
+         (src-range-mkrs (org-transclusion-live-sync-source-range-markers-get
+                          tc-beg tc-end))
+         (src-beg-mkr (car src-range-mkrs))
+         (src-end-mkr (cdr src-range-mkrs))
+         (src-buf (marker-buffer src-beg-mkr))
+         (src-content (org-transclusion-live-sync-source-content-get
+                       src-beg-mkr src-end-mkr))
+         (src-ov (text-clone-make-overlay
+                  src-beg-mkr src-end-mkr src-buf))
+         (tc-ov))
+    ;; replace the region as a copy of the src-overlay region
+    (save-excursion
+      (let* ((inhibit-read-only t)
+             (props)
+             (m (get-text-property tc-beg 'tc-beg-mkr))
+             (beg (marker-position m)))
+        (goto-char tc-beg)
+        (setq props (text-properties-at tc-beg))
+        (delete-region tc-beg tc-end)
+        (insert-and-inherit src-content)
+        (setq tc-end (point))
+        (add-text-properties tc-beg tc-end props)
+        (move-marker m beg)))
+    (setq tc-ov (org-transclusion-make-overlay tc-beg tc-end))
+    (cons src-ov tc-ov)))
 
 (defun org-transclusion-live-sync-exit-at-point ()
   "Exit live-sync at point.
