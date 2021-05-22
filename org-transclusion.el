@@ -1296,7 +1296,12 @@ are integers (points or number of blank lines.)"
                        #'org-transclusion-live-sync-post-command-h t))))))
 
 (defun org-transclusion-live-sync-after-delete-overlay (list)
-  "Used in `text-clone-after-delete-overlay-functions'."
+  ".
+Refresh the transclusion after live-sync has ended before
+starting a new one.  LIST is assumed to be a list that represents
+the deleted overlay for transclusion in this structure:
+
+    (buf (beg . end))"
   (when list
     (let ((buf (car list))
           (beg (caadr list))
