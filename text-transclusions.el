@@ -54,12 +54,12 @@ them to visually differentiate them."
 (defun text-clone-post-command-h ()
   "Delete all the text-clone overlays when any one is non-existent."
   (when-let ((ovs text-clone-overlays))
-    (let ((deletedp nil))
+    (let ((deleted nil))
       (dolist (ov ovs)
-        (unless (or deletedp
+        (unless (or deleted
                     (overlay-buffer ov))
-          (setq deletedp t)))
-      (when deletedp
+          (setq deleted t)))
+      (when deleted
         (text-clone-delete-overlays)))))
 
 (defun text-clone-delete-overlays ()
@@ -75,9 +75,10 @@ up text-clone:
   (when text-clone-overlays
     (dolist (ov text-clone-overlays)
       ;; Clean up the local post-command-hook
-      (with-current-buffer (overlay-buffer ov)
-        (remove-hook 'post-command-hook
-                     #'text-clone-post-command-h t))
+      (when (overlay-buffer ov)
+        (with-current-buffer (overlay-buffer ov)
+          (remove-hook 'post-command-hook
+                       #'text-clone-post-command-h t)))
       (delete-overlay ov))
     (setq text-clone-overlays nil)))
 
@@ -120,34 +121,3 @@ This function also works during undo in progress; that is, when
                           (save-excursion (insert str))
                           (delete-region mod-beg (point)))
                       (user-error "No live-sync done. The text strings in the overlays are not identical"))))))))))))
-
-
-(add-hook 'text-clone-modify-overlays-functions 'my/add-overlays)
-
-(defun my/add-overlays (ovs)
-  (let ((overlays ovs))
-    (overlay-put (pop overlays) 'face 'org-transclusion-source-edit)
-    (dolist (overlay overlays)
-      (overlay-put overlay 'face 'org-transclusion-edit))))
-
-;; (overlay-put tc-ov 'tc-type "src-edit-ov")
-;; (overlay-put tc-ov 'tc-paired-src-edit-ov src-ov)
-
-(defun test-text-clone ()
-  (interactive)
-  (let ((src-buf (find-file-noselect "./test.txt"))
-        (cbuf2 (find-file-noselect "./test-clone-2.txt"))
-        src-beg src-end src-content src-ov clone-ov
-        cov2)
-    (with-current-buffer src-buf
-      ;; front-advanced should be nil
-      (setq src-beg (point-min))
-      (setq src-end (point-max))
-      (setq src-content (buffer-string))
-      (setq src-ov (text-clone-make-overlay src-beg src-end)))
-    (with-current-buffer cbuf2
-      (insert src-content)
-      (setq cov2 (text-clone-make-overlay (point-min) (+ (point-min) src-end))))
-    (setq clone-ov (text-clone-make-overlay (point) (+ (point) src-end)))
-    (save-excursion (insert src-content))
-    (text-clone-set-overlays src-ov clone-ov cov2)))
