@@ -61,7 +61,7 @@ instance, if you would like to put a different faces for them to
 visually differentiate them."
   (if (or (not overlays)
           (> 2 (length overlays)))
-      (user-error "Nothing done. Wrong types of argument passed")
+      (user-error "Nothing done. You need to pass 2 or more overlays")
     (dolist (ov overlays)
       (overlay-put ov 'evaporate t)
       (overlay-put ov 'text-clones overlays)
