@@ -1,14 +1,66 @@
+;;; text-clone.el --- clone and live-sync text -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2020-21 Noboru Ota
+
+;; Author: Noboru Ota <me@nobiot.com>
+;; URL: https://github.com/nobiot/org-transclusion
+;; Keywords: text-clone, transclusion
+
+;; Version: 0.0.1
+;; Package-Requires: ((emacs "27.1"))
+
+;; This file is not part of GNU Emacs.
+
+;; This program is free software: you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by the
+;; Free Software Foundation, either version 3 of the License, or (at your
+;; option) any later version.
+
+;; This program is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;; General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License along
+;; with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;;;; Credits
+
+;; It is an extention of text-clone functions written as part of GNU Emacs in
+;; subr.el.  The first adaption to extend text-clone functions to work across
+;; buffers was published in StackExchange by the user named Tobias in March
+;; 2020. It can be found at https://emacs.stackexchange.com/questions/56201/
+;; is-there-an-emacs-package-which-can-mirror-a-region/56202#56202
+
+;; Noboru Ota has made further adaptions for version 0.0.1 in order for it
+;; work with the Org-transclusion package.
+
+;;; Code:
+
+;;;; Variables
+
 (defvar text-clone-modify-overlays-functions nil
-  "Argument passed is a list of clone overlays.")
+  "An \"abnormal hook\" used in `text-clone-set-overlays'.
+Use `add-hook' to add functions to the hook.  The functions are
+meant to put overlay properties after the standard set of
+properties have been added by `text-clone-set-overlays'.  The
+functions should accept a list of overlays.")
 
-(defvar text-clone-overlays nil)
+(defvar text-clone-overlays nil
+  "Global variable to keep track of all the text-clone.
+overlays.  Used primarily by `text-clone-delete-overlays'.")
 
-(defvar text-clone-live-sync-in-progress nil)
+(defvar text-clone-live-sync-in-progress nil
+  "Global varible used by `text-clone-live-sync' function.")
+
+;;;; Functions
 
 (defun text-clone-make-overlay (beg end &optional buf)
-  "Wrapper for make-ovelay.
-BEG and END can be point or marker.  Optionally BUF can be passed.
-FRONT-ADVANCE is nil, and REAR-ADVANCE is t."
+  "Wrapper for `make-ovelay' to standardize the parameters passed to it.
+BEG and END can be point or marker.  Optionally BUF can be
+passed.  FRONT-ADVANCE is nil, and REAR-ADVANCE is t."
   (make-overlay beg end buf nil t))
 
 (defun text-clone-set-overlays (&rest overlays)
@@ -33,7 +85,7 @@ the properties.  For instance, you can put different faces for
 them to visually differentiate them."
   (if (or (not overlays)
           (> 2 (length overlays)))
-      (user-error "Nothing done. You need to pass 2 or more overlays")
+      (user-error "Nothing done.  You need to pass 2 or more overlays")
     (setq text-clone-overlays nil)
     (dolist (ov overlays)
       (overlay-put ov 'evaporate t)
@@ -68,7 +120,7 @@ them to visually differentiate them."
 As side-effects, this function also does the following to clean
 up text-clone:
 
-- Remove the local post-command-hook
+- Remove the local `post-command-hook'
   `text-clone-post-command-h' for text-clone each overlay
 
 - Reset tracking of text-clone overlays by setting
@@ -89,13 +141,15 @@ This is used on the `modification-hooks' property of text clones.
 AFTER, BEG, and END are the fixed args for `modification-hooks'
 and friends in an overlay.
 
-It's a simplified versino of the orignal
-`text-clone--maintain'. We do not work with SPREADP or
-SYNTAX (both defined in `text-clone-create').
+It's a simplified version of the orignal `text-clone--maintain'.
+This function does not use SPREADP or SYNTAX (both defined in
+`text-clone-create').
 
 Overlay is also assumed to be always SPREADP but insteaf we opt
-for nil t -- tighter overlay size. And have post-command-hook to
-deal with the case when either of the overlay is deleted.
+for (nil t) -- refer to `text-clone-make-overlay'.  This enables
+tighter overlay size and has `post-command-hook' to deal with the
+case when one of the overlays is deleted (refer to
+`text-clone-post-command-h').
 
 This function also works during undo in progress; that is, when
 `undo-in-progress' is non-nil."
@@ -123,3 +177,6 @@ This function also works during undo in progress; that is, when
                           (delete-region mod-beg (point)))
                       (user-error "No live-sync done.  \
 The text strings in the overlays are not identical"))))))))))))
+
+(provide 'text-clone)
+;;; text-clone.el ends here
