@@ -546,10 +546,11 @@ a couple of org-transclusion specific keybindings; namely:
   (if (not (org-transclusion--within-transclusion-p))
       (progn (message (format "Nothing done. Not a translusion at %d" (point)))
              nil)
+    ;; Delete other live-sync overlays and clean-up.
+    ;; There should be only one pair of transclusion-source in live-sync
     (when-let* ((deleted-live-sync-ovs (text-clone-delete-overlays))
                 (deleted-transclusion (cadr deleted-live-sync-ovs)))
       (org-transclusion-live-sync-after-delete-overlay deleted-transclusion))
-    ;; (org-transclusion-live-sync-remove-others)
     (org-transclusion-refresh-at-point)
     (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
     (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
@@ -568,7 +569,6 @@ a couple of org-transclusion specific keybindings; namely:
            (tc-ov))
       ;; replace the region as a copy of the src-overlay region
       (save-excursion
-        ;; TODO neeed to fix properly for paragraphs and elements
         (let* ((inhibit-read-only t)
                (props)
                (m (get-text-property tc-beg 'tc-beg-mkr))
@@ -581,13 +581,10 @@ a couple of org-transclusion specific keybindings; namely:
           (add-text-properties tc-beg tc-end props)
           (move-marker m beg)))
       (setq tc-ov (org-transclusion-make-overlay tc-beg tc-end))
-      ;;(setq dups (list src-ov tc-ov))
       (org-transclusion-live-sync-display-buffer (overlay-buffer src-ov))
       (org-transclusions-live-sync-modify-overlays (text-clone-set-overlays src-ov tc-ov))
       (with-silent-modifications
         (remove-text-properties (1- tc-beg) tc-end '(read-only)))
-      ;;(setq org-transclusion-live-sync-overlay-pair (list tc-ov src-ov))
-      ;;(add-hook 'post-command-hook #'org-transclusion-live-sync-post-command-h nil t)
       t)))
 
 (defun org-transclusion-live-sync-exit-at-point ()
@@ -597,7 +594,6 @@ the state before live-sync started."
   (interactive)
   (org-transclusion-activate) ;; re-activating hooks inactive during live-sync
   (org-transclusion-refresh-at-point)
-  ;;(org-transclusion-live-sync-delete-overlays)
   (text-clone-delete-overlays)
   (when org-transclusion-temp-window-config
     (unwind-protect
@@ -1151,29 +1147,9 @@ BEG and END are assumed to be markers for the transclusion's source buffer."
     (with-current-buffer (marker-buffer beg)
       (buffer-substring-no-properties beg end))))
 
-;; (defun org-transclusion-live-sync-source-overlay-make (beg end)
-;;   "Return source overlay.
-;; BEG and END are assumed to be markers for the transclusion's source buffer."
-;;   (with-current-buffer (marker-buffer beg)
-;;     ;; front-advanced should be nil
-;;     (org-transclusion-make-overlay beg end)))
-
-;; (defun org-transclusion-live-sync-remove-overlays-maybe (beg end)
-;;   "Remove the overlaies between BEG and END in the source buffer.
-;; The source buffer to be looked at is being live-sync edited.
-;; This function checks if such overlays exist - it should support
-;; multiple edit overlays.  It is meant to be used in
-;; `org-transclusion-remove-at-point'.  The overlay needs to be
-;; deleted before the transclusion itself is deleted; otherwise,
-;; live edit will try to sync the deletion, and causes an error."
-;;   (when-let ((src-edit-ovs (overlays-in beg end)))
-;;     (dolist (ov src-edit-ovs)
-;;       (when (string= "src-edit-ov" (overlay-get ov 'tc-type))
-;;         (delete-overlay (overlay-get ov 'tc-paired-src-edit-ov))
-;;         (delete-overlay ov)))))
-
 (defun org-transclusions-live-sync-modify-overlays (overlays)
-  "Abnormal function for `text-clone-modify-overlays-functions'.
+  "Add overlay properties specific Org-transclusion for OVERLAYS.
+This must be done after `text-clone-set-overlays'.
 Org-transclusion always works with a pair of overlays."
   (let ((src-ov (car overlays))
         (tc-ov (cadr overlays)))
@@ -1181,16 +1157,7 @@ Org-transclusion always works with a pair of overlays."
     (overlay-put src-ov 'face 'org-transclusion-source-edit)
     ;; Transclusion Overlay
     (overlay-put tc-ov 'face 'org-transclusion-edit)
-    ;;(overlay-put tc-ov 'tc-type "src-edit-ov")
-    (overlay-put tc-ov 'tc-paired-src-edit-ov src-ov)
     (overlay-put tc-ov 'local-map org-transclusion-live-sync-map)))
-
-;; (defun org-transclusion-live-sync-delete-overlays ()
-;;   "Delete the pair of live-sync overlays."
-;;   (when org-transclusion-live-sync-overlay-pair
-;;     (dolist (ov org-transclusion-live-sync-overlay-pair)
-;;       (delete-overlay ov))
-;;     (setq org-transclusion-live-sync-overlay-pair nil)))
 
 (defun org-transclusion-get-enclosing-element ()
   "Return an enclosing Org element for live-sync.
@@ -1280,24 +1247,8 @@ are integers (points or number of blank lines.)"
                   (org-element-property :post-blank element)))))))
     val))
 
-(defun org-transclusion-live-sync-post-command-h ()
-  "Delete both of the overlays for live-sync when either one is not present."
-  (when-let ((ovs org-transclusion-live-sync-overlay-pair))
-    (let ((delete-bothp nil))
-      (dolist (ov ovs)
-        (unless (or delete-bothp
-                    (overlay-buffer ov))
-          (setq delete-bothp t)))
-      (when delete-bothp
-        (unwind-protect
-            (dolist (ov ovs)
-              (delete-overlay ov))
-          (remove-hook 'post-command-hook
-                       #'org-transclusion-live-sync-post-command-h t))))))
-
 (defun org-transclusion-live-sync-after-delete-overlay (list)
-  ".
-Refresh the transclusion after live-sync has ended before
+  "Refresh the transclusion after live-sync has ended before
 starting a new one.  LIST is assumed to be a list that represents
 the deleted overlay for transclusion in this structure:
 
@@ -1311,23 +1262,6 @@ the deleted overlay for transclusion in this structure:
          (goto-char beg)
          (org-transclusion-refresh-at-point))
         (goto-char current-p)))))
-
-;; (defun org-transclusion-live-sync-remove-others ()
-;;   "Remove other live-sync regions in other buffers.
-;; This is deliberately done -- a single live-sync edit region
-;; globally in an Emacs session."
-;;   (when-let ((ovs org-transclusion-live-sync-overlay-pair))
-;;     (dolist (ov ovs)
-;;       (let ((p (overlay-start ov))
-;;             (buf (overlay-buffer ov)))
-;;         (if (not buf) (delete-overlay ov)
-;;           (with-current-buffer buf
-;;             (let ((pos (point)))
-;;               (org-with-wide-buffer
-;;                (goto-char p)
-;;                (org-transclusion-refresh-at-point))
-;;               (goto-char pos))
-;;             t))))))
 
 (defun org-transclusion-live-sync-display-buffer (buffer)
   "Display the source buffer upon entering live-sync edit.
@@ -1383,56 +1317,6 @@ When DEMOTE is non-nil, demote."
             (if demote (org-demote-subtree) (org-promote-subtree))
             (org-transclusion-promote-adjust-after)))
         (goto-char pos)))))
-
-;;-----------------------------------------------------------------------------
-;; Text Clone
-;; Based on StackExchange user Tobias' code; adapted by nobiot
-;; https://emacs.stackexchange.com/questions/56201/is-there-an-emacs-package-which-can-mirror-a-region/56202#56202
-;; Since I'm not using SPREADP argument (or margin), I can simplify
-;; the code much more.
-
-(defvar org-transclusion--text-clone-maintaining nil)
-
-(defun org-transclusion--text-clone--maintain (ol1 after beg end &optional _len)
-  "Propagate the change made under the overlay OL1 to the other paired clone.
-This is used on the `modification-hooks' property of text clones.
-AFTER, BEG, and END are the fixed args for `modification-hooks'
-and friends in an overlay."
-  (when (and after ;(not undo-in-progress) ;; < nobit removed undo-in-progress
-             (not org-transclusion--text-clone-maintaining)
-             (overlay-start ol1))
-    (let ((margin (if (overlay-get ol1 'text-clone-spreadp) 1 0)))
-      (setq beg (max beg (+ (overlay-start ol1) margin)))
-      (setq end (min end (- (overlay-end ol1) margin)))
-      (when (<= beg end)
-        (save-excursion
-          ;; Remove text-clone-syntax case; we don't use it.
-          ;; Now go ahead and update the clones.
-          (let ((head (- beg (overlay-start ol1)))
-                (tail (- (overlay-end ol1) end))
-                (str (buffer-substring-no-properties beg end)) ;changed to no-properties
-                (nothing-left t)
-                (org-transclusion--text-clone-maintaining t))
-            (dolist (ol2 (overlay-get ol1 'text-clones))
-              (with-current-buffer (overlay-buffer ol2) ;;< Tobias
-                (save-restriction
-                  (widen)
-                                        ;(outline-show-all)
-                  (let ((oe (overlay-end ol2)))
-                    (unless (or (eq ol1 ol2) (null oe))
-                      (setq nothing-left nil)
-                      (let ((mod-beg (+ (overlay-start ol2) head)))
-                        ;;(overlay-put ol2 'modification-hooks nil)
-                        (goto-char (- (overlay-end ol2) tail))
-                        (if (not (> mod-beg (point)))
-                            (progn
-                              (save-excursion (insert str))
-                              (delete-region mod-beg (point)))
-                          (user-error "No live-sync.  The source and transclusion are not identical"))
-                        ;;(overlay-put ol2 'modification-hooks '(text-clone--maintain))
-                        ))))))
-            (if nothing-left
-                (progn (delete-overlay ol1)))))))))
 
 (provide 'org-transclusion)
 ;;; org-transclusion.el ends here
