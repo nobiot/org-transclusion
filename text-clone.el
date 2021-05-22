@@ -41,34 +41,6 @@
 
 ;;;; Variables
 
-(defvar text-clone-modify-overlays-functions nil
-  "An \"abnormal hook\" used in `text-clone-set-overlays'.
- The functions are meant to put overlay properties after the
-standard set of properties have been added by
-`text-clone-set-overlays'.  The functions should accept a list of
-overlays.  Use `add-hook' to add functions to the hook.")
-
-(defvar text-clone-before-delete-overlay-functions nil
-  "An \"abnormal hook\" used in `text-clone-delete-overlays'.
-The functions are called wtih a list that represents an overlay
-to be deleted as the single argument, and within the
-`with-current-buffer' environment, in the buffer the overlay
-exists.  The argument is a list in this structure:
-
-    (buf (beg . end))
-
-Use `add-hook' to add functions to the hook.")
-
-(defvar text-clone-after-delete-overlay-functions nil
-  "An \"abnormal hook\" used in `text-clone-delete-overlays'.
-The functions are called with a list that represents a deleted
-overlay as the single argument in this structure:
-
-    (buf (beg . end))
-
-Use `add-hook' to add functions to the hook.")
-
-
 (defvar text-clone-overlays nil
   "Global variable to keep track of all the text-clone.
 overlays.  Used primarily by `text-clone-delete-overlays'.")
@@ -121,7 +93,6 @@ them to visually differentiate them."
       ;; Add a local post-command-hook for each overlay buffer
       (with-current-buffer (overlay-buffer ov)
         (add-hook 'post-command-hook #'text-clone-post-command-h nil t)))
-    (run-hook-with-args 'text-clone-modify-overlays-functions overlays)
     (setq text-clone-overlays overlays)
     overlays))
 
@@ -135,17 +106,6 @@ them to visually differentiate them."
           (setq deleted t)))
       (when deleted
         (text-clone-delete-overlays)))))
-
-(defun text-clone-delete-nth-overlay (n)
-  "Delete a single text-clone.
-This functions removes `nth' of text-clone-overlays'.  Zero is
-the first element of the list."
-  (when text-clone-overlays
-    (let ((ov (nth n text-clone-overlays)))
-      (with-current-buffer (overlay-buffer ov)
-        (remove-hook 'post-command-hook
-                     #'text-clone-post-command-h t))
-      (delete (nth n text-clone-overlays) text-clone-overlays))))
 
 (defun text-clone-delete-overlays ()
   "Remove all live-sync overlays.
@@ -173,9 +133,8 @@ up text-clone:
             (with-current-buffer (overlay-buffer ov)
               (remove-hook 'post-command-hook
                            #'text-clone-post-command-h t)
-              (run-hook-with-args 'text-clone-before-delete-overlay-functions element)))
-          (delete-overlay ov)
-          (run-hook-with-args 'text-clone-after-delete-overlay-functions element)))
+
+          (delete-overlay ov)))))
       (setq text-clone-overlays nil)
       ;; As push is used to construct the list, the sequence needs to be reversed
       (nreverse deleted-overlays))))

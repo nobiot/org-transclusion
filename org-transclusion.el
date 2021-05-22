@@ -291,8 +291,8 @@ It's like `with-silent-modifications' but keeps the undo list."
   (add-hook 'kill-emacs-hook #'org-transclusion-before-kill nil t)
   ;; (add-hook 'text-clone-before-delete-overlay-functions
   ;;           #'org-transclusion-live-sync-before-delete-overlay)
-  (add-hook 'text-clone-modify-overlays-functions
-            #'org-transclusions-live-sync-modify-overlays)
+  ;; (add-hook 'text-clone-modify-overlays-functions
+  ;;           #'org-transclusions-live-sync-modify-overlays)
   (org-transclusion-yank-excluded-properties-set))
 
 (defun org-transclusion-deactivate ()
@@ -305,8 +305,8 @@ It's like `with-silent-modifications' but keeps the undo list."
   (remove-hook 'kill-emacs-hook #'org-transclusion-before-kill t)
   ;; (remove-hook 'text-clone-before-delete-overlay-functions
   ;;              #'org-transclusion-live-sync-before-delete-overlay)
-  (remove-hook 'text-clone-modify-overlays-functions
-               #'org-transclusions-live-sync-modify-overlays)
+  ;; (remove-hook 'text-clone-modify-overlays-functions
+  ;;              #'org-transclusions-live-sync-modify-overlays)
   (org-transclusion-yank-excluded-properties-remove))
 
 (defun org-transclusion-make-from-link (&optional arg)
@@ -583,7 +583,7 @@ a couple of org-transclusion specific keybindings; namely:
       (setq tc-ov (org-transclusion-make-overlay tc-beg tc-end))
       ;;(setq dups (list src-ov tc-ov))
       (org-transclusion-live-sync-display-buffer (overlay-buffer src-ov))
-      (text-clone-set-overlays src-ov tc-ov)
+      (org-transclusions-live-sync-modify-overlays (text-clone-set-overlays src-ov tc-ov))
       (with-silent-modifications
         (remove-text-properties (1- tc-beg) tc-end '(read-only)))
       ;;(setq org-transclusion-live-sync-overlay-pair (list tc-ov src-ov))
