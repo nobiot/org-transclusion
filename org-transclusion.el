@@ -555,7 +555,7 @@ a couple of org-transclusion specific keybindings; namely:
     (org-transclusion-refresh-at-point)
     (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
     (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
-    (let* ((ovs (org-transclusion-live-sync-src-buffers-org-get))
+    (let* ((ovs (org-transclusion-live-sync-src-buffers-get))
            (src-ov (car ovs))
            (tc-ov (cdr ovs))
            (tc-beg (overlay-start tc-ov))
@@ -566,7 +566,21 @@ a couple of org-transclusion specific keybindings; namely:
         (remove-text-properties (1- tc-beg) tc-end '(read-only)))
       t)))
 
-(defun org-transclusion-live-sync-src-buffers-org-get ()
+(defun org-transclusion-live-sync-src-buffers-get ()
+  ".
+Assume it's within org-transclusion overlay
+Look at the transclusion overlay at point
+Check the tc-type
+Get the func for the type
+Call the func"
+  (let ((type (get-text-property (point) 'tc-type)))
+    (cond
+     ;; Org Link and ID
+     ((string-prefix-p "org" type 'ignore-case)
+      (org-transclusion-live-sync-src-buffers-get-org))
+     (t nil))))
+
+(defun org-transclusion-live-sync-src-buffers-get-org ()
   "Return cons cell of overlays for source and trasnclusion.
     (src-ov . tc-ov)"
   (let* ((tc-elem (org-transclusion-get-enclosing-element))
