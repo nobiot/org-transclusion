@@ -120,4 +120,5 @@ This function also works during undo in progress; that is, when
                         (progn
                           (save-excursion (insert str))
                           (delete-region mod-beg (point)))
-                      (user-error "No live-sync done. The text strings in the overlays are not identical"))))))))))))
+                      (user-error "No live-sync done.  \
+The text strings in the overlays are not identical"))))))))))))
