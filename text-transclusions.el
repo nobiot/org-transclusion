@@ -1,3 +1,6 @@
+(defvar text-clone-modify-overlays-functions nil
+  "Argument passed is a list of clone overlays.")
+
 (defvar text-clone-live-sync-in-progress nil)
 
 (defun text-clone-live-sync (ol1 after beg end &optional _len)
@@ -33,7 +36,7 @@ This function also works during undo in progress; that is, when
               (let ((oe (overlay-end ol2)))
                 (unless (or (eq ol1 ol2) (null oe))
                   (let ((mod-beg (+ (overlay-start ol2) head)))
-                    (goto-char (- (overlay-end ol2) tail))
+                    (goto-char (- oe tail))
                     (if (not (> mod-beg (point)))
                         (progn
                           (save-excursion (insert str))
@@ -45,27 +48,6 @@ This function also works during undo in progress; that is, when
 BEG and END can be point or marker.  Optionally BUF can be passed.
 FRONT-ADVANCE is nil, and REAR-ADVANCE is t."
   (make-overlay beg end buf nil t))
-
-(defun text-clone-source-overlay-make (beg end)
-  "Return source overlay.
-BEG and END are assumed to be markers for the transclusion's source buffer."
-  (with-current-buffer (marker-buffer beg)
-    ;; front-advanced should be nil
-    (org-transclusion-make-overlay beg end)))
-
-;; (overlay-put tc-ov 'tc-type "src-edit-ov")
-;; (overlay-put tc-ov 'tc-paired-src-edit-ov src-ov)
-
-(defvar text-clone-overlays-function nil
-  "Argument passed is a list of clone overlays.")
-
-(add-hook 'text-clone-overlays-function 'my/add-overlays)
-
-(defun my/add-overlays (ovs)
-  (let ((overlays ovs))
-    (overlay-put (pop overlays) 'face 'org-transclusion-source-edit)
-    (dolist (overlay overlays)
-      (overlay-put overlay 'face 'org-transclusion-edit))))
 
 (defun text-clone-create-overlays (&rest overlays)
   "
@@ -80,7 +62,6 @@ visually differentiate them."
   (if (or (not overlays)
           (> 2 (length overlays)))
       (user-error "Nothing done. Wrong types of argument passed")
-    (run-hook-with-args 'text-clone-overlays-function overlays)
     (dolist (ov overlays)
       (overlay-put ov 'evaporate t)
       (overlay-put ov 'text-clones overlays)
@@ -90,7 +71,19 @@ visually differentiate them."
                    '(text-clone-live-sync))
       (overlay-put ov 'insert-behind-hooks
                    '(text-clone-live-sync))
-      (overlay-put ov 'priority -50))))
+      (overlay-put ov 'priority -50))
+    (run-hook-with-args 'text-clone-modify-overlays-functions overlays)))
+
+(add-hook 'text-clone-modify-overlays-functions 'my/add-overlays)
+
+(defun my/add-overlays (ovs)
+  (let ((overlays ovs))
+    (overlay-put (pop overlays) 'face 'org-transclusion-source-edit)
+    (dolist (overlay overlays)
+      (overlay-put overlay 'face 'org-transclusion-edit))))
+
+;; (overlay-put tc-ov 'tc-type "src-edit-ov")
+;; (overlay-put tc-ov 'tc-paired-src-edit-ov src-ov)
 
 (defun test-text-clone ()
   (interactive)
