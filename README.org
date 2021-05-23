@@ -68,9 +68,9 @@ Download or clone this repo, put =org-transclusion.el= in your load-path, and pu
     (define-key global-map (kbd "<f12>") #'org-transclusion-add-at-point))
 #+END_SRC
 
-If you use Doom and packages such as Straight, etc. to install files from GitHub repositories, you can do something like this below (this is an example using Doom's `package!` macro).
+If you use Doom and packages such as Straight, etc. to install files from GitHub repositories, you can do something like this below (this is an example using Doom's =package!= macro).
 
-For Doom, add `use-package!` to load the library. `package!` only places the files in an appropriate location in your filesystem and does not tell Emacs to use them.
+For Doom, add =use-package!= to load the library. =package!= only places the files in an appropriate location in your filesystem and does not tell Emacs to use them.
 
 #+begin_src elisp
   (package! org-transclusion
