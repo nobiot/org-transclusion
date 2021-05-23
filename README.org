@@ -47,6 +47,7 @@ This package is an attempt to enable transclusion with Org Mode in Emacs. It is 
 - [[#changelog][Changelog]]
 - [[#credits][Credits]]
   - [[#original-idea-by-john-kitchin][Original idea by John Kitchin]]
+  - [[#text-clone][Text-Clone]]
 - [[#development][Development]]
 - [[#license][License]]
 :END:
@@ -105,11 +106,10 @@ The transcluded text is read-only but you can copy it and export it as normal te
 
 You can press =o= to open the source buffer of the transclusion at point. Or press =e= to start a live-sync edit. For more detail, inspect the documentation of each command.
 
+=org-transclusion-map= (default).
+Adapt it to your liking, especially if you use vim keybindings with Evil Mode, etc.
 #+name: org-transclusion-map
 #+begin_example
-=org-transclusion-map= (default)
-Adapt it to your liking, especially if you use vim keybindings with Evil Mode, etc.
-
 key             binding
 ---             -------
 
@@ -313,8 +313,7 @@ Other faces:
 - org-transclusion-source-edit
 - org-transclusion
 - org-transclusion-edit
-
- 
+  
 I do not know if bitmap can be customizable after it's been defined (TBC).
 - org-transclusion-fringe-bitmap ::
   It is used for the fringe that indicates the transcluded region. It works only in a graphical environment (not in terminal).
@@ -340,11 +339,28 @@ It is probably rather drastic a measure. I will appreciate it if you find a less
 :PROPERTIES:
 :TOC:      :depth 0
 :END:
+Main features and changes only.
 
+** 0.1.2 
+- e08df47 * add: live-sync for non-Org text file ::
+  So far Non-Org text files could be transcluded but live-sync was not available. This version enables live-sync for them. Only for the whole file at the moment (ability to specify parts of a text file is considered)
+
+- a576b34 * add: text-clone library (rename) ::
+  Live-sync features are now factored out into =text-clone= as a standalone liberary (available with =text-clone.el= also included in this repo). Refactored so that  =org-transclusion= uses (and requires)  =text-clone=.
+
+** 0.1.1
+- 49f03b1 * feat: current-indentation ::
+  Org-transclusion now keeps the original indentation of the keyword. When a transclusion text region is removed, its keyword will be indented as it was
+  
+- d55fc39 * chg: save-buffer hooks ::
+  Instead of blindly deactivate and activate all transclusions with t flag, this variable is meant to provide mechanism to deactivate/activate only the transclusions currently in effect to copy a text content.
+  
+- 64fd182 * add: remove live-sync overlays when deleted ::
+  Closes issue [[https://github.com/nobiot/org-transclusion/issues/8][#8]]  Adding a mechanism to remove both of the live-sync overlays (transclusion and source) when transclusion is completedly deleted. This solves the problem of a source overlay to be orphaned in such cases.
+  
 ** 0.1.0
 As described in this version.
 * Credits
-
 ** Original idea by John Kitchin
 :PROPERTIES:
 :CUSTOM_ID: john-kitchin
@@ -370,6 +386,9 @@ I would create a kill-buffer hook function that would replace that transcluded c
 
 It seems like this could work well for headlines, and named tables, src blocks, and probably any other element that can be addressed by a name/ID.
 #+end_quote
+
+** Text-Clone
+=text-clone.el= is an extention of text-clone functions written as part of GNU Emacs in =subr.el=.  The first adaption to extend text-clone functions to work across buffers was published in StackExchange by the user named Tobias in March 2020. It can be found at https://emacs.stackexchange.com/questions/56201/is-there-an-emacs-package-which-can-mirror-a-region/56202#56202
 
 * Development
 

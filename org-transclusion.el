@@ -177,16 +177,6 @@ a text content.
 
 Analogous to `org-edit-src-code'.")
 
-;; (defvar org-transclusion-live-sync-overlay-pair nil
-;;   "Global variable to keep track of the pair of live-sync overlays.
-;; One of the pair is the overlay for a given transclusion, and the
-;; other, the one for source of the transclusion.
-
-;; The live-sync edit should be a focused and deliberate action.
-;; It's easy to forget the fact live-sync is on.  The intent of this
-;; global variable is to make the live-sync location a \"singleton\"
-;; -- only one available in an Emacs session.")
-
 (defvar org-transclusion-yank-excluded-properties '(tc-id tc-type
                                                           tc-beg-mkr
                                                           tc-end-mkr
@@ -525,8 +515,6 @@ remain in the source buffer for further editing."
 While live sync is on, before- and after-save-hooks to remove/add
 transclusions are also temporariliy disabled.  This prevents
 auto-save from getting in the way of live sync.
-
-TODO: At the moment, only Org Mode files are supported.
 
 `org-transclusion-live-sync-map' inherits `org-mode-map' and adds
 a couple of org-transclusion specific keybindings; namely:
