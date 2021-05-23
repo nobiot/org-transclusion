@@ -1010,8 +1010,8 @@ to include the first section."
 Keyword PLIST is also passed."
   (let ((types org-transclusion-add-at-point-functions)
         (params nil)
-        (str nil))
-    (setq str (org-element-property :path link))
+        (path nil))
+    (setq path (org-element-property :path link))
     (while (and (not params)
                 types)
       (let* ((type (pop types))
@@ -1020,17 +1020,17 @@ Keyword PLIST is also passed."
              (add-fn
               (progn (intern (concat "org-transclusion--add-" type)))))
         (when (and (functionp match-fn)
-                   (funcall match-fn str)
+                   (apply match-fn path plist)
                    (functionp add-fn))
-          (setq params (list :tc-type type :tc-fn add-fn :tc-args (list str))))))
+          (setq params (list :tc-type type :tc-fn add-fn :tc-args (list path plist))))))
     params))
 
-(defun org-transclusion--match-others-default (_path)
+(defun org-transclusion--match-others-default (_path _plist)
   "Check if `others-default' can be used for the PATH.
 Returns non-nil if check is pass."
   t)
 
-(defun org-transclusion--add-others-default (path)
+(defun org-transclusion--add-others-default (path _plist)
   "Use PATH to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR.
 TODO need to handle when the file does not exist."
   (let ((buf (find-file-noselect path)))
