@@ -388,7 +388,7 @@ It seems like this could work well for headlines, and named tables, src blocks, 
 #+end_quote
 
 ** Text-Clone
-=text-clone.el= is an extention of text-clone functions written as part of GNU Emacs in =subr.el=.  The first adaption to extend text-clone functions to work across buffers was published in StackExchange by the user named Tobias in March 2020. It can be found at https://emacs.stackexchange.com/questions/56201/is-there-an-emacs-package-which-can-mirror-a-region/56202#56202
+=text-clone.el= is an extention of text-clone functions written as part of GNU Emacs in =subr.el=.  The first adaption to extend text-clone functions to work across buffers was published in StackExchange by the user named Tobias in March 2020. It can be found at https://emacs.stackexchange.com/questions/56201/is-there-an-emacs-package-which-can-mirror-a-region/56202#56202. The text-clone library takes this line of work further.
 
 * Development
 
