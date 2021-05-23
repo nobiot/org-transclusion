@@ -209,6 +209,7 @@ Analogous to `org-edit-src-code'.")
     (define-key map (kbd "D") #'org-transclusion-demote-subtree)
     (define-key map (kbd "o") #'org-transclusion-open-source)
     (define-key map (kbd "TAB") #'org-cycle)
+    (define-key map (kbd "C-c C-c") #'org-ctrl-c-ctrl-c)
     map)
   "It is the local-map used within a transclusion.
 As the transcluded text content is read-only, these keybindings
@@ -1022,7 +1023,7 @@ Keyword PLIST is also passed."
         (when (and (functionp match-fn)
                    (apply match-fn path plist)
                    (functionp add-fn))
-          (setq params (list :tc-type type :tc-fn add-fn :tc-args (list path plist))))))
+          (setq params (list :tc-type type :tc-fn add-fn :tc-args (push path plist))))))
     params))
 
 (defun org-transclusion--match-others-default (_path _plist)
