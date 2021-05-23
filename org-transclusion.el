@@ -371,16 +371,16 @@ You can customize the keymap with using `org-transclusion-map':
                     (string= "file" type)))
            (let ((tc-params))
              (setq tc-params (run-hook-with-args-until-success
-                              'org-transclusion-link-open-hook link))
+                              'org-transclusion-link-open-hook link keyword-plist))
              (if (not tc-params)
                  (progn (message (format
                                   "No transclusion added. Check the link at point %d, line %d"
                                   (point) (org-current-line)))
                         nil) ; return nil)
                (let* ((tc-type (plist-get tc-params :tc-type))
-                      (tc-arg (plist-get tc-params :tc-arg))
+                      (tc-args (plist-get tc-params :tc-args))
                       (tc-fn (plist-get tc-params :tc-fn))
-                      (tc-payload (funcall tc-fn tc-arg))
+                      (tc-payload (apply tc-fn tc-args))
                       (tc-beg-mkr (plist-get tc-payload :tc-beg-mkr))
                       (tc-end-mkr (plist-get tc-payload :tc-end-mkr))
                       (tc-content (plist-get tc-payload :tc-content)))
@@ -860,7 +860,7 @@ Currently it only re-aligns table with links in the content."
     ;; Return the temp-buffer's string
     (buffer-string)))
 
-(defun org-transclusion-link-open-org-id (link)
+(defun org-transclusion-link-open-org-id (link &rest _)
   "Return a list for Org-ID LINK object.
 Return nil if not found."
   (when (string= "id" (org-element-property :type link))
@@ -869,24 +869,25 @@ Return nil if not found."
            (mkr (ignore-errors (org-id-find id t))))
       (if mkr
           (list :tc-type "org-id"
-                :tc-arg mkr
+                :tc-args (list mkr)
                 :tc-fn #'org-transclusion-content-get-from-org-marker)
         (message (format "No transclusion done for this ID. Ensure it works at point %d, line %d"
                          (point) (org-current-line)))
         nil))))
 
-(defun org-transclusion-link-open-org-file-links (link)
+(defun org-transclusion-link-open-org-file-links (link &rest _)
   "Return a list for Org file LINK object.
 Return nil if not found."
   (when (org-transclusion--org-file-p (org-element-property :path link))
     (list :tc-type "org-link"
-          :tc-arg link
+          :tc-args (list link)
           :tc-fn #'org-transclusion-content-get-from-org-link)))
 
-(defun org-transclusion-link-open-other-file-links (link)
+(defun org-transclusion-link-open-other-file-links (link &rest plist)
   "Return a list for non-Org file LINK object.
+Keyword PLIST is also passed for certain use (e.g. for :lines property).
 Return nil if not found."
-  (org-transclusion--get-custom-tc-params link))
+  (org-transclusion--get-custom-tc-params link plist))
 
 (defun org-transclusion-content-get-from-org-marker (marker)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from MARKER.
@@ -1004,8 +1005,9 @@ to include the first section."
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions to support non-Org-mode link types
 
-(defun org-transclusion--get-custom-tc-params (link)
-  "Return PARAMS with TC-FN if link type is supported for LINK object."
+(defun org-transclusion--get-custom-tc-params (link plist)
+  "Return PARAMS with TC-FN if link type is supported for LINK object.
+Keyword PLIST is also passed."
   (let ((types org-transclusion-add-at-point-functions)
         (params nil)
         (str nil))
@@ -1020,7 +1022,7 @@ to include the first section."
         (when (and (functionp match-fn)
                    (funcall match-fn str)
                    (functionp add-fn))
-          (setq params (list :tc-type type :tc-fn add-fn :tc-arg str)))))
+          (setq params (list :tc-type type :tc-fn add-fn :tc-args (list str))))))
     params))
 
 (defun org-transclusion--match-others-default (_path)
