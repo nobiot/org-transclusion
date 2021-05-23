@@ -396,7 +396,7 @@ No content is found through the link at point %d, line %d"
                      ;; Insert & overlay
                      (when (save-excursion
                              (end-of-line) (insert-char ?\n)
-                             (org-transclusion-content-insert
+                             (org-transclusion-content-insert
                               keyword-plist tc-type tc-content
                               tc-beg-mkr tc-end-mkr)
                              (delete-char 1)
@@ -1023,6 +1023,8 @@ Keyword PLIST is also passed."
         (when (and (functionp match-fn)
                    (apply match-fn path plist)
                    (functionp add-fn))
+          ;; For tc-args, push is used to get PATH to be the first element of
+          ;; the list of arguments passed
           (setq params (list :tc-type type :tc-fn add-fn :tc-args (push path plist))))))
     params))
 
