@@ -513,7 +513,7 @@ remain in the source buffer for further editing."
   "Put overlay for start live sync edit on the transclusion at point.
 
 While live sync is on, before- and after-save-hooks to remove/add
-transclusions are also temporariliy disabled.  This prevents
+transclusions are also temporarily disabled.  This prevents
 auto-save from getting in the way of live sync.
 
 `org-transclusion-live-sync-map' inherits `org-mode-map' and adds
@@ -847,6 +847,7 @@ Currently it only re-aligns table with links in the content."
   (with-temp-buffer
     (org-mode)
     (insert content)
+    ;; Fix table alignment
     (let ((point (point-min)))
       (while point
         (goto-char (1+ point))
@@ -854,6 +855,9 @@ Currently it only re-aligns table with links in the content."
           (org-table-align)
           (goto-char (org-table-end)))
         (setq point (search-forward "|" (point-max) t))))
+    ;; Fix indentation when `org-adapt-indentation' is non-nil
+    (org-indent-region (point-min) (point-max))
+    ;; Return the temp-buffer's string
     (buffer-string)))
 
 (defun org-transclusion-link-open-org-id (link)
