@@ -6,7 +6,7 @@
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
 
-;; Version: 0.1.1
+;; Version: 0.1.2
 ;; Package-Requires: ((emacs "27.1") (org "9.4"))
 
 ;; This file is not part of GNU Emacs.
@@ -55,7 +55,7 @@
 (defgroup org-transclusion nil
   "Insert text contents by way of link references."
   :group 'org
-  :prefix "org-translusion-"
+  :prefix "org-transclusion-"
   :link '(url-link :tag "Github" "https://github.com/nobiot/org-transclusion"))
 
 (defcustom org-transclusion-add-all-on-activate t
@@ -289,10 +289,6 @@ It's like `with-silent-modifications' but keeps the undo list."
   (add-hook 'after-save-hook #'org-transclusion-after-save-buffer nil t)
   (add-hook 'kill-buffer-hook #'org-transclusion-before-kill nil t)
   (add-hook 'kill-emacs-hook #'org-transclusion-before-kill nil t)
-  ;; (add-hook 'text-clone-before-delete-overlay-functions
-  ;;           #'org-transclusion-live-sync-before-delete-overlay)
-  ;; (add-hook 'text-clone-modify-overlays-functions
-  ;;           #'org-transclusions-live-sync-modify-overlays)
   (org-transclusion-yank-excluded-properties-set))
 
 (defun org-transclusion-deactivate ()
@@ -303,10 +299,6 @@ It's like `with-silent-modifications' but keeps the undo list."
   (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
   (remove-hook 'kill-buffer-hook #'org-transclusion-before-kill t)
   (remove-hook 'kill-emacs-hook #'org-transclusion-before-kill t)
-  ;; (remove-hook 'text-clone-before-delete-overlay-functions
-  ;;              #'org-transclusion-live-sync-before-delete-overlay)
-  ;; (remove-hook 'text-clone-modify-overlays-functions
-  ;;              #'org-transclusions-live-sync-modify-overlays)
   (org-transclusion-yank-excluded-properties-remove))
 
 (defun org-transclusion-make-from-link (&optional arg)
@@ -433,7 +425,7 @@ No content is found through the link at point %d, line %d"
     (org-with-point-at 1
       (let ((regexp "^[ \t]*#\\+TRANSCLUDE:"))
         (while (re-search-forward regexp nil t)
-          ;; Don't transclude if in transclusion overlay to avoid infinite
+          ;; Don't transclude if within a transclusion to avoid infinite
           ;; recursion
           (unless (org-transclusion--within-transclusion-p)
             (org-transclusion-add-at-point)))))
@@ -467,7 +459,7 @@ When success, return the beginning point of the keyword re-inserted."
     (message "Nothing done. No transclusion exists here.") nil))
 
 (defun org-transclusion-remove-all-in-buffer ()
-  "Remove all transluded text regions in the current buffer.
+  "Remove all transcluded text regions in the current buffer.
 Return the list of points for the transclusion keywords re-inserted.
 It is assumed that the list is ordered in descending order.
 The list is intended to be used in `org-transclusion-before-save-buffer'."
@@ -550,12 +542,12 @@ a couple of org-transclusion specific keybindings; namely:
     ;; Delete other live-sync overlays and clean-up.
     ;; There should be only one pair of transclusion-source in live-sync
     (when-let* ((deleted-live-sync-ovs (text-clone-delete-overlays))
-                (deleted-transclusion (cadr deleted-live-sync-ovs)))
-      (org-transclusion-live-sync-after-delete-overlay deleted-transclusion))
+                (deleted-tc-ov (cadr deleted-live-sync-ovs)))
+      (org-transclusion-live-sync-after-delete-overlay deleted-tc-ov))
     (org-transclusion-refresh-at-point)
     (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
     (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
-    (let* ((ovs (org-transclusion-live-sync-src-buffers-get))
+    (let* ((ovs (org-transclusion-live-sync-buffers-get))
            (src-ov (car ovs))
            (tc-ov (cdr ovs))
            (tc-beg (overlay-start tc-ov))
@@ -566,23 +558,43 @@ a couple of org-transclusion specific keybindings; namely:
         (remove-text-properties (1- tc-beg) tc-end '(read-only)))
       t)))
 
-(defun org-transclusion-live-sync-src-buffers-get ()
-  ".
-Assume it's within org-transclusion overlay
-Look at the transclusion overlay at point
-Check the tc-type
-Get the func for the type
-Call the func"
+(defun org-transclusion-live-sync-buffers-get ()
+  "Return cons cell of overlays for source and trasnclusion.
+    (src-ov . tc-ov)
+
+This function looks at transclusion type (tc-type) property and
+delegates the actual process to the specific function for the
+type.
+
+Assume this function is called with the point on an
+org-transclusion overlay."
   (let ((type (get-text-property (point) 'tc-type)))
     (cond
      ;; Org Link and ID
      ((string-prefix-p "org" type 'ignore-case)
-      (org-transclusion-live-sync-src-buffers-get-org))
-     (t nil))))
+      (org-transclusion-live-sync-buffers-get-org))
+     (t (org-transclusion-live-sync-buffers-get-others-default)))))
 
-(defun org-transclusion-live-sync-src-buffers-get-org ()
+(defun org-transclusion-live-sync-buffers-get-others-default ()
   "Return cons cell of overlays for source and trasnclusion.
-    (src-ov . tc-ov)"
+    (src-ov . tc-ov)
+This function is for non-Org text files."
+  ;; Get the transclusion source's overlay but do not directly use it; it is
+  ;; needed after exiting live-sync, which deletes live-sync overlays.
+  (when-let* ((tc-pair (get-text-property (point) 'tc-pair))
+              (src-ov (text-clone-make-overlay
+                       (overlay-start tc-pair)
+                       (overlay-end tc-pair)
+                       (overlay-buffer tc-pair)))
+              (tc-ov (text-clone-make-overlay
+                      (get-text-property (point) 'tc-beg-mkr)
+                      (get-text-property (point) 'tc-end-mkr))))
+    (cons src-ov tc-ov)))
+
+(defun org-transclusion-live-sync-buffers-get-org ()
+  "Return cons cell of overlays for source and trasnclusion.
+    (src-ov . tc-ov)
+This function is for Org Links and IDs."
   (let* ((tc-elem (org-transclusion-get-enclosing-element))
          (tc-beg (org-transclusion-element-get-beg-or-end 'beg tc-elem))
          (tc-end (org-transclusion-element-get-beg-or-end 'end tc-elem))
@@ -596,7 +608,7 @@ Call the func"
          (src-ov (text-clone-make-overlay
                   src-beg-mkr src-end-mkr src-buf))
          (tc-ov))
-    ;; replace the region as a copy of the src-overlay region
+    ;; Replace the region as a copy of the src-overlay region
     (save-excursion
       (let* ((inhibit-read-only t)
              (props)
@@ -617,9 +629,13 @@ Call the func"
 It attemps to re-arrange the windows for the current buffer to
 the state before live-sync started."
   (interactive)
-  (org-transclusion-activate) ;; re-activating hooks inactive during live-sync
-  (org-transclusion-refresh-at-point)
+  ;; Explicitly delete live-sync overlays.  Not functionally necessary as
+  ;; refresh does this inside it; however, it will make the intention of this
+  ;; function clearer.
   (text-clone-delete-overlays)
+  ;; Re-activate hooks inactive during live-sync
+  (org-transclusion-activate)
+  (org-transclusion-refresh-at-point)
   (when org-transclusion-temp-window-config
     (unwind-protect
         (set-window-configuration org-transclusion-temp-window-config)
