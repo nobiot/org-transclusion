@@ -2,7 +2,6 @@
 (add-hook 'org-transclusion-get-keyword-values-hook
           #'org-transclusion-keyword-get-value-lines)
 
-
 (defun org-transclusion--match-src-lines (_path plist)
   "Check if \"src-lines\" can be used for the PATH.
 Returns non-nil if check is pass."
@@ -10,16 +9,27 @@ Returns non-nil if check is pass."
 
 (defun org-transclusion--add-src-lines (path plist)
   "Use PATH to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR.
-TODO need to handle when the file does not exist."
+TODO need to handle when the file does not exist.  The logic to
+pars n-m for :lines is taken from
+`org-export--inclusion-absolute-lines' in ox.el."
   (let ((buf (find-file-noselect path)))
     (with-current-buffer buf
       (org-with-wide-buffer
-       (let ((content (buffer-string))
-             (beg (point-min-marker))
-             (end (point-max-marker)))
-         (list :tc-content content
-               :tc-beg-mkr beg
-               :tc-end-mkr end))))))
+       (let* ((str (plist-get plist :lines))
+              (lines (split-string str "-"))
+              (lbeg (string-to-number (car lines)))
+              (lend (string-to-number (cadr lines)))
+              (beg (if (zerop lbeg) (point-min)
+                     (goto-char (point-min))
+                     (forward-line (1- lbeg))
+                     (point)))
+              (end (if (zerop lend) (point-max)
+                     (goto-char beg)
+                     (forward-line (1- lend))
+                     (point))))
+         (list :tc-content (buffer-substring-no-properties beg end)
+               :tc-beg-mkr (set-marker (make-marker) beg)
+               :tc-end-mkr (set-marker (make-marker) end)))))))
 
 (defun org-transclusion-keyword-get-value-lines (string)
   "It is a utility function used converting a keyword STRING to plist.
