@@ -109,10 +109,13 @@ them to visually differentiate them."
 
 (defun text-clone-delete-overlays ()
   "Remove all live-sync overlays.
-Return a list of buffer, beginning and ending points of the deleted overlays.
-Each element of the list is in this structure:
+Return a list of the buffer, beginning and ending points of the
+deleted overlays.  Each element of the list is in this structure:
 
     (buf (beg . end))
+
+This function checks `text-clone-overlays' for overlays being
+tracked.  Return nil if there is no overlay in it.
 
 As side-effects, this function also does the following to clean
 up text-clone:
