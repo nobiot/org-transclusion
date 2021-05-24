@@ -68,7 +68,7 @@ Download or clone this repo, put all the =.el= files in it into your load-path, 
     (define-key global-map (kbd "<f12>") #'org-transclusion-add-at-point))
 #+END_SRC
 
-It is important that you get all the =.el= files ready, not just =org-transclusion.el=. As at the time of this writing, the live-sync feature is contained in =text-clone.el= (also available in this repo) and a feature to transclude lines of source code file is being developed as an extention to be available another =.el= file. You will need to have all the =.el= files to use Org-transclusion as a package.
+It is important that you get all the =.el= files ready, not just =org-transclusion.el=. As at the time of this writing, the live-sync feature is contained in =text-clone.el= (also available in this repo) and a feature to transclude lines of source code file is being developed as an extension to be available in another =.el= file. You will need to have all the =.el= files to use Org-transclusion as a package.
 
 If you use Doom and packages such as Straight, etc. to install files from GitHub repositories, you can do something like this below (this is an example using Doom's =package!= macro).
 
