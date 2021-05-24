@@ -59,7 +59,7 @@ This package is an attempt to enable transclusion with Org Mode in Emacs. It is 
 
 This package is not available on MELPA or ELPA. Manual installation is required.
 
-Download or clone this repo, put =org-transclusion.el= in your load-path, and put something like this in your init file.
+Download or clone this repo, put all the =.el= files in it into your load-path, and put something like this in your init file.
 
 #+BEGIN_SRC elisp
   (with-eval-after-load 'org
@@ -68,9 +68,9 @@ Download or clone this repo, put =org-transclusion.el= in your load-path, and pu
     (define-key global-map (kbd "<f12>") #'org-transclusion-add-at-point))
 #+END_SRC
 
-If you use Doom and packages such as Straight, etc. to install files from GitHub repositories, you can do something like this below (this is an example using Doom's =package!= macro).
+It is important that you get all the =.el= files ready, not just =org-transclusion.el=. As at the time of this writing, the live-sync feature is contained in =text-clone.el= (also available in this repo) and a feature to transclude lines of source code file is being developed as an extention to be available another =.el= file. You will need to have all the =.el= files to use Org-transclusion as a package.
 
-For Doom, add =use-package!= to load the library. =package!= only places the files in an appropriate location in your filesystem and does not tell Emacs to use them.
+If you use Doom and packages such as Straight, etc. to install files from GitHub repositories, you can do something like this below (this is an example using Doom's =package!= macro).
 
 #+begin_src elisp
   (package! org-transclusion
@@ -79,6 +79,8 @@ For Doom, add =use-package!= to load the library. =package!= only places the fil
              :branch "main"
              :files ("*.el")))
 #+end_src
+
+For Doom, add =use-package!= to load the library. =package!= only places the files in an appropriate location in your filesystem and does not tell Emacs to use them.
 
 * Getting Started
 
