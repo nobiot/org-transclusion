@@ -836,6 +836,9 @@ It assumes that point is at a keyword."
                          `(local-map ,org-transclusion-map
                                      read-only t
                                      front-sticky t
+                                     ;; rear-nonticky seems better for
+                                     ;; src-lines to add "#+result" after C-c
+                                     ;; C-c
                                      rear-nonsticky t
                                      tc-id ,tc-id
                                      tc-type ,type
