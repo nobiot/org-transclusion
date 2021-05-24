@@ -49,8 +49,6 @@
 (declare-function text-property-search-forward 'text-property-search)
 (declare-function text-property-search-backward 'text-property-search)
 (declare-function prop-match-value 'text-property-search)
-(with-eval-after-load 'org-transclusion
-  (load-library "org-transclusion-src-lines"))
 
 ;;;; Customization
 
@@ -81,7 +79,7 @@ transcluded. Default is nil."
   :group 'org-transclusion)
 
 (defcustom org-transclusion-add-at-point-functions (list "others-default")
-  "Define list of link types that org-tranclusion supports.
+  "Define list of `link types' org-tranclusion supports.
 In addtion to a element in the list, there must be two
 corresponding functions with specific names
 
@@ -93,20 +91,6 @@ org-transclusion-add-<org-id>
 See the functions delivered within org-tranclusion for the API signatures."
   :type '(repeat string)
   :group 'org-transclusion)
-
-(defcustom org-transclusion-get-keyword-values-functions
-  '(org-transclusion-keyword-get-value-active-p
-    org-transclusion-keyword-get-value-link
-    org-transclusion-keyword-get-value-level
-    org-transclusion-keyword-get-current-indentation)
-  "Define list of functions used to parse a #+transclude keyword.
-The functions take a single argument, the whole keyword value as
-a string.  Each function retrieves a property with using a regexp
-from the string.")
-
-(defcustom org-transclusion-keyword-plist-to-string-functions nil
-  "Define list of functions used to convert plist of keywords
-  back to the original keyword string.")
 
 ;;;; Faces
 
@@ -210,6 +194,12 @@ Analogous to `org-edit-src-code'.")
     org-transclusion-link-open-org-file-links
     org-transclusion-link-open-other-file-links))
 
+(defvar org-transclusion-get-keyword-values-hook
+  '(org-transclusion-keyword-get-value-active-p
+    org-transclusion-keyword-get-value-link
+    org-transclusion-keyword-get-value-level
+    org-transclusion-keyword-get-current-indentation))
+
 (defvar org-transclusion-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "e") #'org-transclusion-live-sync-start-at-point)
@@ -219,7 +209,6 @@ Analogous to `org-edit-src-code'.")
     (define-key map (kbd "D") #'org-transclusion-demote-subtree)
     (define-key map (kbd "o") #'org-transclusion-open-source)
     (define-key map (kbd "TAB") #'org-cycle)
-    (define-key map (kbd "C-c C-c") #'org-ctrl-c-ctrl-c)
     map)
   "It is the local-map used within a transclusion.
 As the transcluded text content is read-only, these keybindings
@@ -382,16 +371,16 @@ You can customize the keymap with using `org-transclusion-map':
                     (string= "file" type)))
            (let ((tc-params))
              (setq tc-params (run-hook-with-args-until-success
-                              'org-transclusion-link-open-hook link keyword-plist))
+                              'org-transclusion-link-open-hook link))
              (if (not tc-params)
                  (progn (message (format
                                   "No transclusion added. Check the link at point %d, line %d"
                                   (point) (org-current-line)))
                         nil) ; return nil)
                (let* ((tc-type (plist-get tc-params :tc-type))
-                      (tc-args (plist-get tc-params :tc-args))
+                      (tc-arg (plist-get tc-params :tc-arg))
                       (tc-fn (plist-get tc-params :tc-fn))
-                      (tc-payload (apply tc-fn tc-args))
+                      (tc-payload (funcall tc-fn tc-arg))
                       (tc-beg-mkr (plist-get tc-payload :tc-beg-mkr))
                       (tc-end-mkr (plist-get tc-payload :tc-end-mkr))
                       (tc-content (plist-get tc-payload :tc-content)))
@@ -406,7 +395,7 @@ No content is found through the link at point %d, line %d"
                      ;; Insert & overlay
                      (when (save-excursion
                              (end-of-line) (insert-char ?\n)
-                             (org-transclusion-content-insert
+                             (org-transclusion-content-insert
                               keyword-plist tc-type tc-content
                               tc-beg-mkr tc-end-mkr)
                              (delete-char 1)
@@ -445,18 +434,33 @@ When success, return the beginning point of the keyword re-inserted."
             (tc-pair-ov (get-char-property (point) 'tc-pair)))
       (progn
         ;;(org-transclusion-live-sync-remove-overlays-maybe beg end)
-        ;;(text-clone-delete-nth-overlay 0)
-        (text-clone-delete-overlays)
-        (delete-overlay tc-pair-ov)
-        (outline-show-all)
-        (org-transclusion-with-silent-modifications
-          (save-excursion
-            (delete-region beg end)
-            (when (> indent 0) (indent-to indent))
-            (insert-before-markers keyword))
-          ;; Go back to the beginning of the inserted keyword line
-          (goto-char beg))
-        beg)
+        ;; Need to retain the markers of the other adjacent transclusions
+        ;; if any.  If their positions differ after insert, move them back
+        ;; beg or end
+        (let ((mkr-at-beg
+               ;; Check the points to look at exist in buffer.  Then look for
+               ;; adjacent transclusions' markers if any.
+               (when (>= (1- beg)(point-min))
+                 (get-text-property (1- beg) 'tc-end-mkr))))
+              ;; (mkr-at-end (when (<= (1+ end)(point-max))
+              ;;               (get-text-property (1+ end) 'tc-beg-mkr))))
+          (text-clone-delete-overlays)
+          (delete-overlay tc-pair-ov)
+          (outline-show-all)
+          (org-transclusion-with-silent-modifications
+            (save-excursion
+              (delete-region beg end)
+              (when (> indent 0) (indent-to indent))
+              (insert-before-markers keyword))
+            ;; Move markers of adjacent transclusions if any to their original
+            ;; potisions.  Some markers move if two transclusions are placed
+            ;; without any blank lines, and either of beg and end markers will
+            ;; inevitably have the same position (location "between" lines)
+            (when mkr-at-beg (move-marker mkr-at-beg beg))
+            ;;(when mkr-at-end (move-marker mkr-at-end end))
+            ;; Go back to the beginning of the inserted keyword line
+            (goto-char beg))
+          beg))
     (message "Nothing done. No transclusion exists here.") nil))
 
 (defun org-transclusion-remove-all-in-buffer ()
@@ -736,7 +740,7 @@ the settings revert to the user's setting prior to
         ;; #+transclude: keyword exists.
         ;; Further checking the value
         (when-let ((str (org-element-property :value (org-element-at-point))))
-          (dolist (fn org-transclusion-get-keyword-values-functions) plist
+          (dolist (fn org-transclusion-get-keyword-values-hook) plist
                   (setq plist (append plist (funcall fn str)))))
         plist))))
 
@@ -744,7 +748,7 @@ the settings revert to the user's setting prior to
   "It is a utility function used converting a keyword STRING to plist.
 It is meant to be used by `org-transclusion-get-string-to-plist'.
 It needs to be set in
-`org-transclusion-get-keyword-values-functions'."
+`org-transclusion-get-keyword-values-hook'."
   (when (string-match "^\\(t\\|nil\\).*$" string)
     (list :active-p (org-transclusion--not-nil (match-string 1 string)))))
 
@@ -752,7 +756,7 @@ It needs to be set in
   "It is a utility function used converting a keyword STRING to plist.
 It is meant to be used by
 `org-transclusion-get-string-to-plist'.  It needs to be set in
-`org-transclusion-get-keyword-values-functions'."
+`org-transclusion-get-keyword-values-hook'."
   (if (string-match "\\(\\[\\[.+?\\]\\]\\)" string)
       (list :link (org-strip-quotes (match-string 0 string)))
     ;; link mandatory
@@ -763,7 +767,7 @@ It is meant to be used by
   "It is a utility function used converting a keyword STRING to plist.
 It is meant to be used by `org-transclusion-get-string-to-plist'.
 It needs to be set in
-`org-transclusion-get-keyword-values-functions'."
+`org-transclusion-get-keyword-values-hook'."
   (when (string-match ":level *\\([1-9]\\)" string)
     (list :level (string-to-number (org-strip-quotes (match-string 1 string))))))
 
@@ -771,7 +775,7 @@ It needs to be set in
   "It is a utility function used converting a keyword STRING to plist.
 It is meant to be used by `org-transclusion-get-string-to-plist'.
 It needs to be set in
-`org-transclusion-get-keyword-values-functions'."
+`org-transclusion-get-keyword-values-hook'."
   (list :current-indentation (current-indentation)))
 
 (defun org-transclusion-keyword-remove ()
@@ -787,19 +791,11 @@ It assumes that point is at a keyword."
   "Convert a keyword PLIST to a string."
   (let ((active-p (plist-get plist :active-p))
         (link (plist-get plist :link))
-        (level (plist-get plist :level))
-        (custom-properties-string nil))
-    (setq custom-properties-string
-          (dolist (fn org-transclusion-keyword-plist-to-string-functions
-                      custom-properties-string)
-            (when-let ((str (funcall fn plist)))
-              (setq custom-properties-string
-                    (concat custom-properties-string " " str )))))
+        (level (plist-get plist :level)))
     (concat "#+transclude: "
             (symbol-name active-p)
             " " link
             (when level (format " :level %d" level))
-            custom-properties-string
             "\n")))
 
 ;;;;-----------------------------------------------------------------------------
@@ -832,17 +828,15 @@ It assumes that point is at a keyword."
     (setq beg-mkr (save-excursion (goto-char beg)
                                   (set-marker (make-marker) (point))))
     (setq end (point))
-    (setq end-mkr (org-transclusion--make-marker (point)))
+    (setq end-mkr (save-excursion (goto-char end)
+                                  (set-marker (make-marker) (point))))
     (setq ov-src (org-transclusion-make-overlay src-beg-m src-end-m sbuf))
     (setq tc-pair ov-src)
     (add-text-properties beg end
                          `(local-map ,org-transclusion-map
                                      read-only t
                                      front-sticky t
-                                     ;; rear-nonsticky allows for text to be
-                                     ;; added immediatelly after the
-                                     ;; transcluded region.
-                                     rear-nonsticky t ;; changed
+                                     rear-nonsticky t
                                      tc-id ,tc-id
                                      tc-type ,type
                                      tc-beg-mkr ,beg-mkr
@@ -882,7 +876,7 @@ Currently it only re-aligns table with links in the content."
     ;; Return the temp-buffer's string
     (buffer-string)))
 
-(defun org-transclusion-link-open-org-id (link &rest _)
+(defun org-transclusion-link-open-org-id (link)
   "Return a list for Org-ID LINK object.
 Return nil if not found."
   (when (string= "id" (org-element-property :type link))
@@ -891,25 +885,24 @@ Return nil if not found."
            (mkr (ignore-errors (org-id-find id t))))
       (if mkr
           (list :tc-type "org-id"
-                :tc-args (list mkr)
+                :tc-arg mkr
                 :tc-fn #'org-transclusion-content-get-from-org-marker)
         (message (format "No transclusion done for this ID. Ensure it works at point %d, line %d"
                          (point) (org-current-line)))
         nil))))
 
-(defun org-transclusion-link-open-org-file-links (link &rest _)
+(defun org-transclusion-link-open-org-file-links (link)
   "Return a list for Org file LINK object.
 Return nil if not found."
   (when (org-transclusion--org-file-p (org-element-property :path link))
     (list :tc-type "org-link"
-          :tc-args (list link)
+          :tc-arg link
           :tc-fn #'org-transclusion-content-get-from-org-link)))
 
-(defun org-transclusion-link-open-other-file-links (link &rest plist)
+(defun org-transclusion-link-open-other-file-links (link)
   "Return a list for non-Org file LINK object.
-Keyword PLIST is also passed for certain use (e.g. for :lines property).
 Return nil if not found."
-  (org-transclusion--get-custom-tc-params link plist))
+  (org-transclusion--get-custom-tc-params link))
 
 (defun org-transclusion-content-get-from-org-marker (marker)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from MARKER.
@@ -1027,13 +1020,12 @@ to include the first section."
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions to support non-Org-mode link types
 
-(defun org-transclusion--get-custom-tc-params (link plist)
-  "Return PARAMS with TC-FN if link type is supported for LINK object.
-Keyword PLIST is also passed."
+(defun org-transclusion--get-custom-tc-params (link)
+  "Return PARAMS with TC-FN if link type is supported for LINK object."
   (let ((types org-transclusion-add-at-point-functions)
         (params nil)
-        (path nil))
-    (setq path (org-element-property :path link))
+        (str nil))
+    (setq str (org-element-property :path link))
     (while (and (not params)
                 types)
       (let* ((type (pop types))
@@ -1042,19 +1034,17 @@ Keyword PLIST is also passed."
              (add-fn
               (progn (intern (concat "org-transclusion--add-" type)))))
         (when (and (functionp match-fn)
-                   (apply match-fn path plist)
+                   (funcall match-fn str)
                    (functionp add-fn))
-          ;; For tc-args, push is used to get PATH to be the first element of
-          ;; the list of arguments passed
-          (setq params (list :tc-type type :tc-fn add-fn :tc-args (push path plist))))))
+          (setq params (list :tc-type type :tc-fn add-fn :tc-arg str)))))
     params))
 
-(defun org-transclusion--match-others-default (_path _plist)
+(defun org-transclusion--match-others-default (_path)
   "Check if `others-default' can be used for the PATH.
 Returns non-nil if check is pass."
   t)
 
-(defun org-transclusion--add-others-default (path _plist)
+(defun org-transclusion--add-others-default (path)
   "Use PATH to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR.
 TODO need to handle when the file does not exist."
   (let ((buf (find-file-noselect path)))
@@ -1379,3 +1369,4 @@ When DEMOTE is non-nil, demote."
 
 (provide 'org-transclusion)
 ;;; org-transclusion.el ends here
+>>>>>>> 8ee04d9
