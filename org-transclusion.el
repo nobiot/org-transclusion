@@ -850,6 +850,9 @@ It assumes that point is at a keyword."
                          `(local-map ,org-transclusion-map
                                      read-only t
                                      front-sticky t
+                                     ;; rear-nonticky seems better for
+                                     ;; src-lines to add "#+result" after C-c
+                                     ;; C-c
                                      rear-nonsticky t
                                      tc-id ,tc-id
                                      tc-type ,type
@@ -1154,15 +1157,16 @@ string \"nil\", return symbol t."
   "Return t if the current point is within a tranclusion overlay."
   (when (get-char-property (point) 'tc-id) t))
 
-(defun org-transclusion--make-marker (point)
-  "Return marker of the insertion-type t for POINT.
-The insertion-type is important in order for the translusion
-end marker is correctly set.  This fixes the problem of
-transclude keyword not correctly removed when the keywords are
-placed without a blank line."
-  (let ((marker (set-marker (make-marker) point)))
-    (set-marker-insertion-type marker t)
-    marker))
+;; Looks like this is not needed for the purpose.
+;; (defun org-transclusion--make-marker (point)
+;;   "Return marker of the insertion-type t for POINT.
+;; The insertion-type is important in order for the translusion
+;; end marker is correctly set.  This fixes the problem of
+;; transclude keyword not correctly removed when the keywords are
+;; placed without a blank line."
+;;   (let ((marker (set-marker (make-marker) point)))
+;;     (set-marker-insertion-type marker t)
+;;     marker))
 
 (defun org-transclusion-propertize-transclusion ()
   "."
