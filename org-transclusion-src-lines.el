@@ -43,15 +43,11 @@ pars n-m for :lines is taken from
                 (beg-mkr (set-marker (make-marker) beg))
                 (end-mkr (set-marker (make-marker) end))
                 (content))
-           (if (not src-lang)
-               (setq content (buffer-substring-no-properties beg end))
-             (setq content
-                   (concat
-                    (format "#+begin_src %s\n" src-lang)
-                    (buffer-substring-no-properties beg end)
-                    "\n"
-                    "#+end_src"
-                    "\n")))
+           (setq content
+                 (concat
+                  (when src-lang (format "#+begin_src %s\n" src-lang))
+                  (buffer-substring-no-properties beg end)
+                  (when src-lang "#+end_src\n")))
            (list :tc-content content
                  :tc-beg-mkr beg-mkr
                  :tc-end-mkr end-mkr
@@ -110,7 +106,45 @@ Currently it only re-aligns table with links in the content."
     (put-text-property (point-min) (point-max)
                        'tc-open-fn
                        'org-transclusion-open-source-src-lines)
+    (put-text-property (point-min) (point-max)
+                       'tc-live-sync-buffers
+                       'org-transclusion-live-sync-buffers-get-src-lines)
     ;; Return the temp-buffer's string
     (buffer-string)))
+
+(defun org-transclusion-live-sync-buffers-get-src-lines ()
+  "Return cons cell of overlays for source and trasnclusion.
+    (src-ov . tc-ov)
+This function is for non-Org text files."
+  ;; Get the transclusion source's overlay but do not directly use it; it is
+  ;; needed after exiting live-sync, which deletes live-sync overlays.
+  (when electric-indent-mode
+    (user-error "No live sync for src-code block when `electric-indent-mode' is on"))
+  (let* ((tc-pair (get-text-property (point) 'tc-pair))
+         (src-ov (text-clone-make-overlay
+                  (overlay-start tc-pair)
+                  (overlay-end tc-pair)
+                  (overlay-buffer tc-pair)))
+         (beg (marker-position (get-text-property (point) 'tc-beg-mkr)))
+         (end (marker-position (get-text-property (point) 'tc-end-mkr)))
+         (tc-ov)
+         (context (org-element-context))
+         (type (car context))
+         (src-ov-len (- (overlay-end src-ov) (overlay-start src-ov))))
+    ;; If the region is in src-block, get the content
+    (when (string= type "src-block")
+      (save-excursion
+        (goto-char (org-element-property :begin context))
+        (forward-line 1)
+        (setq beg (line-beginning-position))
+        (goto-char (- (org-element-property :end context)
+                      (org-element-property :post-blank context)))
+        (forward-char -1)
+        (forward-line -1)
+        (setq end (1+ (line-end-position)))))
+    (if (/= src-ov-len (- end beg))
+        (user-error "Error.  Lengths of transclusion and source are not identical")
+      (setq tc-ov (text-clone-make-overlay beg end))
+      (cons src-ov tc-ov))))
 
 (provide 'org-transclusion-src-lines)
