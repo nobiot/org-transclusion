@@ -434,18 +434,33 @@ When success, return the beginning point of the keyword re-inserted."
             (tc-pair-ov (get-char-property (point) 'tc-pair)))
       (progn
         ;;(org-transclusion-live-sync-remove-overlays-maybe beg end)
-        ;;(text-clone-delete-nth-overlay 0)
-        (text-clone-delete-overlays)
-        (delete-overlay tc-pair-ov)
-        (outline-show-all)
-        (org-transclusion-with-silent-modifications
-          (save-excursion
-            (delete-region beg end)
-            (when (> indent 0) (indent-to indent))
-            (insert-before-markers keyword))
-          ;; Go back to the beginning of the inserted keyword line
-          (goto-char beg))
-        beg)
+        ;; Need to retain the markers of the other adjacent transclusions
+        ;; if any.  If their positions differ after insert, move them back
+        ;; beg or end
+        (let ((mkr-at-beg
+               ;; Check the points to look at exist in buffer.  Then look for
+               ;; adjacent transclusions' markers if any.
+               (when (>= (1- beg)(point-min))
+                 (get-text-property (1- beg) 'tc-end-mkr))))
+              ;; (mkr-at-end (when (<= (1+ end)(point-max))
+              ;;               (get-text-property (1+ end) 'tc-beg-mkr))))
+          (text-clone-delete-overlays)
+          (delete-overlay tc-pair-ov)
+          (outline-show-all)
+          (org-transclusion-with-silent-modifications
+            (save-excursion
+              (delete-region beg end)
+              (when (> indent 0) (indent-to indent))
+              (insert-before-markers keyword))
+            ;; Move markers of adjacent transclusions if any to their original
+            ;; potisions.  Some markers move if two transclusions are placed
+            ;; without any blank lines, and either of beg and end markers will
+            ;; inevitably have the same position (location "between" lines)
+            (when mkr-at-beg (move-marker mkr-at-beg beg))
+            ;;(when mkr-at-end (move-marker mkr-at-end end))
+            ;; Go back to the beginning of the inserted keyword line
+            (goto-char beg))
+          beg))
     (message "Nothing done. No transclusion exists here.") nil))
 
 (defun org-transclusion-remove-all-in-buffer ()
@@ -813,14 +828,15 @@ It assumes that point is at a keyword."
     (setq beg-mkr (save-excursion (goto-char beg)
                                   (set-marker (make-marker) (point))))
     (setq end (point))
-    (setq end-mkr (org-transclusion--make-marker (point)))
+    (setq end-mkr (save-excursion (goto-char end)
+                                  (set-marker (make-marker) (point))))
     (setq ov-src (org-transclusion-make-overlay src-beg-m src-end-m sbuf))
     (setq tc-pair ov-src)
     (add-text-properties beg end
                          `(local-map ,org-transclusion-map
                                      read-only t
                                      front-sticky t
-                                     rear-nonsticky nil
+                                     rear-nonsticky t
                                      tc-id ,tc-id
                                      tc-type ,type
                                      tc-beg-mkr ,beg-mkr
