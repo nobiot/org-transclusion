@@ -49,6 +49,8 @@
 (declare-function text-property-search-forward 'text-property-search)
 (declare-function text-property-search-backward 'text-property-search)
 (declare-function prop-match-value 'text-property-search)
+(with-eval-after-load 'org-transclusion
+  (load-library "org-transclusion-src-lines"))
 
 ;;;; Customization
 
@@ -79,7 +81,7 @@ transcluded. Default is nil."
   :group 'org-transclusion)
 
 (defcustom org-transclusion-add-at-point-functions (list "others-default")
-  "Define list of `link types' org-tranclusion supports.
+  "Define list of link types that org-tranclusion supports.
 In addtion to a element in the list, there must be two
 corresponding functions with specific names
 
@@ -91,6 +93,20 @@ org-transclusion-add-<org-id>
 See the functions delivered within org-tranclusion for the API signatures."
   :type '(repeat string)
   :group 'org-transclusion)
+
+(defcustom org-transclusion-get-keyword-values-functions
+  '(org-transclusion-keyword-get-value-active-p
+    org-transclusion-keyword-get-value-link
+    org-transclusion-keyword-get-value-level
+    org-transclusion-keyword-get-current-indentation)
+  "Define list of functions used to parse a #+transclude keyword.
+The functions take a single argument, the whole keyword value as
+a string.  Each function retrieves a property with using a regexp
+from the string.")
+
+(defcustom org-transclusion-keyword-plist-to-string-functions nil
+  "Define list of functions used to convert plist of keywords
+  back to the original keyword string.")
 
 ;;;; Faces
 
@@ -193,12 +209,6 @@ Analogous to `org-edit-src-code'.")
   '(org-transclusion-link-open-org-id
     org-transclusion-link-open-org-file-links
     org-transclusion-link-open-other-file-links))
-
-(defvar org-transclusion-get-keyword-values-hook
-  '(org-transclusion-keyword-get-value-active-p
-    org-transclusion-keyword-get-value-link
-    org-transclusion-keyword-get-value-level
-    org-transclusion-keyword-get-current-indentation))
 
 (defvar org-transclusion-map
   (let ((map (make-sparse-keymap)))
@@ -726,7 +736,7 @@ the settings revert to the user's setting prior to
         ;; #+transclude: keyword exists.
         ;; Further checking the value
         (when-let ((str (org-element-property :value (org-element-at-point))))
-          (dolist (fn org-transclusion-get-keyword-values-hook) plist
+          (dolist (fn org-transclusion-get-keyword-values-functions) plist
                   (setq plist (append plist (funcall fn str)))))
         plist))))
 
@@ -734,7 +744,7 @@ the settings revert to the user's setting prior to
   "It is a utility function used converting a keyword STRING to plist.
 It is meant to be used by `org-transclusion-get-string-to-plist'.
 It needs to be set in
-`org-transclusion-get-keyword-values-hook'."
+`org-transclusion-get-keyword-values-functions'."
   (when (string-match "^\\(t\\|nil\\).*$" string)
     (list :active-p (org-transclusion--not-nil (match-string 1 string)))))
 
@@ -742,7 +752,7 @@ It needs to be set in
   "It is a utility function used converting a keyword STRING to plist.
 It is meant to be used by
 `org-transclusion-get-string-to-plist'.  It needs to be set in
-`org-transclusion-get-keyword-values-hook'."
+`org-transclusion-get-keyword-values-functions'."
   (if (string-match "\\(\\[\\[.+?\\]\\]\\)" string)
       (list :link (org-strip-quotes (match-string 0 string)))
     ;; link mandatory
@@ -753,7 +763,7 @@ It is meant to be used by
   "It is a utility function used converting a keyword STRING to plist.
 It is meant to be used by `org-transclusion-get-string-to-plist'.
 It needs to be set in
-`org-transclusion-get-keyword-values-hook'."
+`org-transclusion-get-keyword-values-functions'."
   (when (string-match ":level *\\([1-9]\\)" string)
     (list :level (string-to-number (org-strip-quotes (match-string 1 string))))))
 
@@ -761,7 +771,7 @@ It needs to be set in
   "It is a utility function used converting a keyword STRING to plist.
 It is meant to be used by `org-transclusion-get-string-to-plist'.
 It needs to be set in
-`org-transclusion-get-keyword-values-hook'."
+`org-transclusion-get-keyword-values-functions'."
   (list :current-indentation (current-indentation)))
 
 (defun org-transclusion-keyword-remove ()
@@ -777,11 +787,19 @@ It assumes that point is at a keyword."
   "Convert a keyword PLIST to a string."
   (let ((active-p (plist-get plist :active-p))
         (link (plist-get plist :link))
-        (level (plist-get plist :level)))
+        (level (plist-get plist :level))
+        (custom-properties-string nil))
+    (setq custom-properties-string
+          (dolist (fn org-transclusion-keyword-plist-to-string-functions
+                      custom-properties-string)
+            (when-let ((str (funcall fn plist)))
+              (setq custom-properties-string
+                    (concat custom-properties-string " " str )))))
     (concat "#+transclude: "
             (symbol-name active-p)
             " " link
             (when level (format " :level %d" level))
+            custom-properties-string
             "\n")))
 
 ;;;;-----------------------------------------------------------------------------
@@ -821,7 +839,10 @@ It assumes that point is at a keyword."
                          `(local-map ,org-transclusion-map
                                      read-only t
                                      front-sticky t
-                                     rear-nonsticky nil
+                                     ;; rear-nonsticky allows for text to be
+                                     ;; added immediatelly after the
+                                     ;; transcluded region.
+                                     rear-nonsticky t ;; changed
                                      tc-id ,tc-id
                                      tc-type ,type
                                      tc-beg-mkr ,beg-mkr
