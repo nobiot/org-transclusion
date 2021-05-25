@@ -41,8 +41,9 @@ intuitive when it comes to including lines of code."
                        (forward-line (1- lbeg))
                        (point)))
                 (end (if (zerop lend) (point-max)
-                       (goto-char beg)
-                       (forward-line lend) ;; include the line
+                       (goto-char (point-min))
+                       (forward-line (1- lend))
+                       (end-of-line);; include the line
                        (point)))
                 ;; Need markers here so that they can move
                 ;; when #+begin/end_src added
@@ -57,6 +58,8 @@ intuitive when it comes to including lines of code."
                      (when src-options (format " %s" src-options))
                      "\n"))
                   (buffer-substring-no-properties beg end)
+                  ;; if ending is not the point-max, ensure to add end-of-line
+                  (when (not (zerop lend)) "\n")
                   (when src-lang "#+end_src\n")))
            (list :tc-content content
                  :tc-beg-mkr beg-mkr
