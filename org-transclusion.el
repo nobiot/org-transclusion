@@ -582,8 +582,11 @@ type.
 
 Assume this function is called with the point on an
 org-transclusion overlay."
-  (let ((type (get-text-property (point) 'tc-type)))
+  (let ((live-sync-fn (get-text-property (point) 'tc-live-sync-buffers))
+        (type (get-text-property (point) 'tc-type)))
     (cond
+     (live-sync-fn
+      (funcall live-sync-fn))
      ;; Org Link and ID
      ((string-prefix-p "org" type 'ignore-case)
       (org-transclusion-live-sync-buffers-get-org))
@@ -1062,20 +1065,21 @@ to include the first section."
         (when (and (functionp match-fn)
                    (apply match-fn path plist)
                    (functionp add-fn))
-          ;; For tc-args, push is used to get PATH to be the first element of
+          ;; For tc-args, push is used to get LINK to be the first element of
           ;; the list of arguments passed
-          (setq params (list :tc-type type :tc-fn add-fn :tc-args (push path plist))))))
+          (setq params (list :tc-type type :tc-fn add-fn :tc-args (push link plist))))))
     params))
 
-(defun org-transclusion--match-others-default (_path _plist)
-  "Check if `others-default' can be used for the PATH.
+(defun org-transclusion--match-others-default (_link _plist)
+  "Check if `others-default' can be used for the LINK.
 Returns non-nil if check is pass."
   t)
 
-(defun org-transclusion--add-others-default (path _plist)
-  "Use PATH to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR.
+(defun org-transclusion--add-others-default (link _plist)
+  "Use Org LINK element to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR.
 TODO need to handle when the file does not exist."
-  (let ((buf (find-file-noselect path)))
+  (let* ((path (org-element-property :path link))
+         (buf (find-file-noselect path)))
     (with-current-buffer buf
       (org-with-wide-buffer
        (let ((content (buffer-string))

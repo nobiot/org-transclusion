@@ -9,14 +9,14 @@
 (add-hook 'org-transclusion-keyword-plist-to-string-functions
           #'org-transclusion-keyword-plist-to-string-src-lines)
 
-(defun org-transclusion--match-src-lines (_path plist)
-  "Check if \"src-lines\" can be used for the PATH.
+(defun org-transclusion--match-src-lines (_link plist)
+  "Check if \"src-lines\" can be used for the LINK.
 Returns non-nil if check is pass."
   (when (or (plist-get plist :lines)
             (plist-get plist :src))
     t))
 
-(defun org-transclusion--add-src-lines (path plist)
+(defun org-transclusion--add-src-lines (link plist)
   "Use PATH to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR.
 TODO need to handle when the file does not exist.  The logic to
 pars n-m for :lines is taken from
@@ -24,24 +24,32 @@ pars n-m for :lines is taken from
 exception.  Instead of :lines 1-10 to exclude line 10, the logic
 below has been adjusted to include line 10.  This should be more
 intuitive when it comes to including lines of code."
-  (let ((buf (find-file-noselect path))
-        (src-lines (plist-get plist :lines))
-        (src-lang (plist-get plist :src))
-        (src-options (plist-get plist :src-options)))
+  (let* ((path (org-element-property :path link))
+         (search-option (org-element-property :search-option link))
+         (buf (find-file-noselect path))
+         (src-lines (plist-get plist :lines))
+         (src-lang (plist-get plist :src))
+         (src-options (plist-get plist :src-options)))
     (when buf
       (with-current-buffer buf
         (org-with-wide-buffer
-         (let* ((lines (when src-lines (split-string src-lines "-")))
+         (let* ((start-pos (or (when search-option
+                                 (save-excursion
+                                   (ignore-errors
+                                     (org-link-search search-option)
+                                     (line-beginning-position))))
+                               (point-min)))
+                (lines (when src-lines (split-string src-lines "-")))
                 (lbeg (if lines (string-to-number (car lines))
                         0))
                 (lend (if lines (string-to-number (cadr lines))
                         0))
                 (beg (if (zerop lbeg) (point-min)
-                       (goto-char (point-min))
+                       (goto-char start-pos)
                        (forward-line (1- lbeg))
                        (point)))
                 (end (if (zerop lend) (point-max)
-                       (goto-char (point-min))
+                       (goto-char start-pos)
                        (forward-line (1- lend))
                        (end-of-line);; include the line
                        ;; Ensure to include the \n into the end point
