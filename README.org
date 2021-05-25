@@ -43,6 +43,8 @@ This package is an attempt to enable transclusion with Org Mode in Emacs. It is 
   - [[#include-the-section-before-the-first-headline-org-file-only][Include the section before the first headline (Org file only)]]
   - [[#faces--fringe-bitmap][Faces & fringe bitmap]]
   - [[#keybindings][Keybindings]]
+- [[#tips][Tips]]
+  - [[#moving-from-00x-to-01x][Moving from 0.0.x to 0.1.x]]
 - [[#known-limitations][Known Limitations]]
 - [[#changelog][Changelog]]
 - [[#credits][Credits]]
@@ -324,6 +326,16 @@ I do not know if bitmap can be customizable after it's been defined (TBC).
 
 - =org-transclusion-map=
 - =org-transclusion-live-sync-map=
+
+* Tips
+
+** Moving from 0.0.x to 0.1.x
+GitHub user @lytex has provided a [[https://github.com/lytex/doom.d/blob/3e48c37f6e6beadf69b57e803d6d2c282aee353d/utils/org-transclusion.sh][bash script]] that converts old syntax to the new one [[https://github.com/nobiot/org-transclusion/issues/71#issuecomment-846618510][in this issue]]. Thank you.
+
+#+begin_quote
+I've made a bash one-liner to migrate from the old syntax to the new one (manages transclude and hlevel -> level), feel free to copy or link it in the docs
+#+end_quote
+
 * Known Limitations
 Note this section is still incomplete, far from being exhaustive for "known" limitations.
 
@@ -362,13 +374,6 @@ Main features and changes only.
   
 ** 0.1.0
 As described in this version.
-
-** Moving from 0.0.x to 0.1.x
-GitHub user @lytex has provided a [[https://github.com/lytex/doom.d/blob/3e48c37f6e6beadf69b57e803d6d2c282aee353d/utils/org-transclusion.sh][bash script]] that converts old syntax to the new one [[https://github.com/nobiot/org-transclusion/issues/71#issuecomment-846618510][in this issue]]. Thank you.
-
-#+begin_quote
-I've made a bash one-liner to migrate from the old syntax to the new one (manages transclude and hlevel -> level), feel free to copy or link it in the docs
-#+end_quote
 
 * Credits
 ** Original idea by John Kitchin
