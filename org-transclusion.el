@@ -94,16 +94,6 @@ See the functions delivered within org-tranclusion for the API signatures."
   :type '(repeat string)
   :group 'org-transclusion)
 
-(defcustom org-transclusion-get-keyword-values-functions
-  '(org-transclusion-keyword-get-value-active-p
-    org-transclusion-keyword-get-value-link
-    org-transclusion-keyword-get-value-level
-    org-transclusion-keyword-get-current-indentation)
-  "Define list of functions used to parse a #+transclude keyword.
-The functions take a single argument, the whole keyword value as
-a string.  Each function retrieves a property with using a regexp
-from the string.")
-
 ;;;; Faces
 
 (defface org-transclusion-source-fringe
@@ -201,10 +191,23 @@ Analogous to `org-edit-src-code'.")
 (defvar org-transclusion-yank-excluded-line-prefix nil)
 (defvar org-transclusion-yank-excluded-wrap-prefix nil)
 
-(defvar org-transclusion-link-open-hook
+(defvar org-transclusion-link-open-functions
   '(org-transclusion-link-open-org-id
     org-transclusion-link-open-org-file-links
     org-transclusion-link-open-other-file-links))
+
+(defvar org-transclusion-content-insert-functions
+  '(org-transclusion-content-insert))
+
+(defvar org-transclusion-get-keyword-values-functions
+  '(org-transclusion-keyword-get-value-active-p
+    org-transclusion-keyword-get-value-link
+    org-transclusion-keyword-get-value-level
+    org-transclusion-keyword-get-current-indentation)
+  "Define list of functions used to parse a #+transclude keyword.
+The functions take a single argument, the whole keyword value as
+a string.  Each function retrieves a property with using a regexp
+from the string.")
 
 (defvar org-transclusion-map
   (let ((map (make-sparse-keymap)))
@@ -378,7 +381,7 @@ You can customize the keymap with using `org-transclusion-map':
                     (string= "file" type)))
            (let ((tc-params))
              (setq tc-params (run-hook-with-args-until-success
-                              'org-transclusion-link-open-hook link keyword-plist))
+                              'org-transclusion-link-open-functions link keyword-plist))
              (if (not tc-params)
                  (progn (message (format
                                   "No transclusion added. Check the link at point %d, line %d"
@@ -838,8 +841,8 @@ It assumes that point is at a keyword."
          (end) ;; at the end of text content after inserting it
          (end-mkr)
          (ov-src) ;; source-buffer
-         (tc-pair)
-         (format-fn (plist-get fns :content-format)))
+         (tc-pair))
+    ;;   (format-fn (plist-get fns :content-format)))
     (when (org-kill-is-subtree-p content)
       (let ((level (plist-get keyword-values :level)))
         (with-temp-buffer
@@ -848,9 +851,12 @@ It assumes that point is at a keyword."
           (delay-mode-hooks (org-mode))
           (org-paste-subtree level content t nil)
           (setq content (buffer-string)))))
-    (insert (if format-fn (funcall format-fn content)
-              ;; if not for format-fn, call default format fn
-              (org-transclusion-content-format content)))
+    (insert
+     (run-hook-with-args-until-success
+      'org-transclusion-content-insert-functions content))
+     ;; (if format-fn (funcall format-fn content)
+     ;;   ;; if not for format-fn, call default format fn
+     ;;   (org-transclusion-content-format content)))
     (setq beg-mkr (save-excursion (goto-char beg)
                                   (set-marker (make-marker) (point))))
     (setq end (point))

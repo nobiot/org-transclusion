@@ -8,6 +8,8 @@
           #'org-transclusion-keyword-get-value-src-options)
 (add-hook 'org-transclusion-keyword-plist-to-string-functions
           #'org-transclusion-keyword-plist-to-string-src-lines)
+(add-hook 'org-transclusion-content-insert-functions
+          #'org-transclusion-content-format-src-lines)
 
 (defun org-transclusion--match-src-lines (_link plist)
   "Check if \"src-lines\" can be used for the LINK.
@@ -70,9 +72,7 @@ intuitive when it comes to including lines of code."
                   (when src-lang "#+end_src\n")))
            (list :tc-content content
                  :tc-beg-mkr beg-mkr
-                 :tc-end-mkr end-mkr
-                 :tc-fns '(:content-format
-                           org-transclusion-content-format-src-lines))))))))
+                 :tc-end-mkr end-mkr)))))))
 
 (defun org-transclusion-keyword-get-value-lines (string)
   "It is a utility function used converting a keyword STRING to plist.
