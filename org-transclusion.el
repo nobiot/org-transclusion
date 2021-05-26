@@ -196,8 +196,8 @@ Analogous to `org-edit-src-code'.")
     org-transclusion-link-open-org-file-links
     org-transclusion-link-open-other-file-links))
 
-(defvar org-transclusion-content-insert-functions
-  '(org-transclusion-content-insert))
+(defvar org-transclusion-content-format-functions
+  '(org-transclusion-content-format))
 
 (defvar org-transclusion-get-keyword-values-functions
   '(org-transclusion-keyword-get-value-active-p
@@ -208,6 +208,9 @@ Analogous to `org-edit-src-code'.")
 The functions take a single argument, the whole keyword value as
 a string.  Each function retrieves a property with using a regexp
 from the string.")
+
+(defvar org-transclusion-open-source-get-marker-functions
+  '(org-transclusion-open-source-get-marker))
 
 (defvar org-transclusion-map
   (let ((map (make-sparse-keymap)))
@@ -517,26 +520,31 @@ remain in the source buffer for further editing."
   (interactive "P")
   (unless (overlay-buffer (get-text-property (point) 'tc-pair))
     (org-transclusion-refresh-at-point))
-  (let ((open-fn (get-text-property (point) 'tc-open-fn)))
-    (if open-fn (funcall open-fn)
-      ;; If no custom open-fn then do the standard routine
-      (let* ((src-buf (overlay-buffer (get-text-property (point) 'tc-pair)))
-             (tc-elem (org-transclusion-get-enclosing-element))
-             (tc-beg (org-transclusion-element-get-beg-or-end 'beg tc-elem))
-             (tc-end (org-transclusion-element-get-beg-or-end 'end tc-elem))
-             (src-beg-mkr
-              (or (org-transclusion-find-source-marker tc-beg tc-end)
-                  (get-text-property (point) 'tc-src-beg-mkr)))
-             (buf (current-buffer)))
-        (if (not src-buf)
-            (user-error (format "No paired source buffer found here: at %d" (point)))
-          (unwind-protect
-              (progn
-                (pop-to-buffer src-buf
-                               '(display-buffer-reuse-window . '(inhibit-same-window)))
-                (goto-char src-beg-mkr)
-                (recenter-top-bottom))
-            (unless arg (pop-to-buffer buf))))))))
+  (let* ((type (get-text-property (point) 'tc-type))
+         (src-mkr (run-hook-with-args-until-success
+                   'org-transclusion-open-source-get-marker-functions type))
+         (src-buf (marker-buffer src-mkr))
+         (buf (current-buffer)))
+    (if (not src-buf)
+        (user-error (format "No paired source buffer found here: at %d" (point)))
+      (unwind-protect
+          (progn
+            (pop-to-buffer src-buf
+                           '(display-buffer-use-some-window . '(inhibit-same-window)))
+            (goto-char src-mkr)
+            (recenter-top-bottom))
+        (unless arg (pop-to-buffer buf))))))
+
+(defun org-transclusion-open-source-get-marker (type)
+  "Default."
+  (let* ((src-buf (overlay-buffer (get-text-property (point) 'tc-pair)))
+         (tc-elem (org-transclusion-get-enclosing-element))
+         (tc-beg (org-transclusion-element-get-beg-or-end 'beg tc-elem))
+         (tc-end (org-transclusion-element-get-beg-or-end 'end tc-elem))
+         (src-beg-mkr
+          (or (org-transclusion-find-source-marker tc-beg tc-end)
+              (get-text-property (point) 'tc-src-beg-mkr))))
+    src-beg-mkr))
 
 (defun org-transclusion-live-sync-start-at-point ()
   "Put overlay for start live sync edit on the transclusion at point.
@@ -853,7 +861,7 @@ It assumes that point is at a keyword."
           (setq content (buffer-string)))))
     (insert
      (run-hook-with-args-until-success
-      'org-transclusion-content-insert-functions content))
+      'org-transclusion-content-format-functions type content))
      ;; (if format-fn (funcall format-fn content)
      ;;   ;; if not for format-fn, call default format fn
      ;;   (org-transclusion-content-format content)))
@@ -891,10 +899,12 @@ It assumes that point is at a keyword."
     (overlay-put ov-src 'tc-pair tc-pair)
     t))
 
-(defun org-transclusion-content-format (content)
+(defun org-transclusion-content-format (_type content)
   "Format text CONTENT from source before transcluding.
 Return content modified (or unmodified, if not applicable).
-Currently it only re-aligns table with links in the content."
+Currently it only re-aligns table with links in the content.
+
+This is the default one"
   (with-temp-buffer
     (org-mode)
     (insert content)

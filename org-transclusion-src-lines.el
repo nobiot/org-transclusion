@@ -8,8 +8,10 @@
           #'org-transclusion-keyword-get-value-src-options)
 (add-hook 'org-transclusion-keyword-plist-to-string-functions
           #'org-transclusion-keyword-plist-to-string-src-lines)
-(add-hook 'org-transclusion-content-insert-functions
+(add-hook 'org-transclusion-content-format-functions
           #'org-transclusion-content-format-src-lines)
+(add-hook 'org-transclusion-open-source-get-marker-functions
+          #'org-transclusion-open-source-get-marker-src-lines)
 
 (defun org-transclusion--match-src-lines (_link plist)
   "Check if \"src-lines\" can be used for the LINK.
@@ -111,39 +113,23 @@ Double qutations are mandatory."
      (when src (format " :src %s" src))
      (when src-options (format " :src-options \"%s\"" src-options)))))
 
-(defun org-transclusion-open-source-src-lines (&optional arg)
-  "Open the source buffer of transclusion at point.
-When ARG is non-nil (e.g. \\[universal-argument]), the point will
-remain in the source buffer for further editing."
-  (interactive "P")
-  (unless (overlay-buffer (get-text-property (point) 'tc-pair))
-    (org-transclusion-refresh-at-point))
-  (let* ((src-buf (overlay-buffer (get-text-property (point) 'tc-pair)))
-         (src-beg-mkr (get-text-property (point) 'tc-src-beg-mkr)))
-    (if (not src-buf)
-        (user-error (format "No paired source buffer found here: at %d" (point)))
-      (unwind-protect
-          (progn
-            (pop-to-buffer src-buf
-                           '(display-buffer-reuse-window . '(inhibit-same-window)))
-            (goto-char src-beg-mkr)
-            (recenter-top-bottom))
-        (unless arg (pop-to-buffer src-buf))))))
+(defun org-transclusion-open-source-get-marker-src-lines (type)
+  "Return marker for `org-transclusion-open-source'."
+  (when (string= type "src-lines")
+    (get-text-property (point) 'tc-src-beg-mkr)))
 
-(defun org-transclusion-content-format-src-lines (content)
+(defun org-transclusion-content-format-src-lines (type content)
   "Format text CONTENT from source before transcluding.
 Return content modified (or unmodified, if not applicable).
 Currently it only re-aligns table with links in the content."
-  (with-temp-buffer
-    (insert content)
-    (put-text-property (point-min) (point-max)
-                       'tc-open-fn
-                       'org-transclusion-open-source-src-lines)
-    (put-text-property (point-min) (point-max)
-                       'tc-live-sync-buffers
-                       'org-transclusion-live-sync-buffers-get-src-lines)
-    ;; Return the temp-buffer's string
-    (buffer-string)))
+  (when (string= type "src-lines")
+    (with-temp-buffer
+      (insert content)
+      (put-text-property (point-min) (point-max)
+                         'tc-live-sync-buffers
+                         'org-transclusion-live-sync-buffers-get-src-lines)
+      ;; Return the temp-buffer's string
+      (buffer-string))))
 
 (defun org-transclusion-live-sync-buffers-get-src-lines ()
   "Return cons cell of overlays for source and trasnclusion.
