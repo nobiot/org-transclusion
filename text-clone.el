@@ -71,11 +71,11 @@ This function does not explicitly differentiate overlays for the
 orginal text region and its clones.  Where such distinction is
 important, use the sequence of OVERLAYS list; for example, the
 first element of the list can be the overlay for the original and
-rest, clones.  You can use the abnormal hook functions
-`text-clone-modify-overlays-functions' to further modify the
-overlays.  The hook passes overlays after this function has added
-the properties.  For instance, you can put different faces for
-them to visually differentiate them."
+rest, clones.
+
+As this function returns modified overlays, a calling function
+can further modify them.  For instance, you can put different
+faces to visually differentiate them."
   (if (or (not overlays)
           (> 2 (length overlays)))
       (user-error "Nothing done.  You need to pass 2 or more overlays")

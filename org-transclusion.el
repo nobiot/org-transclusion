@@ -94,6 +94,14 @@ See the functions delivered within org-tranclusion for the API signatures."
   :type '(repeat string)
   :group 'org-transclusion)
 
+(defcustom org-transclusion-open-source-display-action-list '(nil . nil)
+  "Action list used to open source buffer to display.
+
+See `display-buffer' for example options."
+  :type display-buffer--action-custom-type
+  :risky t
+  :group 'org-transclusion)
+
 ;;;; Faces
 
 (defface org-transclusion-source-fringe
@@ -529,10 +537,10 @@ remain in the source buffer for further editing."
         (user-error (format "No paired source buffer found here: at %d" (point)))
       (unwind-protect
           (progn
-            (pop-to-buffer src-buf
-                           '(display-buffer-use-some-window . '(inhibit-same-window)))
-            (goto-char src-mkr)
-            (recenter-top-bottom))
+            (when (display-buffer src-buf
+                                  org-transclusion-open-source-display-action-list)
+              (goto-char src-beg-mkr)
+              (recenter-top-bottom)))
         (unless arg (pop-to-buffer buf))))))
 
 (defun org-transclusion-open-source-get-marker (type)
