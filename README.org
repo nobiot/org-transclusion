@@ -272,6 +272,8 @@ You can customize settings in the =org-transclusion= group.
 - =org-transclusion-add-all-on-activate= :: Defines whether or not all the active transclusions (with =t=) get automatically transcluded on minor mode activation (=org-transclusion-mode=). This does not affect the manual activation when you directly call =org-transclusion-activate=
 - =org-transclusion-exclude-elements= :: See below
 - =org-transclusion-include-first-section= :: See below
+- =org-transclusion-open-source-display-action-list= ::
+   You can customize the way the =org-transclusion-open-source= function displays the source buffer for the transclusion. You specify the "action" in the way defined by the built-in =display-buffer= function. Refer to its in-system documentation (with =C-h f=) for the accepted values. =M-x customize= can also guide you with the types of values with the widget.
 - =org-transclusion-add-at-point-functions= :: (WIP)
 
 ** Customizable filter to exclude certain Org elements
