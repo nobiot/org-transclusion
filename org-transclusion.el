@@ -92,6 +92,14 @@ See the functions delivered within org-tranclusion for the API signatures."
   :type '(repeat string)
   :group 'org-transclusion)
 
+(defcustom org-transclusion-open-source-display-action-list '(nil . nil)
+  "Action list used to open source buffer to display.
+
+See `display-buffer' for example options."
+  :type display-buffer--action-custom-type
+  :risky t
+  :group 'org-transclusion)
+
 ;;;; Faces
 
 (defface org-transclusion-source-fringe
@@ -507,7 +515,7 @@ remain in the source buffer for further editing."
   (unless (overlay-buffer (get-text-property (point) 'tc-pair))
     (org-transclusion-refresh-at-point))
   (let* ((src-buf (overlay-buffer (get-text-property (point) 'tc-pair)))
-         (tc-elem (org-transclusion-get-enclosing-element))
+         (tc-elem (org-element-at-point))
          (tc-beg (org-transclusion-element-get-beg-or-end 'beg tc-elem))
          (tc-end (org-transclusion-element-get-beg-or-end 'end tc-elem))
          (src-beg-mkr
@@ -518,10 +526,10 @@ remain in the source buffer for further editing."
         (user-error (format "No paired source buffer found here: at %d" (point)))
       (unwind-protect
           (progn
-            (pop-to-buffer src-buf
-                           '(display-buffer-reuse-window . '(inhibit-same-window)))
-            (goto-char src-beg-mkr)
-            (recenter-top-bottom))
+            (when (display-buffer src-buf
+                                  org-transclusion-open-source-display-action-list)
+              (goto-char src-beg-mkr)
+              (recenter-top-bottom)))
         (unless arg (pop-to-buffer buf))))))
 
 (defun org-transclusion-live-sync-start-at-point ()
