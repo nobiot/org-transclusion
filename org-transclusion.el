@@ -92,6 +92,19 @@ See the functions delivered within org-tranclusion for the API signatures."
   :type '(repeat string)
   :group 'org-transclusion)
 
+(defcustom org-transclusion-regexp-search-function 'org-transclusion-regexp-search-default
+  "Function to call when file link has /REGEXP/ search option
+Note: This function should take REGEXP as it argument and match only once.
+The default `org-transclusion-regexp-search-default' matches the single last occurance of REGEXP."
+  :type 'function
+  :group 'org-transclusion)
+
+(defcustom org-transclusion-line-search-style 'paragraph
+  "Key that determines the function in `org-transclusion-line-search-handler'
+ See the documentation of `org-transclusion-line-search-handler' for more information"
+  :options '(paragraph one-line)
+  :group 'org-transclusion)
+
 ;;;; Faces
 
 (defface org-transclusion-source-fringe
@@ -171,6 +184,7 @@ a text content.
 `org-transclusion-before-save-buffer' and
 `org-transclusion-after-save-buffer' use this variable.")
 
+
 (defvar-local org-transclusion-temp-window-config nil
   "Rember window config (the arrangment of windows) for the
   current buffer. This is for live-sync.
@@ -189,10 +203,18 @@ Analogous to `org-edit-src-code'.")
 (defvar org-transclusion-yank-excluded-line-prefix nil)
 (defvar org-transclusion-yank-excluded-wrap-prefix nil)
 
+(defvar org-transclusion-line-search-handler '((paragraph . org-transclusion-paragraph-from-line)
+					       (one-line . org-transclusion-one-line))
+  "Alist of function to call when file link has a line search option,
+determined by the value of `org-transclusion-line-search-style'
+NOTE: All functions must return the range of the transclusion in a list
+for example, the function `org-transclusion-one-line' return
+the list of (BEG . END) in which, BEG is the the position of the first charracter
+and END is the position of the last character of the current line.")
+
 (defvar org-transclusion-link-open-hook
   '(org-transclusion-link-open-org-id
-    org-transclusion-link-open-org-file-links
-    org-transclusion-link-open-other-file-links))
+    org-transclusion-open-file-link))
 
 (defvar org-transclusion-get-keyword-values-hook
   '(org-transclusion-keyword-get-value-active-p
@@ -228,6 +250,7 @@ specific keybindings; namely:
 - `org-transclusion-live-sync-paste'
 - `org-transclusion-live-sync-exit-at-point'")
 
+
 (define-fringe-bitmap 'org-transclusion-fringe-bitmap
   [#b11000000
    #b11000000
@@ -239,8 +262,6 @@ specific keybindings; namely:
    #b11000000]
   nil nil '(center t))
 
-;;;; Macro
-;;;; Definining macros before they are used in the rest of package
 ;;;; Flycheck warns with "macro X defined too late"
 (defmacro org-transclusion-with-silent-modifications (&rest body)
   "Run BODY silently.
@@ -801,6 +822,28 @@ It assumes that point is at a keyword."
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions for inserting content
 
+(defun org-transclusion-regexp-search-default (regexp)
+  "Match the last occurance of REGEXP in current buffer."
+  (save-excursion
+    (goto-char (point-max))
+    (re-search-backward regexp nil t)))
+
+(defun org-transclusion-one-line (&optional line-num)
+  (save-excursion
+    (when line-num
+      (goto-line line-num))
+    (list (line-beginning-position) (line-end-position))))
+
+(defun org-transclusion-paragraph-from-line (&optional line-num)
+  (save-excursion
+    (when line-num
+      (goto-line line-num))
+    (list
+     (save-excursion (backward-paragraph)
+		     (point))
+     (save-excursion (forward-paragraph)
+		     (point)))))
+    
 (defun org-transclusion-content-insert (keyword-values type content src-beg-m src-end-m)
   "Add content and overlay.
 - KEYWORD-VALUES :: TBD
@@ -894,18 +937,30 @@ Return nil if not found."
                          (point) (org-current-line)))
         nil))))
 
-(defun org-transclusion-link-open-org-file-links (link)
-  "Return a list for Org file LINK object.
+(defun org-transclusion-open-file-link (link)
+  "Return a list for file LINK object.
 Return nil if not found."
-  (when (org-transclusion--org-file-p (org-element-property :path link))
-    (list :tc-type "org-link"
-          :tc-arg link
-          :tc-fn #'org-transclusion-content-get-from-org-link)))
+  (let ((path (org-element-property :path link)))
+    (when (file-exists-p path) ;; Check if file exists
+      (list :tc-type
+	    (if (org-transclusion--org-file-p path) 
+		"org-link" ;; Special value for handling org file
+	      (org-element-property :type link)) ;; for non-org file
+	    :tc-arg link
+	    :tc-fn #'org-transclusion-content-get-from-file-link))))
 
-(defun org-transclusion-link-open-other-file-links (link)
-  "Return a list for non-Org file LINK object.
-Return nil if not found."
-  (org-transclusion--get-custom-tc-params link))
+;; (defun org-transclusion-link-open-org-file-links (link)
+;;   "Return a list for Org file LINK object.
+;; Return nil if not found."
+;;   (when (org-transclusion--org-file-p (org-element-property :path link))
+;;     (list :tc-type "org-link"
+;;           :tc-arg link
+;;           :tc-fn #'org-transclusion-content-get-from-org-link)))
+
+;; (defun org-transclusion-link-open-other-file-links (link)
+;;   "Return a list for non-Org file LINK object.
+;; Return nil if not found."
+;;   (org-transclusion--get-custom-tc-params link))
 
 (defun org-transclusion-content-get-from-org-marker (marker)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from MARKER.
@@ -922,22 +977,46 @@ This is meant for Org-ID."
              (org-transclusion-content-get-org-buffer-or-element-at-point 'only-element)))))
     (message "Nothing done. Cannot find marker for the ID.")))
 
-(defun org-transclusion-content-get-from-org-link (link &rest _arg)
-  "Return tc-beg-mkr, tc-end-mkr, tc-content from LINK."
+;; (defun org-transclusion-content-get-from-org-link (link &rest _arg)
+;;   "Return tc-beg-mkr, tc-end-mkr, tc-content from LINK."
+;;   (save-excursion
+;;     ;; First visit the buffer and go to the relevant elelement if id or
+;;     ;; search-option is present.
+;;     (let* ((path (org-element-property :path link))
+;;            (search-option (org-element-property :search-option link))
+;;            (buf (find-file-noselect path)))
+;;       (with-current-buffer buf
+;;         (org-with-wide-buffer
+;;          ;;(outline-show-all)
+;;          (if search-option
+;;              (progn
+;;                (org-link-search search-option)
+;;                (org-transclusion-content-get-org-buffer-or-element-at-point 'only-element))
+;;            (org-transclusion-content-get-org-buffer-or-element-at-point)))))))
+
+(defun org-transclusion-content-get-from-file-link (link &rest _arg)
+  "Return tc-beg-mkr, tc-end-mkr, tc-content from file LINK."
   (save-excursion
     ;; First visit the buffer and go to the relevant elelement if id or
     ;; search-option is present.
     (let* ((path (org-element-property :path link))
-           (search-option (org-element-property :search-option link))
-           (buf (find-file-noselect path)))
-      (with-current-buffer buf
-        (org-with-wide-buffer
-         ;;(outline-show-all)
-         (if search-option
-             (progn
-               (org-link-search search-option)
-               (org-transclusion-content-get-org-buffer-or-element-at-point 'only-element))
-           (org-transclusion-content-get-org-buffer-or-element-at-point)))))))
+	   (file-type (org-element-property :type link))
+           (search-option (org-element-property :search-option link)))
+      (if (file-exists-p path) ;; Check if file exists,
+	  (with-current-buffer (find-file-noselect path) ;; if yes, open file in another buffer
+	    (org-with-wide-buffer ;; Call `org-transclusion-content-get-buffer-or-element-at-point'
+	     (apply #'org-transclusion-content-get-buffer-or-element
+		      link
+		      ;; Start constructing arguments 
+		      (string-match-p "org-link" file-type) ;; Check if this is an org file.
+		      search-option ;; Having search option implies non-nil only-element argument.
+		      (cond ((not search-option) nil) ;; No search options, invoke right away, yields whole buffer.
+			    ((string-match-p "\\`[0-9]+\\'" search-option) ;; Check if option is for line,
+			     (list (string-to-number search-option))) ;; invoke with option as line-num argument
+			    ;; Pass other kinds of options as search-option argument
+			    (t (list nil search-option))))))
+	;; File doesn't exist
+	(user-error "%s" (concat path " doesn't exist!"))))))
 
 (defun org-transclusion-content-get-org-buffer-or-element-at-point (&optional only-element)
   "Return content for transclusion.
@@ -984,6 +1063,50 @@ Assume you are at the beginning of the org element to transclude."
         (list :tc-content tc-content
               :tc-beg-mkr tc-beg-mkr
               :tc-end-mkr tc-end-mkr)))))
+
+(defun org-transclusion-content-get-buffer-or-element (link &optional org-p only-element line-num search-option)
+  "Return content for transclusion.
+When ONLY-ELEMENT is t, only the element.  If nil, the whole buffer.
+LINE-NUM and SEARCH-OPTION are from `org-transclusion-content-get-from-file-link', 
+both implies that ONLY-ELEMENT is t.
+
+A non-nil LINE-NUM is passed to the function of `org-transclusion-line-search-handler',
+the function returns a range, range of the content for transclusion.
+A non-nil SEARCH-OPTION return only the element, that the search matches."
+  (save-excursion
+    (let ((content-range ;; In the forms of (BEG END)
+	   (cond
+	    ((not only-element) (list (point-min) (point-max))) ;; i.e. the range is the whole buffer.
+	    ;; content-range is what returned by one of 'org-transclusion-line-search-handler' function.
+	    (line-num (funcall (alist-get org-transclusion-line-search-style org-transclusion-line-search-handler) line-num))
+	    ;; content-range is the match-data
+	    (search-option
+	     (cond
+	     ;; When search-option doesn't match, show error.
+	     ((zerop (how-many search-option)) (user-error "Nothing matched %s in %s" search-option (buffer-file-name)))
+	     ;; When search-option is org-specific (begins "*" and "#" ) and this buffer is displaying an org file, call `org-link-search'.
+	     ((and org-p (string-match-p "^*.*\\|^#.*" search-option)) (org-link-search search-option))
+	     ;; Or else, handle regexp with `org-transclusion-regexp-search-function'
+	     (t (save-match-data (funcall org-transclusion-regexp-search-function search-option)
+				 (match-data))))))))
+      (when line-num
+	(goto-line line-num))
+      (if org-p
+	  ;; Handle org file
+	  (org-transclusion-content-get-org-buffer-or-element-at-point only-element)
+	;; Handling non-org file
+	(progn (let* ((tc-content)(tc-beg-mkr)(tc-end-mkr)) ;; Assign empty variables
+	     ;; tc-beg-mkr and tc-end-mkr is the range of the content for transclusion.
+	     ;; When ONLY-ELEMENT is nil, tc-beg-mkr and tc-end-mkr is the range of the whole buffer.
+	     ;; When LINE-NUM is non-nil, tc-beg-mkr and tc-end-mkr is determined by
+	     ;; `org-transclusion-line-search-handler'
+	     ;; When REGEXP-OPTION is non-nil, the range is the beginning and end of what matches the regular expression.
+	     (setq tc-beg-mkr (progn (goto-char (car content-range)) (point-marker)))
+	     (setq tc-end-mkr (progn (goto-char (cadr content-range)) (point-marker)))
+	     (setq tc-content (buffer-substring tc-beg-mkr tc-end-mkr))
+	     (list :tc-content tc-content
+		   :tc-beg-mkr tc-beg-mkr
+		   :tc-end-mkr tc-end-mkr)))))))
 
 (defun org-transclusion-content-filter-org-buffer (data)
   "Filter DATA before transcluding its content.
