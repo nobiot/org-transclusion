@@ -625,17 +625,31 @@ This function is for Org Links and IDs."
       (let* ((inhibit-read-only t)
              (props)
              (beg tc-beg)
-             (end tc-end))
+             (end tc-end)
+             ;; Only applicable if there is another transclusion
+             ;; immediately before the one starting to live-sync
+             (end-mkr-at-beg
+              (get-text-property (1- beg) 'tc-end-mkr)))
         (goto-char beg)
         (setq props (text-properties-at tc-beg))
         (delete-region tc-beg tc-end)
-        (insert-and-inherit src-content)
+        ;; Before marker is needed
+        ;; for an adjacent transclusion
+        (insert-before-markers src-content)
         (setq end (point))
         (add-text-properties beg end props)
-        ;; Need to move tc-end-mkr when it is for an single element
-        (let ((end-mkr (get-text-property beg 'tc-end-mkr)))
+        ;; Need to move marker that indicate the range of transclusions (not
+        ;; live-sync range) when it is for an single element like paragraph
+        (let ((beg-mkr (get-text-property beg 'tc-beg-mkr))
+              (end-mkr (get-text-property beg 'tc-end-mkr)))
+          (when (> beg-mkr beg)
+            (move-marker beg-mkr beg))
           (when (< end-mkr end)
-            (move-marker end-mkr end)))
+            (move-marker end-mkr end))
+          ;; deal with the other transclusion immediately before this.
+          (when (and end-mkr-at-beg
+                     (not (eq end-mkr-at-beg end-mkr)))
+            (move-marker end-mkr-at-beg beg)))
         (setq tc-ov (org-transclusion-make-overlay beg end))))
     (cons src-ov tc-ov)))
 
