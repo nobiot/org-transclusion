@@ -821,29 +821,6 @@ It assumes that point is at a keyword."
 
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions for inserting content
-
-(defun org-transclusion-regexp-search-default (regexp)
-  "Match the last occurance of REGEXP in current buffer."
-  (save-excursion
-    (goto-char (point-max))
-    (re-search-backward regexp nil t)))
-
-(defun org-transclusion-one-line (&optional line-num)
-  (save-excursion
-    (when line-num
-      (goto-line line-num))
-    (list (line-beginning-position) (line-end-position))))
-
-(defun org-transclusion-paragraph-from-line (&optional line-num)
-  (save-excursion
-    (when line-num
-      (goto-line line-num))
-    (list
-     (save-excursion (backward-paragraph)
-		     (point))
-     (save-excursion (forward-paragraph)
-		     (point)))))
-    
 (defun org-transclusion-content-insert (keyword-values type content src-beg-m src-end-m)
   "Add content and overlay.
 - KEYWORD-VALUES :: TBD
@@ -1018,6 +995,28 @@ This is meant for Org-ID."
 	;; File doesn't exist
 	(user-error "%s" (concat path " doesn't exist!"))))))
 
+(defun org-transclusion-regexp-search-default (regexp)
+  "Match the last occurance of REGEXP in current buffer."
+  (save-excursion
+    (goto-char (point-max))
+    (re-search-backward regexp nil t)))
+
+(defun org-transclusion-one-line (&optional line-num)
+  (save-excursion
+    (when line-num
+      (goto-line line-num))
+    (list (line-beginning-position) (line-end-position))))
+
+(defun org-transclusion-paragraph-from-line (&optional line-num)
+  (save-excursion
+    (when line-num
+      (goto-line line-num))
+    (list
+     (save-excursion (backward-paragraph)
+		     (point))
+     (save-excursion (forward-paragraph)
+		     (point)))))
+    
 (defun org-transclusion-content-get-org-buffer-or-element-at-point (&optional only-element)
   "Return content for transclusion.
 When ONLY-ELEMENT is t, only the element.  If nil, the whole buffer.
@@ -1074,39 +1073,47 @@ A non-nil LINE-NUM is passed to the function of `org-transclusion-line-search-ha
 the function returns a range, range of the content for transclusion.
 A non-nil SEARCH-OPTION return only the element, that the search matches."
   (save-excursion
-    (let ((content-range ;; In the forms of (BEG END)
+    (let* ((search-string (when search-option
+			   ;; Extract "REGEXP" from "/REGEXP/"
+			   (if (string-match "/\\(.*\\)/" search-option)
+		     	       (match-string 1 search-option)
+			     search-option)))
+	  (content-range ;; In the forms of (BEG END)
 	   (cond
-	    ((not only-element) (list (point-min) (point-max))) ;; i.e. the range is the whole buffer.
-	    ;; content-range is what returned by one of 'org-transclusion-line-search-handler' function.
+	    ((not only-element) (list (point-min) (point-max))) ;; If only-element is nil, returns the range is the whole buffer.
+	    ;; if line-num is non-nil, returns the evaluation from one of 'org-transclusion-line-search-handler' function.
 	    (line-num (funcall (alist-get org-transclusion-line-search-style org-transclusion-line-search-handler) line-num))
-	    ;; content-range is the match-data
+	    ;; if search-option is non-nil, return the match data.
 	    (search-option
 	     (cond
       	      ;; When search-option is org-specific (begins "*" and "#" ) and this buffer is displaying an org file, call `org-link-search'.
 	      ((and org-p (string-match-p "^*.*\\|^#.*" search-option)) (org-link-search search-option))
 	      ;; When search-option doesn't match, show error.
-	      ((zerop (how-many search-option)) (user-error "Nothing matched %s in %s" search-option (buffer-file-name)))
+	      ((zerop (how-many search-string)) (user-error "Nothing matched %s in %s" search-option (buffer-file-name)))
 	      ;; Or else, handle regexp with `org-transclusion-regexp-search-function'
-	      (t (save-match-data (funcall org-transclusion-regexp-search-function search-option)
-				  (match-data))))))))
-      (when line-num
-	(goto-line line-num))
-      (if org-p
-	  ;; Handle org file
-	  (org-transclusion-content-get-org-buffer-or-element-at-point only-element)
-	;; Handling non-org file
+	      (t (save-match-data
+		   (funcall org-transclusion-regexp-search-function search-string)
+		   (match-data))))))))
+      (cond
+       ;; If this is an org file and no search option, get the whole buffer.
+       ((and org-p (not only-element)) (org-transclusion-content-get-org-buffer-or-element-at-point nil))
+       ;; If this is an org file and search option is org-specific, get only that element
+       ((and org-p (string-match-p "^*.*\\|^#.*" search-option)) (org-transclusion-content-get-org-buffer-or-element-at-point t))
+       (t
+	;; If this is non-org file or an org file with other kind of search option.
 	(progn (let* ((tc-content)(tc-beg-mkr)(tc-end-mkr)) ;; Assign empty variables
-	     ;; tc-beg-mkr and tc-end-mkr is the range of the content for transclusion.
-	     ;; When ONLY-ELEMENT is nil, tc-beg-mkr and tc-end-mkr is the range of the whole buffer.
-	     ;; When LINE-NUM is non-nil, tc-beg-mkr and tc-end-mkr is determined by
-	     ;; `org-transclusion-line-search-handler'
-	     ;; When REGEXP-OPTION is non-nil, the range is the beginning and end of what matches the regular expression.
-	     (setq tc-beg-mkr (progn (goto-char (car content-range)) (point-marker)))
-	     (setq tc-end-mkr (progn (goto-char (cadr content-range)) (point-marker)))
-	     (setq tc-content (buffer-substring tc-beg-mkr tc-end-mkr))
-	     (list :tc-content tc-content
-		   :tc-beg-mkr tc-beg-mkr
-		   :tc-end-mkr tc-end-mkr)))))))
+		 ;; tc-beg-mkr and tc-end-mkr is the range of the content for transclusion.
+		 ;; When ONLY-ELEMENT is nil, tc-beg-mkr and tc-end-mkr is the range of the whole buffer.
+		 ;; When LINE-NUM is non-nil, tc-beg-mkr and tc-end-mkr is determined by
+		 ;; `org-transclusion-line-search-handler'
+		 ;; When SEARCH-OPTION is non-nil, the range is the beginning and end
+		 ;; of what matches the regular expression.
+		 (setq tc-beg-mkr (progn (goto-char (car content-range)) (point-marker)))
+		 (setq tc-end-mkr (progn (goto-char (cadr content-range)) (point-marker)))
+		 (setq tc-content (buffer-substring tc-beg-mkr tc-end-mkr))
+		 (list :tc-content tc-content
+		       :tc-beg-mkr tc-beg-mkr
+		       :tc-end-mkr tc-end-mkr))))))))
 
 (defun org-transclusion-content-filter-org-buffer (data)
   "Filter DATA before transcluding its content.
