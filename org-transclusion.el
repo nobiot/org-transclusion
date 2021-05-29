@@ -1096,9 +1096,11 @@ A non-nil SEARCH-OPTION return only the element, that the search matches."
 		   (match-data))))))))
       (cond
        ;; If this is an org file and no search option, get the whole buffer.
-       ((and org-p (not only-element)) (org-transclusion-content-get-org-buffer-or-element-at-point nil))
-       ;; If this is an org file and search option is org-specific, get only that element
-       ((and org-p (string-match-p "^*.*\\|^#.*" search-option)) (org-transclusion-content-get-org-buffer-or-element-at-point t))
+       ((and org-p (not only-element))
+	(org-transclusion-content-get-org-buffer-or-element-at-point nil))
+       ;; If this is an org file, no line-num and search option is org-specific, get only that element
+       ((and org-p (not line-num) (string-match-p "^*.*\\|^#.*" search-option))
+	(org-transclusion-content-get-org-buffer-or-element-at-point t))
        (t
 	;; If this is non-org file or an org file with other kind of search option.
 	(progn (let* ((tc-content)(tc-beg-mkr)(tc-end-mkr)) ;; Assign empty variables
