@@ -592,10 +592,11 @@ type.
 
 Assume this function is called with the point on an
 org-transclusion overlay."
-  (let ((type (get-text-property (point) 'tc-type)))
+  (let ((type (get-text-property (point) 'tc-type))
+	(parent (get-text-property (point) :parent)))
     (cond
      ;; Org Link and ID
-     ((string-prefix-p "org" type 'ignore-case)
+     ((and (string-prefix-p "org" type 'ignore-case) parent)
       (org-transclusion-live-sync-buffers-get-org))
      (t (org-transclusion-live-sync-buffers-get-others-default)))))
 
@@ -1179,18 +1180,18 @@ to include the first section."
 Returns non-nil if check is pass."
   t)
 
-(defun org-transclusion--add-others-default (path)
-  "Use PATH to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR.
-TODO need to handle when the file does not exist."
-  (let ((buf (find-file-noselect path)))
-    (with-current-buffer buf
-      (org-with-wide-buffer
-       (let ((content (buffer-string))
-             (beg (point-min-marker))
-             (end (point-max-marker)))
-         (list :tc-content content
-               :tc-beg-mkr beg
-               :tc-end-mkr end))))))
+;; (defun org-transclusion--add-others-default (path)
+;;   "Use PATH to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR.
+;; TODO need to handle when the file does not exist."
+;;   (let ((buf (find-file-noselect path)))
+;;     (with-current-buffer buf
+;;       (org-with-wide-buffer
+;;        (let ((content (buffer-string))
+;;              (beg (point-min-marker))
+;;              (end (point-max-marker)))
+;;          (list :tc-content content
+;;                :tc-beg-mkr beg
+;;                :tc-end-mkr end))))))
 
 ;;-----------------------------------------------------------------------------
 ;;; Utility Functions
