@@ -248,12 +248,16 @@ In the live-sync edit region, the normal =yank= command (=C-y=) is replaced with
 Transclusion has been tested to work for the following types of links:
 
 - File link for an entire org file/buffer; e.g. =[[file:~/org/file.org][My Org Notes]]=
+- File link with =::line-number=; The default behavior is transcluding the paragraph around the line-number.
 - File link with =::*heading=
 - File link with =::#custom-id=
+- File link with =::/regexp/=; The default behavior is transcluding the last occurance of matched text.
 - File link with =::name= for blocks (e.g. blocked quotations), tables, and links
 - File link with =::dedicated-target=; this is intended for linking to a paragraph. See below.
 - ID link =id:uuid=
-- File link for non-org files (tested with =.txt= and =.md=); for these, the whole buffer gets transcluded
+- File link for non-org files (tested with =.txt= and =.md=); is also supported but,
+  org-specific options will be treated as an regexp e.g. =::*heading=, =::#custom-id=,
+  =::dedicated-target= and =::name= etc.
 
 For transcluding a specific paragraph, Org-transclusion relies on Org mode's [[https://orgmode.org/manual/Internal-Links.html#Internal-Links][dedicated-target]]. The target paragraph must be identifiable by a dedicated target with a =<<paragraph-id>>=: 
 

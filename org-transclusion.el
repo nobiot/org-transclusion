@@ -1003,12 +1003,16 @@ This is meant for Org-ID."
     (re-search-backward regexp nil t)))
 
 (defun org-transclusion-one-line (&optional line-num)
+  "Returns (BEG END) with the position of the first and last character of LINE-NUM,
+or the current line if LINE-NUM is nil, as BEG and END respectively."
   (save-excursion
     (when line-num
       (goto-line line-num))
     (list (line-beginning-position) (line-end-position))))
 
 (defun org-transclusion-paragraph-from-line (&optional line-num)
+  "Returns (BEG END) with the position of the beginning and end of a paragraph at LINE-NUM,
+or the current line if LINE-NUM is nil, as BEG and END respectively."
   (save-excursion
     (when line-num
       (goto-line line-num))
@@ -1087,20 +1091,20 @@ A non-nil SEARCH-OPTION return only the element, that the search matches."
 	    ;; if search-option is non-nil, return the match data.
 	    (search-option
 	     (cond
-      	      ;; When search-option is org-specific (begins "*" and "#" ) and this buffer is displaying an org file, call `org-link-search'.
-	      ((and org-p (string-match-p "^*.*\\|^#.*" search-option)) (org-link-search search-option))
+      	      ;; When this is an org file with no line search or regexp search call `org-link-search' with search option
+	      ((and org-p (not line-num) (not (string-match "/\\(.*\\)/" search-option))) (org-link-search search-string))
 	      ;; When search-option doesn't match, show error.
 	      ((zerop (how-many search-string)) (user-error "Nothing matched %s in %s" search-option (buffer-file-name)))
 	      ;; Or else, handle regexp with `org-transclusion-regexp-search-function'
 	      (t (save-match-data
-		   (funcall org-transclusion-regexp-search-function search-string)
+		   (funcall org-transclusion-regexp-search-function (concat search-string ".*"))
 		   (match-data))))))))
       (cond
        ;; If this is an org file and no search option, get the whole buffer.
        ((and org-p (not only-element))
 	(org-transclusion-content-get-org-buffer-or-element-at-point nil))
        ;; If this is an org file, no line-num and search option is org-specific, get only that element
-       ((and org-p (not line-num) (string-match-p "^*.*\\|^#.*" search-option))
+       ((and org-p (not line-num) (not (string-match "/\\(.*\\)/" search-option)))
 	(org-transclusion-content-get-org-buffer-or-element-at-point t))
        (t
 	;; If this is non-org file or an org file with other kind of search option.
