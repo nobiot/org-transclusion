@@ -401,7 +401,7 @@ You can customize the keymap with using `org-transclusion-map':
                (let* ((tc-type (plist-get tc-params :tc-type))
                       (tc-arg (plist-get tc-params :tc-arg))
                       (tc-fn (plist-get tc-params :tc-fn))
-                      (tc-payload (funcall tc-fn tc-arg))
+                      (tc-payload (funcall tc-fn tc-arg tc-type))
                       (tc-beg-mkr (plist-get tc-payload :tc-beg-mkr))
                       (tc-end-mkr (plist-get tc-payload :tc-end-mkr))
                       (tc-content (plist-get tc-payload :tc-content)))
@@ -994,13 +994,13 @@ This is meant for Org-ID."
 ;;                (org-transclusion-content-get-org-buffer-or-element-at-point 'only-element))
 ;;            (org-transclusion-content-get-org-buffer-or-element-at-point)))))))
 
-(defun org-transclusion-content-get-from-file-link (link &rest _arg)
+(defun org-transclusion-content-get-from-file-link (link &optional type)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from file LINK."
   (save-excursion
     ;; First visit the buffer and go to the relevant elelement if id or
     ;; search-option is present.
     (let* ((path (org-element-property :path link))
-	   (file-type (org-element-property :type link))
+	   (file-type (or type (org-element-property :type link)))
            (search-option (org-element-property :search-option link)))
       (if (file-exists-p path) ;; Check if file exists,
 	  (with-current-buffer (find-file-noselect path) ;; if yes, open file in another buffer
@@ -1082,13 +1082,13 @@ A non-nil SEARCH-OPTION return only the element, that the search matches."
 	    ;; content-range is the match-data
 	    (search-option
 	     (cond
-	     ;; When search-option doesn't match, show error.
-	     ((zerop (how-many search-option)) (user-error "Nothing matched %s in %s" search-option (buffer-file-name)))
-	     ;; When search-option is org-specific (begins "*" and "#" ) and this buffer is displaying an org file, call `org-link-search'.
-	     ((and org-p (string-match-p "^*.*\\|^#.*" search-option)) (org-link-search search-option))
-	     ;; Or else, handle regexp with `org-transclusion-regexp-search-function'
-	     (t (save-match-data (funcall org-transclusion-regexp-search-function search-option)
-				 (match-data))))))))
+      	      ;; When search-option is org-specific (begins "*" and "#" ) and this buffer is displaying an org file, call `org-link-search'.
+	      ((and org-p (string-match-p "^*.*\\|^#.*" search-option)) (org-link-search search-option))
+	      ;; When search-option doesn't match, show error.
+	      ((zerop (how-many search-option)) (user-error "Nothing matched %s in %s" search-option (buffer-file-name)))
+	      ;; Or else, handle regexp with `org-transclusion-regexp-search-function'
+	      (t (save-match-data (funcall org-transclusion-regexp-search-function search-option)
+				  (match-data))))))))
       (when line-num
 	(goto-line line-num))
       (if org-p
