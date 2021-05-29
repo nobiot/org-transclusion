@@ -401,7 +401,7 @@ You can customize the keymap with using `org-transclusion-map':
                (let* ((tc-type (plist-get tc-params :tc-type))
                       (tc-arg (plist-get tc-params :tc-arg))
                       (tc-fn (plist-get tc-params :tc-fn))
-                      (tc-payload (funcall tc-fn tc-arg tc-type))
+                      (tc-payload (funcall tc-fn tc-arg))
                       (tc-beg-mkr (plist-get tc-payload :tc-beg-mkr))
                       (tc-end-mkr (plist-get tc-payload :tc-end-mkr))
                       (tc-content (plist-get tc-payload :tc-content)))
@@ -927,19 +927,6 @@ Return nil if not found."
 	    :tc-arg link
 	    :tc-fn #'org-transclusion-content-get-from-file-link))))
 
-;; (defun org-transclusion-link-open-org-file-links (link)
-;;   "Return a list for Org file LINK object.
-;; Return nil if not found."
-;;   (when (org-transclusion--org-file-p (org-element-property :path link))
-;;     (list :tc-type "org-link"
-;;           :tc-arg link
-;;           :tc-fn #'org-transclusion-content-get-from-org-link)))
-
-;; (defun org-transclusion-link-open-other-file-links (link)
-;;   "Return a list for non-Org file LINK object.
-;; Return nil if not found."
-;;   (org-transclusion--get-custom-tc-params link))
-
 (defun org-transclusion-content-get-from-org-marker (marker)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from MARKER.
 This is meant for Org-ID."
@@ -955,30 +942,12 @@ This is meant for Org-ID."
              (org-transclusion-content-get-org-buffer-or-element-at-point 'only-element)))))
     (message "Nothing done. Cannot find marker for the ID.")))
 
-;; (defun org-transclusion-content-get-from-org-link (link &rest _arg)
-;;   "Return tc-beg-mkr, tc-end-mkr, tc-content from LINK."
-;;   (save-excursion
-;;     ;; First visit the buffer and go to the relevant elelement if id or
-;;     ;; search-option is present.
-;;     (let* ((path (org-element-property :path link))
-;;            (search-option (org-element-property :search-option link))
-;;            (buf (find-file-noselect path)))
-;;       (with-current-buffer buf
-;;         (org-with-wide-buffer
-;;          ;;(outline-show-all)
-;;          (if search-option
-;;              (progn
-;;                (org-link-search search-option)
-;;                (org-transclusion-content-get-org-buffer-or-element-at-point 'only-element))
-;;            (org-transclusion-content-get-org-buffer-or-element-at-point)))))))
-
-(defun org-transclusion-content-get-from-file-link (link &optional type)
+(defun org-transclusion-content-get-from-file-link (link)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from file LINK."
   (save-excursion
     ;; First visit the buffer and go to the relevant elelement if id or
     ;; search-option is present.
     (let* ((path (org-element-property :path link))
-	   (file-type (or type (org-element-property :type link)))
            (search-option (org-element-property :search-option link)))
       (if (file-exists-p path) ;; Check if file exists,
 	  (with-current-buffer (find-file-noselect path) ;; if yes, open file in another buffer
@@ -986,7 +955,7 @@ This is meant for Org-ID."
 	     (apply #'org-transclusion-content-get-buffer-or-element
 		      link
 		      ;; Start constructing arguments 
-		      (string-match-p "org-link" file-type) ;; Check if this is an org file.
+		      (org-transclusion--org-file-p path) ;; Check if this is an org file.
 		      search-option ;; Having search option implies non-nil only-element argument.
 		      (cond ((not search-option) nil) ;; No search options, invoke right away, yields whole buffer.
 			    ((string-match-p "\\`[0-9]+\\'" search-option) ;; Check if option is for line,
