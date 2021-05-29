@@ -607,12 +607,13 @@ This function is for non-Org text files."
     (src-ov . tc-ov)
 This function is for Org Links and IDs."
   (let* ((tc-elem (org-transclusion-get-enclosing-element))
-         (tc-beg (org-transclusion-element-get-beg-or-end 'beg tc-elem))
-         (tc-end (org-transclusion-element-get-beg-or-end 'end tc-elem))
+         (tc-beg (org-element-property :begin tc-elem))
+         (tc-end (org-element-property :end tc-elem))
          (src-range-mkrs (org-transclusion-live-sync-source-range-markers-get
                           tc-beg tc-end))
          (src-beg-mkr (car src-range-mkrs))
          (src-end-mkr (cdr src-range-mkrs))
+         (src-len (- src-end-mkr src-beg-mkr))
          (src-buf (marker-buffer src-beg-mkr))
          (src-content (org-transclusion-live-sync-source-content-get
                        src-beg-mkr src-end-mkr))
@@ -623,19 +624,19 @@ This function is for Org Links and IDs."
     (save-excursion
       (let* ((inhibit-read-only t)
              (props)
-             (beg-mkr (get-text-property tc-beg 'tc-beg-mkr))
-             (end-mkr (get-text-property tc-beg 'tc-end-mkr))
-             (beg (marker-position beg-mkr))
-             (end (marker-position end-mkr)))
-        (goto-char tc-beg)
+             (beg tc-beg)
+             (end tc-end))
+        (goto-char beg)
         (setq props (text-properties-at tc-beg))
         (delete-region tc-beg tc-end)
         (insert-and-inherit src-content)
-        (setq tc-end (point))
-        (add-text-properties tc-beg tc-end props)
-        (move-marker beg-mkr beg)
-        (move-marker end-mkr end)))
-    (setq tc-ov (org-transclusion-make-overlay tc-beg tc-end))
+        (setq end (point))
+        (add-text-properties beg end props)
+        ;; Need to move tc-end-mkr when it is for an single element
+        (let ((end-mkr (get-text-property beg 'tc-end-mkr)))
+          (when (< end-mkr end)
+            (move-marker end-mkr end)))
+        (setq tc-ov (org-transclusion-make-overlay beg end))))
     (cons src-ov tc-ov)))
 
 (defun org-transclusion-live-sync-exit-at-point ()
@@ -1198,8 +1199,8 @@ Return \"(src-beg-mkr . src-end-mkr)\"."
       (with-current-buffer src-buf
         (goto-char src-search-beg)
         (when-let* ((src-elem (org-transclusion-get-enclosing-element))
-                    (src-beg (org-transclusion-element-get-beg-or-end 'beg src-elem))
-                    (src-end (org-transclusion-element-get-beg-or-end 'end src-elem)))
+                    (src-beg (org-element-property :begin src-elem))
+                    (src-end (org-element-property :end src-elem)))
           (cons
            (set-marker (make-marker) src-beg)
            (set-marker (make-marker) src-end)))))))
@@ -1286,30 +1287,30 @@ paragraph."
             (user-error (format "Live sync cannot start here: point %d"
                                 (point)))))))))
 
-(defun org-transclusion-element-get-beg-or-end (beg-or-end element)
-  "Return appropriate beg-or-end of an element.
-This for when we need to find exactly the same sets of beg and
-end for source and transclusion elements (e.g. live-sync).
+;; (defun org-transclusion-element-get-beg-or-end (beg-or-end element)
+;;   "Return appropriate beg-or-end of an element.
+;; This for when we need to find exactly the same sets of beg and
+;; end for source and transclusion elements (e.g. live-sync).
 
-Call BEG-OR-END passing either 'beg or 'end and the ELEMENT in
-question.
+;; Call BEG-OR-END passing either 'beg or 'end and the ELEMENT in
+;; question.
 
-We are usually interested in :contents-begin and :contents-end,
-but some greater elements such as src-block do not have them.  In
-that case, we use :begin and :end.  The :end prop needs to be too
-large; we need to sutract :post-blank from it.  All these props
-are integers (points or number of blank lines.)"
-  (let ((val
-         (if (eq beg-or-end 'beg)
-             (if-let ((val (org-element-property :contents-begin element)))
-                 val
-               (org-element-property :begin element))
-           (when (eq beg-or-end 'end)
-             (if-let ((val (org-element-property :contents-end element)))
-                 val
-               (- (org-element-property :end element)
-                  (org-element-property :post-blank element)))))))
-    val))
+;; We are usually interested in :contents-begin and :contents-end,
+;; but some greater elements such as src-block do not have them.  In
+;; that case, we use :begin and :end.  The :end prop needs to be too
+;; large; we need to sutract :post-blank from it.  All these props
+;; are integers (points or number of blank lines.)"
+;;   (let ((val
+;;          (if (eq beg-or-end 'beg)
+;;              (if-let ((val (org-element-property :contents-begin element)))
+;;                  val
+;;                (org-element-property :begin element))
+;;            (when (eq beg-or-end 'end)
+;;              (if-let ((val (org-element-property :contents-end element)))
+;;                  val
+;;                (- (org-element-property :end element)
+;;                   (org-element-property :post-blank element)))))))
+;;     val))
 
 (defun org-transclusion-live-sync-after-delete-overlay (list)
   "Refresh the transclusion after live-sync has ended before
