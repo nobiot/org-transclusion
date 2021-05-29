@@ -822,6 +822,14 @@ It assumes that point is at a keyword."
 
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions for inserting content
+
+(define-obsolete-function-alias 'org-transclusion-link-open-org-file-links
+  'org-transclusion-open-file-link "Made obsolete since 0.1.2")
+(define-obsolete-function-alias 'org-transclusion-link-open-other-file-links
+  'org-transclusion-open-file-link "Made obsolete since 0.1.2")
+(define-obsolete-function-alias 'org-transclusion-content-get-from-org-link
+  'org-transclusion-content-get-from-file-link "Made obsolete since 0.1.2")
+
 (defun org-transclusion-content-insert (keyword-values type content src-beg-m src-end-m)
   "Add content and overlay.
 - KEYWORD-VALUES :: TBD
