@@ -195,6 +195,7 @@ Analogous to `org-edit-src-code'.")
   '(org-transclusion-keyword-get-value-active-p
     org-transclusion-keyword-get-value-link
     org-transclusion-keyword-get-value-level
+    org-transclusion-keyword-get-value-only-contents
     org-transclusion-keyword-get-current-indentation)
   "Define list of functions used to parse a #+transclude keyword.
 The functions take a single argument, the whole keyword value as
@@ -322,7 +323,7 @@ If you pass a `universal-argument', this function automatically triggers
 transclusion by calling `org-transclusion-add-at-point'."
   ;; check if at-point is a link file or id
   (interactive "P")
-  (let* ((context (org-element-lineage
+rest  (let* ((context (org-element-lineage
                    (org-element-context)'(link) t))
          (type (org-element-property :type context)))
     (when (or (string= type "file")
@@ -768,7 +769,7 @@ the settings revert to the user's setting prior to
 ;;;; Functions for Transclude Keyword
 ;;   #+transclude: t "~/path/to/file.org::1234"
 
-(defun org-transclusion-keyword-get-string-to-plist ()
+(defun org-transclusion-keywordo-get-string-to-plist ()
   "Return the \"#+transcldue:\" keyword's values if any at point."
   (save-excursion
     (beginning-of-line)
@@ -815,6 +816,15 @@ It needs to be set in
 `org-transclusion-get-keyword-values-functions'."
   (list :current-indentation (current-indentation)))
 
+(defun org-transclusion-keyword-get-value-only-contents (string)
+  "It is a utility function used converting a keyword STRING to plist.
+It is meant to be used by `org-transclusion-get-string-to-plist'.
+It needs to be set in
+`org-transclusion-get-keyword-values-functions'."
+  (when (string-match ":only-contents +\\(\"?\\w*\"?\\)" string)
+    (list :only-contents
+          (org-transclusion--not-nil (org-strip-quotes (match-string 1 string))))))
+
 (defun org-transclusion-keyword-remove ()
   "Remove the keyword element at point.
 It assumes that point is at a keyword."
@@ -829,6 +839,7 @@ It assumes that point is at a keyword."
   (let ((active-p (plist-get plist :active-p))
         (link (plist-get plist :link))
         (level (plist-get plist :level))
+        (only-contents (plist-get plist :only-contents))
         (custom-properties-string nil))
     (setq custom-properties-string
           (dolist (fn org-transclusion-keyword-plist-to-string-functions
@@ -840,6 +851,7 @@ It assumes that point is at a keyword."
             (symbol-name active-p)
             " " link
             (when level (format " :level %d" level))
+            (when only-contents (format " :only-contents %s" only-contents))
             custom-properties-string
             "\n")))
 
@@ -933,7 +945,7 @@ This is the default one"
     ;; Return the temp-buffer's string
     (buffer-string)))
 
-(defun org-transclusion-add-at-point-org-id (link &rest _plist)
+(defun org-transclusion-add-at-point-org-id (link plist)
   "Return a list for Org-ID LINK object.
 Return nil if not found."
   (when (string= "id" (org-element-property :type link))
@@ -942,58 +954,64 @@ Return nil if not found."
            (mkr (ignore-errors (org-id-find id t))))
       (if mkr
           (list :tc-type "org-id"
-                :tc-args (list mkr)
+                :tc-args (list mkr plist)
                 :tc-fn #'org-transclusion-content-from-org-marker)
         (message (format "No transclusion done for this ID. Ensure it works at point %d, line %d"
                          (point) (org-current-line)))
         nil))))
 
-(defun org-transclusion-add-at-point-org-file-links (link &rest _plist)
+(defun org-transclusion-add-at-point-org-file-links (link plist)
   "Return a list for Org file LINK object.
 Return nil if not found."
   (when (org-transclusion--org-file-p (org-element-property :path link))
     (list :tc-type "org-link"
-          :tc-args (list link)
+          :tc-args (list link plist)
           :tc-fn #'org-transclusion-content-from-org-link)))
 
-(defun org-transclusion-add-at-point-other-file-links (link &rest _plist)
+(defun org-transclusion-add-at-point-other-file-links (link plist)
   "Return a list for non-Org file LINK object.
 Return nil if not found."
   (list :tc-type "others-default"
-        :tc-args (list link)
+        :tc-args (list link plist)
         :tc-fn #'org-transclusion-content-from-others-default))
 
-(defun org-transclusion-content-from-org-marker (marker)
+(defun org-transclusion-content-from-org-marker (marker plist)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from MARKER.
 This is meant for Org-ID."
   (if (and marker (marker-buffer marker)
            (buffer-live-p (marker-buffer marker)))
       (progn
-        (with-current-buffer (marker-buffer marker)
-          (org-with-wide-buffer
-           ;;(outline-show-all)
-           (goto-char marker)
-           (if (org-before-first-heading-p)
-               (org-transclusion-content-get-org-buffer-or-element-at-point)
-             (org-transclusion-content-get-org-buffer-or-element-at-point 'only-element)))))
+        (let ((only-contents (plist-get plist :only-contents)))
+          (with-current-buffer (marker-buffer marker)
+            (org-with-wide-buffer
+             ;;(outline-show-all)
+             (goto-char marker)
+             (if (org-before-first-heading-p)
+                 (org-transclusion-content-get-org-buffer-or-element-at-point
+                  nil only-contents)
+               (org-transclusion-content-get-org-buffer-or-element-at-point
+                'only-element only-contents))))))
     (message "Nothing done. Cannot find marker for the ID.")))
 
-(defun org-transclusion-content-from-org-link (link &rest _plist)
+(defun org-transclusion-content-from-org-link (link plist)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from LINK."
   (save-excursion
     ;; First visit the buffer and go to the relevant elelement if id or
     ;; search-option is present.
     (let* ((path (org-element-property :path link))
            (search-option (org-element-property :search-option link))
-           (buf (find-file-noselect path)))
+           (buf (find-file-noselect path))
+           (only-contents (plist-get plist :only-contents)))
       (with-current-buffer buf
         (org-with-wide-buffer
          ;;(outline-show-all)
          (if search-option
              (progn
                (org-link-search search-option)
-               (org-transclusion-content-get-org-buffer-or-element-at-point 'only-element))
-           (org-transclusion-content-get-org-buffer-or-element-at-point)))))))
+               (org-transclusion-content-get-org-buffer-or-element-at-point
+                'only-element only-contents))
+           (org-transclusion-content-get-org-buffer-or-element-at-point
+            nil only-contents)))))))
 
 (defun org-transclusion-content-get-org-buffer-or-element-at-point (&optional only-element
                                                                               only-contents
@@ -1071,7 +1089,7 @@ Assume you are at the beginning of the org element to transclude."
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions to support non-Org-mode link types
 
-(defun org-transclusion-content-from-others-default (link &rest _plist)
+(defun org-transclusion-content-from-others-default (link _plist)
   "Use Org LINK element to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR.
 TODO need to handle when the file does not exist."
   (let* ((path (org-element-property :path link))
