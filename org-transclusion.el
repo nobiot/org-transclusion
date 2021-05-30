@@ -192,9 +192,7 @@ Analogous to `org-edit-src-code'.")
                                                           tc-end-mkr
                                                           tc-src-beg-mkr
                                                           tc-pair
-                                                          tc-orig-keyword
-                                                          org-transclusion-text-beg-mkr
-                                                          org-transclusion-text-end-mkr))
+                                                          tc-orig-keyword))
 
 (defvar org-transclusion-yank-excluded-line-prefix nil)
 (defvar org-transclusion-yank-excluded-wrap-prefix nil)
