@@ -183,10 +183,10 @@ Analogous to `org-edit-src-code'.")
 (defvar org-transclusion-yank-excluded-line-prefix nil)
 (defvar org-transclusion-yank-excluded-wrap-prefix nil)
 
-(defvar org-transclusion-link-open-functions
-  '(org-transclusion-link-open-org-id
-    org-transclusion-link-open-org-file-links
-    org-transclusion-link-open-other-file-links))
+(defvar org-transclusion-add-at-point-functions
+  '(org-transclusion-add-at-point-org-id
+    org-transclusion-add-at-point-org-file-links
+    org-transclusion-add-at-point-other-file-links))
 
 (defvar org-transclusion-content-format-functions
   '(org-transclusion-content-format))
@@ -380,7 +380,7 @@ You can customize the keymap with using `org-transclusion-map':
                     (string= "file" type)))
            (let ((tc-params))
              (setq tc-params (run-hook-with-args-until-success
-                              'org-transclusion-link-open-functions link keyword-plist))
+                              'org-transclusion-add-at-point-functions link keyword-plist))
              (if (not tc-params)
                  (progn (message (format
                                   "No transclusion added. Check the link at point %d, line %d"
@@ -930,7 +930,7 @@ This is the default one"
     ;; Return the temp-buffer's string
     (buffer-string)))
 
-(defun org-transclusion-link-open-org-id (link &rest _plist)
+(defun org-transclusion-add-at-point-org-id (link &rest _plist)
   "Return a list for Org-ID LINK object.
 Return nil if not found."
   (when (string= "id" (org-element-property :type link))
@@ -940,27 +940,27 @@ Return nil if not found."
       (if mkr
           (list :tc-type "org-id"
                 :tc-args (list mkr)
-                :tc-fn #'org-transclusion-content-get-from-org-marker)
+                :tc-fn #'org-transclusion-content-from-org-marker)
         (message (format "No transclusion done for this ID. Ensure it works at point %d, line %d"
                          (point) (org-current-line)))
         nil))))
 
-(defun org-transclusion-link-open-org-file-links (link &rest _plist)
+(defun org-transclusion-add-at-point-org-file-links (link &rest _plist)
   "Return a list for Org file LINK object.
 Return nil if not found."
   (when (org-transclusion--org-file-p (org-element-property :path link))
     (list :tc-type "org-link"
           :tc-args (list link)
-          :tc-fn #'org-transclusion-content-get-from-org-link)))
+          :tc-fn #'org-transclusion-content-from-org-link)))
 
-(defun org-transclusion-link-open-other-file-links (link &rest _plist)
+(defun org-transclusion-add-at-point-other-file-links (link &rest _plist)
   "Return a list for non-Org file LINK object.
 Return nil if not found."
   (list :tc-type "others-default"
         :tc-args (list link)
-        :tc-fn #'org-transclusion-add-others-default))
+        :tc-fn #'org-transclusion-content-from-others-default))
 
-(defun org-transclusion-content-get-from-org-marker (marker)
+(defun org-transclusion-content-from-org-marker (marker)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from MARKER.
 This is meant for Org-ID."
   (if (and marker (marker-buffer marker)
@@ -975,7 +975,7 @@ This is meant for Org-ID."
              (org-transclusion-content-get-org-buffer-or-element-at-point 'only-element)))))
     (message "Nothing done. Cannot find marker for the ID.")))
 
-(defun org-transclusion-content-get-from-org-link (link &rest _arg)
+(defun org-transclusion-content-from-org-link (link &rest _plist)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from LINK."
   (save-excursion
     ;; First visit the buffer and go to the relevant elelement if id or
@@ -1076,7 +1076,7 @@ to include the first section."
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions to support non-Org-mode link types
 
-(defun org-transclusion-add-others-default (link _plist)
+(defun org-transclusion-content-from-others-default (link &rest _plist)
   "Use Org LINK element to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR.
 TODO need to handle when the file does not exist."
   (let* ((path (org-element-property :path link))

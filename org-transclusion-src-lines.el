@@ -3,8 +3,8 @@
 ;;; Setting up the extension
 
 ;; Add a new transclusion type
-(add-hook 'org-transclusion-link-open-functions
-          #'org-transclusion-link-open-src-lines)
+(add-hook 'org-transclusion-add-at-point-functions
+          #'org-transclusion-add-at-point-src-lines)
 ;; Keyword values
 (add-hook 'org-transclusion-get-keyword-values-functions
           #'org-transclusion-keyword-get-value-lines)
@@ -26,16 +26,16 @@
 
 ;;; Functions
 
-(defun org-transclusion-link-open-src-lines (link plist)
+(defun org-transclusion-add-at-point-src-lines (link plist)
   "Check if \"src-lines\" can be used for the LINK.
 Returns non-nil if check is pass."
   (when (or (plist-get plist :lines)
             (plist-get plist :src))
     (list :tc-type "src-lines"
           :tc-args (list link plist)
-          :tc-fn #'org-transclusion-add-src-lines)))
+          :tc-fn #'org-transclusion-content-from-src-lines)))
 
-(defun org-transclusion-add-src-lines (link plist)
+(defun org-transclusion-content-from-src-lines (link plist)
   "Use PATH to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR.
 TODO need to handle when the file does not exist.  The logic to
 pars n-m for :lines is taken from
