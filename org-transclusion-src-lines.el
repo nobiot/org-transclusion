@@ -137,9 +137,6 @@ Currently it only re-aligns table with links in the content."
   (when (string= type "src-lines")
     (with-temp-buffer
       (insert content)
-      (put-text-property (point-min) (point-max)
-                         'tc-live-sync-buffers
-                         'org-transclusion-live-sync-buffers-get-src-lines)
       ;; Return the temp-buffer's string
       (buffer-string))))
 
