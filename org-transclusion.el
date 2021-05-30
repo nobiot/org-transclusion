@@ -516,21 +516,25 @@ remain in the source buffer for further editing."
     (org-transclusion-refresh-at-point))
   (let* ((src-buf (overlay-buffer (get-text-property (point) 'tc-pair)))
          (tc-elem (org-element-at-point))
-         (tc-beg (org-transclusion-element-get-beg-or-end 'beg tc-elem))
-         (tc-end (org-transclusion-element-get-beg-or-end 'end tc-elem))
+         (tc-beg (org-element-property :begin tc-elem))
+         (tc-end (org-element-property :end tc-elem))
          (src-beg-mkr
           (or (org-transclusion-find-source-marker tc-beg tc-end)
               (get-text-property (point) 'tc-src-beg-mkr)))
-         (buf (current-buffer)))
+         (buf (current-buffer))
+         (pos (point)))
     (if (not src-buf)
         (user-error (format "No paired source buffer found here: at %d" (point)))
       (unwind-protect
           (progn
             (when (display-buffer src-buf
                                   org-transclusion-open-source-display-action-list)
+              (pop-to-buffer src-buf)
               (goto-char src-beg-mkr)
               (recenter-top-bottom)))
-        (unless arg (pop-to-buffer buf))))))
+        (unless arg
+          (progn (pop-to-buffer buf)
+                 (goto-char pos)))))))
 
 (defun org-transclusion-live-sync-start-at-point ()
   "Put overlay for start live sync edit on the transclusion at point.
