@@ -80,20 +80,6 @@ transcluded. Default is nil."
   :type 'boolean
   :group 'org-transclusion)
 
-(defcustom org-transclusion-add-at-point-functions (list "others-default")
-  "Define list of link types that org-tranclusion supports.
-In addtion to a element in the list, there must be two
-corresponding functions with specific names
-
-The functions must conform to take specific arguments, and to returnbvalues.
-
-org-transclusion-match-<org-id>
-org-transclusion-add-<org-id>
-
-See the functions delivered within org-tranclusion for the API signatures."
-  :type '(repeat string)
-  :group 'org-transclusion)
-
 (defcustom org-transclusion-open-source-display-action-list '(nil . nil)
   "Action list used to open source buffer to display.
 
@@ -944,7 +930,7 @@ This is the default one"
     ;; Return the temp-buffer's string
     (buffer-string)))
 
-(defun org-transclusion-link-open-org-id (link &rest _)
+(defun org-transclusion-link-open-org-id (link &rest _plist)
   "Return a list for Org-ID LINK object.
 Return nil if not found."
   (when (string= "id" (org-element-property :type link))
@@ -959,7 +945,7 @@ Return nil if not found."
                          (point) (org-current-line)))
         nil))))
 
-(defun org-transclusion-link-open-org-file-links (link &rest _)
+(defun org-transclusion-link-open-org-file-links (link &rest _plist)
   "Return a list for Org file LINK object.
 Return nil if not found."
   (when (org-transclusion--org-file-p (org-element-property :path link))
@@ -967,10 +953,12 @@ Return nil if not found."
           :tc-args (list link)
           :tc-fn #'org-transclusion-content-get-from-org-link)))
 
-(defun org-transclusion-link-open-other-file-links (link &rest plist)
+(defun org-transclusion-link-open-other-file-links (link &rest _plist)
   "Return a list for non-Org file LINK object.
 Return nil if not found."
-  (org-transclusion-get-custom-tc-params link plist))
+  (list :tc-type "others-default"
+        :tc-args (list link)
+        :tc-fn #'org-transclusion-add-others-default))
 
 (defun org-transclusion-content-get-from-org-marker (marker)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from MARKER.
@@ -1088,32 +1076,6 @@ to include the first section."
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions to support non-Org-mode link types
 
-(defun org-transclusion-get-custom-tc-params (link plist)
-  "Return PARAMS with TC-FN if link type is supported for LINK object."
-  (let ((types org-transclusion-add-at-point-functions)
-        (params nil)
-        (path nil))
-    (setq path (org-element-property :path link))
-    (while (and (not params)
-                types)
-      (let* ((type (pop types))
-             (match-fn
-              (progn (intern (concat "org-transclusion-match-" type))))
-             (add-fn
-              (progn (intern (concat "org-transclusion-add-" type)))))
-        (when (and (functionp match-fn)
-                   (apply match-fn path plist)
-                   (functionp add-fn))
-          ;; For tc-args, push is used to get LINK to be the first element of
-          ;; the list of arguments passed
-          (setq params (list :tc-type type :tc-fn add-fn :tc-args (push link plist))))))
-    params))
-
-(defun org-transclusion-match-others-default (_link _plist)
-  "Check if `others-default' can be used for the LINK.
-Returns non-nil if check is pass."
-  t)
-
 (defun org-transclusion-add-others-default (link _plist)
   "Use Org LINK element to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR.
 TODO need to handle when the file does not exist."
@@ -1210,17 +1172,6 @@ string \"nil\", return symbol t."
 (defun org-transclusion--within-transclusion-p ()
   "Return t if the current point is within a tranclusion overlay."
   (when (get-char-property (point) 'tc-id) t))
-
-;; Looks like this is not needed for the purpose.
-;; (defun org-transclusion--make-marker (point)
-;;   "Return marker of the insertion-type t for POINT.
-;; The insertion-type is important in order for the translusion
-;; end marker is correctly set.  This fixes the problem of
-;; transclude keyword not correctly removed when the keywords are
-;; placed without a blank line."
-;;   (let ((marker (set-marker (make-marker) point)))
-;;     (set-marker-insertion-type marker t)
-;;     marker))
 
 (defun org-transclusion-propertize-transclusion ()
   "."
@@ -1342,31 +1293,6 @@ paragraph."
           (if context context
             (user-error (format "Live sync cannot start here: point %d"
                                 (point)))))))))
-
-;; (defun org-transclusion-element-get-beg-or-end (beg-or-end element)
-;;   "Return appropriate beg-or-end of an element.
-;; This for when we need to find exactly the same sets of beg and
-;; end for source and transclusion elements (e.g. live-sync).
-
-;; Call BEG-OR-END passing either 'beg or 'end and the ELEMENT in
-;; question.
-
-;; We are usually interested in :contents-begin and :contents-end,
-;; but some greater elements such as src-block do not have them.  In
-;; that case, we use :begin and :end.  The :end prop needs to be too
-;; large; we need to sutract :post-blank from it.  All these props
-;; are integers (points or number of blank lines.)"
-;;   (let ((val
-;;          (if (eq beg-or-end 'beg)
-;;              (if-let ((val (org-element-property :contents-begin element)))
-;;                  val
-;;                (org-element-property :begin element))
-;;            (when (eq beg-or-end 'end)
-;;              (if-let ((val (org-element-property :contents-end element)))
-;;                  val
-;;                (- (org-element-property :end element)
-;;                   (org-element-property :post-blank element)))))))
-;;     val))
 
 (defun org-transclusion-live-sync-after-delete-overlay (list)
   "Refresh the transclusion after live-sync has ended before

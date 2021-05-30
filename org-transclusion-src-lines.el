@@ -3,7 +3,8 @@
 ;;; Setting up the extension
 
 ;; Add a new transclusion type
-(push "src-lines" org-transclusion-add-at-point-functions)
+(add-hook 'org-transclusion-link-open-functions
+          #'org-transclusion-link-open-src-lines)
 ;; Keyword values
 (add-hook 'org-transclusion-get-keyword-values-functions
           #'org-transclusion-keyword-get-value-lines)
@@ -25,12 +26,14 @@
 
 ;;; Functions
 
-(defun org-transclusion-match-src-lines (_link plist)
+(defun org-transclusion-link-open-src-lines (link plist)
   "Check if \"src-lines\" can be used for the LINK.
 Returns non-nil if check is pass."
   (when (or (plist-get plist :lines)
             (plist-get plist :src))
-    t))
+    (list :tc-type "src-lines"
+          :tc-args (list link plist)
+          :tc-fn #'org-transclusion-add-src-lines)))
 
 (defun org-transclusion-add-src-lines (link plist)
   "Use PATH to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR.
