@@ -393,8 +393,7 @@ You can customize the keymap with using `org-transclusion-map':
                       (tc-payload (apply tc-fn tc-args))
                       (tc-beg-mkr (plist-get tc-payload :tc-beg-mkr))
                       (tc-end-mkr (plist-get tc-payload :tc-end-mkr))
-                      (tc-content (plist-get tc-payload :tc-content))
-                      (tc-fns     (plist-get tc-payload :tc-fns)))
+                      (tc-content (plist-get tc-payload :tc-content)))
                  (if (or (string= tc-content "")
                          (eq tc-content nil))
                      (progn (message
@@ -408,7 +407,7 @@ No content is found through the link at point %d, line %d"
                              (end-of-line) (insert-char ?\n)
                              (org-transclusion-content-insert
                               keyword-plist tc-type tc-content
-                              tc-beg-mkr tc-end-mkr tc-fns)
+                              tc-beg-mkr tc-end-mkr)
                              (delete-char 1)
                              t) ;; return t for "when caluse"
                        ;; Remove keyword after having transcluded content
@@ -769,7 +768,7 @@ the settings revert to the user's setting prior to
 ;;;; Functions for Transclude Keyword
 ;;   #+transclude: t "~/path/to/file.org::1234"
 
-(defun org-transclusion-keywordo-get-string-to-plist ()
+(defun org-transclusion-keyword-get-string-to-plist ()
   "Return the \"#+transcldue:\" keyword's values if any at point."
   (save-excursion
     (beginning-of-line)
@@ -858,14 +857,13 @@ It assumes that point is at a keyword."
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions for inserting content
 
-(defun org-transclusion-content-insert (keyword-values type content src-beg-m src-end-m fns)
+(defun org-transclusion-content-insert (keyword-values type content src-beg-m src-end-m)
   "Add content and overlay.
 - KEYWORD-VALUES :: TBD
 - TYPE :: TBD
 - CONTENT :: TBD
 - SRC-BEG-M :: TBD
-- SRC-END-M :: TBD
-- Fns :: TBD"
+- SRC-END-M :: TBD"
   (let* ((tc-id (substring (org-id-uuid) 0 8))
          (sbuf (marker-buffer src-beg-m)) ;source buffer
          (beg (point)) ;; before the text is inserted
@@ -874,7 +872,6 @@ It assumes that point is at a keyword."
          (end-mkr)
          (ov-src) ;; source-buffer
          (tc-pair))
-    ;;   (format-fn (plist-get fns :content-format)))
     (when (org-kill-is-subtree-p content)
       (let ((level (plist-get keyword-values :level)))
         (with-temp-buffer
