@@ -621,7 +621,6 @@ This function is for Org Links and IDs."
                             tc-beg tc-end))
            (src-beg-mkr (car src-range-mkrs))
            (src-end-mkr (cdr src-range-mkrs))
-           (src-len (- src-end-mkr src-beg-mkr))
            (src-buf (marker-buffer src-beg-mkr))
            (src-content (org-transclusion-live-sync-source-content-get
                          src-beg-mkr src-end-mkr))
