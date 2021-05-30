@@ -220,6 +220,10 @@ from the string.")
 (defvar org-transclusion-open-source-get-marker-functions
   '(org-transclusion-open-source-get-marker))
 
+(defvar org-transclusion-live-sync-buffers-get-functions
+  '(org-transclusion-live-sync-buffers-get-org
+    org-transclusion-live-sync-buffers-get-others-default))
+
 (defvar org-transclusion-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "e") #'org-transclusion-live-sync-start-at-point)
@@ -601,17 +605,11 @@ type.
 
 Assume this function is called with the point on an
 org-transclusion overlay."
-  (let ((live-sync-fn (get-text-property (point) 'tc-live-sync-buffers))
-        (type (get-text-property (point) 'tc-type)))
-    (cond
-     (live-sync-fn
-      (funcall live-sync-fn))
-     ;; Org Link and ID
-     ((string-prefix-p "org" type 'ignore-case)
-      (org-transclusion-live-sync-buffers-get-org))
-     (t (org-transclusion-live-sync-buffers-get-others-default)))))
+  (let ((type (get-text-property (point) 'tc-type)))
+    (run-hook-with-args-until-success
+     'org-transclusion-live-sync-buffers-get-functions type)))
 
-(defun org-transclusion-live-sync-buffers-get-others-default ()
+(defun org-transclusion-live-sync-buffers-get-others-default (_type)
   "Return cons cell of overlays for source and trasnclusion.
     (src-ov . tc-ov)
 This function is for non-Org text files."
@@ -627,56 +625,57 @@ This function is for non-Org text files."
                       (get-text-property (point) 'tc-end-mkr))))
     (cons src-ov tc-ov)))
 
-(defun org-transclusion-live-sync-buffers-get-org ()
+(defun org-transclusion-live-sync-buffers-get-org (type)
   "Return cons cell of overlays for source and trasnclusion.
     (src-ov . tc-ov)
 This function is for Org Links and IDs."
-  (let* ((tc-elem (org-transclusion-get-enclosing-element))
-         (tc-beg (org-element-property :begin tc-elem))
-         (tc-end (org-element-property :end tc-elem))
-         (src-range-mkrs (org-transclusion-live-sync-source-range-markers-get
-                          tc-beg tc-end))
-         (src-beg-mkr (car src-range-mkrs))
-         (src-end-mkr (cdr src-range-mkrs))
-         (src-len (- src-end-mkr src-beg-mkr))
-         (src-buf (marker-buffer src-beg-mkr))
-         (src-content (org-transclusion-live-sync-source-content-get
-                       src-beg-mkr src-end-mkr))
-         (src-ov (text-clone-make-overlay
-                  src-beg-mkr src-end-mkr src-buf))
-         (tc-ov))
-    ;; Replace the region as a copy of the src-overlay region
-    (save-excursion
-      (let* ((inhibit-read-only t)
-             (props)
-             (beg tc-beg)
-             (end tc-end)
-             ;; Only applicable if there is another transclusion
-             ;; immediately before the one starting to live-sync
-             (end-mkr-at-beg
-              (get-text-property (1- beg) 'tc-end-mkr)))
-        (goto-char beg)
-        (setq props (text-properties-at tc-beg))
-        (delete-region tc-beg tc-end)
-        ;; Before marker is needed
-        ;; for an adjacent transclusion
-        (insert-before-markers src-content)
-        (setq end (point))
-        (add-text-properties beg end props)
-        ;; Need to move marker that indicate the range of transclusions (not
-        ;; live-sync range) when it is for an single element like paragraph
-        (let ((beg-mkr (get-text-property beg 'tc-beg-mkr))
-              (end-mkr (get-text-property beg 'tc-end-mkr)))
-          (when (> beg-mkr beg)
-            (move-marker beg-mkr beg))
-          (when (< end-mkr end)
-            (move-marker end-mkr end))
-          ;; deal with the other transclusion immediately before this.
-          (when (and end-mkr-at-beg
-                     (not (eq end-mkr-at-beg end-mkr)))
-            (move-marker end-mkr-at-beg beg)))
-        (setq tc-ov (org-transclusion-make-overlay beg end))))
-    (cons src-ov tc-ov)))
+  (when (string-prefix-p "org" type 'ignore-case)
+    (let* ((tc-elem (org-transclusion-get-enclosing-element))
+           (tc-beg (org-element-property :begin tc-elem))
+           (tc-end (org-element-property :end tc-elem))
+           (src-range-mkrs (org-transclusion-live-sync-source-range-markers-get
+                            tc-beg tc-end))
+           (src-beg-mkr (car src-range-mkrs))
+           (src-end-mkr (cdr src-range-mkrs))
+           (src-len (- src-end-mkr src-beg-mkr))
+           (src-buf (marker-buffer src-beg-mkr))
+           (src-content (org-transclusion-live-sync-source-content-get
+                         src-beg-mkr src-end-mkr))
+           (src-ov (text-clone-make-overlay
+                    src-beg-mkr src-end-mkr src-buf))
+           (tc-ov))
+      ;; Replace the region as a copy of the src-overlay region
+      (save-excursion
+        (let* ((inhibit-read-only t)
+               (props)
+               (beg tc-beg)
+               (end tc-end)
+               ;; Only applicable if there is another transclusion
+               ;; immediately before the one starting to live-sync
+               (end-mkr-at-beg
+                (get-text-property (1- beg) 'tc-end-mkr)))
+          (goto-char beg)
+          (setq props (text-properties-at tc-beg))
+          (delete-region tc-beg tc-end)
+          ;; Before marker is needed
+          ;; for an adjacent transclusion
+          (insert-before-markers src-content)
+          (setq end (point))
+          (add-text-properties beg end props)
+          ;; Need to move marker that indicate the range of transclusions (not
+          ;; live-sync range) when it is for an single element like paragraph
+          (let ((beg-mkr (get-text-property beg 'tc-beg-mkr))
+                (end-mkr (get-text-property beg 'tc-end-mkr)))
+            (when (> beg-mkr beg)
+              (move-marker beg-mkr beg))
+            (when (< end-mkr end)
+              (move-marker end-mkr end))
+            ;; deal with the other transclusion immediately before this.
+            (when (and end-mkr-at-beg
+                       (not (eq end-mkr-at-beg end-mkr)))
+              (move-marker end-mkr-at-beg beg)))
+          (setq tc-ov (org-transclusion-make-overlay beg end))))
+      (cons src-ov tc-ov))))
 
 (defun org-transclusion-live-sync-exit-at-point ()
   "Exit live-sync at point.

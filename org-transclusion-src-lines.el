@@ -1,5 +1,7 @@
 ;;;-*- lexical-binding: t; -*-
+;; Add a new transclusion type
 (push "src-lines" org-transclusion-add-at-point-functions)
+;; Keyword values
 (add-hook 'org-transclusion-get-keyword-values-functions
           #'org-transclusion-keyword-get-value-lines)
 (add-hook 'org-transclusion-get-keyword-values-functions
@@ -8,10 +10,15 @@
           #'org-transclusion-keyword-get-value-src-options)
 (add-hook 'org-transclusion-keyword-plist-to-string-functions
           #'org-transclusion-keyword-plist-to-string-src-lines)
+;; Transclusion content formatting
 (add-hook 'org-transclusion-content-format-functions
           #'org-transclusion-content-format-src-lines)
+;; Open source buffer
 (add-hook 'org-transclusion-open-source-get-marker-functions
           #'org-transclusion-open-source-get-marker-src-lines)
+;; Live-sync
+(add-hook 'org-transclusion-live-sync-buffers-get-functions
+          #'org-transclusion-live-sync-buffers-get-src-lines)
 
 (defun org-transclusion--match-src-lines (_link plist)
   "Check if \"src-lines\" can be used for the LINK.
@@ -131,13 +138,13 @@ Currently it only re-aligns table with links in the content."
       ;; Return the temp-buffer's string
       (buffer-string))))
 
-(defun org-transclusion-live-sync-buffers-get-src-lines ()
+(defun org-transclusion-live-sync-buffers-get-src-lines (type)
   "Return cons cell of overlays for source and trasnclusion.
     (src-ov . tc-ov)
 This function is for non-Org text files."
   ;; Get the transclusion source's overlay but do not directly use it; it is
   ;; needed after exiting live-sync, which deletes live-sync overlays.
- (when (string= "src-lines" (get-text-property (point) 'tc-type))
+ (when (string= "src-lines" type)
    (when electric-indent-mode
      (user-error "No live sync for src-code block when `electric-indent-mode' is on"))
    (let* ((tc-pair (get-text-property (point) 'tc-pair))
