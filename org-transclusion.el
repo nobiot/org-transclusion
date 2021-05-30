@@ -991,7 +991,9 @@ This is meant for Org-ID."
                (org-transclusion-content-get-org-buffer-or-element-at-point 'only-element))
            (org-transclusion-content-get-org-buffer-or-element-at-point)))))))
 
-(defun org-transclusion-content-get-org-buffer-or-element-at-point (&optional only-element)
+(defun org-transclusion-content-get-org-buffer-or-element-at-point (&optional only-element
+                                                                              only-contents
+                                                                              exclude-elements)
   "Return content for transclusion.
 When ONLY-ELEMENT is t, only the element.  If nil, the whole buffer.
 Assume you are at the beginning of the org element to transclude."
@@ -1004,26 +1006,25 @@ Assume you are at the beginning of the org element to transclude."
       (when (and (string= "target" type)
                  (string= "paragraph" (org-element-type (org-element-property :parent el))))
         (setq el (org-element-property :parent el)))
-      (let ((no-recursion '(headline section))
-            (tc-content)(tc-beg-mkr)(tc-end-mkr)(tree)(obj))
-        (when only-element (push type no-recursion))
+      (let (tc-content tc-beg-mkr tc-end-mkr tree obj)
         (setq tree (if (not only-element)
                        (org-element-parse-buffer)
                      (org-element--parse-elements
                       (org-element-property :begin el)
                       (org-element-property :end el)
                       nil nil 'object nil (list 'tc-paragraph nil))))
-        (setq obj (org-element-map
-                      tree
-                      org-element-all-elements
-                    ;; Map all the elements (not objects).  But for the
-                    ;; output (transcluded copy) do not do recursive for
-                    ;; headline and section (as to avoid duplicate
-                    ;; sections; headlines contain section) Want to remove
-                    ;; the elements of the types included in the list from
-                    ;; the AST.
-                    #'org-transclusion-content-filter-org-buffer
-                    nil nil no-recursion nil))
+        (setq obj tree)
+        ;; Apply `org-transclusion-exclude-elements'
+        (setq obj (org-element-map obj org-element-all-elements
+                    #'org-transclusion-content-filter-org-buffer-default
+                    nil nil org-element-all-elements nil))
+        (setq obj (org-element-map obj org-element-all-elements
+                    #'org-transclusion-content-filter-org-first-section
+                    nil nil org-element-all-elements nil))
+        (when only-contents
+          (setq obj (org-element-map obj org-element-all-elements
+                      #'org-transclusion-content-filter-only-contents
+                      nil nil '(section) nil)))
         (setq tc-content (org-element-interpret-data obj))
         (setq tc-beg-mkr (progn (goto-char
                                  (if only-element (org-element-property :begin el)
@@ -1037,40 +1038,31 @@ Assume you are at the beginning of the org element to transclude."
               :tc-beg-mkr tc-beg-mkr
               :tc-end-mkr tc-end-mkr)))))
 
-(defun org-transclusion-content-filter-org-buffer (data)
-  "Filter DATA before transcluding its content.
-DATA is meant to be a parse tree for ‘org-element.el'.
+(defun org-transclusion-content-filter-org-buffer-default (data)
+  "."
+  (org-element-map data org-transclusion-exclude-elements
+    (lambda (d) (org-element-extract-element d)))
+  data)
 
-This function is used within
-`org-transclusion-content-get-org-buffer-or-element-at-point'.
+(defun org-transclusion-content-filter-org-first-section (data)
+  "."
+  ;; This condition is meant to filter out the first section; that is,
+  ;; the part before the first headline.  The DATA should have the type
+  ;; `org-data' by default, with one exception.  I put `tc-paragraph'
+  ;; as the type when a paragraph is parased (via dedicated target).
+  ;; In this case, the whole DATA should be returned.
+  ;; Sections are included in the headlines Thies means that if there
+  ;; is no headline, nothing gets transcluded.
+  (if (and (memq (org-element-type data) '(section))
+             (not org-transclusion-include-first-section))
+      nil
+    data))
 
-Use `org-transclusion-exclude-elements' variable to specify which
-elements to remove from the transcluded copy.
-
-The \"first section\" (the part before the first headline) is by
-default excluded -- this is the intended behavior.
-
-Use `org-transclusion-include-first-section' customizing variable
-to include the first section."
-  (cond ((and (memq (org-element-type data) '(section))
-              (not (eq 'tc-paragraph (org-element-type (org-element-property :parent data)))))
-         ;; This condition is meant to filter out the first section; that is,
-         ;; the part before the first headline.  The DATA should have the type
-         ;; `org-data' by default, with one exception.  I put `tc-paragraph'
-         ;; as the type when a paragraph is parased (via dedicated target).
-         ;; In this case, the whole DATA should be returned.
-         ;; Sections are included in the headlines Thies means that if there
-         ;; is no headline, nothing gets transcluded.
-         (if org-transclusion-include-first-section
-             ;; Add filter to the first section as well
-             (progn (org-element-map data org-transclusion-exclude-elements
-                      (lambda (d) (org-element-extract-element d)))
-                    data)
-           nil))
-        ;; Rest of the case.
-        (t (org-element-map data org-transclusion-exclude-elements
-             (lambda (d) (org-element-extract-element d) nil))
-           data)))
+(defun org-transclusion-content-filter-only-contents (data)
+  "."
+  (if (eq (org-element-type data) 'headline)
+      nil
+    data))
 
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions to support non-Org-mode link types
