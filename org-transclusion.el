@@ -972,7 +972,7 @@ Return nil if not found."
 (defun org-transclusion-link-open-other-file-links (link &rest plist)
   "Return a list for non-Org file LINK object.
 Return nil if not found."
-  (org-transclusion--get-custom-tc-params link plist))
+  (org-transclusion-get-custom-tc-params link plist))
 
 (defun org-transclusion-content-get-from-org-marker (marker)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from MARKER.
@@ -1090,7 +1090,7 @@ to include the first section."
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions to support non-Org-mode link types
 
-(defun org-transclusion--get-custom-tc-params (link plist)
+(defun org-transclusion-get-custom-tc-params (link plist)
   "Return PARAMS with TC-FN if link type is supported for LINK object."
   (let ((types org-transclusion-add-at-point-functions)
         (params nil)
@@ -1100,9 +1100,9 @@ to include the first section."
                 types)
       (let* ((type (pop types))
              (match-fn
-              (progn (intern (concat "org-transclusion--match-" type))))
+              (progn (intern (concat "org-transclusion-match-" type))))
              (add-fn
-              (progn (intern (concat "org-transclusion--add-" type)))))
+              (progn (intern (concat "org-transclusion-add-" type)))))
         (when (and (functionp match-fn)
                    (apply match-fn path plist)
                    (functionp add-fn))
@@ -1111,12 +1111,12 @@ to include the first section."
           (setq params (list :tc-type type :tc-fn add-fn :tc-args (push link plist))))))
     params))
 
-(defun org-transclusion--match-others-default (_link _plist)
+(defun org-transclusion-match-others-default (_link _plist)
   "Check if `others-default' can be used for the LINK.
 Returns non-nil if check is pass."
   t)
 
-(defun org-transclusion--add-others-default (link _plist)
+(defun org-transclusion-add-others-default (link _plist)
   "Use Org LINK element to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR.
 TODO need to handle when the file does not exist."
   (let* ((path (org-element-property :path link))

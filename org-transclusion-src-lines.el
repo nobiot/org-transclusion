@@ -1,4 +1,7 @@
 ;;;-*- lexical-binding: t; -*-
+
+;;; Setting up the extension
+
 ;; Add a new transclusion type
 (push "src-lines" org-transclusion-add-at-point-functions)
 ;; Keyword values
@@ -20,14 +23,16 @@
 (add-hook 'org-transclusion-live-sync-buffers-get-functions
           #'org-transclusion-live-sync-buffers-get-src-lines)
 
-(defun org-transclusion--match-src-lines (_link plist)
+;;; Functions
+
+(defun org-transclusion-match-src-lines (_link plist)
   "Check if \"src-lines\" can be used for the LINK.
 Returns non-nil if check is pass."
   (when (or (plist-get plist :lines)
             (plist-get plist :src))
     t))
 
-(defun org-transclusion--add-src-lines (link plist)
+(defun org-transclusion-add-src-lines (link plist)
   "Use PATH to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR.
 TODO need to handle when the file does not exist.  The logic to
 pars n-m for :lines is taken from
