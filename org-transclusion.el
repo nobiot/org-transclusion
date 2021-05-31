@@ -49,8 +49,6 @@
 (declare-function text-property-search-forward 'text-property-search)
 (declare-function text-property-search-backward 'text-property-search)
 (declare-function prop-match-value 'text-property-search)
-(with-eval-after-load 'org-transclusion
-  (load-library "org-transclusion-src-lines"))
 
 ;;;; Customization
 
@@ -208,6 +206,8 @@ from the string.")
 (defvar org-transclusion-live-sync-buffers-get-functions
   '(org-transclusion-live-sync-buffers-get-org
     org-transclusion-live-sync-buffers-get-others-default))
+
+(defvar org-transclusion-keyword-plist-to-string-functions '())
 
 (defvar org-transclusion-map
   (let ((map (make-sparse-keymap)))
@@ -370,53 +370,47 @@ You can customize the keymap with using `org-transclusion-map':
 
 \\{org-transclusion-map}"
   (interactive)
-  (when-let* ((keyword-plist (org-transclusion-keyword-get-string-to-plist))
+  (let* ((keyword-plist (org-transclusion-keyword-get-string-to-plist))
               (link (org-transclusion-wrap-path-to-link
                      (plist-get keyword-plist :link)))
-              (type (org-element-property :type link)))
-    ;; The transclusion needs to be active, and the link type needs to be
-    ;; either id or file
-    (cond ((and (plist-get keyword-plist :active-p)
-                (or (string= "id" type)
-                    (string= "file" type)))
-           (let ((tc-params))
-             (setq tc-params (run-hook-with-args-until-success
-                              'org-transclusion-add-at-point-functions link keyword-plist))
-             (if (not tc-params)
-                 (progn (message (format
-                                  "No transclusion added. Check the link at point %d, line %d"
-                                  (point) (org-current-line)))
-                        nil) ; return nil)
-               (let* ((tc-type (plist-get tc-params :tc-type))
-                      (tc-args (plist-get tc-params :tc-args))
-                      (tc-fn (plist-get tc-params :tc-fn))
-                      (tc-payload (apply tc-fn tc-args))
-                      (tc-beg-mkr (plist-get tc-payload :tc-beg-mkr))
-                      (tc-end-mkr (plist-get tc-payload :tc-end-mkr))
-                      (tc-content (plist-get tc-payload :tc-content)))
-                 (if (or (string= tc-content "")
-                         (eq tc-content nil))
-                     (progn (message
-                             (format "Nothing done.  \
+              (type (org-element-property :type link))
+              (payload))
+    (setq payload (run-hook-with-args-until-success
+                     'org-transclusion-add-at-point-functions link keyword-plist))
+    (if (not payload)
+        (progn (message (format
+                         "No transclusion added. Check the link at point %d, line %d"
+                         (point) (org-current-line)))
+               ;; when "error", return nil
+               nil)
+      (let* ((tc-type (plist-get payload :tc-type))
+             (tc-beg-mkr (plist-get payload :tc-beg-mkr))
+             (tc-end-mkr (plist-get payload :tc-end-mkr))
+             (tc-content (plist-get payload :tc-content)))
+        (if (or (string= tc-content "")
+                (eq tc-content nil))
+            (progn (message
+                    (format "Nothing done.  \
 No content is found through the link at point %d, line %d"
-                                     (point) (org-current-line)))
-                            nil)
-                   (org-transclusion-with-silent-modifications
-                     ;; Insert & overlay
-                     (when (save-excursion
-                             (end-of-line) (insert-char ?\n)
-                             (org-transclusion-content-insert
-                              keyword-plist tc-type tc-content
-                              tc-beg-mkr tc-end-mkr)
-                             (delete-char 1)
-                             t) ;; return t for "when caluse"
-                       ;; Remove keyword after having transcluded content
-                       (when (org-at-keyword-p)
-                         (org-transclusion-keyword-remove))
-                       (org-transclusion-activate))))))))
-          ;; For other cases. Do nothing
-          (t (message "Nothing done. Transclusion inactive or link missing at %d" (point))
-             nil))))
+                            (point) (org-current-line)))
+                   nil)
+          (org-transclusion-with-silent-modifications
+            ;; Insert & overlay
+            (when (save-excursion
+                    (end-of-line) (insert-char ?\n)
+                    (org-transclusion-content-insert
+                     keyword-plist tc-type tc-content
+                     tc-beg-mkr tc-end-mkr)
+                    (delete-char 1)
+                    t) ;; return t for "when caluse"
+              ;; Remove keyword after having transcluded content
+              (when (org-at-keyword-p)
+                (org-transclusion-keyword-remove))
+              (org-transclusion-activate))))))))
+
+;; For other cases. Do nothing
+;;  (t (message "Nothing done. Transclusion inactive or link missing at %d" (point))
+;;     nil))
 
 (defun org-transclusion-add-all-in-buffer ()
   "Add all active transclusions in the current buffer."
@@ -948,29 +942,27 @@ Return nil if not found."
   (when (string= "id" (org-element-property :type link))
     ;; when type is id, the value of path is the id
     (let* ((id (org-element-property :path link))
-           (mkr (ignore-errors (org-id-find id t))))
+           (mkr (ignore-errors (org-id-find id t)))
+           (payload '(:tc-type "org-id")))
       (if mkr
-          (list :tc-type "org-id"
-                :tc-args (list mkr plist)
-                :tc-fn #'org-transclusion-content-from-org-marker)
-        (message (format "No transclusion done for this ID. Ensure it works at point %d, line %d"
-                         (point) (org-current-line)))
+          (append payload (org-transclusion-content-from-org-marker mkr plist))
+        (message
+         (format "No transclusion done for this ID. Ensure it works at point %d, line %d"
+                 (point) (org-current-line)))
         nil))))
 
 (defun org-transclusion-add-at-point-org-file-links (link plist)
   "Return a list for Org file LINK object.
 Return nil if not found."
   (when (org-transclusion--org-file-p (org-element-property :path link))
-    (list :tc-type "org-link"
-          :tc-args (list link plist)
-          :tc-fn #'org-transclusion-content-from-org-link)))
+    (append '(:tc-type "org-link")
+            (org-transclusion-content-from-org-link link plist))))
 
 (defun org-transclusion-add-at-point-other-file-links (link plist)
   "Return a list for non-Org file LINK object.
 Return nil if not found."
-  (list :tc-type "others-default"
-        :tc-args (list link plist)
-        :tc-fn #'org-transclusion-content-from-others-default))
+  (append '(:tc-type "others-default")
+          (org-transclusion-content-from-others-default link plist)))
 
 (defun org-transclusion-content-from-org-marker (marker plist)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from MARKER.
