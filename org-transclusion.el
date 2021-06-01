@@ -308,9 +308,9 @@ The resultant transclusion keyword will be placed in the first
 empty line.  If there is no empty line until the bottom of the
 buffer, add a new empty line.
 
-When `org-transclusion-mode' is active, this function automatically transclude
-the text content; when it is inactive, it simply adds \"#+transclude t
-[[link]]\" for the link.
+When minor-mode `org-transclusion-mode' is active, this function
+automatically transclude the text content; when it is inactive,
+it simply adds \"#+transclude [[link]]\" for the link.
 
 You can pass a prefix argument (ARG) with using
 `digit-argument' (e.g. C-1 or C-2; or \\[universal-argument] 3,
@@ -335,7 +335,7 @@ transclusion by calling `org-transclusion-add-at-point'."
              (link (org-element-link-interpreter context contents)))
         (save-excursion
           (org-transclusion-search-or-add-next-empty-line)
-          (insert (format "#+transclude: t %s\n" link))
+          (insert (format "#+transclude: %s\n" link))
           (forward-line -1)
           (when (and (numberp arg)
                      (> arg 0)
@@ -520,7 +520,7 @@ remain in the source buffer for further editing."
                  (goto-char pos)))))))
 
 (defun org-transclusion-open-source-get-marker (type)
-  "Default."
+  "."
   (let* ((src-buf (overlay-buffer (get-text-property (point) 'tc-pair)))
          (tc-elem (org-transclusion-get-enclosing-element))
          (tc-beg (org-element-property :begin tc-elem))
