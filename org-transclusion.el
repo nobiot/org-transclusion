@@ -190,7 +190,7 @@ Analogous to `org-edit-src-code'.")
   '(org-transclusion-content-format))
 
 (defvar org-transclusion-get-keyword-values-functions
-  '(org-transclusion-keyword-get-value-active-p
+  '(;;org-transclusion-keyword-get-value-active-p
     org-transclusion-keyword-get-value-link
     org-transclusion-keyword-get-value-level
     org-transclusion-keyword-get-value-only-contents
@@ -374,43 +374,32 @@ You can customize the keymap with using `org-transclusion-map':
               (link (org-transclusion-wrap-path-to-link
                      (plist-get keyword-plist :link)))
               (type (org-element-property :type link))
-              (payload))
-    (setq payload (run-hook-with-args-until-success
-                     'org-transclusion-add-at-point-functions link keyword-plist))
-    (if (not payload)
+              (payload (run-hook-with-args-until-success
+                        'org-transclusion-add-at-point-functions link keyword-plist))
+              (tc-type (plist-get payload :tc-type))
+              (tc-beg-mkr (plist-get payload :tc-beg-mkr))
+              (tc-end-mkr (plist-get payload :tc-end-mkr))
+              (tc-content (plist-get payload :tc-content)))
+    (if (or (string= tc-content "")
+            (eq tc-content nil))
         (progn (message (format
                          "No transclusion added. Check the link at point %d, line %d"
                          (point) (org-current-line)))
                ;; when "error", return nil
                nil)
-      (let* ((tc-type (plist-get payload :tc-type))
-             (tc-beg-mkr (plist-get payload :tc-beg-mkr))
-             (tc-end-mkr (plist-get payload :tc-end-mkr))
-             (tc-content (plist-get payload :tc-content)))
-        (if (or (string= tc-content "")
-                (eq tc-content nil))
-            (progn (message
-                    (format "Nothing done.  \
-No content is found through the link at point %d, line %d"
-                            (point) (org-current-line)))
-                   nil)
-          (org-transclusion-with-silent-modifications
-            ;; Insert & overlay
-            (when (save-excursion
-                    (end-of-line) (insert-char ?\n)
-                    (org-transclusion-content-insert
-                     keyword-plist tc-type tc-content
-                     tc-beg-mkr tc-end-mkr)
-                    (delete-char 1)
-                    t) ;; return t for "when caluse"
-              ;; Remove keyword after having transcluded content
-              (when (org-at-keyword-p)
-                (org-transclusion-keyword-remove))
-              (org-transclusion-activate))))))))
-
-;; For other cases. Do nothing
-;;  (t (message "Nothing done. Transclusion inactive or link missing at %d" (point))
-;;     nil))
+      (org-transclusion-with-silent-modifications
+        ;; Insert & overlay
+        (when (save-excursion
+                (end-of-line) (insert-char ?\n)
+                (org-transclusion-content-insert
+                 keyword-plist tc-type tc-content
+                 tc-beg-mkr tc-end-mkr)
+                (delete-char 1)
+                t) ;; return t for "when caluse"
+          ;; Remove keyword after having transcluded content
+          (when (org-at-keyword-p)
+            (org-transclusion-keyword-remove))
+          (org-transclusion-activate))))))
 
 (defun org-transclusion-add-all-in-buffer ()
   "Add all active transclusions in the current buffer."
@@ -775,13 +764,13 @@ the settings revert to the user's setting prior to
                   (setq plist (append plist (funcall fn str)))))
         plist))))
 
-(defun org-transclusion-keyword-get-value-active-p (string)
-  "It is a utility function used converting a keyword STRING to plist.
-It is meant to be used by `org-transclusion-get-string-to-plist'.
-It needs to be set in
-`org-transclusion-get-keyword-values-functions'."
-  (when (string-match "^\\(t\\|nil\\).*$" string)
-    (list :active-p (org-transclusion--not-nil (match-string 1 string)))))
+;; (defun org-transclusion-keyword-get-value-active-p (string)
+;;   "It is a utility function used converting a keyword STRING to plist.
+;; It is meant to be used by `org-transclusion-get-string-to-plist'.
+;; It needs to be set in
+;; `org-transclusion-get-keyword-values-functions'."
+;;   (when (string-match "^\\(t\\|nil\\).*$" string)
+;;     (list :active-p (org-transclusion--not-nil (match-string 1 string)))))
 
 (defun org-transclusion-keyword-get-value-link (string)
   "It is a utility function used converting a keyword STRING to plist.
@@ -829,7 +818,7 @@ It assumes that point is at a keyword."
 
 (defun org-transclusion-keyword-plist-to-string (plist)
   "Convert a keyword PLIST to a string."
-  (let ((active-p (plist-get plist :active-p))
+  (let (;;(active-p (plist-get plist :active-p))
         (link (plist-get plist :link))
         (level (plist-get plist :level))
         (only-contents (plist-get plist :only-contents))
@@ -841,8 +830,8 @@ It assumes that point is at a keyword."
               (setq custom-properties-string
                     (concat custom-properties-string " " str )))))
     (concat "#+transclude: "
-            (symbol-name active-p)
-            " " link
+            ;;(symbol-name active-p) " "
+            link
             (when level (format " :level %d" level))
             (when only-contents (format " :only-contents %s" only-contents))
             custom-properties-string
@@ -921,20 +910,21 @@ Currently it only re-aligns table with links in the content.
 
 This is the default one"
   (with-temp-buffer
-    (org-mode)
-    (insert content)
-    ;; Fix table alignment
-    (let ((point (point-min)))
-      (while point
-        (goto-char (1+ point))
-        (when (org-at-table-p)
-          (org-table-align)
-          (goto-char (org-table-end)))
-        (setq point (search-forward "|" (point-max) t))))
-    ;; Fix indentation when `org-adapt-indentation' is non-nil
-    (org-indent-region (point-min) (point-max))
-    ;; Return the temp-buffer's string
-    (buffer-string)))
+    (let ((org-inhibit-startup t))
+      (delay-mode-hooks (org-mode))
+      (insert content)
+      ;; Fix table alignment
+      (let ((point (point-min)))
+        (while point
+          (goto-char (1+ point))
+          (when (org-at-table-p)
+            (org-table-align)
+            (goto-char (org-table-end)))
+          (setq point (search-forward "|" (point-max) t))))
+      ;; Fix indentation when `org-adapt-indentation' is non-nil
+      (org-indent-region (point-min) (point-max))
+      ;; Return the temp-buffer's string
+      (buffer-string))))
 
 (defun org-transclusion-add-at-point-org-id (link plist)
   "Return a list for Org-ID LINK object.
@@ -973,7 +963,6 @@ This is meant for Org-ID."
         (let ((only-contents (plist-get plist :only-contents)))
           (with-current-buffer (marker-buffer marker)
             (org-with-wide-buffer
-             ;;(outline-show-all)
              (goto-char marker)
              (if (org-before-first-heading-p)
                  (org-transclusion-content-get-org-buffer-or-element-at-point
@@ -985,7 +974,7 @@ This is meant for Org-ID."
 (defun org-transclusion-content-from-org-link (link plist)
   "Return tc-beg-mkr, tc-end-mkr, tc-content from LINK."
   (save-excursion
-    ;; First visit the buffer and go to the relevant elelement if id or
+    ;; First visit the buffer and go to the relevant elelement if
     ;; search-option is present.
     (let* ((path (org-element-property :path link))
            (search-option (org-element-property :search-option link))
@@ -993,7 +982,6 @@ This is meant for Org-ID."
            (only-contents (plist-get plist :only-contents)))
       (with-current-buffer buf
         (org-with-wide-buffer
-         ;;(outline-show-all)
          (if search-option
              (progn
                (org-link-search search-option)
