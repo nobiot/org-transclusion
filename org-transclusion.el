@@ -323,7 +323,7 @@ If you pass a `universal-argument', this function automatically triggers
 transclusion by calling `org-transclusion-add-at-point'."
   ;; check if at-point is a link file or id
   (interactive "P")
-rest  (let* ((context (org-element-lineage
+  (let* ((context (org-element-lineage
                    (org-element-context)'(link) t))
          (type (org-element-property :type context)))
     (when (or (string= type "file")
