@@ -35,7 +35,7 @@
 ;; is-there-an-emacs-package-which-can-mirror-a-region/56202#56202
 
 ;; Noboru Ota has made further adaptions for version 0.0.1 in order for it
-;; work with the Org-transclusion package.
+;; to work with the Org-transclusion package.
 
 ;;; Code:
 
