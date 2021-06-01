@@ -1,0 +1,3 @@
+Suspendisse tincidunt justo sit amet sapien tempus pretium. Duis tincidunt arcu hendrerit pretium lacinia. Phasellus pharetra felis at facilisis commodo. Praesent ornare arcu eu rhoncus accumsan. Proin sed pulvinar dolor. Vestibulum vestibulum eleifend tellus non pellentesque. Phasellus pharetra cursus ex, id vestibulum erat egestas at. Proin at hendrerit lacus.
+
+tellus non pellentesque. Phasellus pharetra cursus ex, id vestibulum erat egestas at. Proin at hendrerit lacus. You can also change the source buffer as normal buffer. When you go back to the transclusion, the latest state of the buffer gets copied over. 
