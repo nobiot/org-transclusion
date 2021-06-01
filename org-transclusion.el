@@ -371,20 +371,21 @@ You can customize the keymap with using `org-transclusion-map':
 \\{org-transclusion-map}"
   (interactive)
   (let* ((keyword-plist (org-transclusion-keyword-get-string-to-plist))
-              (link (org-transclusion-wrap-path-to-link
-                     (plist-get keyword-plist :link)))
-              (type (org-element-property :type link))
-              (payload (run-hook-with-args-until-success
-                        'org-transclusion-add-at-point-functions link keyword-plist))
-              (tc-type (plist-get payload :tc-type))
-              (tc-beg-mkr (plist-get payload :tc-beg-mkr))
-              (tc-end-mkr (plist-get payload :tc-end-mkr))
-              (tc-content (plist-get payload :tc-content)))
+         (link (org-transclusion-wrap-path-to-link
+                (plist-get keyword-plist :link)))
+         (type (org-element-property :type link))
+         (payload (run-hook-with-args-until-success
+                   'org-transclusion-add-at-point-functions link keyword-plist))
+         (tc-type (plist-get payload :tc-type))
+         (tc-beg-mkr (plist-get payload :tc-beg-mkr))
+         (tc-end-mkr (plist-get payload :tc-end-mkr))
+         (tc-content (plist-get payload :tc-content)))
     (if (or (string= tc-content "")
             (eq tc-content nil))
-        (progn (message (format
-                         "No transclusion added. Check the link at point %d, line %d"
-                         (point) (org-current-line)))
+        (progn (message
+                (format
+                 "No transclusion added.  Check the link at point %d, line %d"
+                 (point) (org-current-line)))
                ;; when "error", return nil
                nil)
       (org-transclusion-with-silent-modifications
