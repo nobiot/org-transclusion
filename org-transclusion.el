@@ -1006,34 +1006,30 @@ Assume you are at the beginning of the org element to transclude."
       (when (and (string= "target" type)
                  (string= "paragraph" (org-element-type (org-element-property :parent el))))
         (setq el (org-element-property :parent el)))
-      (let (tc-content tc-beg-mkr tc-end-mkr tree obj)
-        (setq tree (if (not only-element)
-                       (org-element-parse-buffer)
-                     (org-element--parse-elements
-                      (org-element-property :begin el)
-                      (org-element-property :end el)
-                      nil nil 'object nil (list 'tc-paragraph nil))))
+      (let ((beg (org-element-property :begin el))
+            (end (org-element-property :end el))
+            tc-content tc-beg-mkr tc-end-mkr tree obj)
+        (when only-element
+          (narrow-to-region beg end))
+        (setq tree (org-element-parse-buffer))
         (setq obj tree)
         ;; Apply `org-transclusion-exclude-elements'
         (setq obj (org-element-map obj org-element-all-elements
                     #'org-transclusion-content-filter-org-buffer-default
                     nil nil org-element-all-elements nil))
-        (setq obj (org-element-map obj org-element-all-elements
-                    #'org-transclusion-content-filter-org-first-section
-                    nil nil org-element-all-elements nil))
+        ;; First section
+        (unless only-element ;only-element is nil when it is a first section
+          (setq obj (org-element-map obj org-element-all-elements
+                      #'org-transclusion-content-filter-org-first-section
+                      nil nil org-element-all-elements nil)))
+        ;; Only contents
         (when only-contents
           (setq obj (org-element-map obj org-element-all-elements
                       #'org-transclusion-content-filter-only-contents
                       nil nil '(section) nil)))
         (setq tc-content (org-element-interpret-data obj))
-        (setq tc-beg-mkr (progn (goto-char
-                                 (if only-element (org-element-property :begin el)
-                                   (point-min))) ;; for the entire buffer
-                                (point-marker)))
-        (setq tc-end-mkr (progn (goto-char
-                                 (if only-element (org-element-property :end el)
-                                   (point-max))) ;; for the entire buffer
-                                (point-marker)))
+        (setq tc-beg-mkr (move-marker (make-marker) (point-min)))
+        (setq tc-end-mkr (move-marker (make-marker) (point-max)))
         (list :tc-content tc-content
               :tc-beg-mkr tc-beg-mkr
               :tc-end-mkr tc-end-mkr)))))
@@ -1053,8 +1049,8 @@ Assume you are at the beginning of the org element to transclude."
   ;; In this case, the whole DATA should be returned.
   ;; Sections are included in the headlines Thies means that if there
   ;; is no headline, nothing gets transcluded.
-  (if (and (memq (org-element-type data) '(section))
-             (not org-transclusion-include-first-section))
+  (if (and (eq (org-element-type data) 'section)
+           (not org-transclusion-include-first-section))
       nil
     data))
 
