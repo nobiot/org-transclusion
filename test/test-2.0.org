@@ -1,4 +1,7 @@
 * Regression
+** make from link
+This is a link to a [[id:20210501T171427.051019][Bertrand Russell]] wikipedia excerpt
+
 ** test empty file
 #+transclude: [[file:empty.txt][empty text file]]
 
@@ -6,6 +9,7 @@
 #+transclude: [[file:test.txt][text file]]
 
 ** test t/nil
+t/nil will be dropped after remove-at-point
 #+transclude: t [[file:test.txt][text file]]
 #+transclude: nil [[file:test.txt][text file]]
 
