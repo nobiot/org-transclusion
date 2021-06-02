@@ -45,6 +45,9 @@
 (require 'org-element)
 (require 'org-id)
 (require 'text-clone)
+(declare-function text-clone-make-overlay 'text-clone)
+(declare-function text-clone-delete-overlays 'text-clone)
+(declare-function text-clone-set-overlays 'text-clone)
 (declare-function org-at-keyword-p 'org)
 (declare-function text-property-search-forward 'text-property-search)
 (declare-function text-property-search-backward 'text-property-search)
@@ -372,15 +375,15 @@ You can customize the keymap with using `org-transclusion-map':
   (let* ((keyword-plist (org-transclusion-keyword-get-string-to-plist))
          (link (org-transclusion-wrap-path-to-link
                 (plist-get keyword-plist :link)))
-         (type (org-element-property :type link))
          (payload (run-hook-with-args-until-success
                    'org-transclusion-add-at-point-functions link keyword-plist))
          (tc-type (plist-get payload :tc-type))
-         (tc-beg-mkr (plist-get payload :tc-beg-mkr))
-         (tc-end-mkr (plist-get payload :tc-end-mkr))
-         (tc-content (plist-get payload :tc-content)))
-    (if (or (string= tc-content "")
-            (eq tc-content nil))
+         (src-buf (plist-get payload :src-buf))
+         (src-beg (plist-get payload :src-beg))
+         (src-end (plist-get payload :src-end))
+         (src-content (plist-get payload :src-content)))
+    (if (or (string= src-content "")
+            (eq src-content nil))
         (progn (message
                 (format
                  "No transclusion added.  Check the link at point %d, line %d"
@@ -392,8 +395,8 @@ You can customize the keymap with using `org-transclusion-map':
         (when (save-excursion
                 (end-of-line) (insert-char ?\n)
                 (org-transclusion-content-insert
-                 keyword-plist tc-type tc-content
-                 tc-beg-mkr tc-end-mkr)
+                 keyword-plist tc-type src-content
+                 src-buf src-beg src-end)
                 (delete-char 1)
                 t) ;; return t for "when caluse"
           ;; Remove keyword after having transcluded content
@@ -694,7 +697,7 @@ It assumes that point is at a keyword."
 ;;-----------------------------------------------------------------------------
 ;;;; Add-at-point functions
 (defun org-transclusion-add-at-point-org-id (link plist)
-  "Return a list for Org-ID LINK object.
+  "Return a list for Org-ID LINK object and PLIST.
 Return nil if not found."
   (when (string= "id" (org-element-property :type link))
     ;; when type is id, the value of path is the id
@@ -709,14 +712,14 @@ Return nil if not found."
         nil))))
 
 (defun org-transclusion-add-at-point-org-file-links (link plist)
-  "Return a list for Org file LINK object.
+  "Return a list for Org file LINK object and PLIST.
 Return nil if not found."
   (when (org-transclusion-org-file-p (org-element-property :path link))
     (append '(:tc-type "org-link")
             (org-transclusion-content-from-org-link link plist))))
 
 (defun org-transclusion-add-at-point-other-file-links (link plist)
-  "Return a list for non-Org file LINK object.
+  "Return a list for non-Org file LINK object and PLIST.
 Return nil if not found."
   (append '(:tc-type "others-default")
           (org-transclusion-content-from-others-default link plist)))
@@ -724,7 +727,7 @@ Return nil if not found."
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for inserting content
 
-(defun org-transclusion-content-insert (keyword-values type content src-beg-m src-end-m)
+(defun org-transclusion-content-insert (keyword-values type content sbuf sbeg send)
   "Add content and overlay.
 - KEYWORD-VALUES :: TBD
 - TYPE :: TBD
@@ -732,13 +735,12 @@ Return nil if not found."
 - SRC-BEG-M :: TBD
 - SRC-END-M :: TBD"
   (let* ((tc-id (substring (org-id-uuid) 0 8))
-         (sbuf (marker-buffer src-beg-m)) ;source buffer
          (beg (point)) ;; before the text is inserted
-         (beg-mkr)
+         (beg-mkr (set-marker (make-marker) beg))
          (end) ;; at the end of text content after inserting it
          (end-mkr)
-         (ov-src) ;; source-buffer
-         (tc-pair))
+         (ov-src (text-clone-make-overlay sbeg send sbuf)) ;; source-buffer overlay
+         (tc-pair ov-src))
     (when (org-kill-is-subtree-p content)
       (let ((level (plist-get keyword-values :level)))
         (with-temp-buffer
@@ -750,16 +752,8 @@ Return nil if not found."
     (insert
      (run-hook-with-args-until-success
       'org-transclusion-content-format-functions type content))
-     ;; (if format-fn (funcall format-fn content)
-     ;;   ;; if not for format-fn, call default format fn
-     ;;   (org-transclusion-content-format content)))
-    (setq beg-mkr (save-excursion (goto-char beg)
-                                  (set-marker (make-marker) (point))))
     (setq end (point))
-    (setq end-mkr (save-excursion (goto-char end)
-                                  (set-marker (make-marker) (point))))
-    (setq ov-src (text-clone-make-overlay src-beg-m src-end-m sbuf))
-    (setq tc-pair ov-src)
+    (setq end-mkr (set-marker (make-marker) end))
     (add-text-properties beg end
                          `(local-map ,org-transclusion-map
                                      read-only t
@@ -772,7 +766,7 @@ Return nil if not found."
                                      tc-type ,type
                                      tc-beg-mkr ,beg-mkr
                                      tc-end-mkr ,end-mkr
-                                     tc-src-beg-mkr ,src-beg-m
+                                     tc-src-beg-mkr ,(set-marker (make-marker) sbeg sbuf)
                                      tc-pair ,tc-pair
                                      tc-orig-keyword ,keyword-values
                                      ;; TODO Fringe is not supported for terminal
@@ -847,8 +841,8 @@ This is meant for Org-ID."
             nil only-contents)))))))
 
 (defun org-transclusion-content-org-buffer-or-element-at-point (&optional only-element
-                                                                              only-contents
-                                                                              exclude-elements)
+                                                                          only-contents
+                                                                          exclude-elements)
   "Return content for transclusion.
 When ONLY-ELEMENT is t, only the element.  If nil, the whole buffer.
 Assume you are at the beginning of the org element to transclude."
@@ -863,11 +857,10 @@ Assume you are at the beginning of the org element to transclude."
         (setq el (org-element-property :parent el)))
       (let ((beg (org-element-property :begin el))
             (end (org-element-property :end el))
-            tc-content tc-beg-mkr tc-end-mkr tree obj)
+            obj)
         (when only-element
           (narrow-to-region beg end))
-        (setq tree (org-element-parse-buffer))
-        (setq obj tree)
+        (setq obj (org-element-parse-buffer))
         ;; Apply `org-transclusion-exclude-elements'
         (setq obj (org-element-map obj org-element-all-elements
                     #'org-transclusion-content-filter-org-buffer-default
@@ -882,12 +875,10 @@ Assume you are at the beginning of the org element to transclude."
           (setq obj (org-element-map obj org-element-all-elements
                       #'org-transclusion-content-filter-only-contents
                       nil nil '(section) nil)))
-        (setq tc-content (org-element-interpret-data obj))
-        (setq tc-beg-mkr (move-marker (make-marker) (point-min)))
-        (setq tc-end-mkr (move-marker (make-marker) (point-max)))
-        (list :tc-content tc-content
-              :tc-beg-mkr tc-beg-mkr
-              :tc-end-mkr tc-end-mkr)))))
+        (list :src-content (org-element-interpret-data obj)
+              :src-buf (current-buffer)
+              :src-beg (point-min)
+              :src-end (point-max))))))
 
 (defun org-transclusion-content-filter-org-buffer-default (data)
   "."
@@ -925,12 +916,10 @@ TODO need to handle when the file does not exist."
          (buf (find-file-noselect path)))
     (with-current-buffer buf
       (org-with-wide-buffer
-       (let ((content (buffer-string))
-             (beg (point-min-marker))
-             (end (point-max-marker)))
-         (list :tc-content content
-               :tc-beg-mkr beg
-               :tc-end-mkr end))))))
+       (list :src-content (buffer-string)
+             :src-buf buf
+             :src-beg (point-min)
+             :src-end (point-max))))))
 
 ;;-----------------------------------------------------------------------------
 ;;; Utility Functions
@@ -1032,10 +1021,9 @@ string \"nil\", return symbol t."
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for open-source
 
-(defun org-transclusion-open-source-get-marker (type)
+(defun org-transclusion-open-source-get-marker (_type)
   "."
-  (let* ((src-buf (overlay-buffer (get-text-property (point) 'tc-pair)))
-         (tc-elem (org-transclusion-live-sync-enclosing-element))
+  (let* ((tc-elem (org-transclusion-live-sync-enclosing-element))
          (tc-beg (org-element-property :begin tc-elem))
          (tc-end (org-element-property :end tc-elem))
          (src-beg-mkr
