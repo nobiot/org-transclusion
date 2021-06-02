@@ -179,13 +179,10 @@ Analogous to `org-edit-src-code'.")
     org-transclusion-add-at-point-org-file-links
     org-transclusion-add-at-point-other-file-links))
 
-(defvar org-transclusion-content-format-functions
-  '(org-transclusion-content-format))
-
 (defvar org-transclusion-get-keyword-values-functions
-  '(;;org-transclusion-keyword-get-value-active-p
-    org-transclusion-keyword-get-value-link
+  '(org-transclusion-keyword-get-value-link
     org-transclusion-keyword-get-value-level
+    org-transclusion-keyword-get-value-disable-auto
     org-transclusion-keyword-get-value-only-contents
     org-transclusion-keyword-get-current-indentation)
   "Define list of functions used to parse a #+transclude keyword.
@@ -193,14 +190,17 @@ The functions take a single argument, the whole keyword value as
 a string.  Each function retrieves a property with using a regexp
 from the string.")
 
+(defvar org-transclusion-keyword-plist-to-string-functions '())
+
+(defvar org-transclusion-content-format-functions
+  '(org-transclusion-content-format))
+
 (defvar org-transclusion-open-source-get-marker-functions
   '(org-transclusion-open-source-get-marker))
 
 (defvar org-transclusion-live-sync-buffers-get-functions
   '(org-transclusion-live-sync-buffers-get-org
     org-transclusion-live-sync-buffers-get-others-default))
-
-(defvar org-transclusion-keyword-plist-to-string-functions '())
 
 (defvar org-transclusion-map
   (let ((map (make-sparse-keymap)))
@@ -402,7 +402,8 @@ You can customize the keymap with using `org-transclusion-map':
           ;; Remove keyword after having transcluded content
           (when (org-at-keyword-p)
             (org-transclusion-keyword-remove))
-          (org-transclusion-activate))))))
+          (org-transclusion-activate)
+          t)))))
 
 (defun org-transclusion-add-all-in-buffer ()
   "Add all active transclusions in the current buffer."
@@ -413,7 +414,9 @@ You can customize the keymap with using `org-transclusion-map':
         (while (re-search-forward regexp nil t)
           ;; Don't transclude if within a transclusion to avoid infinite
           ;; recursion
-          (unless (org-transclusion-within-transclusion-p)
+          (unless (or (org-transclusion-within-transclusion-p)
+                      (plist-get (org-transclusion-keyword-get-string-to-plist)
+                                 :disable-auto))
             (org-transclusion-add-at-point)))))
     (goto-char pos)
     t))
@@ -640,6 +643,15 @@ It is meant to be used by
     (user-error "Error.  Link in #+transclude is mandatory at %d" (point))
     nil))
 
+(defun org-transclusion-keyword-get-value-disable-auto (string)
+  "It is a utility function used converting a keyword STRING to plist.
+It is meant to be used by `org-transclusion-get-string-to-plist'.
+It needs to be set in
+`org-transclusion-get-keyword-values-functions'."
+  (when (string-match ":disable-auto" string)
+    (list :disable-auto
+          (org-strip-quotes (match-string 0 string)))))
+
 (defun org-transclusion-keyword-get-value-level (string)
   "It is a utility function used converting a keyword STRING to plist.
 It is meant to be used by `org-transclusion-get-string-to-plist'.
@@ -653,9 +665,9 @@ It needs to be set in
 It is meant to be used by `org-transclusion-get-string-to-plist'.
 It needs to be set in
 `org-transclusion-get-keyword-values-functions'."
-  (when (string-match ":only-contents +\\(\"?\\w*\"?\\)" string)
+  (when (string-match ":only-contents?" string)
     (list :only-contents
-          (org-transclusion-not-nil (org-strip-quotes (match-string 1 string))))))
+          (org-strip-quotes (match-string 0 string)))))
 
 (defun org-transclusion-keyword-get-current-indentation (_)
   "It is a utility function used converting a keyword STRING to plist.
@@ -678,6 +690,7 @@ It assumes that point is at a keyword."
   (let (;;(active-p (plist-get plist :active-p))
         (link (plist-get plist :link))
         (level (plist-get plist :level))
+        (disable-auto (plist-get plist :disable-auto))
         (only-contents (plist-get plist :only-contents))
         (custom-properties-string nil))
     (setq custom-properties-string
@@ -687,10 +700,10 @@ It assumes that point is at a keyword."
               (setq custom-properties-string
                     (concat custom-properties-string " " str )))))
     (concat "#+transclude: "
-            ;;(symbol-name active-p) " "
             link
             (when level (format " :level %d" level))
-            (when only-contents (format " :only-contents %s" only-contents))
+            (when disable-auto (format " :disable-auto"))
+            (when only-contents (format " :only-contents"))
             custom-properties-string
             "\n")))
 
