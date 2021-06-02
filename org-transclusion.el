@@ -184,6 +184,7 @@ Analogous to `org-edit-src-code'.")
     org-transclusion-keyword-get-value-level
     org-transclusion-keyword-get-value-disable-auto
     org-transclusion-keyword-get-value-only-contents
+    org-transclusion-keyword-get-value-exclude-elements
     org-transclusion-keyword-get-current-indentation)
   "Define list of functions used to parse a #+transclude keyword.
 The functions take a single argument, the whole keyword value as
@@ -669,6 +670,15 @@ It needs to be set in
     (list :only-contents
           (org-strip-quotes (match-string 0 string)))))
 
+(defun org-transclusion-keyword-get-value-exclude-elements (string)
+  "It is a utility function used converting a keyword STRING to plist.
+It is meant to be used by `org-transclusion-get-string-to-plist'.
+It needs to be set in
+`org-transclusion-get-keyword-values-hook'.
+Double qutations are mandatory."
+  (when (string-match ":exclude-elements +\"\\(.*\\)\"" string)
+    (list :exclude-elements (org-strip-quotes (match-string 1 string)))))
+
 (defun org-transclusion-keyword-get-current-indentation (_)
   "It is a utility function used converting a keyword STRING to plist.
 It is meant to be used by `org-transclusion-get-string-to-plist'.
@@ -692,6 +702,7 @@ It assumes that point is at a keyword."
         (level (plist-get plist :level))
         (disable-auto (plist-get plist :disable-auto))
         (only-contents (plist-get plist :only-contents))
+        (exclude-elements (plist-get plist :exclude-elements))
         (custom-properties-string nil))
     (setq custom-properties-string
           (dolist (fn org-transclusion-keyword-plist-to-string-functions
@@ -704,8 +715,16 @@ It assumes that point is at a keyword."
             (when level (format " :level %d" level))
             (when disable-auto (format " :disable-auto"))
             (when only-contents (format " :only-contents"))
+            (when exclude-elements (format " :exclude-elements \"%s\""
+                                           exclude-elements))
             custom-properties-string
             "\n")))
+
+(defun org-transclusion-keyword-plist-to-exclude-elements (plist)
+  "Return list of symbols from PLIST when applicable.
+If PLIST does not have :exclude-elements, return nil."
+  (let ((str (plist-get plist :exclude-elements)))
+    (when str (mapcar #'intern (split-string (org-trim str) " ")))))
 
 ;;-----------------------------------------------------------------------------
 ;;;; Add-at-point functions
@@ -823,15 +842,17 @@ This is meant for Org-ID."
   (if (and marker (marker-buffer marker)
            (buffer-live-p (marker-buffer marker)))
       (progn
-        (let ((only-contents (plist-get plist :only-contents)))
+        (let ((only-contents (plist-get plist :only-contents))
+              (exclude-elements
+               (org-transclusion-keyword-plist-to-exclude-elements plist)))
           (with-current-buffer (marker-buffer marker)
             (org-with-wide-buffer
              (goto-char marker)
              (if (org-before-first-heading-p)
                  (org-transclusion-content-org-buffer-or-element-at-point
-                  nil only-contents)
+                  nil only-contents exclude-elements)
                (org-transclusion-content-org-buffer-or-element-at-point
-                'only-element only-contents))))))
+                'only-element only-contents exclude-elements))))))
     (message "Nothing done. Cannot find marker for the ID.")))
 
 (defun org-transclusion-content-from-org-link (link plist)
@@ -842,16 +863,18 @@ This is meant for Org-ID."
     (let* ((path (org-element-property :path link))
            (search-option (org-element-property :search-option link))
            (buf (find-file-noselect path))
-           (only-contents (plist-get plist :only-contents)))
+           (only-contents (plist-get plist :only-contents))
+           (exclude-elements
+            (org-transclusion-keyword-plist-to-exclude-elements plist)))
       (with-current-buffer buf
         (org-with-wide-buffer
          (if search-option
              (progn
                (org-link-search search-option)
                (org-transclusion-content-org-buffer-or-element-at-point
-                'only-element only-contents))
+                'only-element only-contents exclude-elements))
            (org-transclusion-content-org-buffer-or-element-at-point
-            nil only-contents)))))))
+            nil only-contents exclude-elements)))))))
 
 (defun org-transclusion-content-org-buffer-or-element-at-point (&optional only-element
                                                                           only-contents
@@ -875,9 +898,13 @@ Assume you are at the beginning of the org element to transclude."
           (narrow-to-region beg end))
         (setq obj (org-element-parse-buffer))
         ;; Apply `org-transclusion-exclude-elements'
-        (setq obj (org-element-map obj org-element-all-elements
-                    #'org-transclusion-content-filter-org-buffer-default
-                    nil nil org-element-all-elements nil))
+        ;; Appending exclude-elements can duplicate symbols
+        ;; But that does not influence the output
+        (let ((org-transclusion-exclude-elements
+               (append exclude-elements org-transclusion-exclude-elements)))
+          (setq obj (org-element-map obj org-element-all-elements
+                      #'org-transclusion-content-filter-org-buffer-default
+                      nil nil org-element-all-elements nil)))
         ;; First section
         (unless only-element ;only-element is nil when it is a first section
           (setq obj (org-element-map obj org-element-all-elements
