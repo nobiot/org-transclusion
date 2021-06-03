@@ -1,17 +1,24 @@
 * Regression
 ** make from link
 This is a link to a [[id:20210501T171427.051019][Bertrand Russell]] wikipedia excerpt
+#+transclude: [[id:20210501T171427.051019][Bertrand Russell]]
 
 ** test empty file
-#+transclude: [[file:empty.txt][empty text file]]
+#+transclude: [[file:empty.txt::2][empty text file]]
 
 ** test text
 #+transclude: [[file:test.txt][text file]]
 
 ** test t/nil
 t/nil will be dropped after remove-at-point
-#+transclude: t [[file:test.txt][text file]]
-#+transclude: nil [[file:test.txt][text file]]
+Nunc tincidunt interdum ligula. Mauris rhoncus pharetra urna eu venenatis.
+This works for mutliple buffers at the same time
+
+This can be edited anywhere... 
+
+Duis tincidunt arcu hendrerit pretium lacinia. Phasellus pharetra felis at facilisis commodo. Praesent ornare arcu eu rhoncus accumsan. Proin sed pulvinar dolor. Vestibulum vestibulum eleifend tellus non pellentesque. Phasellu pharetra cursus ex, id vestibulum erat egestas at. Proin at hendrerit lacus.
+
+#+transclude: [[file:test.txt][text file]]
 
 ** ID
 #+transclude: [[id:20210501T171427.051019][Bertrand Russell]]
@@ -26,7 +33,10 @@ t/nil will be dropped after remove-at-point
 #+transclude: [[id:20210501T171427.051019][Bertrand Russell]]
 
 ** Paragraph
-#+transclude: [[file:./paragraph.org::para1]]
+This also should work. Adding new characters. Nullam vulputate tincidunt felis. Proin placerat libero facilisis arcu dictum, sit amet porta auguedictum. Nullam eros justo, molestie porttitor massa ultricies, molestie cursus nibh. Mauris porta elit ac nibh fermentum finibus. Proin nec neque lorem. Etiam pretium nisl non justo lacinia, in dmattis nisi faucibus. Curabitur rutrum ex nec lorem porttitor sagittis. Proin cursus sapien nec est venenatis, nec finibus mi tempor. Aliquam vel lacus bibendum, imperdiet urna ut, dictum lectus. Sed et tempus lorem. Nam in viverra enim.
+2 spaces before this<<para1>>
+This is being added
+
 #+transclude: [[file:./paragraph.org::para1]]
 
 ** Table
@@ -45,7 +55,7 @@ t/nil will be dropped after remove-at-point
 #+transclude: [[file:testpara.org::#custom-id-1][Custom ID]] :level 2
 
 ** *Hadline
-#+transclude: [[file:bertrand-russell.org::*Bertrand Russell - Wikipedia]]
+#+transclude: [[file:bertrand-russell.org::*Bertrand Russell - Wikipedia]] :level 2 :disable-auto
 
 ** Filter
 
@@ -63,7 +73,44 @@ t/nil will be dropped after remove-at-point
 #+transclude: [[file:./test-no-first-section.org]]
 
 *  Only Contents
-#+transclude: [[id:20210501T171427.051019][Bertrand Russell]] :only-contents t
+#+transclude: [[id:20210501T171427.051019][Bertrand Russell]] :only-contents
+
+* Disable-auto
+** *Hadline
+#+transclude: [[file:bertrand-russell.org::*Bertrand Russell - Wikipedia]] :level 2 :disable-auto :only-contents
+
+* Exclude elements
+#+transclude: [[id:20210501T171427.051019][Bertrand Russell]] :only-contents :exclude-elements "keyword drawer headline"
+
+#+transclude: [[file:./test-no-first-section.org]] :exclude-elements "drawer keyword property-drawer"
+
+#+transclude: [[file:bertrand-russell.org::*Bertrand Russell - Wikipedia]] :level 2 :disable-auto :only-contents :exclude-elements "keyword drawer headline"
+
+* =yank-excluded-properties=
+
+#+begin_src elisp
+  (setq yank-excluded-properties
+        '(:parent category field follow-link fontified font-lock-face help-echo intangible invisible keymap local-map mouse-face read-only yank-handler))
+  
+    (setq yank-excluded-properties
+        '(category field follow-link fontified font-lock-face help-echo intangible invisible keymap local-map mouse-face read-only yank-handler))
+  
+  (setq org-transclusion-yank-remember-user-excluded-props '(:parent))
+#+end_src
+
+#+RESULTS:
+
+#+begin_src elisp
+  org-transclusion-yank-excluded-properties
+#+end_src
+
+#+RESULTS:
+| tc-type | tc-beg-mkr | tc-end-mkr | tc-src-beg-mkr | tc-pair | tc-orig-keyword | wrap-prefix | line-prefix | :parent | front-sticky | rear-nonsticky |
 
 
+#+begin_src elisp
+  yank-excluded-properties
+#+end_src
 
+#+RESULTS:
+| category | field | follow-link | fontified | font-lock-face | help-echo | intangible | invisible | keymap | local-map | mouse-face | read-only | yank-handler |
