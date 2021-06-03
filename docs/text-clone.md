@@ -3,7 +3,7 @@ title: How Text-Clone Works
 subtitle: A Quick Developer's Guide
 author: nobiot
 created: 2021-06-01
-modified: 2021-06-03T142013
+modified: 2021-06-03T162507
 ---
 
 # What is this Document?
@@ -15,6 +15,10 @@ I have written this document with Elisp programmers in mind as its main reader. 
 The script and test files are available at the locations below:
 - [text-clone.el](https://github.com/nobiot/org-transclusion/blob/main/text-clone.el)
 - [files for test-drive](https://github.com/nobiot/org-transclusion/tree/main/docs/test-clone)
+
+A short video demonstration is also available on [YouTube](https://youtu.be/WNY1BfCqwV4).
+
+[![](../resources/text-clone-demo-title.png)](https://youtu.be/WNY1BfCqwV4)
 
 # Credits
 
