@@ -477,21 +477,28 @@ When success, return the beginning point of the keyword re-inserted."
           beg))
     (message "Nothing done. No transclusion exists here.") nil))
 
-(defun org-transclusion-remove-all-in-buffer ()
+(defun org-transclusion-remove-all-in-buffer (&optional narrowed)
   "Remove all transcluded text regions in the current buffer.
 Return the list of points for the transclusion keywords re-inserted.
 It is assumed that the list is ordered in descending order.
-The list is intended to be used in `org-transclusion-before-save-buffer'."
-  (interactive)
-  (outline-show-all)
-  (goto-char (point-min))
-  (let ((point)(list))
-    (while (text-property-search-forward 'tc-type)
-      (forward-char -1)
-      (org-transclusion-with-silent-modifications
-        (setq point (org-transclusion-remove-at-point))
-        (when point (push point list))))
-    list))
+The list is intended to be used in `org-transclusion-before-save-buffer'.
+
+By default, this function temporarily widens the narrowed region
+to work on the entire buffer.  You can pass NARROWED with using
+`universal-argument' (\\[universal-argument]).  When NARROWED is
+non-nil, this function works only on the narrowed region, leaving
+the rest of the buffer in tact. "
+  (interactive "P")
+  (save-restriction
+    (unless narrowed (widen))
+    (goto-char (point-min))
+    (let ((point)(list))
+      (while (text-property-search-forward 'tc-type)
+        (forward-char -1)
+        (org-transclusion-with-silent-modifications
+          (setq point (org-transclusion-remove-at-point))
+          (when point (push point list))))
+      list)))
 
 (defun org-transclusion-refresh-at-point ()
   "Refresh the transcluded text at point."
