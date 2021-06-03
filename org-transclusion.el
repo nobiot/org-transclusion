@@ -89,6 +89,13 @@ See `display-buffer' for example options."
   :risky t
   :group 'org-transclusion)
 
+(defcustom org-transclusion-mode-lighter
+  " OT"
+  "Mode-line indicator for `org-transclusion-mode'."
+  :type '(choice (const :tag "No lighter" "") string)
+  :safe 'stringp
+  :group 'org-transclusion)
+
 ;;;; Faces
 
 (defface org-transclusion-source-fringe
@@ -275,7 +282,7 @@ It's like `with-silent-modifications' but keeps the undo list."
 (define-minor-mode org-transclusion-mode
   "Toggle Org-transclusion minor mode."
   :init-value nil
-  :lighter nil
+  :lighter org-transclusion-mode-lighter
   :global nil
   :keymap (let ((map (make-sparse-keymap)))
             map)
@@ -403,7 +410,8 @@ You can customize the keymap with using `org-transclusion-map':
           ;; Remove keyword after having transcluded content
           (when (org-at-keyword-p)
             (org-transclusion-keyword-remove))
-          (org-transclusion-activate)
+          (let ((org-transclusion-add-all-on-activate nil))
+            (org-transclusion-mode +1))
           t)))))
 
 (defun org-transclusion-add-all-in-buffer ()
