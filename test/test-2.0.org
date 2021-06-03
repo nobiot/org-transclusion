@@ -114,3 +114,6 @@ This is being added
 
 #+RESULTS:
 | category | field | follow-link | fontified | font-lock-face | help-echo | intangible | invisible | keymap | local-map | mouse-face | read-only | yank-handler |
+
+* Remove narrowed and/or invisible regions
+#+transclude: [[file:bertrand-russell.org::*Bertrand Russell - Wikipedia]]
