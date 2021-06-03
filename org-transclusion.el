@@ -36,7 +36,8 @@
 
 ;; Org-transclusion is a buffer-local minor mode.  It is suggested to set a
 ;; keybinding like this to make it easy to toggle it:
-;;     (define-key global-map (kbd "<f12>") #'org-transclusion-mode)
+;;     (define-key global-map (kbd "<f12>") #'org-transclusion-add-at-point)
+;;     (define-key global-map (kbd "C-c n t") #'org-transclusion-mode)
 
 ;;; Code:
 
@@ -239,15 +240,21 @@ specific keybindings; namely:
 - `org-transclusion-live-sync-paste'
 - `org-transclusion-live-sync-exit-at-point'")
 
-(defvar org-transclusion-yank-excluded-properties '(tc-id tc-type
-                                                          tc-beg-mkr
-                                                          tc-end-mkr
-                                                          tc-src-beg-mkr
-                                                          tc-pair
-                                                          tc-orig-keyword))
+(defvar org-transclusion-yank-excluded-properties '(tc-type
+                                                    tc-beg-mkr
+                                                    tc-end-mkr
+                                                    tc-src-beg-mkr
+                                                    tc-pair
+                                                    tc-orig-keyword
+                                                    wrap-prefix
+                                                    line-prefix
+                                                    :parent
+                                                    front-sticky
+                                                    rear-nonsticky))
 
-(defvar org-transclusion-yank-excluded-line-prefix nil)
-(defvar org-transclusion-yank-excluded-wrap-prefix nil)
+(defvar org-transclusion-yank-remember-user-excluded-props '())
+;; (defvar org-transclusion-yank-excluded-line-prefix nil)
+;; (defvar org-transclusion-yank-excluded-wrap-prefix nil)
 
 (define-fringe-bitmap 'org-transclusion-fringe-bitmap
   [#b11000000
@@ -356,27 +363,29 @@ transclusion by calling `org-transclusion-add-at-point'."
             (org-transclusion-add-at-point)))))))
 
 (defun org-transclusion-add-at-point ()
-  "Transclude text content where #+transclude at point points.
+  "Transclude text content for the #+transclude at point.
 
 Examples of acceptable formats are as below:
 
-- \"#+transclude: t[nil] [[file:path/file.org::search-option][desc]]:level n\"
-- \"#+transclude: t[nil] [[id:uuid]] :level n\"
+- \"#+transclude: [[file:path/file.org::search-option][desc]]:level n\"
+- \"#+transclude: [[id:uuid]] :level n :only-contents\"
 
-The file path or id are tranlated to the normal Org Mode link
+The file path or id are translated to the normal Org Mode link
 format such as [[file:path/tofile.org::*Heading]] or [[id:uuid]]
-to copy the text content of the link target.
+to copy a piece of text from the link target.
 
 TODO: id:uuid without brackets [[]] is a valid link within Org
 Mode. This is not supported yet.
 
-A transcluded text region is read-only, but you can activate the
-live-sync edit mode by calling
-`org-transclusion-live-sync-start-at-point'. This edit mode is
-analogous to Occur Edit for Occur Mode.  As such, following keys
-can be used on the read-only text within a transcluded region.
+A transcluded text region is read-only. You can use a variety of
+commands on the transcluded region at point. Refer to the
+commands below.
 
-You can customize the keymap with using `org-transclusion-map':
+For example, `org-transclusion-live-sync-start-at-point'.  This
+edit mode is analogous to Occur Edit for Occur Mode.
+
+You can customize the keymap with
+using `org-transclusion-map':
 
 \\{org-transclusion-map}"
   (interactive)
@@ -392,28 +401,28 @@ You can customize the keymap with using `org-transclusion-map':
          (src-content (plist-get payload :src-content)))
     (if (or (string= src-content "")
             (eq src-content nil))
+        ;; Keep going with program when no content
+        ;; add-all-in-buffer should move to the next transclusion
         (progn (message
                 (format
-                 "No transclusion added.  Check the link at point %d, line %d"
-                 (point) (org-current-line)))
-               ;; when "error", return nil
-               nil)
+                 "No content found with \"%s\".  Check the link at point %d, line %d"
+                 (org-element-property :raw-link link) (point) (org-current-line))
+               nil))
       (org-transclusion-with-silent-modifications
-        ;; Insert & overlay
         (when (save-excursion
                 (end-of-line) (insert-char ?\n)
                 (org-transclusion-content-insert
                  keyword-plist tc-type src-content
                  src-buf src-beg src-end)
                 (delete-char 1)
-                t) ;; return t for "when caluse"
-          ;; Remove keyword after having transcluded content
+                t)
+          ;; Remove keyword only when insert and others are successful
           (when (org-at-keyword-p)
-            (org-transclusion-keyword-remove))
-          (unless org-transclusion-mode
-            (let ((org-transclusion-add-all-on-activate nil))
-              (org-transclusion-mode +1)))
-          t)))))
+            (org-transclusion-keyword-remove))))
+      (unless org-transclusion-mode
+        (let ((org-transclusion-add-all-on-activate nil))
+          (org-transclusion-mode +1)))
+      t)))
 
 (defun org-transclusion-add-all-in-buffer ()
   "Add all active transclusions in the current buffer."
@@ -477,7 +486,7 @@ The list is intended to be used in `org-transclusion-before-save-buffer'."
   (outline-show-all)
   (goto-char (point-min))
   (let ((point)(list))
-    (while (text-property-search-forward 'tc-id)
+    (while (text-property-search-forward 'tc-type)
       (forward-char -1)
       (org-transclusion-with-silent-modifications
         (setq point (org-transclusion-remove-at-point))
@@ -770,13 +779,13 @@ Return nil if not found."
 
 (defun org-transclusion-content-insert (keyword-values type content sbuf sbeg send)
   "Add content and overlay.
+Return t when successful.
 - KEYWORD-VALUES :: TBD
 - TYPE :: TBD
 - CONTENT :: TBD
 - SRC-BEG-M :: TBD
 - SRC-END-M :: TBD"
-  (let* ((tc-id (substring (org-id-uuid) 0 8))
-         (beg (point)) ;; before the text is inserted
+  (let* ((beg (point)) ;; before the text is inserted
          (beg-mkr (set-marker (make-marker) beg))
          (end) ;; at the end of text content after inserting it
          (end-mkr)
@@ -803,7 +812,6 @@ Return nil if not found."
                                      ;; src-lines to add "#+result" after C-c
                                      ;; C-c
                                      rear-nonsticky t
-                                     tc-id ,tc-id
                                      tc-type ,type
                                      tc-beg-mkr ,beg-mkr
                                      tc-end-mkr ,end-mkr
@@ -1045,7 +1053,7 @@ string \"nil\", return symbol t."
 
 (defun org-transclusion-within-transclusion-p ()
   "Return t if the current point is within a tranclusion overlay."
-  (when (get-char-property (point) 'tc-id) t))
+  (when (get-char-property (point) 'tc-type) t))
 
 (defun org-transclusion-propertize-transclusion ()
   "."
@@ -1308,42 +1316,39 @@ This way, the pasted text will not inherit the text props that
 are required for live-sync and other transclusion-specific
 functions.
 
-`org-transclusion-yank-excluded-line-prefix' and
-`org-transclusion-yank-excluded-wrap-prefix' are used to ensure
-the settings revert to the user's setting prior to
+List variable
+`org-transclusion-yank-remember-user-excluded-props' is used to
+ensure the settings revert to the user's setting prior to
 `org-transclusion-activate'."
   ;; Ensure this happens only once until deactivation
-  (unless (memq 'tc-id yank-excluded-properties)
+  (unless (memq 'tc-type yank-excluded-properties)
+    (let ((excluded-props))
     ;; Return t if 'wrap-prefix is already in `yank-excluded-properties'
     ;; if not push to elm the list
-    (setq org-transclusion-yank-excluded-wrap-prefix
-          (if (memq 'wrap-prefix yank-excluded-properties) t
-            (push 'wrap-prefix yank-excluded-properties) nil))
-    (setq org-transclusion-yank-excluded-line-prefix
-          (if (memq 'line-prefix yank-excluded-properties) t
-            (push 'line-prefix yank-excluded-properties) nil))
+    ;; wrap-prefix, etc.
+    (dolist (sym org-transclusion-yank-excluded-properties)
+      (if (memq sym yank-excluded-properties)
+        (push sym org-transclusion-yank-remember-user-excluded-props)
+        ;; Avoid duplicate
+        (push sym excluded-props)))
     (setq yank-excluded-properties
-          (append yank-excluded-properties org-transclusion-yank-excluded-properties))))
+          (append yank-excluded-properties excluded-props)))))
 
 (defun org-transclusion-yank-excluded-properties-remove ()
   "Remove transclusion-specific text props from `yank-excluded-properties'.
-`org-transclusion-yank-excluded-line-prefix' and
-`org-transclusion-yank-excluded-wrap-prefix' are used to ensure
-the settings revert to the user's setting prior to
+List variable
+`org-transclusion-yank-remember-user-excluded-props' is used to
+ensure the settings revert to the user's setting prior to
 `org-transclusion-activate'."
-  (when (memq 'tc-id yank-excluded-properties)
-    ;; Ensure it's called only once until next activation
+  ;; Ensure it's called only once until next activation
+  (when (memq 'tc-type yank-excluded-properties)
     (dolist (obj org-transclusion-yank-excluded-properties)
       ;; 'line-prefix and 'wrap-prefix need to be set to the user's set values
-      (setq yank-excluded-properties (delq obj yank-excluded-properties)))
-    ;; Ensure `yank-excluded-properties' will revert to the user's setting
-    ;; for line-prefix and wrap-prefix
-    (unless  org-transclusion-yank-excluded-line-prefix
-      (setq yank-excluded-properties
-            (delq 'line-prefix yank-excluded-properties)))
-    (unless org-transclusion-yank-excluded-wrap-prefix
-      (setq yank-excluded-properties
-            (delq 'wrap-prefix yank-excluded-properties)))))
+      ;; Ensure `yank-excluded-properties' will revert to the user's setting
+      ;; for line-prefix, wrap-prefix, etc.
+      (unless (memq obj org-transclusion-yank-remember-user-excluded-props)
+        (setq yank-excluded-properties (delq obj yank-excluded-properties))))
+    (setq org-transclusion-yank-remember-user-excluded-props '())))
 
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for promote/demote a transcluded subtree
