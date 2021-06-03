@@ -1,8 +1,8 @@
 (defun my/add-overlays (ovs)
   (let ((overlays ovs))
-    (overlay-put (pop overlays) 'face '(:background "#fff3da" :extend t))
+    (overlay-put (pop overlays) 'face '(:background "#3f2210" :extend t))
     (dolist (overlay overlays)
-      (overlay-put overlay 'face '(:background "#ebf6fa" :extend t)))))
+      (overlay-put overlay 'face '(:background "#203448" :extend t)))))
 
 (defun test-text-clone ()
   (interactive)
