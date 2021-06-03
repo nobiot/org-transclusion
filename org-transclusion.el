@@ -410,8 +410,9 @@ You can customize the keymap with using `org-transclusion-map':
           ;; Remove keyword after having transcluded content
           (when (org-at-keyword-p)
             (org-transclusion-keyword-remove))
-          (let ((org-transclusion-add-all-on-activate nil))
-            (org-transclusion-mode +1))
+          (unless org-transclusion-mode
+            (let ((org-transclusion-add-all-on-activate nil))
+              (org-transclusion-mode +1)))
           t)))))
 
 (defun org-transclusion-add-all-in-buffer ()
