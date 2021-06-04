@@ -459,9 +459,9 @@ When success, return the beginning point of the keyword re-inserted."
                ;; adjacent transclusions' markers if any.
                (when (>= (1- beg)(point-min))
                  (get-text-property (1- beg) 'tc-end-mkr))))
-          (text-clone-delete-overlays)
+          (when (org-transclusion-within-live-sync-p)
+            (org-transclusion-live-sync-exit-at-point))
           (delete-overlay tc-pair-ov)
-          (outline-show-all)
           (org-transclusion-with-silent-modifications
             (save-excursion
               (delete-region beg end)
@@ -588,18 +588,17 @@ a couple of org-transclusion specific keybindings; namely:
 It attemps to re-arrange the windows for the current buffer to
 the state before live-sync started."
   (interactive)
-  ;; Explicitly delete live-sync overlays.  Not functionally necessary as
-  ;; refresh does this inside it; however, it will make the intention of this
-  ;; function clearer.
-  (text-clone-delete-overlays)
-  ;; Re-activate hooks inactive during live-sync
-  (org-transclusion-activate)
-  (org-transclusion-refresh-at-point)
-  (when org-transclusion-temp-window-config
-    (unwind-protect
-        (set-window-configuration org-transclusion-temp-window-config)
-      (progn
-        (setq org-transclusion-temp-window-config nil)))))
+  (if (not (org-transclusion-within-live-sync-p))
+      (user-error "Not within a transclusion in live-sync")
+    (text-clone-delete-overlays)
+    ;; Re-activate hooks inactive during live-sync
+    (org-transclusion-activate)
+    (org-transclusion-refresh-at-point)
+    (when org-transclusion-temp-window-config
+      (unwind-protect
+          (set-window-configuration org-transclusion-temp-window-config)
+        (progn
+          (setq org-transclusion-temp-window-config nil))))))
 
 (defun org-transclusion-live-sync-paste ()
   "Paste text content from `kill-ring' and inherit the text props.
@@ -1059,8 +1058,14 @@ string \"nil\", return symbol t."
   (when (org-not-nil v) t))
 
 (defun org-transclusion-within-transclusion-p ()
-  "Return t if the current point is within a tranclusion overlay."
+  "Return t if the current point is within a tranclusion region."
   (when (get-char-property (point) 'tc-type) t))
+
+(defun org-transclusion-within-live-sync-p ()
+  "Return t if the current point is within a transclusion in live-sync."
+  (when (and (org-transclusion-within-transclusion-p)
+             (get-char-property (point) 'text-clones))
+    t))
 
 (defun org-transclusion-propertize-transclusion ()
   "."
