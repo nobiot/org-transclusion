@@ -178,14 +178,22 @@ a text content.
 
 (defvar-local org-transclusion-remember-window-config nil
   "Rember window config (the arrangment of windows) for the
-  current buffer. This is for live-sync.
-
-Analogous to `org-edit-src-code'.")
+current buffer. This is for live-sync.  Analogous to
+`org-edit-src-code'.")
 
 (defvar org-transclusion-add-functions
   '(org-transclusion-add-org-id
     org-transclusion-add-org-file-links
-    org-transclusion-add-other-file-links))
+    org-transclusion-add-other-file-links)
+  "Define a list of functions to get a payload for transclusion.
+These function take two arguments: Org link and keyword plist,
+and return a playload.  The payload is defined as a property list
+that consists of the following properties:
+
+- :tc-type
+- :src-buf
+- :src-beg
+- :src-end")
 
 (defvar org-transclusion-keyword-values-functions
   '(org-transclusion-keyword-value-link
@@ -194,10 +202,10 @@ Analogous to `org-edit-src-code'.")
     org-transclusion-keyword-value-only-contents
     org-transclusion-keyword-value-exclude-elements
     org-transclusion-keyword-current-indentation)
-  "Define list of functions used to parse a #+transclude keyword.
-The functions take a single argument, the whole keyword value as
-a string.  Each function retrieves a property with using a regexp
-from the string.")
+  "Define a list of functions used to parse a #+transclude keyword.
+These functions take a single argument, the whole keyword value
+as a string.  Each function retrieves a property with using a
+regexp from the string.")
 
 (defvar org-transclusion-keyword-plist-to-string-functions '())
 
@@ -242,20 +250,10 @@ specific keybindings; namely:
 - `org-transclusion-live-sync-exit'")
 
 (defvar org-transclusion-yank-excluded-properties '(tc-type
-                                                    tc-beg-mkr
-                                                    tc-end-mkr
-                                                    tc-src-beg-mkr
-                                                    tc-pair
-                                                    tc-orig-keyword
-                                                    wrap-prefix
-                                                    line-prefix
-                                                    :parent
-                                                    front-sticky
-                                                    rear-nonsticky))
+  tc-beg-mkr tc-end-mkr tc-src-beg-mkr tc-pair tc-orig-keyword
+  wrap-prefix line-prefix :parent front-sticky rear-nonsticky))
 
 (defvar org-transclusion-yank-remember-user-excluded-props '())
-;; (defvar org-transclusion-yank-excluded-line-prefix nil)
-;; (defvar org-transclusion-yank-excluded-wrap-prefix nil)
 
 (define-fringe-bitmap 'org-transclusion-fringe-bitmap
   [#b11000000
@@ -650,13 +648,19 @@ is meant to be used as part of `org-transclusion-live-sync-map'"
 ;;;; Functions for Activate / Deactiveate / save-buffer hooks
 
 (defun org-transclusion-before-save-buffer ()
-  "."
+  "Remove translusions in `before-save-hook'.
+This function is meant to clear the file clear of the
+transclusions.  It also remembers the current point for
+`org-transclusion-after-save-buffer' to move it back."
   (setq org-transclusion-remember-point (point))
   (setq org-transclusion-remember-transclusions
         (org-transclusion-remove-all)))
 
 (defun org-transclusion-after-save-buffer ()
-  "."
+  "Add transclusions back as they were `before-save-buffer'.
+This function relies on `org-transclusion-remember-transclusions'
+set in `before-save-hook'.  It also move the point back to
+`org-transclusion-remember-point'."
   (unwind-protect
       (progn
         ;; Assume the list is in descending order.
