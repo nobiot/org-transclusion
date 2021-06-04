@@ -164,7 +164,7 @@ point after `before-save-hook' and `after-save-hook' pair;
 `org-transclusion-before-save-buffer' and
 `org-transclusion-after-save-buffer' use this variable.")
 
-(defvar-local org-transclusion-before-save-transclusions nil
+(defvar-local org-transclusion-remember-transclusions nil
   "This variable is used to remember the active transclusions before `save-buffer'.
 It is meant to be used to keep the file the current buffer is
 visiting clear of the transcluded text content.  Instead of
@@ -651,9 +651,8 @@ is meant to be used as part of `org-transclusion-live-sync-map'"
 
 (defun org-transclusion-before-save-buffer ()
   "."
-  (setq org-transclusion-before-save-transclusions nil)
   (setq org-transclusion-remember-point (point))
-  (setq org-transclusion-before-save-transclusions
+  (setq org-transclusion-remember-transclusions
         (org-transclusion-remove-all)))
 
 (defun org-transclusion-after-save-buffer ()
@@ -662,7 +661,7 @@ is meant to be used as part of `org-transclusion-live-sync-map'"
       (progn
         ;; Assume the list is in descending order.
         ;; pop and do from the bottom of buffer
-        (dolist (p org-transclusion-before-save-transclusions)
+        (dolist (p org-transclusion-remember-transclusions)
           (save-excursion
             (goto-char p)
             (org-transclusion-add)))
@@ -670,7 +669,7 @@ is meant to be used as part of `org-transclusion-live-sync-map'"
           (goto-char org-transclusion-remember-point))
     (progn
       (setq org-transclusion-remember-point nil)
-      (setq org-transclusion-before-save-transclusions nil)))))
+      (setq org-transclusion-remember-transclusions nil)))))
 
 (defun org-transclusion-before-kill ()
   "."
