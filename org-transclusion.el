@@ -424,11 +424,23 @@ using `org-transclusion-map':
           (org-transclusion-mode +1)))
       t)))
 
-(defun org-transclusion-add-all-in-buffer ()
-  "Add all active transclusions in the current buffer."
-  (interactive)
-  (let ((pos (point)))
-    (org-with-point-at 1
+(defun org-transclusion-add-all-in-buffer (&optional narrowed)
+  "Add all active transclusions in the current buffer.
+
+By default, this function temporarily widens the narrowed region
+to work on the entire buffer.  Note that this behavior is
+important for `org-transclusion-after-save-buffer' to be part of
+clearing the underlying file of all the transcluded text.
+
+For interactive use, you can pass NARROWED with using
+`universal-argument' (\\[universal-argument]) to get this
+function to work only on the narrowed region, leaving the rest of
+the buffer in tact."
+  (interactive "P")
+  (save-restriction
+    (let ((marker (move-marker (make-marker) (point))))
+      (unless narrowed (widen))
+      (goto-char (point-min))
       (let ((regexp "^[ \t]*#\\+TRANSCLUDE:"))
         (while (re-search-forward regexp nil t)
           ;; Don't transclude if within a transclusion to avoid infinite
@@ -436,9 +448,10 @@ using `org-transclusion-map':
           (unless (or (org-transclusion-within-transclusion-p)
                       (plist-get (org-transclusion-keyword-get-string-to-plist)
                                  :disable-auto))
-            (org-transclusion-add-at-point)))))
-    (goto-char pos)
-    t))
+            (org-transclusion-add-at-point))))
+      (goto-char marker)
+      (move-marker marker nil) ; point nowhere for GC
+      t)))
 
 (defun org-transclusion-remove-at-point ()
   "Remove transcluded text at point.
@@ -501,14 +514,17 @@ function to work only on the narrowed region, leaving the rest of
 the buffer in tact."
   (interactive "P")
   (save-restriction
-    (unless narrowed (widen))
-    (goto-char (point-min))
-    (let ((point)(list))
+    (let ((marker (move-marker (make-marker) (point)))
+          point list)
+      (unless narrowed (widen))
+      (goto-char (point-min))
       (while (text-property-search-forward 'tc-type)
         (forward-char -1)
         (org-transclusion-with-silent-modifications
           (setq point (org-transclusion-remove-at-point))
           (when point (push point list))))
+      (goto-char marker)
+      (move-marker marker nil) ; point nowhere for GC
       list)))
 
 (defun org-transclusion-refresh-at-point ()
