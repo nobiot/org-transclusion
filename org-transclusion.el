@@ -583,13 +583,16 @@ a couple of org-transclusion specific keybindings; namely:
     (org-transclusion-refresh-at-point)
     (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
     (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
-    (let* ((ovs (org-transclusion-live-sync-buffers-get))
+    (let* ((remember-pos (point))
+           (ovs (org-transclusion-live-sync-buffers-get))
            (src-ov (car ovs))
            (tc-ov (cdr ovs))
            (tc-beg (overlay-start tc-ov))
            (tc-end (overlay-end tc-ov)))
       (org-transclusion-live-sync-display-buffer (overlay-buffer src-ov))
-      (org-transclusion-live-sync-modify-overlays (text-clone-set-overlays src-ov tc-ov))
+      (org-transclusion-live-sync-modify-overlays
+       (text-clone-set-overlays src-ov tc-ov))
+      (goto-char remember-pos)
       (with-silent-modifications
         (remove-text-properties (1- tc-beg) tc-end '(read-only)))
       t)))
