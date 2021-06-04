@@ -301,7 +301,7 @@ It's like `with-silent-modifications' but keeps the undo list."
    (t (org-transclusion-deactivate))))
 
 (defun org-transclusion-activate ()
-  "Activate automatic transclusions in the local buffer."
+  "Activate Org-transclusion hooks and other setups in the local buffer."
   (interactive)
   (add-hook 'before-save-hook #'org-transclusion-before-save-buffer nil t)
   (add-hook 'after-save-hook #'org-transclusion-after-save-buffer nil t)
@@ -310,7 +310,7 @@ It's like `with-silent-modifications' but keeps the undo list."
   (org-transclusion-yank-excluded-properties-set))
 
 (defun org-transclusion-deactivate ()
-  "Deactivate automatic transclusions in the local buffer."
+  "Dectivate Org-transclusion hooks and other setups in the local buffer."
   (interactive)
   (org-transclusion-remove-all-in-buffer)
   (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
@@ -970,14 +970,16 @@ This function applies multiple filters on the Org elements before
 construting the payload based on relevant user options and
 optional arguments as below:
 
-ONLY-CONTENTS applies filter to remove headline titles of the
-subtree, extracting only sections (including paragraphs, tables,
-etc.).
-
 EXCLUDE-ELEMENTS adds elements to be excluded onto user option
 `org-transclusion-exclude-elements'.  The user option applies
 globally, the optional arguments can be applied for each
-transcluion."
+transcluion.
+
+First section
+
+ONLY-CONTENTS applies filter to remove headline titles of the
+subtree, extracting only sections (including paragraphs, tables,
+etc.)."
   (let* ((el (org-element-context))
          (type (when el (org-element-type el))))
     (if (or (not el)(not type))
@@ -999,7 +1001,7 @@ transcluion."
         (let ((org-transclusion-exclude-elements
                (append exclude-elements org-transclusion-exclude-elements)))
           (setq obj (org-element-map obj org-element-all-elements
-                      #'org-transclusion-content-filter-org-buffer-default
+                      #'org-transclusion-content-filter-org-exclude-elements
                       nil nil org-element-all-elements nil)))
         ;; First section
         (unless only-element ;only-element is nil when it is a first section
@@ -1016,28 +1018,27 @@ transcluion."
               :src-beg (point-min)
               :src-end (point-max))))))
 
-(defun org-transclusion-content-filter-org-buffer-default (data)
-  "."
+(defun org-transclusion-content-filter-org-exclude-elements (data)
+  "Exclude specific elements from DATA.
+The elements to be excluded are defined by customizing variable
+`org-transclusion-exclude-elements' globally, and adjusted by
+:exclude-elements property of the transclusion keyword."
   (org-element-map data org-transclusion-exclude-elements
     (lambda (d) (org-element-extract-element d)))
   data)
 
 (defun org-transclusion-content-filter-org-first-section (data)
-  "."
-  ;; This condition is meant to filter out the first section; that is,
-  ;; the part before the first headline.  The DATA should have the type
-  ;; `org-data' by default, with one exception.  I put `tc-paragraph'
-  ;; as the type when a paragraph is parased (via dedicated target).
-  ;; In this case, the whole DATA should be returned.
-  ;; Sections are included in the headlines Thies means that if there
-  ;; is no headline, nothing gets transcluded.
+  "Exclude the first section from DATA.
+The first section is the part before the first headline of an Org
+file.  Include it when `org-transclusion-include-first-section'
+is non-nil."
   (if (and (eq (org-element-type data) 'section)
            (not org-transclusion-include-first-section))
       nil
     data))
 
 (defun org-transclusion-content-filter-only-contents (data)
-  "."
+  "Exclude headlines from DATA to include only contents."
   (if (eq (org-element-type data) 'headline)
       nil
     data))
@@ -1275,10 +1276,10 @@ paragraph."
                                 (point)))))))))
 
 (defun org-transclusion-live-sync-after-delete-overlay (list)
-  "Refresh the transclusion after live-sync has ended before
-starting a new one.  LIST is assumed to be a list that represents
-the deleted overlay for transclusion in this structure:
-
+  "Refresh the transclusion after live-sync has ended.
+This must be done before starting a new live-sync.  LIST is
+assumed to be a list that represents the deleted overlay for
+transclusion in this structure:
     (buf (beg . end))"
   (when list
     (let ((buf (car list))
@@ -1313,11 +1314,12 @@ back the original window configuration."
 
 (defun org-transclusion-live-sync-buffers-get ()
   "Return cons cell of overlays for source and trasnclusion.
-    (src-ov . tc-ov)
+The cons cell to be returned is in this format:
 
-This function looks at transclusion type (tc-type) property and
-delegates the actual process to the specific function for the
-type.
+   (src-ov . tc-ov)
+
+This function looks at transclusion type property and delegates
+the actual process to the specific function for the type.
 
 Assume this function is called with the point on an
 org-transclusion overlay."
@@ -1327,7 +1329,10 @@ org-transclusion overlay."
 
 (defun org-transclusion-live-sync-buffers-get-others-default (_type)
   "Return cons cell of overlays for source and trasnclusion.
+The cons cell to be returned is in this format:
+
     (src-ov . tc-ov)
+
 This function is for non-Org text files."
   ;; Get the transclusion source's overlay but do not directly use it; it is
   ;; needed after exiting live-sync, which deletes live-sync overlays.
@@ -1343,8 +1348,12 @@ This function is for non-Org text files."
 
 (defun org-transclusion-live-sync-buffers-get-org (type)
   "Return cons cell of overlays for source and trasnclusion.
+The cons cell to be returned is in this format:
+
     (src-ov . tc-ov)
-This function is for Org Links and IDs."
+
+This function uses TYPE to identify Org files to work on only Org
+links and IDs."
   (when (string-prefix-p "org" type 'ignore-case)
     (let* ((tc-elem (org-transclusion-live-sync-enclosing-element))
            (tc-beg (org-element-property :begin tc-elem))
