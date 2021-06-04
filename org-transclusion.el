@@ -459,6 +459,10 @@ When success, return the beginning point of the keyword re-inserted."
                ;; adjacent transclusions' markers if any.
                (when (>= (1- beg)(point-min))
                  (get-text-property (1- beg) 'tc-end-mkr))))
+          ;; If within live-sync, exit.  It's not absolutely
+          ;; required. delete-region below will evaporate the live-sync
+          ;; overlay, and text-clone's post-command correctly handles the
+          ;; overlay on the source.
           (when (org-transclusion-within-live-sync-p)
             (org-transclusion-live-sync-exit-at-point))
           (delete-overlay tc-pair-ov)
