@@ -45,7 +45,7 @@
 (require 'org)
 (require 'org-element)
 (require 'org-id)
-(require 'text-clone)
+;;(require 'text-clone)
 (declare-function text-clone-make-overlay 'text-clone)
 (declare-function text-clone-delete-overlays 'text-clone)
 (declare-function text-clone-set-overlays 'text-clone)
@@ -483,15 +483,22 @@ When success, return the beginning point of the keyword re-inserted."
 
 (defun org-transclusion-remove-all-in-buffer (&optional narrowed)
   "Remove all transcluded text regions in the current buffer.
-Return the list of points for the transclusion keywords re-inserted.
-It is assumed that the list is ordered in descending order.
-The list is intended to be used in `org-transclusion-before-save-buffer'.
+Return the list of points for the transclusion keywords
+re-inserted.  It is assumed that the list is ordered in
+descending order from the bottom of the buffer to the top.  The
+list is intended to be used in
+`org-transclusion-before-save-buffer'.
 
 By default, this function temporarily widens the narrowed region
-to work on the entire buffer.  You can pass NARROWED with using
-`universal-argument' (\\[universal-argument]).  When NARROWED is
-non-nil, this function works only on the narrowed region, leaving
-the rest of the buffer in tact. "
+to work on the entire buffer.  Note that this behavior is
+important for `org-transclusion-before-save-buffer' and
+`org-transclusion-before-kill' to clear the underlying file of
+all the transcluded text.
+
+For interactive use, you can pass NARROWED with using
+`universal-argument' (\\[universal-argument]) to get this
+function to work only on the narrowed region, leaving the rest of
+the buffer in tact."
   (interactive "P")
   (save-restriction
     (unless narrowed (widen))
@@ -788,13 +795,29 @@ Return nil if not found."
 ;;;; Functions for inserting content
 
 (defun org-transclusion-content-insert (keyword-values type content sbuf sbeg send)
-  "Add content and overlay.
+  "Insert CONTENT at point and put source overlay in SBUF.
 Return t when successful.
-- KEYWORD-VALUES :: TBD
-- TYPE :: TBD
-- CONTENT :: TBD
-- SRC-BEG-M :: TBD
-- SRC-END-M :: TBD"
+
+This function formats CONTENT with using one of the
+`org-transclusion-content-format-functions'; e.g. align a table
+for Org.
+
+This function is intended to be used within
+`org-transclusion-add-at-point'.  All the arguments should be
+obtained by one of the `org-transclusion-add-at-point-functions'.
+
+This function adds text properties required for Org-transclusion
+to the inserted content.  It also puts an overlay to an
+appropriate region of the source buffer.  They are constructed
+based on the following arguments:
+
+- KEYWORD-VALUES :: Property list of the value of transclusion keyword
+- TYPE :: Transclusion type; e.g. \"org-link\"
+- CONTENT :: Text content of the transclusion source to be inserted
+- SBUF :: Buffer of the transclusion source where CONTENT comes from
+- SBEG :: Begin point of CONTENT in SBUF
+- SEND :: End point of CONTENT in SBUF"
+
   (let* ((beg (point)) ;; before the text is inserted
          (beg-mkr (set-marker (make-marker) beg))
          (end) ;; at the end of text content after inserting it
@@ -864,8 +887,10 @@ This is the default one"
       (buffer-string))))
 
 (defun org-transclusion-content-from-org-marker (marker plist)
-  "Return tc-beg-mkr, tc-end-mkr, tc-content from MARKER.
-This is meant for Org-ID."
+  "Return a list of payload from MARKER and PLIST.
+This function is intended to be used for Org-ID.  It delates the
+work to
+`org-transclusion-content-org-buffer-or-element-at-point'."
   (if (and marker (marker-buffer marker)
            (buffer-live-p (marker-buffer marker)))
       (progn
@@ -883,7 +908,10 @@ This is meant for Org-ID."
     (message "Nothing done. Cannot find marker for the ID.")))
 
 (defun org-transclusion-content-from-org-link (link plist)
-  "Return tc-beg-mkr, tc-end-mkr, tc-content from LINK."
+  "Return a list of payload from Org LINK object and PLIST.
+This function is intended to be used for Org-ID.  It delates the
+work to
+`org-transclusion-content-org-buffer-or-element-at-point'."
   (save-excursion
     ;; First visit the buffer and go to the relevant elelement if
     ;; search-option is present.
@@ -906,9 +934,31 @@ This is meant for Org-ID."
 (defun org-transclusion-content-org-buffer-or-element-at-point (&optional only-element
                                                                           only-contents
                                                                           exclude-elements)
-  "Return content for transclusion.
-When ONLY-ELEMENT is t, only the element.  If nil, the whole buffer.
-Assume you are at the beginning of the org element to transclude."
+  "Return a list of playload for transclusion.
+Tis function assumes the point is at the beginning of the org
+element to transclude.
+
+The payload is a plist that consists of the following properties:
+- :src-content
+- :src-buf
+- :src-beg
+- :src-end
+
+When ONLY-ELEMENT is non-nil, this function looks at only the element
+at point; if nil, the whole buffer.
+
+This function applies multiple filters on the Org elements before
+construting the payload based on relevant user options and
+optional arguments as below:
+
+ONLY-CONTENTS applies filter to remove headline titles of the
+subtree, extracting only sections (including paragraphs, tables,
+etc.).
+
+EXCLUDE-ELEMENTS adds elements to be excluded onto user option
+`org-transclusion-exclude-elements'.  The user option applies
+globally, the optional arguments can be applied for each
+transcluion."
   (let* ((el (org-element-context))
          (type (when el (org-element-type el))))
     (if (or (not el)(not type))
