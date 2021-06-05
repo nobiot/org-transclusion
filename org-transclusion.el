@@ -183,8 +183,8 @@ current buffer. This is for live-sync.  Analogous to
 
 (defvar org-transclusion-add-functions
   '(org-transclusion-add-org-id
-    org-transclusion-add-org-file-links
-    org-transclusion-add-other-file-links)
+    org-transclusion-add-org-file
+    org-transclusion-add-other-file)
   "Define a list of functions to get a payload for transclusion.
 These function take two arguments: Org link and keyword plist,
 and return a playload.  The payload is defined as a property list
@@ -816,14 +816,15 @@ Return nil if not found."
                  (point) (org-current-line)))
         nil))))
 
-(defun org-transclusion-add-org-file-links (link plist)
+
+(defun org-transclusion-add-org-file (link plist)
   "Return a list for Org file LINK object and PLIST.
 Return nil if not found."
   (when (org-transclusion-org-file-p (org-element-property :path link))
     (append '(:tc-type "org-link")
             (org-transclusion-content-org-link link plist))))
 
-(defun org-transclusion-add-other-file-links (link plist)
+(defun org-transclusion-add-other-file (link plist)
   "Return a list for non-Org file LINK object and PLIST.
 Return nil if not found."
   (append '(:tc-type "others-default")
