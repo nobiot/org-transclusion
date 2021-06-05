@@ -724,7 +724,8 @@ It is meant to be used by `org-transclusion-get-string-to-plist'.
 It needs to be set in
 `org-transclusion-keyword-value-functions'."
   (when (string-match ":level *\\([1-9]\\)" string)
-    (list :level (string-to-number (org-strip-quotes (match-string 1 string))))))
+    (list :level
+          (string-to-number (org-strip-quotes (match-string 1 string))))))
 
 (defun org-transclusion-keyword-value-only-contents (string)
   "It is a utility function used converting a keyword STRING to plist.
@@ -742,7 +743,8 @@ It needs to be set in
 `org-transclusion-get-keyword-values-hook'.
 Double qutations are mandatory."
   (when (string-match ":exclude-elements +\"\\(.*\\)\"" string)
-    (list :exclude-elements (org-strip-quotes (match-string 1 string)))))
+    (list :exclude-elements
+          (org-trim (org-strip-quotes (match-string 1 string))))))
 
 (defun org-transclusion-keyword-current-indentation (_)
   "It is a utility function used converting a keyword STRING to plist.
@@ -789,7 +791,13 @@ It assumes that point is at a keyword."
   "Return list of symbols from PLIST when applicable.
 If PLIST does not have :exclude-elements, return nil."
   (let ((str (plist-get plist :exclude-elements)))
-    (when str (mapcar #'intern (split-string (org-trim str) " ")))))
+    (when str
+      (let ((list (split-string str " "))
+            elements)
+        (dolist (s list elements)
+          (unless (string= s "")
+            (when (memq (intern s) org-element-all-elements)
+              (push (intern s) elements))))))))
 
 ;;-----------------------------------------------------------------------------
 ;;;; Add-at-point functions
