@@ -195,7 +195,7 @@ that consists of the following properties:
 - :src-beg
 - :src-end")
 
-(defvar org-transclusion-keyword-values-functions
+(defvar org-transclusion-keyword-value-functions
   '(org-transclusion-keyword-value-link
     org-transclusion-keyword-value-level
     org-transclusion-keyword-value-disable-auto
@@ -694,7 +694,7 @@ set in `before-save-hook'.  It also move the point back to
         ;; #+transclude: keyword exists.
         ;; Further checking the value
         (when-let ((str (org-element-property :value (org-element-at-point))))
-          (dolist (fn org-transclusion-keyword-values-functions) plist
+          (dolist (fn org-transclusion-keyword-value-functions) plist
                   (setq plist (append plist (funcall fn str)))))
         plist))))
 
@@ -702,7 +702,7 @@ set in `before-save-hook'.  It also move the point back to
   "It is a utility function used converting a keyword STRING to plist.
 It is meant to be used by
 `org-transclusion-get-string-to-plist'.  It needs to be set in
-`org-transclusion-keyword-values-functions'."
+`org-transclusion-keyword-value-functions'."
   (if (string-match "\\(\\[\\[.+?\\]\\]\\)" string)
       (list :link (org-strip-quotes (match-string 0 string)))
     ;; link mandatory
@@ -713,7 +713,7 @@ It is meant to be used by
   "It is a utility function used converting a keyword STRING to plist.
 It is meant to be used by `org-transclusion-get-string-to-plist'.
 It needs to be set in
-`org-transclusion-keyword-values-functions'."
+`org-transclusion-keyword-value-functions'."
   (when (string-match ":disable-auto" string)
     (list :disable-auto
           (org-strip-quotes (match-string 0 string)))))
@@ -722,7 +722,7 @@ It needs to be set in
   "It is a utility function used converting a keyword STRING to plist.
 It is meant to be used by `org-transclusion-get-string-to-plist'.
 It needs to be set in
-`org-transclusion-keyword-values-functions'."
+`org-transclusion-keyword-value-functions'."
   (when (string-match ":level *\\([1-9]\\)" string)
     (list :level (string-to-number (org-strip-quotes (match-string 1 string))))))
 
@@ -730,7 +730,7 @@ It needs to be set in
   "It is a utility function used converting a keyword STRING to plist.
 It is meant to be used by `org-transclusion-get-string-to-plist'.
 It needs to be set in
-`org-transclusion-keyword-values-functions'."
+`org-transclusion-keyword-value-functions'."
   (when (string-match ":only-contents?" string)
     (list :only-contents
           (org-strip-quotes (match-string 0 string)))))
@@ -748,7 +748,7 @@ Double qutations are mandatory."
   "It is a utility function used converting a keyword STRING to plist.
 It is meant to be used by `org-transclusion-get-string-to-plist'.
 It needs to be set in
-`org-transclusion-keyword-values-functions'."
+`org-transclusion-keyword-value-functions'."
   (list :current-indentation (current-indentation)))
 
 (defun org-transclusion-keyword-remove ()
