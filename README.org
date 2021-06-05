@@ -6,7 +6,11 @@
 
 # Note: I use the readme template that alphapapa shares on his GitHub repo <https://github.com/alphapapa/emacs-package-dev-handbook#template>. It works with the org-make-toc <https://github.com/alphapapa/org-make-toc> package, which automatically updates the table of contents.
 
-*NOTICE* Please refer to notice on the upcoming changes and new features in [issue 81](https://github.com/nobiot/org-transclusion/issues/81) -- it includes breaking changes. 
+⚠⚠⚠
+
+*NOTICE*: Please refer to notice on the upcoming changes and new features in [[https://github.com/nobiot/org-transclusion/issues/81][issue 81]] -- it includes information on upcoming breaking changes. 
+
+⚠⚠⚠
 
 Transclusion is the ability to include content from one file into another by reference. Org-transclusion lets you do this in your Org file. 
 
