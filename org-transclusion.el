@@ -971,8 +971,8 @@ work to
             nil only-contents exclude-elements)))))))
 
 (defun org-transclusion-content-org-buffer-or-element (&optional only-element
-                                                                          only-contents
-                                                                          exclude-elements)
+                                                                 only-contents
+                                                                 exclude-elements)
   "Return a list of playload for transclusion.
 Tis function assumes the point is at the beginning of the org
 element to transclude.
@@ -1346,25 +1346,6 @@ org-transclusion overlay."
     (run-hook-with-args-until-success
      'org-transclusion-live-sync-buffers-functions type)))
 
-(defun org-transclusion-live-sync-buffers-others-default (_type)
-  "Return cons cell of overlays for source and trasnclusion.
-The cons cell to be returned is in this format:
-
-    (src-ov . tc-ov)
-
-This function is for non-Org text files."
-  ;; Get the transclusion source's overlay but do not directly use it; it is
-  ;; needed after exiting live-sync, which deletes live-sync overlays.
-  (when-let* ((tc-pair (get-text-property (point) 'tc-pair))
-              (src-ov (text-clone-make-overlay
-                       (overlay-start tc-pair)
-                       (overlay-end tc-pair)
-                       (overlay-buffer tc-pair)))
-              (tc-ov (text-clone-make-overlay
-                      (get-text-property (point) 'tc-beg-mkr)
-                      (get-text-property (point) 'tc-end-mkr))))
-    (cons src-ov tc-ov)))
-
 (defun org-transclusion-live-sync-buffers-org (type)
   "Return cons cell of overlays for source and trasnclusion.
 The cons cell to be returned is in this format:
@@ -1419,6 +1400,25 @@ links and IDs."
               (move-marker end-mkr-at-beg beg)))
           (setq tc-ov (text-clone-make-overlay beg end))))
       (cons src-ov tc-ov))))
+
+(defun org-transclusion-live-sync-buffers-others-default (_type)
+  "Return cons cell of overlays for source and trasnclusion.
+The cons cell to be returned is in this format:
+
+    (src-ov . tc-ov)
+
+This function is for non-Org text files."
+  ;; Get the transclusion source's overlay but do not directly use it; it is
+  ;; needed after exiting live-sync, which deletes live-sync overlays.
+  (when-let* ((tc-pair (get-text-property (point) 'tc-pair))
+              (src-ov (text-clone-make-overlay
+                       (overlay-start tc-pair)
+                       (overlay-end tc-pair)
+                       (overlay-buffer tc-pair)))
+              (tc-ov (text-clone-make-overlay
+                      (get-text-property (point) 'tc-beg-mkr)
+                      (get-text-property (point) 'tc-end-mkr))))
+    (cons src-ov tc-ov)))
 
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for yank/paste a region within transclusion
