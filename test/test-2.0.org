@@ -84,6 +84,9 @@ This is being added
 
 #+transclude: [[file:bertrand-russell.org::*On Denoting]] :level 2 :only-contents :exclude-elements "headline drawer"
 
+** test
+#+transclude: [[file:bertrand-russell.org::*On Denoting]] :level 2 :only-contents :exclude-elements "headline   drawer"
+
 * Disable-auto
 ** *Hadline
 #+transclude: [[file:bertrand-russell.org::*Bertrand Russell - Wikipedia]] :level 2 :disable-auto :only-contents
