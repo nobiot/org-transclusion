@@ -597,11 +597,11 @@ a couple of org-transclusion specific keybindings; namely:
   (if (not (org-transclusion-within-transclusion-p))
       (progn (message (format "Nothing done. Not a translusion at %d" (point)))
              nil)
-    ;; Delete other live-sync overlays and clean-up.
+    ;; Delete the other live-sync and refresh its transclusion
     ;; There should be only one pair of transclusion-source in live-sync
     (when-let* ((deleted-live-sync-ovs (text-clone-delete-overlays))
                 (deleted-tc-ov (cadr deleted-live-sync-ovs)))
-      (org-transclusion-live-sync-after-delete-overlay deleted-tc-ov))
+      (org-transclusion-live-sync-refresh-after-exit deleted-tc-ov))
     (org-transclusion-refresh)
     (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
     (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
@@ -1295,7 +1295,7 @@ paragraph."
             (user-error (format "Live sync cannot start here: point %d"
                                 (point)))))))))
 
-(defun org-transclusion-live-sync-after-delete-overlay (list)
+(defun org-transclusion-live-sync-refresh-after-exit (list)
   "Refresh the transclusion after live-sync has ended.
 This must be done before starting a new live-sync.  LIST is
 assumed to be a list that represents the deleted overlay for
