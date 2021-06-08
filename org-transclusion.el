@@ -839,6 +839,14 @@ Return nil if not found."
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for inserting content
 
+(defun org-transclusion-max-headline-level ()
+  (let ((tree (org-element-parse-buffer))
+        list)
+    (org-element-map tree 'headline
+      (lambda (h)
+        (push (org-element-property :level h) list)))
+    (when list (seq-min list))))
+
 (defun org-transclusion-content-insert (keyword-values type content sbuf sbeg send)
   "Insert CONTENT at point and put source overlay in SBUF.
 Return t when successful.
@@ -868,15 +876,28 @@ based on the following arguments:
          (end) ;; at the end of text content after inserting it
          (end-mkr)
          (ov-src (text-clone-make-overlay sbeg send sbuf)) ;; source-buffer overlay
-         (tc-pair ov-src))
-    (when (org-kill-is-subtree-p content)
-      (let ((level (plist-get keyword-values :level)))
+         (tc-pair ov-src)
+         (content content))
+    (when (string-prefix-p "org" type 'ignore-case)
         (with-temp-buffer
           ;; This temp buffer needs to be in Org Mode
           ;; Otherwise, subtree won't be recognized as a Org subtree
           (delay-mode-hooks (org-mode))
-          (org-paste-subtree level content t nil)
-          (setq content (buffer-string)))))
+          (insert content)
+          (org-with-point-at 1
+            (let* ((to-level (plist-get keyword-values :level))
+                   (level (org-transclusion-max-headline-level))
+                   (diff (when (and level to-level) (- level to-level))))
+            (when diff
+              (cond ((< diff 0) ; demote
+                     (org-map-entries (lambda ()
+                                        (dotimes (v (abs diff))
+                                          (org-do-demote)))))
+                    ((> diff 0) ; promote
+                     (org-map-entries (lambda ()
+                                        (dotimes (v diff)
+                                          (org-do-promote))))))))
+            (setq content (buffer-string)))))
     (insert
      (run-hook-with-args-until-success
       'org-transclusion-content-format-functions type content))
