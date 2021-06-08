@@ -285,6 +285,7 @@ It's like `with-silent-modifications' but keeps the undo list."
 
 ;;;; Commands
 
+;;;###autoload
 (define-minor-mode org-transclusion-mode
   "Toggle Org-transclusion minor mode."
   :init-value nil
@@ -299,8 +300,9 @@ It's like `with-silent-modifications' but keeps the undo list."
       (org-transclusion-add-all)))
    (t (org-transclusion-deactivate))))
 
+;;;###autoload
 (defun org-transclusion-activate ()
-  "Activate Org-transclusion hooks and other setups in the local buffer."
+  "Activate Org-transclusion hooks and other setups in the current buffer."
   (interactive)
   (add-hook 'before-save-hook #'org-transclusion-before-save-buffer nil t)
   (add-hook 'after-save-hook #'org-transclusion-after-save-buffer nil t)
@@ -309,7 +311,7 @@ It's like `with-silent-modifications' but keeps the undo list."
   (org-transclusion-yank-excluded-properties-set))
 
 (defun org-transclusion-deactivate ()
-  "Dectivate Org-transclusion hooks and other setups in the local buffer."
+  "Dectivate Org-transclusion hooks and other setups in the current buffer."
   (interactive)
   (org-transclusion-remove-all)
   (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
@@ -318,23 +320,25 @@ It's like `with-silent-modifications' but keeps the undo list."
   (remove-hook 'kill-emacs-hook #'org-transclusion-before-kill t)
   (org-transclusion-yank-excluded-properties-remove))
 
+;;;###autoload
 (defun org-transclusion-make-from-link (&optional arg)
   "Make a transclusion keyword from a link at point.
 
 The resultant transclusion keyword will be placed in the first
-empty line.  If there is no empty line until the bottom of the
-buffer, add a new empty line.
+next empty line.  If there is no empty line until the bottom of
+the buffer, this function adds a new empty line.
 
 When minor-mode `org-transclusion-mode' is active, this function
-automatically transclude the text content; when it is inactive,
+automatically transcludes the text content; when it is inactive,
 it simply adds \"#+transclude [[link]]\" for the link.
 
 You can pass a prefix argument (ARG) with using
 `digit-argument' (e.g. C-1 or C-2; or \\[universal-argument] 3,
 so on) or `universal-argument' (\\[universal-argument]).
 
-If you pass a positive number 1-9 with `digit-argument', this function
-automatically inserts the :level property of the resultant transclusion.
+If you pass a positive number 1-9 with `digit-argument', this
+function automatically inserts the :level property into the
+resultant transclusion.
 
 If you pass a `universal-argument', this function automatically triggers
 transclusion by calling `org-transclusion-add'."
@@ -361,8 +365,11 @@ transclusion by calling `org-transclusion-add'."
           (when (or (equal arg '(4)) org-transclusion-mode)
             (org-transclusion-add)))))))
 
+;;;###autoload
 (defun org-transclusion-add ()
   "Transclude text content for the #+transclude at point.
+When the `org-transclusion-mode' minor mode is not actively yet,
+this function toggles it on.
 
 Examples of acceptable formats are as below:
 
@@ -378,13 +385,11 @@ Mode. This is not supported yet.
 
 A transcluded text region is read-only. You can use a variety of
 commands on the transcluded region at point. Refer to the
-commands below.
+commands below. You can customize the keymap with
+using `org-transclusion-map'.
 
 For example, `org-transclusion-live-sync-start'.  This edit mode
 is analogous to Occur Edit for Occur Mode.
-
-You can customize the keymap with
-using `org-transclusion-map':
 
 \\{org-transclusion-map}"
   (interactive)
@@ -423,18 +428,19 @@ using `org-transclusion-map':
           (org-transclusion-mode +1)))
       t)))
 
+;;;###autoload
 (defun org-transclusion-add-all (&optional narrowed)
   "Add all active transclusions in the current buffer.
 
 By default, this function temporarily widens the narrowed region
-to work on the entire buffer.  Note that this behavior is
-important for `org-transclusion-after-save-buffer' to be part of
-clearing the underlying file of all the transcluded text.
+you are in and works on the entire buffer.  Note that this
+behavior is important for `org-transclusion-after-save-buffer' in
+order to clear the underlying file of all the transcluded text.
 
 For interactive use, you can pass NARROWED with using
 `universal-argument' (\\[universal-argument]) to get this
-function to work only on the narrowed region, leaving the rest of
-the buffer in tact."
+function to work only on the narrowed region you are in, leaving
+the rest of the buffer unchanged."
   (interactive "P")
   (save-restriction
     (let ((marker (move-marker (make-marker) (point))))
@@ -502,15 +508,15 @@ list is intended to be used in
 `org-transclusion-before-save-buffer'.
 
 By default, this function temporarily widens the narrowed region
-to work on the entire buffer.  Note that this behavior is
+you are in and works on the entire buffer..  Note that this behavior is
 important for `org-transclusion-before-save-buffer' and
 `org-transclusion-before-kill' to clear the underlying file of
 all the transcluded text.
 
 For interactive use, you can pass NARROWED with using
 `universal-argument' (\\[universal-argument]) to get this
-function to work only on the narrowed region, leaving the rest of
-the buffer in tact."
+function to work only on the narrowed region you are in, leaving
+the rest of the buffer unchanged."
   (interactive "P")
   (save-restriction
     (let ((marker (move-marker (make-marker) (point)))
@@ -887,12 +893,15 @@ based on the following arguments:
                                      tc-type ,type
                                      tc-beg-mkr ,beg-mkr
                                      tc-end-mkr ,end-mkr
-                                     tc-src-beg-mkr ,(set-marker (make-marker) sbeg sbuf)
+                                     tc-src-beg-mkr
+                                     ,(set-marker (make-marker) sbeg sbuf)
                                      tc-pair ,tc-pair
                                      tc-orig-keyword ,keyword-values
                                      ;; TODO Fringe is not supported for terminal
-                                     line-prefix ,(org-transclusion-propertize-transclusion)
-                                     wrap-prefix ,(org-transclusion-propertize-transclusion)))
+                                     line-prefix
+                                     ,(org-transclusion-propertize-transclusion)
+                                     wrap-prefix
+                                     ,(org-transclusion-propertize-transclusion)))
     ;; Put to the source overlay
     (overlay-put ov-src 'tc-by beg-mkr)
     (overlay-put ov-src 'evaporate t)
