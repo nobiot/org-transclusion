@@ -705,14 +705,20 @@ set in `before-save-hook'.  It also move the point back to
       (setq org-transclusion-remember-transclusions nil)))))
 
 (defun org-transclusion-before-kill ()
-  "."
+  "Remove transclusions before kill-buffer or kill-emacs.
+Intended to be used with `kill-buffer-hook' and `kill-emacs-hook'
+to clear the file of the transcluded text regions.  This function
+also flags the buffer modified and `save-buffer'.  Calling
+`save-buffer' after remove-all and live-sync has been existed
+ensures the clearing process to occur. This is reqiured because
+during live-sync, some hooks that manage the clearing process are
+temporarily turned off (removed)."
   (org-transclusion-remove-all)
   (set-buffer-modified-p t)
   (save-buffer))
 
 ;;;;-----------------------------------------------------------------------------
 ;;;; Functions for Transclude Keyword
-;;   #+transclude: t "~/path/to/file.org::1234"
 
 (defun org-transclusion-keyword-string-to-plist ()
   "Return the \"#+transcldue:\" keyword's values if any at point."
