@@ -811,7 +811,10 @@ It assumes that point is at a keyword."
 
 (defun org-transclusion-keyword-plist-to-exclude-elements (plist)
   "Return list of symbols from PLIST when applicable.
-If PLIST does not have :exclude-elements, return nil."
+If PLIST does not have :exclude-elements, return nil.
+
+This function also attemps to remove empty string that gets
+inserted when more than one space is inserted between symbols."
   (let ((str (plist-get plist :exclude-elements)))
     (when str
       (let ((list (split-string str " "))
