@@ -427,7 +427,7 @@ does not support all the elements.
                 (org-transclusion-content-insert
                  keyword-plist tc-type src-content
                  src-buf src-beg src-end)
-                (delete-char 1)
+                (unless (eobp) (delete-char 1))
                 t)
           ;; Remove keyword only when insert and others are successful
           (when (org-at-keyword-p)
