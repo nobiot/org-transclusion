@@ -520,11 +520,11 @@ the rest of the buffer unchanged."
   (interactive "P")
   (save-restriction
     (let ((marker (move-marker (make-marker) (point)))
-          point list)
+          match point list)
       (unless narrowed (widen))
       (goto-char (point-min))
-      (while (text-property-search-forward 'tc-type)
-        (forward-char -1)
+      (while (setq match (text-property-search-forward 'tc-type))
+        (goto-char (prop-match-beginning match))
         (org-transclusion-with-silent-modifications
           (setq point (org-transclusion-remove))
           (when point (push point list))))
