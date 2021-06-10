@@ -330,18 +330,20 @@ the buffer, this function adds a new empty line.
 
 When minor-mode `org-transclusion-mode' is active, this function
 automatically transcludes the text content; when it is inactive,
-it simply adds \"#+transclude [[link]]\" for the link.
+it simply adds the \"#+transclude\" keyword before the link and
+inserts the whole line.
 
 You can pass a prefix argument (ARG) with using
 `digit-argument' (e.g. C-1 or C-2; or \\[universal-argument] 3,
 so on) or `universal-argument' (\\[universal-argument]).
 
 If you pass a positive number 1-9 with `digit-argument', this
-function automatically inserts the :level property into the
-resultant transclusion.
+function automatically puts the :level property to the resultant
+transclusion keyword.
 
-If you pass a `universal-argument', this function automatically triggers
-transclusion by calling `org-transclusion-add'."
+If you pass a `universal-argument', this function automatically
+triggers transclusion by calling `org-transclusion-add' even when
+`org-transclusion-mode' is inactive in the current buffer."
   (interactive "P")
   (let* ((context (org-element-lineage
                    (org-element-context)'(link) t))
@@ -368,17 +370,18 @@ transclusion by calling `org-transclusion-add'."
 ;;;###autoload
 (defun org-transclusion-add ()
   "Transclude text content for the #+transclude at point.
-When the `org-transclusion-mode' minor mode is not actively yet,
-this function toggles it on.
+When the `org-transclusion-mode' minor mode is inactive in the
+current buffer, this function toggles it on.
 
 Examples of acceptable formats are as below:
 
 - \"#+transclude: [[file:path/file.org::search-option][desc]]:level n\"
 - \"#+transclude: [[id:uuid]] :level n :only-contents\"
 
-The file path or id are translated to the normal Org Mode link
-format such as [[file:path/tofile.org::*Heading]] or [[id:uuid]]
-to copy a piece of text from the link target.
+The file path or id in the transclude keyword value are
+translated to the normal Org Mode link format such as
+[[file:path/tofile.org::*Heading]] or [[id:uuid]] to copy a piece
+of text from the link target.
 
 TODO: id:uuid without brackets [[]] is a valid link within Org
 Mode. This is not supported yet.
@@ -388,8 +391,12 @@ commands on the transcluded region at point. Refer to the
 commands below. You can customize the keymap with
 using `org-transclusion-map'.
 
-For example, `org-transclusion-live-sync-start'.  This edit mode
-is analogous to Occur Edit for Occur Mode.
+For example, `org-transclusion-live-sync-start' lets you edit the
+part of the text at point.  This edit mode is analogous to Occur
+Edit for Occur Mode.
+
+TODO: that for transclusions of Org elements/buffer, live-sync
+does not support all the elements.
 
 \\{org-transclusion-map}"
   (interactive)
@@ -508,10 +515,10 @@ list is intended to be used in
 `org-transclusion-before-save-buffer'.
 
 By default, this function temporarily widens the narrowed region
-you are in and works on the entire buffer..  Note that this behavior is
-important for `org-transclusion-before-save-buffer' and
-`org-transclusion-before-kill' to clear the underlying file of
-all the transcluded text.
+you are in and works on the entire buffer.  Note that this
+behavior is important for `org-transclusion-before-save-buffer'
+and `org-transclusion-before-kill' to clear the underlying file
+of all the transcluded text.
 
 For interactive use, you can pass NARROWED with using
 `universal-argument' (\\[universal-argument]) to get this
@@ -581,16 +588,25 @@ remain in the source buffer for further editing."
 (defun org-transclusion-move-to-source ()
   "Open the source buffer and move point to it.
 It's a function only to enable a keymap to call
-`org-transclusion-open-source' with argument."
+`org-transclusion-open-source' with an argument."
   (interactive)
   (org-transclusion-open-source t))
 
 (defun org-transclusion-live-sync-start ()
-  "Put overlay for start live sync edit on the transclusion at point.
+  "Start live sync edit on the transclusion at point.
 
 While live sync is on, before- and after-save-hooks to remove/add
 transclusions are also temporarily disabled.  This prevents
 auto-save from getting in the way of live sync.
+
+For transclusions of Org elements or buffers, live-sync works
+only on the following elements: center-block, drawer,
+dynamic-block, latex-environment, plain-list, quote-block,
+special-block table, and verse-block.
+
+It is known that live-sync does not work for the other Org
+elements; namely: comment-block, export-block, example-block,
+fixed-width, keyword, src-block, and property-drawerd.
 
 `org-transclusion-live-sync-map' inherits `org-mode-map' and adds
 a couple of org-transclusion specific keybindings; namely:
@@ -644,8 +660,8 @@ the state before live-sync started."
 
 (defun org-transclusion-live-sync-paste ()
   "Paste text content from `kill-ring' and inherit the text props.
-This is meant to be used within live-sync overlay.  This function
-is meant to be used as part of `org-transclusion-live-sync-map'"
+This is meant to be used within live-sync overlay as part of
+`org-transclusion-live-sync-map'"
   (interactive)
   (insert-and-inherit (current-kill 0)))
 
@@ -839,14 +855,6 @@ Return nil if not found."
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for inserting content
 
-(defun org-transclusion-max-headline-level ()
-  (let ((tree (org-element-parse-buffer))
-        list)
-    (org-element-map tree 'headline
-      (lambda (h)
-        (push (org-element-property :level h) list)))
-    (when list (seq-min list))))
-
 (defun org-transclusion-content-insert (keyword-values type content sbuf sbeg send)
   "Insert CONTENT at point and put source overlay in SBUF.
 Return t when successful.
@@ -870,7 +878,6 @@ based on the following arguments:
 - SBUF :: Buffer of the transclusion source where CONTENT comes from
 - SBEG :: Begin point of CONTENT in SBUF
 - SEND :: End point of CONTENT in SBUF"
-
   (let* ((beg (point)) ;; before the text is inserted
          (beg-mkr (set-marker (make-marker) beg))
          (end) ;; at the end of text content after inserting it
@@ -886,7 +893,7 @@ based on the following arguments:
           (insert content)
           (org-with-point-at 1
             (let* ((to-level (plist-get keyword-values :level))
-                   (level (org-transclusion-max-headline-level))
+                   (level (org-transclusion-content-highest-org-headline))
                    (diff (when (and level to-level) (- level to-level))))
             (when diff
               (cond ((< diff 0) ; demote
@@ -931,6 +938,19 @@ based on the following arguments:
     (overlay-put ov-src 'priority -50)
     (overlay-put ov-src 'tc-pair tc-pair)
     t))
+
+(defun org-transclusion-content-highest-org-headline ()
+  "Return the highest level as an integer of all the headlines in buffer.
+Returns nil if there is no headline.  Note that level 1 is the
+highest; the lower the number, higher the level of headline.
+
+This function sssumes the buffer is an Org buffer."
+  (let ((tree (org-element-parse-buffer))
+        list)
+    (org-element-map tree 'headline
+      (lambda (h)
+        (push (org-element-property :level h) list)))
+    (when list (seq-min list))))
 
 (defun org-transclusion-content-format (_type content)
   "Format text CONTENT from source before transcluding.
@@ -1266,17 +1286,19 @@ Org-transclusion always works with a pair of overlays."
   "Return an enclosing Org element for live-sync.
 This assumes the point is within the element (at point).
 
-This function first looks for the following elements:
-
-  center-block drawer dynamic-block example-block export-block
-  fixed-width latex-environment plain-list property-drawer
-  quote-block special-block table verse-block
+This function first looks for elements other than paragraph:
 
 If none of them found, this function identifies the paragraph at
 point to return.
 
-*comment-block, src-block, keyword do not work well as they
- don't seem t have :parent prop from `org-element'.
+Note that live-sync is known to work only for the following elements:
+  center-block drawer dynamic-block latex-environment plain-list
+  quote-block special-block table verse-block
+
+It is known that live-sync does not work for the other elements
+as `org-element' does not add :parent prop to them:
+  comment-block export-block example-block fixed-width keyword
+  src-block property-drawerd not work well
 
 This function works in a temporary org buffer to isolate the
 transcluded region and source region from the rest of the
@@ -1305,17 +1327,17 @@ paragraph."
         (let ((context
                (or (org-element-lineage (org-element-context)
                                         '(center-block
-                                          ;; comment-block
+                                          comment-block
                                           drawer
                                           dynamic-block
                                           example-block
                                           export-block fixed-width
-                                          ;; keyword
+                                          keyword
                                           latex-environment
                                           plain-list
                                           property-drawer
                                           quote-block special-block
-                                          ;; src-block
+                                          src-block
                                           table
                                           verse-block) 'with-self)
                    ;; For a paragraph

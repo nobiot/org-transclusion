@@ -41,6 +41,7 @@ This package is an attempt to enable transclusion with Org Mode in Emacs. It is 
 - [[#installation][Installation]]
 - [[#getting-started][Getting Started]]
 - [[#usage][Usage]]
+  - [[#filtering][Filtering]]
   - [[#live-sync-edit][Live-sync edit]]
   - [[#commands][Commands]]
   - [[#org-links-supported][Org links supported]]
@@ -196,6 +197,24 @@ o		org-transclusion-open-source
 
 - =org-transclusion-open-source=
 
+** Filtering
+You can control what elements to include in many different ways with using various filters
+
+=:exclude-elements=
+
+- "headine" :: You exclude sub-headlines within your subtrees, and transclude only the contents of the top-most level of the subtrees. If you are transcluding only one headline element, this should be intuitive. If you transclude a whole buffer, you might be transcluding multiple subtrees.
+
+In some cases, this can be a little anti-intuive. In the following examples, you will be transcluding three subtrees -- even though the first headline levels are lower than the third one, the first two are the top-most level of their own respective subtrees.
+
+#+begin_example
+  ** Headline 1
+     Content of Headline 1
+  ** Headline 2
+     Content of Headline 2
+  * Headline 3
+    Content of Headline
+#+end_example
+
 ** Live-sync edit
 :PROPERTIES:
 :CUSTOM_ID: live-sync-edit
@@ -347,6 +366,17 @@ I've made a bash one-liner to migrate from the old syntax to the new one (manage
 * Known Limitations
 Note this section is still incomplete, far from being exhaustive for "known" limitations.
 
+- =org-transclusion-live-sync-start= does not support all Org elements ::
+  For transclusions of Org elements or buffers, live-sync works only on the following elements:
+center-block, drawer, dynamic-block, latex-environment, plain-list, quote-block, special-block table, and verse-block.
+
+It is known that live-sync does not work for the other elements; namely:
+comment-block, export-block, example-block, fixed-width, keyword, src-block, and property-drawerd.
+
+More technical reason for this limitation is documented in the docstring of function =org-transclusion-live-sync-enclosing-element=.
+
+Work is in progress to lift this limitation but I'm still experimenting different ideas.
+
 - =org-indent-mode= may not work well with Org-transclusion ::
   It should not break anything, but both packages uses =line-prefix= and =wrap-prefix= text-properties for modifying the visual appearance of text. =org-indent-mode= uses them to make the text's indententation appears aligned; Org-transclusion uses them for the fringes to indicate transclusion and source regions. 
 
@@ -363,13 +393,17 @@ It is probably rather drastic a measure. I will appreciate it if you find a less
 :END:
 Main features and changes only.
 
+** 0.2.0
+- cbb1c25 *  add: apply :level to buffer with first section ::
+  Fix #47 The firsrt section itself does not get influenced by :level property.  The first headline, when present, is treated as the first headline, thus :exclude-element "headline" affets its sub-headlines; this means that the content of the first headline is transcluded even when with "headline" in the list of excluded elements.
+
 ** 0.1.2 
 - e08df47 * add: live-sync for non-Org text file ::
   So far Non-Org text files could be transcluded but live-sync was not available. This version enables live-sync for them. Only for the whole file at the moment (ability to specify parts of a text file is considered)
 
 - a576b34 * add: text-clone library (rename) ::
   Live-sync features are now factored out into =text-clone= as a standalone liberary (available with =text-clone.el= also included in this repo). Refactored so that  =org-transclusion= uses (and requires)  =text-clone=.
-
+  
 ** 0.1.1
 - 49f03b1 * feat: current-indentation ::
   Org-transclusion now keeps the original indentation of the keyword. When a transclusion text region is removed, its keyword will be indented as it was

@@ -72,6 +72,27 @@ This is being added
 [[file:./test-no-first-section.org]]
 #+ transclude: [[file:./test-no-first-section.org]]
 
+* Live-Sync
+** center-block dynamic-block example-block export-block special-block verse-block
+
+** drawer 
+#+begin_example
+(setq org-transclusion-exclude-elements '())
+(setq org-transclusion-exclude-elements '(property-drawer))
+#+end_example
+
+#+transclude: [[id:20210501T171427.051019][Bertrand Russell]]
+
+** fixed-width
+
+
+** latex-environment
+
+** plain-list 
+
+** quote-block  table
+#+transclude: [[file:paragraph.org::table][Link to a table]]
+#+transclude: [[file:paragraph.org::quote][Link to a quote]]
 
 *  Only Contents
 #+transclude: [[id:20210501T171427.051019][Bertrand Russell]] :only-contents
@@ -95,7 +116,6 @@ This is being added
 #+transclude: [[id:20210501T171427.051019][Bertrand Russell]] :only-contents :exclude-elements "keyword drawer headline"
 
 #+transclude: [[file:./test-no-first-section.org]] :exclude-elements "drawer keyword property-drawer"
-
 
 * =yank-excluded-properties=
 
