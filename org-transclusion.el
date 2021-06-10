@@ -593,19 +593,19 @@ It's a function only to enable a keymap to call
   (org-transclusion-open-source t))
 
 (defun org-transclusion-live-sync-start ()
-  "Start live sync edit on the transclusion at point.
+  "Start live-sync edit on the transclusion at point.
 
-While live sync is on, before- and after-save-hooks to remove/add
+While live-sync is on, before- and after-save-hooks to remove/add
 transclusions are also temporarily disabled.  This prevents
-auto-save from getting in the way of live sync.
+auto-save from getting in the way of live-sync.
 
-For transclusions of Org elements or buffers, live-sync works
+For transclusions of Org elements or a buffer, live-sync works
 only on the following elements: center-block, drawer,
-dynamic-block, latex-environment, plain-list, quote-block,
-special-block table, and verse-block.
+dynamic-block, latex-environment, paragraph, plain-list,
+quote-block, special-block table, and verse-block.
 
 It is known that live-sync does not work for the other Org
-elements; namely: comment-block, export-block, example-block,
+elements: comment-block, export-block, example-block,
 fixed-width, keyword, src-block, and property-drawerd.
 
 `org-transclusion-live-sync-map' inherits `org-mode-map' and adds
