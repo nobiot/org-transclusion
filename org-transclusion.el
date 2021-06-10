@@ -572,6 +572,7 @@ remain in the source buffer for further editing."
   (unless (overlay-buffer (get-text-property (point) 'org-transclusion-pair))
     (org-transclusion-refresh))
   (let* ((type (get-text-property (point) 'org-transclusion-type))
+         ;; Temporary marker to be discarded at the end of this function
          (src-mkr (run-hook-with-args-until-success
                    'org-transclusion-open-source-marker-functions type))
          (src-buf (marker-buffer src-mkr))
@@ -588,7 +589,8 @@ remain in the source buffer for further editing."
               (recenter-top-bottom)))
         (unless arg
           (progn (pop-to-buffer buf)
-                 (goto-char pos)))))))
+                 (goto-char pos)))))
+    (move-marker src-mkr nil))) ; point nowhere for GC
 
 (defun org-transclusion-move-to-source ()
   "Open the source buffer and move point to it.
@@ -845,7 +847,6 @@ Return nil if not found."
          (format "No transclusion done for this ID. Ensure it works at point %d, line %d"
                  (point) (org-current-line)))
         nil))))
-
 
 (defun org-transclusion-add-org-file (link plist)
   "Return a list for Org file LINK object and PLIST.
@@ -1278,8 +1279,8 @@ Return \"(src-beg-mkr . src-end-mkr)\"."
                     (src-beg (org-element-property :begin src-elem))
                     (src-end (org-element-property :end src-elem)))
           (cons
-           (set-marker (make-marker) src-beg)
-           (set-marker (make-marker) src-end)))))))
+           (move-marker (make-marker) src-beg)
+           (move-marker (make-marker) src-end)))))))
 
 (defun org-transclusion-live-sync-source-content (beg end)
   "Return text content between BEG and END.
