@@ -11,17 +11,12 @@ This is a link to a [[id:20210501T171427.051019][Bertrand Russell]] wikipedia ex
 
 ** test t/nil
 t/nil will be dropped after remove-at-point
-Nunc tincidunt interdum ligula. Mauris rhoncus pharetra urna eu venenatis.
-This works for mutliple buffers at the same time
 
-This can be edited anywhere... 
-
-Duis tincidunt arcu hendrerit pretium lacinia. Phasellus pharetra felis at facilisis commodo. Praesent ornare arcu eu rhoncus accumsan. Proin sed pulvinar dolor. Vestibulum vestibulum eleifend tellus non pellentesque. Phasellu pharetra cursus ex, id vestibulum erat egestas at. Proin at hendrerit lacus.
 
 #+transclude: [[file:test.txt][text file]]
+#+transclude: t [[id:20210501T171427.051019][Bertrand Russell]]
 
-** ID
-#+transclude: [[id:20210501T171427.051019][Bertrand Russell]]
+(setq inhibit-read-only nil)
 
 ** Test =org-adapt-indentation=
 
@@ -33,9 +28,7 @@ Duis tincidunt arcu hendrerit pretium lacinia. Phasellus pharetra felis at facil
 #+transclude: [[id:20210501T171427.051019][Bertrand Russell]]
 
 ** Paragraph
-This also should work. Adding new characters. Nullam vulputate tincidunt felis. Proin placerat libero facilisis arcu dictum, sit amet porta auguedictum. Nullam eros justo, molestie porttitor massa ultricies, molestie cursus nibh. Mauris porta elit ac nibh fermentum finibus. Proin nec neque lorem. Etiam pretium nisl non justo lacinia, in dmattis nisi faucibus. Curabitur rutrum ex nec lorem porttitor sagittis. Proin cursus sapien nec est venenatis, nec finibus mi tempor. Aliquam vel lacus bibendum, imperdiet urna ut, dictum lectus. Sed et tempus lorem. Nam in viverra enim.
-2 spaces before this<<para1>>
-This is being added
+
 
 #+transclude: [[file:./paragraph.org::para1]]
 
