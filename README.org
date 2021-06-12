@@ -6,7 +6,11 @@
 
 ⚠⚠⚠
 
-*NOTICE*: Please refer to notice on the upcoming changes and new features in [[https://github.com/nobiot/org-transclusion/issues/81][issue 81]] -- it includes information on upcoming breaking changes. 
+*NOTICE*: Please refer to notice [[https://github.com/nobiot/org-transclusion/issues/81][(issue 81)]] on the changes and new features that have been introduced with v0.2.0 -- it includes information on breaking changes (minor) and how you can adjust your Emacs to them if applicable to you.
+
+README below has also been updated to reflect these changes; new users can ignore the notice.
+
+I am also planning to publish another Show & Tell YouTube video to talk about the changes and new features soon. Stay tuned...
 
 ⚠⚠⚠
 
