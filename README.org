@@ -120,7 +120,7 @@ For example, if you have an ID link in your Org file like this:
 
 =[[id:20210501T171427.051019][Bertrand Russell]]=
 
-Put your cursor somewhere on this link and call  =M-x org-transclusion-make-from-link=. That inserts a "transclusion" keyword like this:
+Put your cursor somewhere on this link and call  =M-x org-transclusion-make-from-link=. That inserts a "transclusion" keyword like this in the next empty line:
 
 =#+transclude: [[id:20210501T171427.051019][Bertrand Russell]]=
 
@@ -128,12 +128,11 @@ Put your cursor somewhere on this keyword line and call =M-x org-transclusion-ad
 
 [[./resources/2021-05-09T190918.png]]
 
-The transcluded text is read-only but you can copy it and export it as normal text. Org-transclusion retains where it has transcluded the text from (its source buffer). There are a number of useful commands you can call by a single letter (by default). You can learn more about these in this README below.
+The transcluded text is read-only but you can copy it and export it as normal text. Org-transclusion remembers where it has transcluded the text from (its source buffer). With using this memory, you can use a number of useful commands you can call by a single letter (by default). 
 
-You can press =o= to open the source buffer of the transclusion at point, or =O= (capital "o") to move to it. Press =e= to start live-sync edit. For more detail, inspect the documentation of each command.
+For example, you can press =o= to open the source buffer of the transclusion at point, or =O= (capital "o") to move to it. Rpess =r= to refresh the transclusion. Press =e= to start live-sync edit. For more detail, inspect the documentation of each command.
 
-=org-transclusion-map= (default).
-Adapt it to your liking, especially if you use vim keybindings with Evil Mode, etc.
+This single-letter-context-menu is defined in  =org-transclusion-map=. The default keybindings are shown below. Adapt it to your liking, especially if you use vim keybindings with Evil Mode, etc.
 
 #+begin_src elisp :exports none
 (substitute-command-keys "\\{org-transclusion-map}")
@@ -158,6 +157,8 @@ o               org-transclusion-open-source
 C-c C-c         org-ctrl-c-ctrl-c
 
 #+end_example
+
+This should get you started with Org-transclusion. There are more options and cusutomizing options available for you to fine-tune the text contents you transclude. More about them in README below.
 
 * Usage
 ** COMMENT Org-transclusion local minor mode
