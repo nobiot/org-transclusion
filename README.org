@@ -1,7 +1,5 @@
 [[file:https://img.shields.io/badge/License-GPLv3-blue.svg]]
-
 #+title: Org-transclusion
-
 #+property: LOGGING nil
 
 # Note: I use the readme template that alphapapa shares on his GitHub repo <https://github.com/alphapapa/emacs-package-dev-handbook#template>. It works with the org-make-toc <https://github.com/alphapapa/org-make-toc> package, which automatically updates the table of contents.
@@ -14,7 +12,7 @@
 
 Transclusion is the ability to include content from one file into another by reference. Org-transclusion lets you do this in your Org file. 
 
-When I start writing a long-form material, I want to begin with looking through my note and assemble relevant notes to form a basis of the first draft quickly. As I organise my notes in a repository, I also want to avoid having multiple copies of notes flying around.
+When I start writing a long-form material, I want to begin with looking through my notes and assemble relevant one to form a basis of the first draft quickly. As I organise my notes in a repository, I also want to avoid having multiple copies of notes flying around.
 
 Transclusion helps me do this.
 
@@ -74,7 +72,8 @@ Download or clone this repo, put all the =.el= files in it into your load-path, 
   (with-eval-after-load 'org
     (add-to-list  'load-path "path/to/org-transclusion/")
     (require 'org-transclusion)
-    (define-key global-map (kbd "<f12>") #'org-transclusion-add-at-point))
+    (define-key global-map (kbd "<f12>") #'org-transclusion-add-at-point)
+    (define-key global-map (kbd "C-n t") #'org-transclusion-mode))
 #+END_SRC
 
 It is important that you get all the =.el= files ready, not just =org-transclusion.el=. As at the time of this writing, the live-sync feature is contained in =text-clone.el= (also available in this repo) and a feature to transclude lines of source code file is being developed as an extension to be available in another =.el= file. You will need to have all the =.el= files to use Org-transclusion as a package.
@@ -82,6 +81,7 @@ It is important that you get all the =.el= files ready, not just =org-transclusi
 If you use Doom and packages such as Straight, etc. to install files from GitHub repositories, you can do something like this below (this is an example using Doom's =package!= macro).
 
 #+begin_src elisp
+  ;; In ~/.doom.d/package.el
   (package! org-transclusion
     :recipe (:host github
              :repo "nobiot/org-transclusion"
@@ -89,7 +89,20 @@ If you use Doom and packages such as Straight, etc. to install files from GitHub
              :files ("*.el")))
 #+end_src
 
-For Doom, add =use-package!= to load the library. =package!= only places the files in an appropriate location in your filesystem and does not tell Emacs to use them.
+For Doom, add =use-package!= to load the library by adding something like this in your =config.el=. As of v0.2.0, some commands are defined with =autoload=, so adding some properties such as =:defer= lets you lazy-load =org-transclusion= package. Please consult Doom's documentation for further instruction (I don't use Doom, but I have lightly tested this snippet). There are other ways to configure Doom; also refer to @Ma-Nu-El's comment in [[https://github.com/nobiot/org-transclusion/issues/79][issue #79]] (thank you, @Ma-Nu-El). 
+
+#+begin_src elisp
+  ;; In ~/.doom.d/config.el
+  (use-package! org-transclusion
+    :defer
+    :after org
+    :init
+    (map!
+     :map global-map "<f12>" #'org-transclusion-add
+     :leader
+     :prefix "n"
+     :desc "Org Transclusion Mode" "t" #'org-transclusion-mode))
+#+end_src
 
 * Getting Started
 
@@ -98,8 +111,8 @@ The basic idea of Org-transclusion is simple: insert a copy of text content via 
 To transclude content via a reference, use one of the following commands:
 
 - =org-transclusion-make-from-link=
-- =org-transclusion-add-at-point=
-- =org-transclusion-add-all-in-buffer=
+- =org-transclusion-add=
+- =org-transclusion-add-all=
 
 For example, if you have an ID link in your Org file like this:
 
@@ -107,36 +120,45 @@ For example, if you have an ID link in your Org file like this:
 
 Put your cursor somewhere on this link and call  =M-x org-transclusion-make-from-link=. That inserts a "transclusion" keyword like this:
 
-=#+transclude: t [[id:20210501T171427.051019][Bertrand Russell]]=
+=#+transclude: [[id:20210501T171427.051019][Bertrand Russell]]=
 
-Put your cursor somewhere on this keyword line and call =M-x org-transclusion-add-at-point=, and you will see the content the ID points to (probably a whole headline) copied over, replacing the =transclude= keyword.
+Put your cursor somewhere on this keyword line and call =M-x org-transclusion-add-at-point=, and you will see the content the ID points to copied over, replacing the =transclude= keyword.
 
 [[./resources/2021-05-09T190918.png]]
 
-The transcluded text is read-only but you can copy it and export it as normal text. Org-transclusion retains where it has transcluded from (its source buffer). There are a number of useful commands you can call by a single letter (by default). You can learn more about these in this README below.
+The transcluded text is read-only but you can copy it and export it as normal text. Org-transclusion retains where it has transcluded the text from (its source buffer). There are a number of useful commands you can call by a single letter (by default). You can learn more about these in this README below.
 
-You can press =o= to open the source buffer of the transclusion at point. Or press =e= to start a live-sync edit. For more detail, inspect the documentation of each command.
+You can press =o= to open the source buffer of the transclusion at point, or =O= (capital "o") to move to it. Press =e= to start live-sync edit. For more detail, inspect the documentation of each command.
 
 =org-transclusion-map= (default).
 Adapt it to your liking, especially if you use vim keybindings with Evil Mode, etc.
+
+#+begin_src elisp :exports none
+(substitute-command-keys "\\{org-transclusion-map}")
+#+end_src
+
 #+name: org-transclusion-map
+#+caption: Default org-transclusion-map
 #+begin_example
 key             binding
 ---             -------
 
-TAB		org-cycle
-D		org-transclusion-demote-subtree
-P		org-transclusion-promote-subtree
-d		org-transclusion-remove-at-point
-e		org-transclusion-live-sync-start-at-point
-g		org-transclusion-refresh-at-point
-o		org-transclusion-open-source
+C-c             Prefix Command
+TAB             org-cycle
+D               org-transclusion-demote-subtree
+O               org-transclusion-move-to-source
+P               org-transclusion-promote-subtree
+d               org-transclusion-remove
+e               org-transclusion-live-sync-start
+g               org-transclusion-refresh
+o               org-transclusion-open-source
+
+C-c C-c         org-ctrl-c-ctrl-c
 
 #+end_example
 
 * Usage
-
-** COMMENT Starting Org-transclusion local minor mode
+** COMMENT Org-transclusion local minor mode
 
 The minor mode is automatically turned on through one of these commands. All it does is to call =org-transclusion-activate=  to activate hooks to keep file in the filesystem clean and clear of the transcluded content. 
 
@@ -164,38 +186,6 @@ Transcluded text region will be read-only.
 Refer to [[#live-sync-edit][Live-sync edit]] for Org-translusion's edit feature.
 
 You can customize the local keybindings for transclusions by =org-transclusion-map=. If you use vim keybindings (e.g. =evil-mode=), it is advised that you review the default keybindings.
-
-*** COMMENT =org-transclusion-map=                                 :noexport:
-
-#+begin_src elisp
-(substitute-command-keys "\\{org-transclusion-map}")
-#+end_src
-
-#+RESULTS:
-#+begin_example
-key             binding
----             -------
-
-TAB		org-cycle
-D		org-transclusion-demote-subtree
-P		org-transclusion-promote-subtree
-d		org-transclusion-remove-at-point
-e		org-transclusion-live-sync-start-at-point
-g		org-transclusion-refresh-at-point
-o		org-transclusion-open-source
-
-#+end_example
-
-
-- =org-transclusion-remove-at-point=
-- =org-transclusion-remove-all-in-buffer=
-
-- =org-transclusion-refresh-at-point=
-
-- =org-transclusion-promote-subtree=
-- =org-transclusion-demote-subtree=
-
-- =org-transclusion-open-source=
 
 ** Filtering
 You can control what elements to include in many different ways with using various filters
@@ -232,13 +222,12 @@ In the live-sync edit region, the normal =yank= command (=C-y=) is replaced with
 
 *Note*: that during live-sync edit, file's content gets saved to the filesystem as is -- i.e. the transcluded text will be saved instead of the =#+transclude:= keyword. If you kill buffer or quit Emacs, other hooks will still remove the transclusion to keep the file clear of the transcluded copy, leaving only the keyword in the file system.
 
-*** COMMENT =org-transclusion-live-sync-map=                       :noexport:
-
-#+begin_src elisp
+#+begin_src elisp :exports no
   (substitute-command-keys "\\{org-transclusion-live-sync-map}")
 #+end_src
 
 #+name: org-transclusion-live-sync-map
+#+caption: Default org-transclusion-live-sync-map
 #+begin_example
  key                   binding
  ---                   -------
@@ -255,16 +244,17 @@ In the live-sync edit region, the normal =yank= command (=C-y=) is replaced with
 
 - =org-transclusion-mode= ::
 - =org-transclusion-make-from-link= ::
-- =org-transclusion-add-at-point= ::
-- =org-transclusion-add-all-in-buffer= ::
-- =org-transclusion-remove-at-point= :: 
-- =org-transclusion-remove-all-in-buffer= :: 
-- =org-transclusion-refresh-at-point= :: 
+- =org-transclusion-add= ::
+- =org-transclusion-add-all= ::
+- =org-transclusion-remove= :: 
+- =org-transclusion-remove-all= :: 
+- =org-transclusion-refresh= :: 
 - =org-transclusion-promote-subtree= :: 
 - =org-transclusion-demote-subtree= :: 
-- =org-transclusion-open-source= :: 
-- =org-transclusion-live-sync-start-at-point= :: 
-- =org-transclusion-live-sync-exit-at-point= :: 
+- =org-transclusion-open-source= ::
+- =org-transclusion-move-to-source= :: 
+- =org-transclusion-live-sync-start= :: 
+- =org-transclusion-live-sync-exit= :: 
 - =org-transclusion-live-sync-paste= ::
 
 ** Org links supported
