@@ -41,7 +41,7 @@ This package is an attempt to enable transclusion with Org Mode in Emacs. It is 
 - [[#usage][Usage]]
   - [[#org-transclusion-mode-activate-and-deactivate][Org-transclusion mode, activate, and deactivate]]
   - [[#org-links-supported][Org links supported]]
-  - [[#filtering-per-transclusion][Filtering per transclusion]]
+  - [[#filtering-org-elements-per-transclusion][Filtering Org elements per transclusion]]
   - [[#live-sync-edit][Live-sync edit]]
   - [[#commands][Commands]]
 - [[#customizing][Customizing]]
@@ -112,7 +112,6 @@ As of v0.2.0, some commands are defined with =autoload=. This means that adding 
 :CUSTOM_ID: getting-started
 :END:
 
-
 The basic idea of Org-transclusion is simple: insert a copy of text content via a file link or ID link within a Org file. This is an Org Mode version of [[https://en.wikipedia.org/wiki/Transclusion][transclusion]]. 
 
 To transclude content via a reference, use one of the following commands:
@@ -173,6 +172,8 @@ C-c C-c         org-ctrl-c-ctrl-c
 
 This should get you started with Org-transclusion. There are more options and cusutomizing options available for you to fine-tune the text contents you transclude. More about them in README below.
 
+As your next step, I particularly recommend the section on [[#filtering][filtering Org elements per transclusion]], which shows features that give you the power to control what part of the source to transclude in the way you like and let you experiment on the fly.
+
 * Usage
 ** Org-transclusion mode, activate, and deactivate
 
@@ -221,17 +222,32 @@ tincidunt quam. <<paragraph-id>>
 
 It is generally assumed that the paragraph-id is placed after its content, but it is not an absolute requirement; it can be in the beginning (before the content) or in the middle of it.
  
-** Filtering per transclusion
-You can control what elements to include in many different ways with using various filters
+** Filtering Org elements per transclusion
+:PROPERTIES:
+:CUSTOM_ID: filtering
+:END:
 
-Customizable variable
+You can control what elements to include in many different ways with using various filters. The filters work in two layers: customizable variable and properties per transclude keyword.
 
-:contents-only, :exclude-elements
-=:exclude-elements=
+The following two customizable variables are applicable for all transclusions globally. You can think of them as the default.
 
-- "headine" :: You exclude sub-headlines within your subtrees, and transclude only the contents of the top-most level of the subtrees. If you are transcluding only one headline element, this should be intuitive. If you transclude a whole buffer, you might be transcluding multiple subtrees.
+- =org-transclusion-exclude-elements= ::
+  This customizable variable globally defines the exclusion filter for elements. It is a list of symbols; the acceptable values can be seen by inspecting =org-element-all-elements=. The default is to exclde =property-drawer=.
+  Refer also to the [[#cust-exclude-elements][section on this user option]]. 
+  
+- =org-transclusion-include-first-section= ::
+  This customizing variable globally defines whether or not to include the first section of the source Org file. The first section is the part before the first headline -- that's the section that typically contains =#+title=, =#+author=, and so on. Many people also write notes in it without adding any headlines. Note that this user option is by default set to =nil= -- not to include the first section. Turn it to =t= if you wish to transclude the content from the first section of your Org files. If you wish to exclude the "meta data" defined by =#+title= and others, exclude =keyword= as described in this section -- these meta data are defined with using the =keyword= element of Org Mode.
+  Refer also to the [[#cust-first-section][section on this user option]]. 
 
-In some cases, this can be a little anti-intuive. In the following examples, you will be transcluding three subtrees -- even though the first headline levels are lower than the third one, the first two are the top-most level of their own respective subtrees.
+In addition to the global user options above, you can fine-tune the filter per transclusion. Add following properties to transclusions you wish to apply additional filters.
+
+- =:contents-only= ::
+
+- =:exclude-elements= ::
+
+- Note on the headine element ::
+  You exclude sub-headlines within your subtrees, and transclude only the contents of the top-most level of the subtrees. If you are transcluding only one headline element, this should be intuitive. If you transclude a whole buffer, you might be transcluding multiple subtrees.
+  In some cases, this can be a little anti-intuive. In the following examples, you will be transcluding three subtrees -- even though the first headline levels are lower than the third one, the first two are the top-most level of their own respective subtrees.
 
 #+begin_example
   ** Headline 1
@@ -306,18 +322,24 @@ You can customize settings in the =org-transclusion= group.
 - =org-transclusion-add-at-point-functions= :: (WIP)
 
 ** Customizable filter to exclude certain Org elements
+:PROPERTIES:
+:CUSTOM_ID: cust-exclude-elements
+:END:
 
-Set customizable variable =org-transclusion-exclude-elements= to define which elements to be **excluded** in the transclusion.
+Set customizable variable =org-transclusion-exclude-elements= to define which elements to be *excluded* in the transclusion.
 
 The filter works for all supported types of links within an Org file when transcluding an entire Org file, and parts of it (headlines, custom ID, etc.). There is no filter for non-Org files.
 
 It is a list of symbols, and the default is =(property-drawer)=. The accepted values are the ones defined by =org-element-all-elements= (Org's standard set of elements; refer to its documentation for an exhaustive list).
 
-How to use it is demonstrated in [[https://youtu.be/hz92vaO8IgQ][YouTube video #5]] as well.
+How to use it is demonstrated in [[https://youtu.be/hz92vaO8IgQ][YouTube video #5]] as well. It refers to an old versin of Org-transclusion but you can customize the variable in the same way as shown in the video.
 
 ** Include the section before the first headline (Org file only)
+:PROPERTIES:
+:CUSTOM_ID: cust-first-section
+:END:
 
-You can now include the first section (section before the first headline) of an Org file. It is toggled via customizable variable =org-transclusion-include-first-section=. Its default value is =nil=. Set it to =t= (or non-nil) to transclude the first section. It works when the first section is followed by headlines (only lightly tested; I will appreciate your testing. I might need to consider retracting this feature if it proves to be too buggy).
+You can include the first section (section before the first headline) of an Org file. It is toggled via customizable variable =org-transclusion-include-first-section=. Its default value is =nil=. Set it to =t= (or non-nil) to transclude the first section. It also works when the first section is followed by headlines.
 
 ** Faces & fringe bitmap
 
@@ -372,10 +394,10 @@ Note this section is still incomplete, far from being exhaustive for "known" lim
   For transclusions of Org elements or buffers, live-sync works only on the following elements:
 =center-block=, =drawer=, =dynamic-block=, =latex-environment=, =paragraph=, =plain-list=, =quote-block=, =special-block=, =table=, and =verse-block=.
 
-It is known that live-sync does not work for the other elements; namely:
+  It is known that live-sync does not work for the other elements; namely:
 =comment-block=, =export-block=, =example-block=, =fixed-width=, =keyword=, =src-block=, and =property-drawerd=.
 
-More technical reason for this limitation is documented in the docstring of function =org-transclusion-live-sync-enclosing-element=.
+  More technical reason for this limitation is documented in the docstring of function =org-transclusion-live-sync-enclosing-element=.
 
 Work is in progress to lift this limitation but I'm still experimenting different ideas.
 
@@ -385,9 +407,9 @@ Work is in progress to lift this limitation but I'm still experimenting differen
 - Doom's customization may interfere with Org-transclusion ::
    Refer to [[https://github.com/nobiot/org-transclusion/issues/52][this issue]]. The symptom is that in your Doom and you get an error message that includes this: "progn: ‘recenter’ing a window that does not display current-buffer." Adding this in your configuration has been reported to fix the issue:
 
-=(advice-remove 'org-link-search '+org--recenter-after-follow-link-a)=
+  =(advice-remove 'org-link-search '+org--recenter-after-follow-link-a)=
 
-It is probably rather drastic a measure. I will appreciate it if you find a less drastic way that works. Thank you.
+  It is probably rather drastic a measure. I will appreciate it if you find a less drastic way that works. Thank you.
 
 * Changelog
 :PROPERTIES:
