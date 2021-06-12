@@ -115,7 +115,7 @@ As of v0.2.0, some commands are defined with =autoload=. This means that adding 
 :CUSTOM_ID: getting-started
 :END:
 
-The basic idea of Org-transclusion is simple: insert a copy of text content via a file link or ID link within a Org file. This is an Org Mode version of [[https://en.wikipedia.org/wiki/Transclusion][transclusion]]. 
+The basic idea of Org-transclusion is simple: insert a copy of text content via a file link or ID link within an Org file. This is an Org Mode version of [[https://en.wikipedia.org/wiki/Transclusion][transclusion]]. 
 
 To transclude content via a reference, use one of the following commands:
 
