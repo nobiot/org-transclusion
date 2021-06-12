@@ -247,7 +247,7 @@ In addition to the global user options above, you can fine-tune the filter per t
   
   #+begin_example
   #+transclude: [[file:path/to/file.org]] :contents-only
-  #+end_example
+#+end_example
   
 - =:exclude-elements= ::
   This property lets you *add* elements to exclude per transclusion on top of the variable =org-transclusion-exclude-elements= defines. You cannot *remove* the ones defined by it; thus, it is intended that you use the customizable variable as your global default and fine-tune it by the property per transclusion.
@@ -256,7 +256,7 @@ In addition to the global user options above, you can fine-tune the filter per t
   
   #+begin_example
   #+transclude: [[file:path/to/file.org]] :exclude-elements "drawer keyword"
-  #+end_example
+#+end_example
 
 *** Combining =:contents-only= and =:exclude-elements=
 
