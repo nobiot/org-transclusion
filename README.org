@@ -184,7 +184,7 @@ The minor mode is automatically turned on locally for your current buffer throug
 
 Turn off the minor mode or use =org-transclusion-deactivate=; you will remove all the transclusions in the current buffer and clear the hooks and other setup variables. 
 
-If you prefer, you can use =org-transclusion-mode= as your entry command for transclusion. When customizing variable =org-transclusion-add-all-on-activate= is non-nil (it is =t= by default), toggling the minor mode on calls the =org-transclusion-add-all= command to attempt to turn all transclusion keywords into text regions in the current buffer.
+If you prefer, you can use =org-transclusion-mode= as your entry command for transclusion. When customizable variable =org-transclusion-add-all-on-activate= is non-nil (it is =t= by default), toggling the minor mode on calls the =org-transclusion-add-all= command to attempt to turn all transclusion keywords into text regions in the current buffer.
 
 You can control whether or not transclusions are added automatically per transclude keyword. By default, =org-transclusion-add-all= (it is also used by =org-transclusion-mode=) will work on every transclude keyword in the buffer. Add =:disable-auto= property to a keyword as shown in the example below; =add-all= skips the transclude keyword with this property.
 
@@ -224,6 +224,9 @@ It is generally assumed that the paragraph-id is placed after its content, but i
 ** Filtering per transclusion
 You can control what elements to include in many different ways with using various filters
 
+Customizable variable
+
+:contents-only, :exclude-elements
 =:exclude-elements=
 
 - "headine" :: You exclude sub-headlines within your subtrees, and transclude only the contents of the top-most level of the subtrees. If you are transcluding only one headline element, this should be intuitive. If you transclude a whole buffer, you might be transcluding multiple subtrees.
@@ -314,7 +317,7 @@ How to use it is demonstrated in [[https://youtu.be/hz92vaO8IgQ][YouTube video #
 
 ** Include the section before the first headline (Org file only)
 
-You can now include the first section (section before the first headline) of an Org file. It is toggled via customizing variable =org-transclusion-include-first-section=. Its default value is =nil=. Set it to =t= (or non-nil) to transclude the first section. It works when the first section is followed by headlines (only lightly tested; I will appreciate your testing. I might need to consider retracting this feature if it proves to be too buggy).
+You can now include the first section (section before the first headline) of an Org file. It is toggled via customizable variable =org-transclusion-include-first-section=. Its default value is =nil=. Set it to =t= (or non-nil) to transclude the first section. It works when the first section is followed by headlines (only lightly tested; I will appreciate your testing. I might need to consider retracting this feature if it proves to be too buggy).
 
 ** Faces & fringe bitmap
 
@@ -379,7 +382,7 @@ Work is in progress to lift this limitation but I'm still experimenting differen
 - =org-indent-mode= may not work well with Org-transclusion ::
   It should not break anything, but both packages uses =line-prefix= and =wrap-prefix= text-properties for modifying the visual appearance of text. =org-indent-mode= uses them to make the text's indententation appears aligned; Org-transclusion uses them for the fringes to indicate transclusion and source regions. 
 
-- Doom's customizing may interfere with Org-transclusion ::
+- Doom's customization may interfere with Org-transclusion ::
    Refer to [[https://github.com/nobiot/org-transclusion/issues/52][this issue]]. The symptom is that in your Doom and you get an error message that includes this: "progn: ‘recenter’ing a window that does not display current-buffer." Adding this in your configuration has been reported to fix the issue:
 
 =(advice-remove 'org-link-search '+org--recenter-after-follow-link-a)=
