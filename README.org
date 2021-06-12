@@ -443,7 +443,7 @@ Note this section is still incomplete, far from being exhaustive for "known" lim
   
   More technical reason for this limitation is documented in the docstring of function =org-transclusion-live-sync-enclosing-element=.
 
-Work is in progress to lift this limitation but I'm still experimenting different ideas.
+  Work is in progress to lift this limitation but I'm still experimenting different ideas.
 
 - =org-indent-mode= may not work well with Org-transclusion ::
   It should not break anything, but both packages uses =line-prefix= and =wrap-prefix= text-properties for modifying the visual appearance of text. =org-indent-mode= uses them to make the text's indententation appears aligned; Org-transclusion uses them for the fringes to indicate transclusion and source regions. 
@@ -456,6 +456,9 @@ Work is in progress to lift this limitation but I'm still experimenting differen
 
   It is probably rather drastic a measure. I will appreciate it if you find a less drastic way that works. Thank you.
 
+- Org refile does not work "properly" on the transcluded headlines ::
+  Refer to [[https://github.com/nobiot/org-transclusion/issues/20][issue #20]]. I don't intend to support this -- refile the source, not the transcluded copy.
+  
 * Changelog
 :PROPERTIES:
 :TOC:      :depth 0
