@@ -304,7 +304,9 @@ It's like `with-silent-modifications' but keeps the undo list."
 
 ;;;###autoload
 (defun org-transclusion-activate ()
-  "Activate Org-transclusion hooks and other setups in the current buffer."
+  "Activate Org-transclusion hooks and other setups in the current buffer.
+This function does not add transclusions; it merely sets up hooks
+and variables."
   (interactive)
   (add-hook 'before-save-hook #'org-transclusion-before-save-buffer nil t)
   (add-hook 'after-save-hook #'org-transclusion-after-save-buffer nil t)
@@ -313,7 +315,8 @@ It's like `with-silent-modifications' but keeps the undo list."
   (org-transclusion-yank-excluded-properties-set))
 
 (defun org-transclusion-deactivate ()
-  "Dectivate Org-transclusion hooks and other setups in the current buffer."
+  "Dectivate Org-transclusion hooks and other setups in the current buffer.
+This function also removes all the transclusions in the current buffer."
   (interactive)
   (org-transclusion-remove-all)
   (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)

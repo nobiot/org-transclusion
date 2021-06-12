@@ -39,6 +39,7 @@ This package is an attempt to enable transclusion with Org Mode in Emacs. It is 
 - [[#installation][Installation]]
 - [[#getting-started][Getting Started]]
 - [[#usage][Usage]]
+  - [[#org-transclusion-mode-activate-and-deactivate][Org-transclusion Mode, Activate, and Deactivate]]
   - [[#filtering][Filtering]]
   - [[#live-sync-edit][Live-sync edit]]
   - [[#commands][Commands]]
@@ -107,6 +108,10 @@ As of v0.2.0, some commands are defined with =autoload=. This means that adding 
 #+end_src
 
 * Getting Started
+:PROPERTIES:
+:CUSTOM_ID: getting-started
+:END:
+
 
 The basic idea of Org-transclusion is simple: insert a copy of text content via a file link or ID link within a Org file. This is an Org Mode version of [[https://en.wikipedia.org/wiki/Transclusion][transclusion]]. 
 
@@ -161,13 +166,17 @@ C-c C-c         org-ctrl-c-ctrl-c
 This should get you started with Org-transclusion. There are more options and cusutomizing options available for you to fine-tune the text contents you transclude. More about them in README below.
 
 * Usage
-** COMMENT Org-transclusion local minor mode
+** Org-transclusion Mode, Activate, and Deactivate
 
-The minor mode is automatically turned on through one of these commands. All it does is to call =org-transclusion-activate=  to activate hooks to keep file in the filesystem clean and clear of the transcluded content. 
+Org-transclusion is a local minor mode; however, you do not need to explicitly call =org-transclusion-mode=. The minor mode is intended to be just a convenient wrapper to let you easily toggle between =activate= and =deactivate=. 
 
-Turn off the minor mode, or use =org-transclusion-deactivate=
+As you saw in the [[#getting-started][Getting Started section]] above, calling =org-transclusion-add= or =org-transclusion-add-all= is enough to add transclusions in your current buffer.
 
-The minor mode is just a convenient wrapper to toggle =activate= and =deactivate= commands. 
+The minor mode is automatically turned on locally for your current buffer through one of these commands. All it does is to call =org-transclusion-activate=  to activate hooks and some other variables. The main purpose of this setup is keep files in the filesystem clear of the transcluded content. 
+
+Turn off the minor mode or use =org-transclusion-deactivate=; you will remove all the transclusions in the current buffer and clear the hooks and other setup variables. 
+
+If you prefer, you can use =org-transclusion-mode= as your entry command for transclusion. When customizing variable =org-transclusion-add-all-on-activate= is non-nil (it is =t= by default), toggling the minor mode on calls the =org-transclusion-add-all= command to attempt to turn all transclusion keywords into text regions in the current buffer.
 
 ** COMMENT Transclude text content
 
