@@ -42,6 +42,8 @@ This package is an attempt to enable transclusion with Org Mode in Emacs. It is 
   - [[#org-transclusion-mode-activate-and-deactivate][Org-transclusion mode, activate, and deactivate]]
   - [[#org-links-supported][Org links supported]]
   - [[#filtering-org-elements-per-transclusion][Filtering Org elements per transclusion]]
+    - [[#combining-contents-only-and-exclude-elements][Combining :contents-only and :exclude-elements]]
+    - [[#notes-on-excluding-the-headline-element][Notes on excluding the headline element]]
   - [[#live-sync-edit][Live-sync edit]]
   - [[#commands][Commands]]
 - [[#customizing][Customizing]]
@@ -123,17 +125,13 @@ To transclude content via a reference, use one of the following commands:
 For example, if you have an ID link in your Org file like this:
 
 #+begin_example
-
 [[id:20210501T171427.051019][Bertrand Russell]]
-
 #+end_example
 
 Put your cursor somewhere on this link and call  =M-x org-transclusion-make-from-link=. That inserts a "transclusion" keyword like this in the next empty line:
 
 #+begin_example
-
 #+transclude: [[id:20210501T171427.051019][Bertrand Russell]]
-
 #+end_example
 
 Put your cursor somewhere on this keyword line and call =M-x org-transclusion-add-at-point=, and you will see the content the ID points to copied over, replacing the =transclude= keyword.
@@ -190,9 +188,7 @@ If you prefer, you can use =org-transclusion-mode= as your entry command for tra
 You can control whether or not transclusions are added automatically per transclude keyword. By default, =org-transclusion-add-all= (it is also used by =org-transclusion-mode=) will work on every transclude keyword in the buffer. Add =:disable-auto= property to a keyword as shown in the example below; =add-all= skips the transclude keyword with this property.
 
 #+begin_example
-
 #+transclude: [[file:path/to/file.org]] :disable-auto
-
 #+end_example
 
 You can override the =:disable-auto= property by manually call =org-transclusion-add= at point.
@@ -232,7 +228,7 @@ You can control what elements to include in many different ways with using vario
 The following two customizable variables are applicable for all transclusions globally. You can think of them as the default.
 
 - =org-transclusion-exclude-elements= ::
-  This customizable variable globally defines the exclusion filter for elements. It is a list of symbols; the acceptable values can be seen by inspecting =org-element-all-elements=. The default is to exclde =property-drawer=.
+  This customizable variable globally defines the exclusion filter for elements. It is a list of symbols; the acceptable values can be seen by inspecting =org-element-all-elements=. The default is to exclude =property-drawer=.
   Refer also to the [[#cust-exclude-elements][section on this user option]]. 
   
 - =org-transclusion-include-first-section= ::
@@ -242,12 +238,41 @@ The following two customizable variables are applicable for all transclusions gl
 In addition to the global user options above, you can fine-tune the filter per transclusion. Add following properties to transclusions you wish to apply additional filters.
 
 - =:contents-only= ::
-
+  This property lets you exclude titles of headlines when you transclude a subtree (headline); you transclude only the contents. When the subtree contains sub-headlines, all the contents will be transcluded.
+  Add =:contents-only= without any value like this example:
+  
+  #+begin_example
+  #+transclude: [[file:path/to/file.org]] :contents-only
+  #+end_example
+  
 - =:exclude-elements= ::
+  This property lets you *add* elements to exclude per transclusion on top of the variable =org-transclusion-exclude-elements= defines. You cannot *remove* the ones defined by it; thus, it is intended that you use the customizable variable as your global default and fine-tune it by the property per transclusion.
+  Add =:exclude-elements= with a list of elements (each one as defined by =org-element-all-elements=) separated by a space inside double quotation marks like this example:
+  #+begin_example
+  #+transclude: [[file:path/to/file.org]] :exclude-elements "drawer keyword"
+  #+end_example
 
-- Note on the headine element ::
-  You exclude sub-headlines within your subtrees, and transclude only the contents of the top-most level of the subtrees. If you are transcluding only one headline element, this should be intuitive. If you transclude a whole buffer, you might be transcluding multiple subtrees.
-  In some cases, this can be a little anti-intuive. In the following examples, you will be transcluding three subtrees -- even though the first headline levels are lower than the third one, the first two are the top-most level of their own respective subtrees.
+*** Combining =:contents-only= and =:exclude-elements=
+
+You can combine `:contents-only` and `:exclude-elements` to control how you transclude a subtree. Refer to the example screen shots below (the colored labels are added to the images for illustration purposes and not part of the Emacs buffers).
+
+![Figure 1](./resources/2021-06-05_v0.2.0-01.png) 
+**Figure 1**. *Left*. Three transclusions with different properties; *Right*. Source to be transcluded
+
+![Figure 2](./resources/2021-06-05_v0.2.0-02.png) 
+**Figure 2**. *Left*. Only the root-level headline is transcluded
+
+![Figure 3](./resources/2021-06-05_v0.2.0-03.png)
+**Figure 3**. *Left*. Content of the entire subtree, including sub-headlines, is transcluded
+
+![Figure 4](./resources/2021-06-05_v0.2.0-04.png)
+**Figure 3**. *Left*. Combined; only the content of top-level headline is transcluded
+
+*** Notes on excluding the headline element
+
+If you add =headline= as a list of elements to exclude, you exclude sub-headlines within your subtrees. You will still transclude the contents of the top-most level of the subtrees.
+
+If you are transcluding only one subtree, this should be intuitive. If you transclude a whole buffer, you might be transcluding multiple subtrees. In some cases, this can be a little anti-intuitive. In the following examples, you will be transcluding three subtrees -- even though the first headline levels are lower than the third one, the first two are still the top-most level of their own respective subtrees.
 
 #+begin_example
   ** Headline 1
@@ -392,11 +417,11 @@ Note this section is still incomplete, far from being exhaustive for "known" lim
 
 - =org-transclusion-live-sync-start= does not support all Org elements ::
   For transclusions of Org elements or buffers, live-sync works only on the following elements:
-=center-block=, =drawer=, =dynamic-block=, =latex-environment=, =paragraph=, =plain-list=, =quote-block=, =special-block=, =table=, and =verse-block=.
-
+  =center-block=, =drawer=, =dynamic-block=, =latex-environment=, =paragraph=, =plain-list=, =quote-block=, =special-block=, =table=, and =verse-block=.
+  
   It is known that live-sync does not work for the other elements; namely:
-=comment-block=, =export-block=, =example-block=, =fixed-width=, =keyword=, =src-block=, and =property-drawerd=.
-
+  =comment-block=, =export-block=, =example-block=, =fixed-width=, =keyword=, =src-block=, and =property-drawerd=.
+  
   More technical reason for this limitation is documented in the docstring of function =org-transclusion-live-sync-enclosing-element=.
 
 Work is in progress to lift this limitation but I'm still experimenting different ideas.
@@ -406,7 +431,8 @@ Work is in progress to lift this limitation but I'm still experimenting differen
 
 - Doom's customization may interfere with Org-transclusion ::
    Refer to [[https://github.com/nobiot/org-transclusion/issues/52][this issue]]. The symptom is that in your Doom and you get an error message that includes this: "progn: ‘recenter’ing a window that does not display current-buffer." Adding this in your configuration has been reported to fix the issue:
-
+   
+   
   =(advice-remove 'org-link-search '+org--recenter-after-follow-link-a)=
 
   It is probably rather drastic a measure. I will appreciate it if you find a less drastic way that works. Thank you.
