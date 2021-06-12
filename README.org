@@ -42,8 +42,6 @@ This package is an attempt to enable transclusion with Org Mode in Emacs. It is 
   - [[#org-transclusion-mode-activate-and-deactivate][Org-transclusion mode, activate, and deactivate]]
   - [[#org-links-supported][Org links supported]]
   - [[#filtering-org-elements-per-transclusion][Filtering Org elements per transclusion]]
-    - [[#combining-contents-only-and-exclude-elements][Combining :contents-only and :exclude-elements]]
-    - [[#notes-on-excluding-the-headline-element][Notes on excluding the headline element]]
   - [[#live-sync-edit][Live-sync edit]]
   - [[#commands][Commands]]
 - [[#customizing][Customizing]]
@@ -173,6 +171,10 @@ This should get you started with Org-transclusion. There are more options and cu
 As your next step, I particularly recommend the section on [[#filtering][filtering Org elements per transclusion]], which shows features that give you the power to control what part of the source to transclude in the way you like and let you experiment on the fly.
 
 * Usage
+:PROPERTIES:
+:TOC:      :depth 1
+:END:
+
 ** Org-transclusion mode, activate, and deactivate
 
 Org-transclusion is a local minor mode; however, you do not need to explicitly call =org-transclusion-mode=. The minor mode is intended to be just a convenient wrapper to let you easily toggle between =activate= and =deactivate=. 
@@ -229,16 +231,19 @@ The following two customizable variables are applicable for all transclusions gl
 
 - =org-transclusion-exclude-elements= ::
   This customizable variable globally defines the exclusion filter for elements. It is a list of symbols; the acceptable values can be seen by inspecting =org-element-all-elements=. The default is to exclude =property-drawer=.
+  
   Refer also to the [[#cust-exclude-elements][section on this user option]]. 
   
 - =org-transclusion-include-first-section= ::
   This customizing variable globally defines whether or not to include the first section of the source Org file. The first section is the part before the first headline -- that's the section that typically contains =#+title=, =#+author=, and so on. Many people also write notes in it without adding any headlines. Note that this user option is by default set to =nil= -- not to include the first section. Turn it to =t= if you wish to transclude the content from the first section of your Org files. If you wish to exclude the "meta data" defined by =#+title= and others, exclude =keyword= as described in this section -- these meta data are defined with using the =keyword= element of Org Mode.
+  
   Refer also to the [[#cust-first-section][section on this user option]]. 
 
 In addition to the global user options above, you can fine-tune the filter per transclusion. Add following properties to transclusions you wish to apply additional filters.
 
 - =:contents-only= ::
   This property lets you exclude titles of headlines when you transclude a subtree (headline); you transclude only the contents. When the subtree contains sub-headlines, all the contents will be transcluded.
+  
   Add =:contents-only= without any value like this example:
   
   #+begin_example
@@ -247,7 +252,9 @@ In addition to the global user options above, you can fine-tune the filter per t
   
 - =:exclude-elements= ::
   This property lets you *add* elements to exclude per transclusion on top of the variable =org-transclusion-exclude-elements= defines. You cannot *remove* the ones defined by it; thus, it is intended that you use the customizable variable as your global default and fine-tune it by the property per transclusion.
+  
   Add =:exclude-elements= with a list of elements (each one as defined by =org-element-all-elements=) separated by a space inside double quotation marks like this example:
+  
   #+begin_example
   #+transclude: [[file:path/to/file.org]] :exclude-elements "drawer keyword"
   #+end_example
@@ -256,16 +263,16 @@ In addition to the global user options above, you can fine-tune the filter per t
 
 You can combine `:contents-only` and `:exclude-elements` to control how you transclude a subtree. Refer to the example screen shots below (the colored labels are added to the images for illustration purposes and not part of the Emacs buffers).
 
-![Figure 1](./resources/2021-06-05_v0.2.0-01.png) 
+[[./resources/2021-06-05_v0.2.0-01.png]]
 **Figure 1**. *Left*. Three transclusions with different properties; *Right*. Source to be transcluded
 
-![Figure 2](./resources/2021-06-05_v0.2.0-02.png) 
+[[./resources/2021-06-05_v0.2.0-02.png]]
 **Figure 2**. *Left*. Only the root-level headline is transcluded
 
-![Figure 3](./resources/2021-06-05_v0.2.0-03.png)
+[[./resources/2021-06-05_v0.2.0-03.png]]
 **Figure 3**. *Left*. Content of the entire subtree, including sub-headlines, is transcluded
 
-![Figure 4](./resources/2021-06-05_v0.2.0-04.png)
+[[./resources/2021-06-05_v0.2.0-04.png]]
 **Figure 3**. *Left*. Combined; only the content of top-level headline is transcluded
 
 *** Notes on excluding the headline element
@@ -340,11 +347,16 @@ In the live-sync edit region, the normal =yank= command (=C-y=) is replaced with
 You can customize settings in the =org-transclusion= group.
 
 - =org-transclusion-add-all-on-activate= :: Defines whether or not all the active transclusions (with =t=) get automatically transcluded on minor mode activation (=org-transclusion-mode=). This does not affect the manual activation when you directly call =org-transclusion-activate=
-- =org-transclusion-exclude-elements= :: See below
-- =org-transclusion-include-first-section= :: See below
+
+- =org-transclusion-exclude-elements= :: See [[#cust-exclude-elements][sub-section]] below
+  
+- =org-transclusion-include-first-section= :: See [[#cust-first-section][sub-section]] below
+  
 - =org-transclusion-open-source-display-action-list= ::
    You can customize the way the =org-transclusion-open-source= function displays the source buffer for the transclusion. You specify the "action" in the way defined by the built-in =display-buffer= function. Refer to its in-system documentation (with =C-h f=) for the accepted values. =M-x customize= can also guide you with the types of values with the widget.
-- =org-transclusion-add-at-point-functions= :: (WIP)
+
+- =org-transclusion-mode-lighter= ::
+  Define the lighter for Org-transclusion minor mode. The default is " OT".
 
 ** Customizable filter to exclude certain Org elements
 :PROPERTIES:
