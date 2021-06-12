@@ -180,11 +180,11 @@ Org-transclusion is a local minor mode; however, you do not need to explicitly c
 
 As you saw in the [[#getting-started][Getting Started section]] above, calling =org-transclusion-add= or =org-transclusion-add-all= is enough to add transclusions in your current buffer.
 
-The minor mode is automatically turned on locally for your current buffer through one of these commands. All it does is to call =org-transclusion-activate=  to activate hooks and some other variables. The main purpose of this setup is keep files in the filesystem clear of the transcluded content. 
+The minor mode is automatically turned on locally for your current buffer through one of these commands. All it does is to call =org-transclusion-activate=  to activate hooks and some other variables. The main purpose of this setup is to keep files in the filesystem clear of the transcluded content. 
 
 Turn off the minor mode or use =org-transclusion-deactivate=; you will remove all the transclusions in the current buffer and clear the hooks and other setup variables. 
 
-If you prefer, you can use =org-transclusion-mode= as your entry command for transclusion. When customizable variable =org-transclusion-add-all-on-activate= is non-nil (it is =t= by default), toggling the minor mode on calls the =org-transclusion-add-all= command to attempt to turn all transclusion keywords into text regions in the current buffer.
+If you prefer, you can use =org-transclusion-mode= as your entry command for transclusion. When customizable variable =org-transclusion-add-all-on-activate= is non-nil (it is =t= by default), turning on the minor mode calls the =org-transclusion-add-all= command to attempt to add all transclusions automatically in the current buffer.
 
 You can control whether or not transclusions are added automatically per transclude keyword. By default, =org-transclusion-add-all= (it is also used by =org-transclusion-mode=) will work on every transclude keyword in the buffer. Add =:disable-auto= property to a keyword as shown in the example below; =add-all= skips the transclude keyword with this property.
 
@@ -192,7 +192,7 @@ You can control whether or not transclusions are added automatically per transcl
 #+transclude: [[file:path/to/file.org]] :disable-auto
 #+end_example
 
-You can override the =:disable-auto= property by manually call =org-transclusion-add= at point.
+You can override the =:disable-auto= property by manually calling =org-transclusion-add= at point.
 
 ** Org links supported
 :PROPERTIES:
@@ -209,7 +209,9 @@ Transclusion has been tested to work for the following types of links:
 - ID link =id:uuid=
 - File link for non-org files (tested with =.txt= and =.md=); for these, the whole buffer gets transcluded
 
-For transcluding a specific paragraph, Org-transclusion relies on Org mode's [[https://orgmode.org/manual/Internal-Links.html#Internal-Links][dedicated-target]]. The target paragraph must be identifiable by a dedicated target with a =<<paragraph-id>>=: 
+For transcluding a specific paragraph, there are two main ways: Org Mode's [[https://orgmode.org/manual/Internal-Links.html#Internal-Links][dedicated-target]] and =:only-contents= property.
+
+For dedicated targets, the target paragraph must be identifiable by a dedicated target with a =<<paragraph-id>>=: 
 
 #+begin_example
 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
@@ -218,6 +220,8 @@ tincidunt quam. <<paragraph-id>>
 #+end_example
 
 It is generally assumed that the paragraph-id is placed after its content, but it is not an absolute requirement; it can be in the beginning (before the content) or in the middle of it.
+
+For the =:only-contents= property, refer to the sub-section, [[#filtering-org-elements-per-transclusion][Filtering Org elements per transclusion]].
  
 ** Filtering Org elements per transclusion
 :PROPERTIES:
@@ -226,7 +230,7 @@ It is generally assumed that the paragraph-id is placed after its content, but i
 
 You can control what elements to include in many different ways with using various filters. The filters work in two layers: customizable variable and properties per transclude keyword.
 
-The following two customizable variables are applicable for all transclusions globally. You can think of them as the default.
+The following two customizable variables are applicable to all transclusions globally. You can think of them as the global default.
 
 - =org-transclusion-exclude-elements= ::
   This customizable variable globally defines the exclusion filter for elements. It is a list of symbols; the acceptable values can be seen by inspecting =org-element-all-elements=. The default is to exclude =property-drawer=.
@@ -238,7 +242,7 @@ The following two customizable variables are applicable for all transclusions gl
   
   Refer also to the [[#include-the-section-before-the-first-headline-org-file-only][sub-section on this user option]]. 
 
-In addition to the global user options above, you can fine-tune the filter per transclusion. Add following properties to transclusions you wish to apply additional filters.
+In addition to the global user options above, you can fine-tune the default exclusion filter per transclusion. Add following properties to transclusions you wish to apply additional filters.
 
 - =:contents-only= ::
   This property lets you exclude titles of headlines when you transclude a subtree (headline); you transclude only the contents. When the subtree contains sub-headlines, all the contents will be transcluded.
@@ -263,16 +267,16 @@ In addition to the global user options above, you can fine-tune the filter per t
 You can combine `:contents-only` and `:exclude-elements` to control how you transclude a subtree. Refer to the example screen shots below (the colored labels are added to the images for illustration purposes and not part of the Emacs buffers).
 
 [[./resources/2021-06-05_v0.2.0-01.png]]
-**Figure 1**. *Left*. Three transclusions with different properties; *Right*. Source to be transcluded
+*Figure 1*. *Left*. Three transclusions with different properties; *Right*. Source to be transcluded
 
 [[./resources/2021-06-05_v0.2.0-02.png]]
-**Figure 2**. *Left*. Only the root-level headline is transcluded
+*Figure 2*. *Left*. Only the root-level headline is transcluded
 
 [[./resources/2021-06-05_v0.2.0-03.png]]
-**Figure 3**. *Left*. Content of the entire subtree, including sub-headlines, is transcluded
+*Figure 3*. *Left*. Content of the entire subtree, including sub-headlines, is transcluded
 
 [[./resources/2021-06-05_v0.2.0-04.png]]
-**Figure 3**. *Left*. Combined; only the content of top-level headline is transcluded
+*Figure 3*. *Left*. Combined; only the content of top-level headline is transcluded
 
 *** Notes on excluding the headline element
 
