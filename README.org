@@ -459,8 +459,23 @@ Work is in progress to lift this limitation but I'm still experimenting differen
 Main features and changes only.
 
 ** 0.2.0
-- cbb1c25 *  add: apply :level to buffer with first section ::
-  Fix #47 The firsrt section itself does not get influenced by :level property.  The first headline, when present, is treated as the first headline, thus :exclude-element "headline" affets its sub-headlines; this means that the content of the first headline is transcluded even when with "headline" in the list of excluded elements.
+- Breaking changes ::
+   Refer to the updated README on new features and changed command names
+  - Change names of commands
+  - Remove t/nil to #+transclude: syntax
+  - Add :disable-auto
+  - Main relevant commits:
+    + 2ba90f0 * break: change command and function names
+    + 6cdd836 * | intrnl: v0.2.0 (breaking change)
+    + 765d8ee * add :disable-auto
+
+- New features and improvements ::
+  Refer to the updated README on new features and changed command names
+  - 7e5c839 * feat: exclude-elements
+  - 765d8ee * add :disable-auto
+  - afd6d80 * add: :only-contents
+  - cbb1c25 * add: apply :level to buffer with first section ::
+    Fix #47 The firsrt section itself does not get influenced by :level property.  The first headline, when present, is treated as the first headline, thus :exclude-element "headline" affets its sub-headlines; this means that the content of the first headline is transcluded even when with "headline" in the list of excluded elements.
 
 ** 0.1.2 
 - e08df47 * add: live-sync for non-Org text file ::
