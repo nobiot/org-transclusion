@@ -254,7 +254,7 @@ In addition to the global user options above, you can fine-tune the default excl
   Add =:only-contents= without any value like this example:
   
 #+begin_example
-#+transclude: [[file:path/to/file.org]] :contents-only
+#+transclude: [[file:path/to/file.org]] :only-contents
 #+end_example
   
 - =:exclude-elements= ::
