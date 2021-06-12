@@ -89,7 +89,9 @@ If you use Doom and packages such as Straight, etc. to install files from GitHub
              :files ("*.el")))
 #+end_src
 
-For Doom, add =use-package!= to load the library by adding something like this in your =config.el=. As of v0.2.0, some commands are defined with =autoload=, so adding some properties such as =:defer= lets you lazy-load =org-transclusion= package. Please consult Doom's documentation for further instruction (I don't use Doom, but I have lightly tested this snippet). There are other ways to configure Doom; also refer to @Ma-Nu-El's comment in [[https://github.com/nobiot/org-transclusion/issues/79][issue #79]] (thank you, @Ma-Nu-El). 
+For Doom, add =use-package!= to load the library by adding something like this in the code excerpt below in your =config.el=.
+
+As of v0.2.0, some commands are defined with =autoload=. This means that adding some properties such as =:defer= lets you lazy-load =org-transclusion= package. Please consult Doom's documentation for further instruction (I don't use Doom, but I have lightly tested this snippet). There are other ways to configure Doom; also refer to @Ma-Nu-El's comment in [[https://github.com/nobiot/org-transclusion/issues/79][issue #79]] (thank you, @Ma-Nu-El). 
 
 #+begin_src elisp
   ;; In ~/.doom.d/config.el
