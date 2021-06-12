@@ -43,7 +43,6 @@ This package is an attempt to enable transclusion with Org Mode in Emacs. It is 
   - [[#org-links-supported][Org links supported]]
   - [[#filtering-org-elements-per-transclusion][Filtering Org elements per transclusion]]
   - [[#live-sync-edit][Live-sync edit]]
-  - [[#commands][Commands]]
 - [[#customizing][Customizing]]
   - [[#customizable-filter-to-exclude-certain-org-elements][Customizable filter to exclude certain Org elements]]
   - [[#include-the-section-before-the-first-headline-org-file-only][Include the section before the first headline (Org file only)]]
@@ -73,7 +72,7 @@ Download or clone this repo, put all the =.el= files in it into your load-path, 
   (with-eval-after-load 'org
     (add-to-list  'load-path "path/to/org-transclusion/")
     (require 'org-transclusion)
-    (define-key global-map (kbd "<f12>") #'org-transclusion-add-at-point)
+    (define-key global-map (kbd "<f12>") #'org-transclusion-add)
     (define-key global-map (kbd "C-n t") #'org-transclusion-mode))
 #+END_SRC
 
@@ -168,7 +167,7 @@ C-c C-c         org-ctrl-c-ctrl-c
 
 This should get you started with Org-transclusion. There are more options and cusutomizing options available for you to fine-tune the text contents you transclude. More about them in README below.
 
-As your next step, I particularly recommend the section on [[#filtering][filtering Org elements per transclusion]], which shows features that give you the power to control what part of the source to transclude in the way you like and let you experiment on the fly.
+As your next step, I particularly recommend the section on [[#filtering-org-elements-per-transclusion][filtering Org elements per transclusion]], which shows features that give you the power to control what part of the source to transclude in the way you like and let you experiment on the fly.
 
 * Usage
 :PROPERTIES:
@@ -222,7 +221,7 @@ It is generally assumed that the paragraph-id is placed after its content, but i
  
 ** Filtering Org elements per transclusion
 :PROPERTIES:
-:CUSTOM_ID: filtering
+:CUSTOM_ID: filtering-org-elements-per-transclusion
 :END:
 
 You can control what elements to include in many different ways with using various filters. The filters work in two layers: customizable variable and properties per transclude keyword.
@@ -232,12 +231,12 @@ The following two customizable variables are applicable for all transclusions gl
 - =org-transclusion-exclude-elements= ::
   This customizable variable globally defines the exclusion filter for elements. It is a list of symbols; the acceptable values can be seen by inspecting =org-element-all-elements=. The default is to exclude =property-drawer=.
   
-  Refer also to the [[#cust-exclude-elements][section on this user option]]. 
+  Refer also to the [[#customizable-filter-to-exclude-certain-org-elements][sub-section on this user option]]. 
   
 - =org-transclusion-include-first-section= ::
   This customizing variable globally defines whether or not to include the first section of the source Org file. The first section is the part before the first headline -- that's the section that typically contains =#+title=, =#+author=, and so on. Many people also write notes in it without adding any headlines. Note that this user option is by default set to =nil= -- not to include the first section. Turn it to =t= if you wish to transclude the content from the first section of your Org files. If you wish to exclude the "meta data" defined by =#+title= and others, exclude =keyword= as described in this section -- these meta data are defined with using the =keyword= element of Org Mode.
   
-  Refer also to the [[#cust-first-section][section on this user option]]. 
+  Refer also to the [[#include-the-section-before-the-first-headline-org-file-only][sub-section on this user option]]. 
 
 In addition to the global user options above, you can fine-tune the filter per transclusion. Add following properties to transclusions you wish to apply additional filters.
 
@@ -325,7 +324,7 @@ In the live-sync edit region, the normal =yank= command (=C-y=) is replaced with
  *Also inherits ‘org-mode-map’
 #+end_example
  
-** Commands
+** COMMENT List of Commands
 
 - =org-transclusion-mode= ::
 - =org-transclusion-make-from-link= ::
@@ -348,9 +347,9 @@ You can customize settings in the =org-transclusion= group.
 
 - =org-transclusion-add-all-on-activate= :: Defines whether or not all the active transclusions (with =t=) get automatically transcluded on minor mode activation (=org-transclusion-mode=). This does not affect the manual activation when you directly call =org-transclusion-activate=
 
-- =org-transclusion-exclude-elements= :: See [[#cust-exclude-elements][sub-section]] below
+- =org-transclusion-exclude-elements= :: See [[#customizable-filter-to-exclude-certain-org-elements][sub-section]] below
   
-- =org-transclusion-include-first-section= :: See [[#cust-first-section][sub-section]] below
+- =org-transclusion-include-first-section= :: See [[#include-the-section-before-the-first-headline-org-file-only][sub-section]] below
   
 - =org-transclusion-open-source-display-action-list= ::
    You can customize the way the =org-transclusion-open-source= function displays the source buffer for the transclusion. You specify the "action" in the way defined by the built-in =display-buffer= function. Refer to its in-system documentation (with =C-h f=) for the accepted values. =M-x customize= can also guide you with the types of values with the widget.
@@ -360,7 +359,7 @@ You can customize settings in the =org-transclusion= group.
 
 ** Customizable filter to exclude certain Org elements
 :PROPERTIES:
-:CUSTOM_ID: cust-exclude-elements
+:CUSTOM_ID: customizable-filter-to-exclude-certain-org-elements
 :END:
 
 Set customizable variable =org-transclusion-exclude-elements= to define which elements to be *excluded* in the transclusion.
@@ -369,11 +368,11 @@ The filter works for all supported types of links within an Org file when transc
 
 It is a list of symbols, and the default is =(property-drawer)=. The accepted values are the ones defined by =org-element-all-elements= (Org's standard set of elements; refer to its documentation for an exhaustive list).
 
-How to use it is demonstrated in [[https://youtu.be/hz92vaO8IgQ][YouTube video #5]] as well. It refers to an old versin of Org-transclusion but you can customize the variable in the same way as shown in the video.
+You can also fine-tune the exclusion filter per transclusion. Refer to the sub-section on [[#filtering-org-elements-per-transclusion][filtering Org elements per transclusion]].
 
 ** Include the section before the first headline (Org file only)
 :PROPERTIES:
-:CUSTOM_ID: cust-first-section
+:CUSTOM_ID: include-the-section-before-the-first-headline-org-file-only
 :END:
 
 You can include the first section (section before the first headline) of an Org file. It is toggled via customizable variable =org-transclusion-include-first-section=. Its default value is =nil=. Set it to =t= (or non-nil) to transclude the first section. It also works when the first section is followed by headlines.
