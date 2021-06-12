@@ -39,11 +39,11 @@ This package is an attempt to enable transclusion with Org Mode in Emacs. It is 
 - [[#installation][Installation]]
 - [[#getting-started][Getting Started]]
 - [[#usage][Usage]]
-  - [[#org-transclusion-mode-activate-and-deactivate][Org-transclusion Mode, Activate, and Deactivate]]
-  - [[#filtering][Filtering]]
+  - [[#org-transclusion-mode-activate-and-deactivate][Org-transclusion mode, activate, and deactivate]]
+  - [[#org-links-supported][Org links supported]]
+  - [[#filtering-per-transclusion][Filtering per transclusion]]
   - [[#live-sync-edit][Live-sync edit]]
   - [[#commands][Commands]]
-  - [[#org-links-supported][Org links supported]]
 - [[#customizing][Customizing]]
   - [[#customizable-filter-to-exclude-certain-org-elements][Customizable filter to exclude certain Org elements]]
   - [[#include-the-section-before-the-first-headline-org-file-only][Include the section before the first headline (Org file only)]]
@@ -123,17 +123,25 @@ To transclude content via a reference, use one of the following commands:
 
 For example, if you have an ID link in your Org file like this:
 
-=[[id:20210501T171427.051019][Bertrand Russell]]=
+#+begin_example
+
+[[id:20210501T171427.051019][Bertrand Russell]]
+
+#+end_example
 
 Put your cursor somewhere on this link and call  =M-x org-transclusion-make-from-link=. That inserts a "transclusion" keyword like this in the next empty line:
 
-=#+transclude: [[id:20210501T171427.051019][Bertrand Russell]]=
+#+begin_example
+
+#+transclude: [[id:20210501T171427.051019][Bertrand Russell]]
+
+#+end_example
 
 Put your cursor somewhere on this keyword line and call =M-x org-transclusion-add-at-point=, and you will see the content the ID points to copied over, replacing the =transclude= keyword.
 
 [[./resources/2021-05-09T190918.png]]
 
-The transcluded text is read-only but you can copy it and export it as normal text. Org-transclusion remembers where it has transcluded the text from (its source buffer). With using this memory, you can use a number of useful commands you can call by a single letter (by default). 
+The transcluded text is *read-only* but you can copy it and export it as normal text. Org-transclusion remembers where it has transcluded the text from (its source buffer). With using this memory, you can use a number of useful commands you can call by a single letter (by default). 
 
 For example, you can press =o= to open the source buffer of the transclusion at point, or =O= (capital "o") to move to it. Rpess =r= to refresh the transclusion. Press =e= to start live-sync edit. For more detail, inspect the documentation of each command.
 
@@ -166,7 +174,7 @@ C-c C-c         org-ctrl-c-ctrl-c
 This should get you started with Org-transclusion. There are more options and cusutomizing options available for you to fine-tune the text contents you transclude. More about them in README below.
 
 * Usage
-** Org-transclusion Mode, Activate, and Deactivate
+** Org-transclusion mode, activate, and deactivate
 
 Org-transclusion is a local minor mode; however, you do not need to explicitly call =org-transclusion-mode=. The minor mode is intended to be just a convenient wrapper to let you easily toggle between =activate= and =deactivate=. 
 
@@ -178,28 +186,42 @@ Turn off the minor mode or use =org-transclusion-deactivate=; you will remove al
 
 If you prefer, you can use =org-transclusion-mode= as your entry command for transclusion. When customizing variable =org-transclusion-add-all-on-activate= is non-nil (it is =t= by default), toggling the minor mode on calls the =org-transclusion-add-all= command to attempt to turn all transclusion keywords into text regions in the current buffer.
 
-** COMMENT Transclude text content
+You can control whether or not transclusions are added automatically per transclude keyword. By default, =org-transclusion-add-all= (it is also used by =org-transclusion-mode=) will work on every transclude keyword in the buffer. Add =:disable-auto= property to a keyword as shown in the example below; =add-all= skips the transclude keyword with this property.
 
-Use one of these commands to transclude text content.
+#+begin_example
 
-- =org-transclusion-create-from-link=  
-- =org-transclusion-add-at-point=
-- =org-transclusion-add-all-in-buffer=
+#+transclude: [[file:path/to/file.org]] :disable-auto
 
-Transclusion works for:
+#+end_example
 
-- =ID= links (=Org-ID=) to Org files
-- =file= links to Org files and non-Org text files
+You can override the =:disable-auto= property by manually call =org-transclusion-add= at point.
 
-For links to Org files, options also work such as links to a headline or paragraph via =dedicated target=. Refer to [[#org-links-supported][Org links supported]].
+** Org links supported
+:PROPERTIES:
+:CUSTOM_ID: org-links-supported
+:END:
 
-Transcluded text region will be read-only.
+Transclusion has been tested to work for the following types of links:
 
-Refer to [[#live-sync-edit][Live-sync edit]] for Org-translusion's edit feature.
+- File link for an entire org file/buffer; e.g. =[[file:~/org/file.org][My Org Notes]]=
+- File link with =::*heading=
+- File link with =::#custom-id=
+- File link with =::name= for blocks (e.g. blocked quotations), tables, and links
+- File link with =::dedicated-target=; this is intended for linking to a paragraph. See below.
+- ID link =id:uuid=
+- File link for non-org files (tested with =.txt= and =.md=); for these, the whole buffer gets transcluded
 
-You can customize the local keybindings for transclusions by =org-transclusion-map=. If you use vim keybindings (e.g. =evil-mode=), it is advised that you review the default keybindings.
+For transcluding a specific paragraph, Org-transclusion relies on Org mode's [[https://orgmode.org/manual/Internal-Links.html#Internal-Links][dedicated-target]]. The target paragraph must be identifiable by a dedicated target with a =<<paragraph-id>>=: 
 
-** Filtering
+#+begin_example
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Suspendisse ac velit fermentum, sodales nunc in,
+tincidunt quam. <<paragraph-id>>
+#+end_example
+
+It is generally assumed that the paragraph-id is placed after its content, but it is not an absolute requirement; it can be in the beginning (before the content) or in the middle of it.
+ 
+** Filtering per transclusion
 You can control what elements to include in many different ways with using various filters
 
 =:exclude-elements=
@@ -269,31 +291,6 @@ In the live-sync edit region, the normal =yank= command (=C-y=) is replaced with
 - =org-transclusion-live-sync-exit= :: 
 - =org-transclusion-live-sync-paste= ::
 
-** Org links supported
-:PROPERTIES:
-:CUSTOM_ID: org-links-supported
-:END:
-
-Transclusion has been tested to work for the following types of links:
-
-- File link for an entire org file/buffer; e.g. =[[file:~/org/file.org][My Org Notes]]=
-- File link with =::*heading=
-- File link with =::#custom-id=
-- File link with =::name= for blocks (e.g. blocked quotations), tables, and links
-- File link with =::dedicated-target=; this is intended for linking to a paragraph. See below.
-- ID link =id:uuid=
-- File link for non-org files (tested with =.txt= and =.md=); for these, the whole buffer gets transcluded
-
-For transcluding a specific paragraph, Org-transclusion relies on Org mode's [[https://orgmode.org/manual/Internal-Links.html#Internal-Links][dedicated-target]]. The target paragraph must be identifiable by a dedicated target with a =<<paragraph-id>>=: 
-
-#+begin_example
-Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-Suspendisse ac velit fermentum, sodales nunc in,
-tincidunt quam. <<paragraph-id>>
-#+end_example
-
-It is generally assumed that the paragraph-id is placed after its content, but it is not an absolute requirement; it can be in the beginning (before the content) or in the middle of it.
- 
 * Customizing
 
 You can customize settings in the =org-transclusion= group.
@@ -370,10 +367,10 @@ Note this section is still incomplete, far from being exhaustive for "known" lim
 
 - =org-transclusion-live-sync-start= does not support all Org elements ::
   For transclusions of Org elements or buffers, live-sync works only on the following elements:
-center-block, drawer, dynamic-block, latex-environment, plain-list, quote-block, special-block table, and verse-block.
+=center-block=, =drawer=, =dynamic-block=, =latex-environment=, =paragraph=, =plain-list=, =quote-block=, =special-block=, =table=, and =verse-block=.
 
 It is known that live-sync does not work for the other elements; namely:
-comment-block, export-block, example-block, fixed-width, keyword, src-block, and property-drawerd.
+=comment-block=, =export-block=, =example-block=, =fixed-width=, =keyword=, =src-block=, and =property-drawerd=.
 
 More technical reason for this limitation is documented in the docstring of function =org-transclusion-live-sync-enclosing-element=.
 
