@@ -246,7 +246,7 @@ In addition to the global user options above, you can fine-tune the filter per t
   Add =:contents-only= without any value like this example:
   
   #+begin_example
-  #+transclude: [[file:path/to/file.org]] :contents-only
+#+transclude: [[file:path/to/file.org]] :contents-only
 #+end_example
   
 - =:exclude-elements= ::
@@ -255,7 +255,7 @@ In addition to the global user options above, you can fine-tune the filter per t
   Add =:exclude-elements= with a list of elements (each one as defined by =org-element-all-elements=) separated by a space inside double quotation marks like this example:
   
   #+begin_example
-  #+transclude: [[file:path/to/file.org]] :exclude-elements "drawer keyword"
+#+transclude: [[file:path/to/file.org]] :exclude-elements "drawer keyword"
 #+end_example
 
 *** Combining =:contents-only= and =:exclude-elements=
