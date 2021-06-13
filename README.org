@@ -239,9 +239,9 @@ Use the =:level= property with a value of single digit number from 1 to 9 like t
 #+transclude: [[file:path/to/file.org::*Headline]] :level 2
 #+end_example
 
-The top level of the transcluded headline will be set to the value of =:level= property -- in this example, level 2 regardless of that in the source. When the headline contains sub-headlines, all of them are automatically promoted or demoted to align to the top level headline.
+The top level of the transcluded headline will be set to the value of =:level= property -- in this example, level 2 regardless of that in the source. When the headline contains sub-headlines, they are all automatically promoted or demoted to align according to how many levels the top of the subtree has moved.
 
-When you transclude an entire Org file, it may contain multiple subtrees. In such cases, the top-most level among the subtrees will be set according to the =:level= property, and the rest of headlines in the buffer will align accordingly. 
+When you transclude an entire Org file, it may contain multiple subtrees. In such cases, the top-most level among the subtrees will be set according to the =:level= property; the rest of headlines in the buffer align accordingly. 
 
 ** Filtering Org elements per transclusion
 :PROPERTIES:
@@ -278,7 +278,7 @@ In addition to the global user options above, you can fine-tune the default excl
   
   Add =:exclude-elements= with a list of elements (each one as defined by =org-element-all-elements=) separated by a space inside double quotation marks like this example:
   
-#+begin_example
+#+begin_example
 #+transclude: [[file:path/to/file.org]] :exclude-elements "drawer keyword"
 #+end_example
 
