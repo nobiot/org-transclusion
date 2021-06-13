@@ -46,7 +46,7 @@ I am dabbling in the [[https://writingcooperative.com/zettelkasten-how-one-germa
 - [[#usage][Usage]]
   - [[#org-transclusion-mode-activate-and-deactivate][Org-transclusion mode, activate, and deactivate]]
   - [[#org-links-supported][Org links supported]]
-  - [[#controlling-level-of-headlines-of-transclusions][Controlling level of headlines of transclusions]]
+  - [[#controlling-levels-of-headlines-in-transclusions][Controlling levels of headlines in transclusions]]
   - [[#filtering-org-elements-per-transclusion][Filtering Org elements per transclusion]]
   - [[#live-sync-edit][Live-sync edit]]
 - [[#customizing][Customizing]]
@@ -229,7 +229,7 @@ It is generally assumed that the =paragraph-id= is placed after its content, but
 
 For the =:only-contents= property, refer to sub-section [[#filtering-org-elements-per-transclusion][Filtering Org elements per transclusion]].
  
-** Controlling level of headlines of transclusions
+** Controlling levels of headlines in transclusions
 
 You can specify a different level of transcluded headlines than that of the source Org file.
 
