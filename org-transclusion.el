@@ -49,7 +49,6 @@
 (declare-function text-clone-make-overlay 'text-clone)
 (declare-function text-clone-delete-overlays 'text-clone)
 (declare-function text-clone-set-overlays 'text-clone)
-(declare-function org-at-keyword-p 'org)
 (declare-function text-property-search-forward 'text-property-search)
 (declare-function text-property-search-backward 'text-property-search)
 (declare-function prop-match-value 'text-property-search)
@@ -405,40 +404,44 @@ does not support all the elements.
 
 \\{org-transclusion-map}"
   (interactive)
-  (let* ((keyword-plist (org-transclusion-keyword-string-to-plist))
-         (link (org-transclusion-wrap-path-to-link
-                (plist-get keyword-plist :link)))
-         (payload (run-hook-with-args-until-success
-                   'org-transclusion-add-functions link keyword-plist))
-         (tc-type (plist-get payload :tc-type))
-         (src-buf (plist-get payload :src-buf))
-         (src-beg (plist-get payload :src-beg))
-         (src-end (plist-get payload :src-end))
-         (src-content (plist-get payload :src-content)))
-    (if (or (string= src-content "")
-            (eq src-content nil))
-        ;; Keep going with program when no content `org-transclusion-add-all'
-        ;; should move to the next transclusion
-        (progn (message
-                (format
-                 "No content found with \"%s\".  Check the link at point %d, line %d"
-                 (org-element-property :raw-link link) (point) (org-current-line))
-               nil))
-      (org-transclusion-with-silent-modifications
-        (when (save-excursion
-                (end-of-line) (insert-char ?\n)
-                (org-transclusion-content-insert
-                 keyword-plist tc-type src-content
-                 src-buf src-beg src-end)
-                (unless (eobp) (delete-char 1))
-                t)
-          ;; `org-transclusion-keyword-remove' checks element at point is a
-          ;; keyword or not
-          (org-transclusion-keyword-remove)))
-      (unless org-transclusion-mode
-        (let ((org-transclusion-add-all-on-activate nil))
-          (org-transclusion-mode +1)))
-      t)))
+  (if (let ((elm (org-element-at-point)))
+        (not (and (string= "keyword" (org-element-type elm))
+                  (string= "TRANSCLUDE" (org-element-property :key elm)))))
+      (user-error "Not at a transclude keyword")
+    (let* ((keyword-plist (org-transclusion-keyword-string-to-plist))
+           (link (org-transclusion-wrap-path-to-link
+                  (plist-get keyword-plist :link)))
+           (payload (run-hook-with-args-until-success
+                     'org-transclusion-add-functions link keyword-plist))
+           (tc-type (plist-get payload :tc-type))
+           (src-buf (plist-get payload :src-buf))
+           (src-beg (plist-get payload :src-beg))
+           (src-end (plist-get payload :src-end))
+           (src-content (plist-get payload :src-content)))
+      (if (or (string= src-content "")
+              (eq src-content nil))
+          ;; Keep going with program when no content `org-transclusion-add-all'
+          ;; should move to the next transclusion
+          (progn (message
+                  (format
+                   "No content found with \"%s\".  Check the link at point %d, line %d"
+                   (org-element-property :raw-link link) (point) (org-current-line))
+                  nil))
+        (org-transclusion-with-silent-modifications
+          (when (save-excursion
+                  (end-of-line) (insert-char ?\n)
+                  (org-transclusion-content-insert
+                   keyword-plist tc-type src-content
+                   src-buf src-beg src-end)
+                  (unless (eobp) (delete-char 1))
+                  t)
+            ;; `org-transclusion-keyword-remove' checks element at point is a
+            ;; keyword or not
+            (org-transclusion-keyword-remove)))
+        (unless org-transclusion-mode
+          (let ((org-transclusion-add-all-on-activate nil))
+            (org-transclusion-mode +1)))
+        t))))
 
 ;;;###autoload
 (defun org-transclusion-add-all (&optional narrowed)
