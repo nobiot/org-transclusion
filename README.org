@@ -14,15 +14,13 @@ README below has also been updated to reflect these changes; new users can ignor
 
 ⚠⚠⚠
 
-Transclusion is the ability to include content from one file into another by reference. Org-transclusion lets you do this in your Org file. 
+[[https://en.wikipedia.org/wiki/Transclusion][Transclusion]] is the ability to include content from one file into another by reference. Org-transclusion is an Org Mode version of it. It lets you insert a copy of text content via a file link or ID link within an Org file. It is my take on the [[#original-idea-by-john-kitchin][idea by John Kitchin]].
 
-When I start writing a long-form material, I want to begin with looking through my notes and assemble relevant one to form a basis of the first draft quickly. As I organise my notes in a repository, I also want to avoid having multiple copies of notes flying around.
+When I start writing a long-form material, I want to begin with looking through my notes and assemble relevant ones to form a basis of the first draft quickly. As I organise my notes in a repository, I also want to avoid having multiple copies of notes flying around.
 
 Transclusion helps me do this.
 
 I am dabbling in the [[https://writingcooperative.com/zettelkasten-how-one-german-scholar-was-so-freakishly-productive-997e4e0ca125][Zettelkasten method]] with using [[https://www.orgroam.com/][Org-roam]] to feed my ideas into the repository. As such, although Org-transclusion is a standalone package, I would like to keep workflow seamless between Org-roam and Org-transclusion.
-
-This package is an attempt to enable transclusion with Org Mode in Emacs. It is my take on the [[#original-idea-by-john-kitchin][idea by John Kitchin]].
 
 #+caption: Figure 1. Animation to show creation of a transclusion from an ID link
 [[./resources/2021-05-01-org-transclusion-0.1.0-create.gif]]
@@ -33,10 +31,10 @@ This package is an attempt to enable transclusion with Org Mode in Emacs. It is 
 *Figure 2*. Animation to show live sync from transclusion to source
 
 [[./resources/demo8-title.png]]
-*Figure 3* [[https://youtu.be/idlFzWeygwA][Video demo on v0.2.0 on YouTube]]
+*Figure 3* [[https://youtu.be/idlFzWeygwA][Video demo on v0.2.0 on YouTube]] featuring minor breaking changes and new transclusion filters
 
 - Older videos ::
-  + [[https://youtu.be/idlFzWeygwA][Video demo on v0.1.1 on YouTube]]
+  + [[https://youtu.be/idlFzWeygwA][Video demo on v0.1.1 on YouTube]] featuring basic syntax and live-sync edit
 
 * Contents                                                         :noexport:
 :PROPERTIES:
@@ -48,6 +46,7 @@ This package is an attempt to enable transclusion with Org Mode in Emacs. It is 
 - [[#usage][Usage]]
   - [[#org-transclusion-mode-activate-and-deactivate][Org-transclusion mode, activate, and deactivate]]
   - [[#org-links-supported][Org links supported]]
+  - [[#controlling-level-of-headlines-of-transclusions][Controlling level of headlines of transclusions]]
   - [[#filtering-org-elements-per-transclusion][Filtering Org elements per transclusion]]
   - [[#live-sync-edit][Live-sync edit]]
 - [[#customizing][Customizing]]
@@ -83,9 +82,9 @@ Download or clone this repo, put all the =.el= files in it into your load-path, 
     (define-key global-map (kbd "C-n t") #'org-transclusion-mode))
 #+END_SRC
 
-It is important that you get all the =.el= files ready, not just =org-transclusion.el=. As at the time of this writing, the live-sync feature is contained in =text-clone.el= (also available in this repo) and a feature to transclude lines of source code file is being developed as an extension to be available in another =.el= file. You will need to have all the =.el= files to use Org-transclusion as a package.
+It is important that you get all the =.el= files ready, not just =org-transclusion.el=. As at the time of this writing, the live-sync feature is contained in =text-clone.el= (also available in this repo) and a new feature to transclude lines of source code file is being developed as an extension to be available in another =.el= file. You will need to have all the =.el= files to use Org-transclusion as a package.
 
-If you use Doom and packages such as Straight, etc. to install files from GitHub repositories, you can do something like this below (this is an example using Doom's =package!= macro).
+If you use Doom and packages such as Straight, etc. to install files from GitHub repositories, you can do something like this below (it's an example using Doom's =package!= macro).
 
 #+begin_src elisp
   ;; In ~/.doom.d/package.el
@@ -96,9 +95,9 @@ If you use Doom and packages such as Straight, etc. to install files from GitHub
              :files ("*.el")))
 #+end_src
 
-For Doom, add =use-package!= to load the library by adding something like this in the code excerpt below in your =config.el=.
+For Doom, add =use-package!= to load the package by adding something like this in the code excerpt below in your =config.el=.
 
-As of v0.2.0, some commands are defined with =autoload=. This means that adding some properties such as =:defer= lets you lazy-load =org-transclusion= package. Please consult Doom's documentation for further instruction (I don't use Doom, but I have lightly tested this snippet). There are other ways to configure Doom; also refer to @Ma-Nu-El's comment in [[https://github.com/nobiot/org-transclusion/issues/79][issue #79]] (thank you, @Ma-Nu-El). 
+As of v0.2.0, some commands are defined with =autoload=. This means that adding some properties such as =:defer= lets you lazy-load the =org-transclusion= package. Please consult Doom's documentation for further instruction (I don't use Doom, but I have lightly tested this snippet). There are other ways to configure Doom; also refer to comments in [[https://github.com/nobiot/org-transclusion/issues/79][issue #79]] (thank you, @Ma-Nu-El). 
 
 #+begin_src elisp
   ;; In ~/.doom.d/config.el
@@ -138,15 +137,15 @@ Put your cursor somewhere on this link and call  =M-x org-transclusion-make-from
 #+transclude: [[id:20210501T171427.051019][Bertrand Russell]]
 #+end_example
 
-Put your cursor somewhere on this keyword line and call =M-x org-transclusion-add-at-point=, and you will see the content the ID points to copied over, replacing the =transclude= keyword.
+Put your cursor somewhere on this keyword line and call =M-x org-transclusion-add-at-point=, and you will see the content the ID points to be copied over, replacing the =transclude= keyword.
 
 [[./resources/2021-05-09T190918.png]]
 
-The transcluded text is *read-only* but you can copy it and export it as normal text. Org-transclusion remembers where it has transcluded the text from (its source buffer). With using this memory, you can use a number of useful commands you can call by a single letter (by default). 
+The transcluded text is *read-only* but you can copy it and export it as normal text. Org-transclusion remembers where it has transcluded the text from (its source buffer).  You can use a number of useful commands you can call by a single letter (by default). 
 
-For example, you can press =o= to open the source buffer of the transclusion at point, or =O= (capital "o") to move to it. Rpess =r= to refresh the transclusion. Press =e= to start live-sync edit. For more detail, inspect the documentation of each command.
+For example, you can press =o= to open the source buffer of the transclusion at point, or =O= (capital "o") to move to it. Press =r= to refresh the transclusion. Press =e= to start live-sync edit. For more detail, inspect the documentation of each command.
 
-This single-letter-context-menu is defined in  =org-transclusion-map=. The default keybindings are shown below. Adapt it to your liking, especially if you use vim keybindings with Evil Mode, etc.
+This single-letter-context-menu is defined in  =org-transclusion-map=. The default keybindings are shown below. Adapt them to your liking, especially if you use vim keybindings with Evil Mode, etc.
 
 #+begin_src elisp :exports none
 (substitute-command-keys "\\{org-transclusion-map}")
@@ -174,7 +173,7 @@ C-c C-c         org-ctrl-c-ctrl-c
 
 This should get you started with Org-transclusion. There are more options and cusutomizing options available for you to fine-tune the text contents you transclude. More about them in README below.
 
-As your next step, I particularly recommend the section on [[#filtering-org-elements-per-transclusion][filtering Org elements per transclusion]], which shows features that give you the power to control what part of the source to transclude in the way you like and let you experiment on the fly.
+As your next step, I recommend the section on [[#filtering-org-elements-per-transclusion][filtering Org elements per transclusion]], which shows features that give you the power to control what part of the source to transclude in the way you like and let you experiment on the fly.
 
 * Usage
 :PROPERTIES:
@@ -187,13 +186,13 @@ Org-transclusion is a local minor mode; however, you do not need to explicitly c
 
 As you saw in the [[#getting-started][Getting Started section]] above, calling =org-transclusion-add= or =org-transclusion-add-all= is enough to add transclusions in your current buffer.
 
-The minor mode is automatically turned on locally for your current buffer through one of these commands. All it does is to call =org-transclusion-activate=  to activate hooks and some other variables. The main purpose of this setup is to keep files in the filesystem clear of the transcluded content. 
+The minor mode is automatically turned on locally for your current buffer through one of these commands. All it does is to call =org-transclusion-activate=  to activate hooks and some other variables. Their main purpose is to keep files in the filesystem clear of the transcluded content. 
 
 Turn off the minor mode or use =org-transclusion-deactivate=; you will remove all the transclusions in the current buffer and clear the hooks and other setup variables. 
 
 If you prefer, you can use =org-transclusion-mode= as your entry command for transclusion. When customizable variable =org-transclusion-add-all-on-activate= is non-nil (it is =t= by default), turning on the minor mode calls the =org-transclusion-add-all= command to attempt to add all transclusions automatically in the current buffer.
 
-You can control whether or not transclusions are added automatically per transclude keyword. By default, =org-transclusion-add-all= (it is also used by =org-transclusion-mode=) will work on every transclude keyword in the buffer. Add =:disable-auto= property to a keyword as shown in the example below; =add-all= skips the transclude keyword with this property.
+You can control whether or not transclusions are to be added automatically per transclude keyword. By default, =org-transclusion-add-all= (it is also used by =org-transclusion-mode=) will work on every transclude keyword in the buffer. Add =:disable-auto= property to a keyword as shown in the example below; =add-all= skips transclude keywords with it.
 
 #+begin_example
 #+transclude: [[file:path/to/file.org]] :disable-auto
@@ -226,10 +225,24 @@ Suspendisse ac velit fermentum, sodales nunc in,
 tincidunt quam. <<paragraph-id>>
 #+end_example
 
-It is generally assumed that the paragraph-id is placed after its content, but it is not an absolute requirement; it can be in the beginning (before the content) or in the middle of it.
+It is generally assumed that the =paragraph-id= is placed after its content, but it is not an absolute requirement; it can be in the beginning (before the content) or in the middle of it.
 
-For the =:only-contents= property, refer to the sub-section, [[#filtering-org-elements-per-transclusion][Filtering Org elements per transclusion]].
+For the =:only-contents= property, refer to sub-section [[#filtering-org-elements-per-transclusion][Filtering Org elements per transclusion]].
  
+** Controlling level of headlines of transclusions
+
+You can specify a different level of transcluded headlines than that of the source Org file.
+
+Use the =:level= property with a value of single digit number from 1 to 9 like this example below.
+
+#+begin_example
+#+transclude: [[file:path/to/file.org::*Headline]] :level 2
+#+end_example
+
+The top level of the transcluded headline will be set to the value of =:level= property -- in this example, level 2 regardless of that in the source. When the headline contains sub-headlines, all of them are automatically promoted or demoted to align to the top level headline.
+
+When you transclude an entire Org file, it may contain multiple subtrees. In such cases, the top-most level among the subtrees will be set according to the =:level= property, and the rest of headlines in the buffer will align accordingly. 
+
 ** Filtering Org elements per transclusion
 :PROPERTIES:
 :CUSTOM_ID: filtering-org-elements-per-transclusion
