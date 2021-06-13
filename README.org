@@ -10,8 +10,7 @@
 
 README below has also been updated to reflect these changes; new users can ignore the notice.
 
-I am also planning to publish another Show & Tell YouTube video to talk about the changes and new features soon. Stay tuned...
-
+[[https://youtu.be/idlFzWeygwA][A video demo on v0.2.0 on YouTube]] is available for a quick rundown of the changes and new features.
 ⚠⚠⚠
 
 Transclusion is the ability to include content from one file into another by reference. Org-transclusion lets you do this in your Org file. 
