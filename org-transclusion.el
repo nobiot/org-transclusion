@@ -433,8 +433,13 @@ does not support all the elements.
                 (unless (eobp) (delete-char 1))
                 t)
           ;; Remove keyword only when insert and others are successful
-          (when (org-at-keyword-p)
-            (org-transclusion-keyword-remove))))
+          ;; `org-at-keyword-p' uses `move-beginning-of-line'
+          ;; It only looks at the beginning of line as it visually appears
+          ;; When the point is in a folded region for add-all, the keyword
+          ;; won't be removed.
+          (when (org-with-wide-buffer
+               (org-at-keyword-p)
+               (org-transclusion-keyword-remove)))))
       (unless org-transclusion-mode
         (let ((org-transclusion-add-all-on-activate nil))
           (org-transclusion-mode +1)))
