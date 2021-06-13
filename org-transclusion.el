@@ -432,14 +432,9 @@ does not support all the elements.
                  src-buf src-beg src-end)
                 (unless (eobp) (delete-char 1))
                 t)
-          ;; Remove keyword only when insert and others are successful
-          ;; `org-at-keyword-p' uses `move-beginning-of-line'
-          ;; It only looks at the beginning of line as it visually appears
-          ;; When the point is in a folded region for add-all, the keyword
-          ;; won't be removed.
-          (when (org-with-wide-buffer
-               (org-at-keyword-p)
-               (org-transclusion-keyword-remove)))))
+          ;; `org-transclusion-keyword-remove' checks element at point is a
+          ;; keyword or not
+          (org-transclusion-keyword-remove)))
       (unless org-transclusion-mode
         (let ((org-transclusion-add-all-on-activate nil))
           (org-transclusion-mode +1)))
@@ -798,12 +793,15 @@ It needs to be set in
 
 (defun org-transclusion-keyword-remove ()
   "Remove the keyword element at point.
-It assumes that point is at a keyword."
+Returns t if successful.  It checks if the element at point is a
+keyword.  If not, returns nil."
   (let* ((elm (org-element-at-point))
          (beg (org-element-property :begin elm))
          (end (org-element-property :end elm))
          (post-blank (org-element-property :post-blank elm)))
-    (delete-region beg (- end post-blank)) t))
+    (when (string= "keyword" (org-element-type elm))
+      (delete-region beg (- end post-blank))
+      t)))
 
 (defun org-transclusion-keyword-plist-to-string (plist)
   "Convert a keyword PLIST to a string."
