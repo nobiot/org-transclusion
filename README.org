@@ -248,13 +248,13 @@ The following two customizable variables are applicable to all transclusions glo
 
 In addition to the global user options above, you can fine-tune the default exclusion filter per transclusion. Add following properties to transclusions you wish to apply additional filters.
 
-- =:contents-only= ::
+- =:only-contents= ::
   This property lets you exclude titles of headlines when you transclude a subtree (headline); you transclude only the contents. When the subtree contains sub-headlines, all the contents will be transcluded.
   
-  Add =:contents-only= without any value like this example:
+  Add =:only-contents= without any value like this example:
   
 #+begin_example
-#+transclude: [[file:path/to/file.org]] :contents-only
+#+transclude: [[file:path/to/file.org]] :only-contents
 #+end_example
   
 - =:exclude-elements= ::
@@ -266,9 +266,9 @@ In addition to the global user options above, you can fine-tune the default excl
 #+transclude: [[file:path/to/file.org]] :exclude-elements "drawer keyword"
 #+end_example
 
-*** Combining =:contents-only= and =:exclude-elements=
+*** Combining =:only-contents= and =:exclude-elements=
 
-You can combine `:contents-only` and `:exclude-elements` to control how you transclude a subtree. Refer to the example screen shots below (the colored labels are added to the images for illustration purposes and not part of the Emacs buffers).
+You can combine `:only-contents` and `:exclude-elements` to control how you transclude a subtree. Refer to the example screen shots below (the colored labels are added to the images for illustration purposes and not part of the Emacs buffers).
 
 [[./resources/2021-06-05_v0.2.0-01.png]]
 *Figure 1*. *Left*. Three transclusions with different properties; *Right*. Source to be transcluded
