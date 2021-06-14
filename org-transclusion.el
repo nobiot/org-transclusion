@@ -6,7 +6,7 @@
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
 
-;; Version: 0.2.0
+;; Version: 0.2.1
 ;; Package-Requires: ((emacs "27.1") (org "9.4"))
 
 ;; This file is not part of GNU Emacs.
@@ -52,6 +52,10 @@
 (declare-function text-property-search-forward 'text-property-search)
 (declare-function text-property-search-backward 'text-property-search)
 (declare-function prop-match-value 'text-property-search)
+;;; FIXME not a good practice to use `wiht-eval-after-load'.
+;;; Need to change this. Only for testing at the moment
+(with-eval-after-load 'org-transclusion
+  (load-library "org-transclusion-src-lines"))
 
 ;;;; Customization
 
@@ -940,7 +944,8 @@ based on the following arguments:
                                      front-sticky t
                                      ;; rear-nonticky seems better for
                                      ;; src-lines to add "#+result" after C-c
-                                     ;; C-c rear-nonsticky t
+                                     ;; C-c
+                                     rear-nonsticky t
                                      org-transclusion-type ,type
                                      org-transclusion-beg-mkr
                                      ,beg-mkr
