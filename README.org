@@ -62,6 +62,7 @@ I am dabbling in the [[https://writingcooperative.com/zettelkasten-how-one-germa
   - [[#original-idea-by-john-kitchin][Original idea by John Kitchin]]
   - [[#text-clone][Text-Clone]]
 - [[#development][Development]]
+  - [[#notes-on-pull-requests][Notes on pull requests]]
 - [[#license][License]]
 :END:
 
@@ -555,6 +556,16 @@ It seems like this could work well for headlines, and named tables, src blocks, 
 - Get involved in a discussion in [[https://org-roam.discourse.group/t/prototype-transclusion-block-reference-with-emacs-org-mode/830][Org-roam forum]] (the package is originally aimed for its users, me included)
 
 - Create issues, discussion, and/or pull requests. All welcome.
+
+** Notes on pull requests
+
+I am considering of submitting Org-transclusion for inclusion into the upstream Org Mode at some point, hopefully towards the end of year 2021. This was suggested a while ago in a Reddit discussion.
+
+This means that anyone who is making a substantive code contribution will need to "assign the copyright for your contributions to the FSF so that they can be included in GNU Emacs" ([[https://orgmode.org/contribute.html#copyright.][Org Mode website]]).
+
+I have not started a conversation about it in the Org Mode mailing list nor have I done the formal procedure for the copy right assignment yet. It will be at the discretion of Org Mode's maintainers to decide on my request for inclusion when I submit it.
+
+Please consider this when you create a pull request for Org-transclusion.
 
 Thank you!
 
