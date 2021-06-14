@@ -940,7 +940,8 @@ based on the following arguments:
                                      front-sticky t
                                      ;; rear-nonticky seems better for
                                      ;; src-lines to add "#+result" after C-c
-                                     ;; C-c rear-nonsticky t
+                                     ;; C-c
+                                     rear-nonsticky t
                                      org-transclusion-type ,type
                                      org-transclusion-beg-mkr
                                      ,beg-mkr
