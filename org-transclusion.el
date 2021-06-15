@@ -1219,9 +1219,17 @@ the line, add a new empty line."
 
 (defun org-transclusion-org-file-p (path)
   "Return non-nil if PATH is an Org file.
-Checked with the extension `org'."
-  (let ((ext (file-name-extension path)))
-    (string= ext "org")))
+It does so by confirming that the extension is either `org' or `org.gpg'.
+The latter form of extension ending with .gpg means it is an encrypted org file.
+file-name-extension is used to ascertain that PATH is valid."
+  (when (file-name-extension path)
+    (let* ((path-substrings (split-string path "\\."))
+           (last-two-substings (last path-substrings 2))
+           (last-substring (car (last last-two-substings)))
+           (org-file (string= last-substring "org"))
+           (encrpyted-org-file (and (string= (car last-two-substings) "org")
+                                    (string= last-substring "gpg"))))
+      (or org-file encrpyted-org-file))))
 
 (defun org-transclusion-not-nil (v)
   "Return t or nil.
