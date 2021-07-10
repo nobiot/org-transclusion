@@ -467,14 +467,16 @@ Note this section is still incomplete, far from being exhaustive for "known" lim
 
 - Doom's customization may interfere with Org-transclusion ::
    Refer to [[https://github.com/nobiot/org-transclusion/issues/52][this issue]]. The symptom is that in your Doom and you get an error message that includes this: "progn: ‘recenter’ing a window that does not display current-buffer." Adding this in your configuration has been reported to fix the issue:
-   
-   
+      
   =(advice-remove 'org-link-search '+org--recenter-after-follow-link-a)=
 
   It is probably rather drastic a measure. I will appreciate it if you find a less drastic way that works. Thank you.
 
 - Org refile does not work "properly" on the transcluded headlines ::
   Refer to [[https://github.com/nobiot/org-transclusion/issues/20][issue #20]]. I don't intend to support this -- refile the source, not the transcluded copy.
+
+- Org-transclusion does not support expansion of [[https://orgmode.org/manual/Noweb-Reference-Syntax.html][noweb references]] when transcluded source code has them ::
+  Refer to [[https://github.com/nobiot/org-transclusion/issues/86][issue #86]]. You will get "Text-only" error when export tries to expand the noweb references into the source code.
   
 * Changelog
 :PROPERTIES:
