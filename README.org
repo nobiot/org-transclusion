@@ -475,7 +475,7 @@ Note this section is still incomplete, far from being exhaustive for "known" lim
 - Org refile does not work "properly" on the transcluded headlines ::
   Refer to [[https://github.com/nobiot/org-transclusion/issues/20][issue #20]]. I don't intend to support this -- refile the source, not the transcluded copy.
 
-- Org-transclusion does not support expansion of [[https://orgmode.org/manual/Noweb-Reference-Syntax.html][noweb references]] when transcluded source code has them ::
+- Org-transclusion does not support expansion of [[https://orgmode.org/manual/Noweb-Reference-Syntax.html][noweb references]] when a transcluded source block code has them ::
   Refer to [[https://github.com/nobiot/org-transclusion/issues/86][issue #86]]. You will get "Text-only" error when export tries to expand the noweb references into the source code.
   
 * Changelog
