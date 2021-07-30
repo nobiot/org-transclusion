@@ -29,10 +29,13 @@
 (defun org-transclusion-add-src-lines (link plist)
   "Check if \"src-lines\" can be used for the LINK.
 Returns non-nil if check is pass."
-  (when (or (plist-get plist :lines)
-            (plist-get plist :src))
-    (append '(:tc-type "src-lines")
-            (org-transclusion-content-src-lines link plist))))
+  (cond
+   ((plist-get plist :src)
+    (append '(:tc-type "src")
+            (org-transclusion-content-src-lines link plist)))
+   ((plist-get plist :lines)
+    (append '(:tc-type "lines")
+            (org-transclusion-content-src-lines link plist)))))
 
 (defun org-transclusion-content-src-lines (link plist)
   "Use PATH to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR.
@@ -41,7 +44,15 @@ pars n-m for :lines is taken from
 `org-export--inclusion-absolute-lines' in ox.el with one
 exception.  Instead of :lines 1-10 to exclude line 10, the logic
 below has been adjusted to include line 10.  This should be more
-intuitive when it comes to including lines of code."
+intuitive when it comes to including lines of code.
+
+One of the numbers can be omitted. When the first number is
+omitted (e.g. -10), it means from the beginning of the file to
+line 10. Likewise, when the second number is omitted (e.g. 10-),
+it means from line 10 to the end of file.
+
+In order to include a single line, have the the same number in
+both places (e.g. 10-10, meaning line 10 only)."
   (let* ((path (org-element-property :path link))
          (search-option (org-element-property :search-option link))
          (buf (find-file-noselect path))
@@ -72,10 +83,6 @@ intuitive when it comes to including lines of code."
                        (end-of-line);; include the line
                        ;; Ensure to include the \n into the end point
                        (1+ (point))))
-                ;; Need markers here so that they can move
-                ;; when #+begin/end_src added
-                ;;(beg-mkr (set-marker (make-marker) beg))
-                ;;(end-mkr (set-marker (make-marker) end))
                 (content))
            (setq content
                  (concat
@@ -94,8 +101,7 @@ intuitive when it comes to including lines of code."
 (defun org-transclusion-keyword-value-lines (string)
   "It is a utility function used converting a keyword STRING to plist.
 It is meant to be used by `org-transclusion-get-string-to-plist'.
-It needs to be set in
-`org-transclusion-get-keyword-values-hook'.
+It needs to be set in `org-transclusion-get-keyword-values-hook'.
 Double qutations are optional \"1-10\"."
   (when (string-match ":lines +\\(\"?[0-9]*-[0-9]*\"?\\)" string)
     (list :lines (org-strip-quotes (match-string 1 string)))))
@@ -128,16 +134,22 @@ Double qutations are mandatory."
      (when src (format " :src %s" src))
      (when rest (format " :rest \"%s\"" rest)))))
 
+(defun org-transclusion-src-lines-p (type)
+  "Return non-nil when TYPE is \"src\" or \"lines\".
+Return nil if neither."
+  (or (string= type "src")
+      (string= type "lines")))
+
 (defun org-transclusion-open-source-marker-src-lines (type)
   "Return marker for `org-transclusion-open-source'."
-  (when (string= type "src-lines")
+  (when (org-transclusion-src-lines-p type)
     (get-text-property (point) 'tc-src-beg-mkr)))
 
 (defun org-transclusion-content-format-src-lines (type content)
   "Format text CONTENT from source before transcluding.
 Return content modified (or unmodified, if not applicable).
 Currently it only re-aligns table with links in the content."
-  (when (string= type "src-lines")
+  (when (org-transclusion-src-lines-p type)
     (with-temp-buffer
       (insert content)
       ;; Return the temp-buffer's string
@@ -145,38 +157,30 @@ Currently it only re-aligns table with links in the content."
 
 (defun org-transclusion-live-sync-buffers-src-lines (type)
   "Return cons cell of overlays for source and trasnclusion.
+The cons cell to be returned is in this format:
+
     (src-ov . tc-ov)
-This function is for non-Org text files."
-  ;; Get the transclusion source's overlay but do not directly use it; it is
-  ;; needed after exiting live-sync, which deletes live-sync overlays.
- (when (string= "src-lines" type)
-   (when electric-indent-mode
-     (user-error "No live sync for src-code block when `electric-indent-mode' is on"))
-   (let* ((tc-pair (get-text-property (point) 'tc-pair))
-          (src-ov (text-clone-make-overlay
-                   (overlay-start tc-pair)
-                   (overlay-end tc-pair)
-                   (overlay-buffer tc-pair)))
-          (beg (marker-position (get-text-property (point) 'tc-beg-mkr)))
-          (end (marker-position (get-text-property (point) 'tc-end-mkr)))
-          (tc-ov)
-          (context (org-element-context))
-          (type (car context))
-          (src-ov-len (- (overlay-end src-ov) (overlay-start src-ov))))
-     ;; If the region is in src-block, get the content
-     (when (string= type "src-block")
-       (save-excursion
-         (goto-char (org-element-property :begin context))
-         (forward-line 1)
-         (setq beg (line-beginning-position))
-         (goto-char (- (org-element-property :end context)
-                       (org-element-property :post-blank context)))
-         (forward-char -1)
-         (forward-line -1)
-         (setq end (1+ (line-end-position)))))
-     (if (/= src-ov-len (- end beg))
-         (user-error "Error.  Lengths of transclusion and source are not identical")
-       (setq tc-ov (text-clone-make-overlay beg end))
-       (cons src-ov tc-ov)))))
+
+This function uses TYPE to identify relevant files; it's meant
+for non-Org text files including program source files."
+  (when (org-transclusion-src-lines-p type)
+    ;; Let's not allow live-sync when source is transcluded into a source block.
+    (when (string= "src" type)
+      (user-error "No live sync for src-code block"))
+    (let* ((tc-pair (get-text-property (point) 'org-transclusion-pair))
+           (src-ov (text-clone-make-overlay
+                    (overlay-start tc-pair)
+                    (overlay-end tc-pair)
+                    (overlay-buffer tc-pair)))
+           (beg (marker-position (get-text-property (point) 'org-transclusion-beg-mkr)))
+           (end (marker-position (get-text-property (point) 'org-transclusion-end-mkr)))
+           (tc-ov)
+           (context (org-element-context))
+           (elem-type (car context))
+           (src-ov-len (- (overlay-end src-ov) (overlay-start src-ov))))
+      (if (/= src-ov-len (- end beg))
+          (user-error "Error.  Lengths of transclusion and source are not identical")
+        (setq tc-ov (text-clone-make-overlay beg end))
+        (cons src-ov tc-ov)))))
 
 (provide 'org-transclusion-src-lines)
