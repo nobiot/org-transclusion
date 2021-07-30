@@ -52,6 +52,7 @@
 (declare-function text-property-search-forward 'text-property-search)
 (declare-function text-property-search-backward 'text-property-search)
 (declare-function prop-match-value 'text-property-search)
+(declare-function prop-match-beginning 'text-property-search)
 
 ;;;; Customization
 
@@ -110,8 +111,7 @@ See `display-buffer' for example options."
   '((((class color) (min-colors 88) (background light)))
     (((class color) (min-colors 88) (background dark)))
     (t ))
-  "Face for source region's fringe being transcluded in another
-buffer."
+  "Face for source region's fringe transcluded in another buffer."
   :group 'org-transclusion)
 
 (defface org-transclusion-source
@@ -131,16 +131,14 @@ buffer."
      :background "#221000" :extend t)
     (t
      :background "chocolate4" :extend t))
-  "Face for element in the source being edited by another
-buffer."
+  "Face for element in the source being edited by another buffer."
   :group 'org-transclusion)
 
 (defface org-transclusion-fringe
   '((((class color) (min-colors 88) (background light)))
     (((class color) (min-colors 88) (background dark)))
     (t ))
-  "Face for transcluded region's fringe in the transcluding
-buffer."
+  "Face for transcluded region's fringe in the transcluding buffer."
   :group 'org-transclusion)
 
 (defface org-transclusion
@@ -175,7 +173,7 @@ point after `before-save-hook' and `after-save-hook' pair;
 `org-transclusion-after-save-buffer' use this variable.")
 
 (defvar-local org-transclusion-remember-transclusions nil
-  "This variable is used to remember the active transclusions before `save-buffer'.
+  "This variable is to remember the active transclusions before `save-buffer'.
 It is meant to be used to keep the file the current buffer is
 visiting clear of the transcluded text content.  Instead of
 blindly deactivate and activate all transclusions with t flag,
@@ -187,9 +185,8 @@ a text content.
 `org-transclusion-after-save-buffer' use this variable.")
 
 (defvar-local org-transclusion-remember-window-config nil
-  "Rember window config (the arrangment of windows) for the
-current buffer. This is for live-sync.  Analogous to
-`org-edit-src-code'.")
+  "Rember window config (the arrangment of windows) for the current buffer.
+This is for live-sync.  Analogous to `org-edit-src-code'.")
 
 (defvar org-transclusion-add-functions
   '(org-transclusion-add-org-id
@@ -322,7 +319,8 @@ and variables."
   (add-hook 'after-save-hook #'org-transclusion-after-save-buffer nil t)
   (add-hook 'kill-buffer-hook #'org-transclusion-before-kill nil t)
   (add-hook 'kill-emacs-hook #'org-transclusion-before-kill nil t)
-  (org-transclusion-yank-excluded-properties-set))
+  (org-transclusion-yank-excluded-properties-set)
+  (org-transclusion-load-extensions-maybe))
 
 (defun org-transclusion-deactivate ()
   "Dectivate Org-transclusion hooks and other setups in the current buffer.
@@ -419,6 +417,10 @@ does not support all the elements.
         (not (and (string= "keyword" (org-element-type elm))
                   (string= "TRANSCLUDE" (org-element-property :key elm)))))
       (user-error "Not at a transclude keyword")
+    ;; Turn on the minor mode to load extensions before staring to add.
+    (unless org-transclusion-mode
+      (let ((org-transclusion-add-all-on-activate nil))
+        (org-transclusion-mode +1)))
     (let* ((keyword-plist (org-transclusion-keyword-string-to-plist))
            (link (org-transclusion-wrap-path-to-link
                   (plist-get keyword-plist :link)))
@@ -449,9 +451,6 @@ does not support all the elements.
             ;; `org-transclusion-keyword-remove' checks element at point is a
             ;; keyword or not
             (org-transclusion-keyword-remove)))
-        (unless org-transclusion-mode
-          (let ((org-transclusion-add-all-on-activate nil))
-            (org-transclusion-mode +1)))
         t))))
 
 ;;;###autoload
@@ -722,7 +721,7 @@ set in `before-save-hook'.  It also move the point back to
       (setq org-transclusion-remember-transclusions nil)))))
 
 (defun org-transclusion-before-kill ()
-  "Remove transclusions before kill-buffer or kill-emacs.
+  "Remove transclusions before `kill-buffer' or `kill-emacs'.
 Intended to be used with `kill-buffer-hook' and `kill-emacs-hook'
 to clear the file of the transcluded text regions.  This function
 also flags the buffer modified and `save-buffer'.  Calling
@@ -1232,7 +1231,7 @@ the line, add a new empty line."
   "Return non-nil if PATH is an Org file.
 It does so by confirming that the extension is either `org' or `org.gpg'.
 The latter form of extension ending with .gpg means it is an encrypted org file.
-file-name-extension is used to ascertain that PATH is valid."
+`file-name-extension' is used to ascertain that PATH is valid."
   (when (file-name-extension path)
     (let* ((path-substrings (split-string path "\\."))
            (last-two-substings (last path-substrings 2))
@@ -1609,6 +1608,9 @@ When DEMOTE is non-nil, demote."
             (org-transclusion-promote-adjust-after)))
         (goto-char pos)))))
 
+;;-----------------------------------------------------------------------------
+;;;; Functions for extensions
+
 (defun org-transclusion-load-extensions-maybe (&optional force)
   "Load all extensions listed in `org-transclusion-extensions'."
   (when (or force (not org-transclusion-extensions-loaded))
@@ -1616,8 +1618,6 @@ When DEMOTE is non-nil, demote."
       (condition-case nil (require ext)
         (error (message "Problems while trying to load feature `%s'" ext))))
     (setq org-transclusion-extensions-loaded t)))
-
-(org-transclusion-load-extensions-maybe)
 
 (provide 'org-transclusion)
 ;;; org-transclusion.el ends here
