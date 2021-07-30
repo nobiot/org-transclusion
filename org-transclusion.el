@@ -52,10 +52,6 @@
 (declare-function text-property-search-forward 'text-property-search)
 (declare-function text-property-search-backward 'text-property-search)
 (declare-function prop-match-value 'text-property-search)
-;;; FIXME not a good practice to use `wiht-eval-after-load'.
-;;; Need to change this. Only for testing at the moment
-(with-eval-after-load 'org-transclusion
-  (load-library "org-transclusion-src-lines"))
 
 ;;;; Customization
 
@@ -64,6 +60,14 @@
   :group 'org
   :prefix "org-transclusion-"
   :link '(url-link :tag "Github" "https://github.com/nobiot/org-transclusion"))
+
+(defcustom org-transclusion-extensions '(org-transclusion-src-lines)
+  "Extensions to be loaded with org-transclusion.el."
+  :group 'org-transclusion
+  :type
+  '(set :greedy t
+        (const :tag "   src-lines:              Add :src and :lines" org-transclusion-src-lines)
+        (repeat :tag "Other packages" :inline t (symbol :tag "Package"))))
 
 (defcustom org-transclusion-add-all-on-activate t
   "Define whether to add all the transclusions on activation.
@@ -159,6 +163,9 @@ buffer."
   :group 'org-transclusion)
 
 ;;;; Variables
+
+(defvar org-transclusion-extensions-loaded nil
+  "Have the exntensions been loaded already?")
 
 (defvar-local org-transclusion-remember-point nil
   "This variable is used to remember the current just before `save-buffer'.
@@ -1601,6 +1608,16 @@ When DEMOTE is non-nil, demote."
             (if demote (org-demote-subtree) (org-promote-subtree))
             (org-transclusion-promote-adjust-after)))
         (goto-char pos)))))
+
+(defun org-transclusion-load-extensions-maybe (&optional force)
+  "Load all extensions listed in `org-transclusion-extensions'."
+  (when (or force (not org-transclusion-extensions-loaded))
+    (dolist (ext org-transclusion-extensions)
+      (condition-case nil (require ext)
+        (error (message "Problems while trying to load feature `%s'" ext))))
+    (setq org-transclusion-extensions-loaded t)))
+
+(org-transclusion-load-extensions-maybe)
 
 (provide 'org-transclusion)
 ;;; org-transclusion.el ends here
