@@ -209,7 +209,8 @@ regexp from the string.")
 (defvar org-transclusion-keyword-plist-to-string-functions '())
 
 (defvar org-transclusion-content-format-functions
-  '(org-transclusion-content-format))
+  '(org-transclusion-content-format-others
+    org-transclusion-content-format))
 
 (defvar org-transclusion-open-source-marker-functions
   '(org-transclusion-open-source-marker))
@@ -1000,6 +1001,16 @@ This is the default one"
           (setq point (search-forward "|" (point-max) t))))
       ;; Fix indentation when `org-adapt-indentation' is non-nil
       (org-indent-region (point-min) (point-max))
+      ;; Return the temp-buffer's string
+      (buffer-string))))
+
+(defun org-transclusion-content-format-others (type content)
+  "Format text CONTENT from source before transcluding.
+Use TYPE to check relevance.  Return content modified (or
+unmodified, if not applicable)."
+  (when (string= type "others-default")
+    (with-temp-buffer
+      (insert content)
       ;; Return the temp-buffer's string
       (buffer-string))))
 
