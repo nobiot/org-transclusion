@@ -67,7 +67,7 @@
   :group 'org-transclusion
   :type
   '(set :greedy t
-        (const :tag "   src-lines:              Add :src and :lines" org-transclusion-src-lines)
+        (const :tag "src-lines: Add :src and :lines" org-transclusion-src-lines)
         (repeat :tag "Other packages" :inline t (symbol :tag "Package"))))
 
 (defcustom org-transclusion-add-all-on-activate t
