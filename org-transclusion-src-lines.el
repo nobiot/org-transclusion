@@ -1,6 +1,15 @@
-;;;-*- lexical-binding: t; -*-
+;;; org-transclusion-src-lines.el --- Extension -*- lexical-binding: t; -*-
 
-;;; Setting up the extension
+;;; Commentary:
+
+;;; Code:
+
+(require 'org)
+(require 'org-element)
+(require 'text-clone)
+(declare-function text-clone-make-overlay 'text-clone)
+
+;;;; Setting up the extension
 
 ;; Add a new transclusion type
 (add-hook 'org-transclusion-add-functions
@@ -27,8 +36,10 @@
 ;;; Functions
 
 (defun org-transclusion-add-src-lines (link plist)
-  "Check if \"src-lines\" can be used for the LINK.
-Returns non-nil if check is pass."
+  "Return a list for non-Org text and source file.
+Determine add function based on LINK and PLIST.
+
+Return nil if PLIST does not contain \":src\" or \":lines\" properties."
   (cond
    ((plist-get plist :src)
     (append '(:tc-type "src")
@@ -38,7 +49,8 @@ Returns non-nil if check is pass."
             (org-transclusion-content-src-lines link plist)))))
 
 (defun org-transclusion-content-src-lines (link plist)
-  "Use PATH to return TC-CONTENT, TC-BEG-MKR, and TC-END-MKR.
+  "Return a list of payload from LINK and PLIST.
+
 TODO need to handle when the file does not exist.  The logic to
 pars n-m for :lines is taken from
 `org-export--inclusion-absolute-lines' in ox.el with one
@@ -46,7 +58,7 @@ exception.  Instead of :lines 1-10 to exclude line 10, the logic
 below has been adjusted to include line 10.  This should be more
 intuitive when it comes to including lines of code.
 
-One of the numbers can be omitted. When the first number is
+One of the numbers can be omitted.  When the first number is
 omitted (e.g. -10), it means from the beginning of the file to
 line 10. Likewise, when the second number is omitted (e.g. 10-),
 it means from line 10 to the end of file.
@@ -125,7 +137,12 @@ Double qutations are mandatory."
     (list :rest (org-strip-quotes (match-string 1 string)))))
 
 (defun org-transclusion-keyword-plist-to-string-src-lines (plist)
-  (let ((string)
+  "Convert a keyword PLIST to a string.
+This function is meant to be used as an extension for function
+`org-transclusion-keyword-plist-to-string'.  Add it to the
+abnormal hook
+`org-transclusion-keyword-plist-to-string-functions'."
+  (let ((string nil)
         (lines (plist-get plist :lines))
         (src (plist-get plist :src))
         (rest (plist-get plist :rest)))
@@ -141,14 +158,17 @@ Return nil if neither."
       (string= type "lines")))
 
 (defun org-transclusion-open-source-marker-src-lines (type)
-  "Return marker for `org-transclusion-open-source'."
+  "Return marker for `org-transclusion-open-source'.
+Use TYPE to check relevance."
   (when (org-transclusion-src-lines-p type)
     (get-text-property (point) 'tc-src-beg-mkr)))
 
 (defun org-transclusion-content-format-src-lines (type content)
   "Format text CONTENT from source before transcluding.
-Return content modified (or unmodified, if not applicable).
-Currently it only re-aligns table with links in the content."
+Use TYPE to check relevance.  Return content modified (or
+unmodified, if not applicable).
+
+Currently it returns the content as is."
   (when (org-transclusion-src-lines-p type)
     (with-temp-buffer
       (insert content)
@@ -175,8 +195,6 @@ for non-Org text files including program source files."
            (beg (marker-position (get-text-property (point) 'org-transclusion-beg-mkr)))
            (end (marker-position (get-text-property (point) 'org-transclusion-end-mkr)))
            (tc-ov)
-           (context (org-element-context))
-           (elem-type (car context))
            (src-ov-len (- (overlay-end src-ov) (overlay-start src-ov))))
       (if (/= src-ov-len (- end beg))
           (user-error "Error.  Lengths of transclusion and source are not identical")
@@ -184,3 +202,4 @@ for non-Org text files including program source files."
         (cons src-ov tc-ov)))))
 
 (provide 'org-transclusion-src-lines)
+;;; org-transclusion-src-lines.el ends here
