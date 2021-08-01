@@ -24,8 +24,8 @@
 (add-hook 'org-transclusion-keyword-plist-to-string-functions
           #'org-transclusion-keyword-plist-to-string-src-lines)
 ;; Transclusion content formating
-(add-hook 'org-transclusion-content-format-functions
-          #'org-transclusion-content-format-src-lines)
+;; Not needed. Default works for text files.
+
 ;; Open source buffer
 (add-hook 'org-transclusion-open-source-marker-functions
           #'org-transclusion-open-source-marker-src-lines)
@@ -162,18 +162,6 @@ Return nil if neither."
 Use TYPE to check relevance."
   (when (org-transclusion-src-lines-p type)
     (get-text-property (point) 'tc-src-beg-mkr)))
-
-(defun org-transclusion-content-format-src-lines (type content)
-  "Format text CONTENT from source before transcluding.
-Use TYPE to check relevance.  Return content modified (or
-unmodified, if not applicable).
-
-Currently it returns the content as is."
-  (when (org-transclusion-src-lines-p type)
-    (with-temp-buffer
-      (insert content)
-      ;; Return the temp-buffer's string
-      (buffer-string))))
 
 (defun org-transclusion-live-sync-buffers-src-lines (type)
   "Return cons cell of overlays for source and trasnclusion.
