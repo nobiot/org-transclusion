@@ -373,7 +373,7 @@ triggers transclusion by calling `org-transclusion-add' even when
 ;;;###autoload
 (defun org-transclusion-add ()
   "Transclude text content for the #+transclude at point.
-When the `org-transclusion-mode' minor mode is inactive in the
+When minor-mode `org-transclusion-mode' is inactive in the
 current buffer, this function toggles it on.
 
 Examples of acceptable formats are as below:
@@ -929,11 +929,11 @@ based on the following arguments:
             (when diff
               (cond ((< diff 0) ; demote
                      (org-map-entries (lambda ()
-                                        (dotimes (v (abs diff))
+                                        (dotimes (_ (abs diff))
                                           (org-do-demote)))))
                     ((> diff 0) ; promote
                      (org-map-entries (lambda ()
-                                        (dotimes (v diff)
+                                        (dotimes (_ diff)
                                           (org-do-promote))))))))
             (setq content (buffer-string)))))
     (insert
