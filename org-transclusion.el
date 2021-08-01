@@ -637,21 +637,29 @@ a couple of org-transclusion specific keybindings; namely:
                 (deleted-tc-ov (cadr deleted-live-sync-ovs)))
       (org-transclusion-live-sync-refresh-after-exit deleted-tc-ov))
     (org-transclusion-refresh)
-    (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
-    (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
     (let* ((remember-pos (point))
            (ovs (org-transclusion-live-sync-buffers))
            (src-ov (car ovs))
            (tc-ov (cdr ovs))
            (tc-beg (overlay-start tc-ov))
            (tc-end (overlay-end tc-ov)))
-      (org-transclusion-live-sync-display-buffer (overlay-buffer src-ov))
-      (org-transclusion-live-sync-modify-overlays
-       (text-clone-set-overlays src-ov tc-ov))
-      (goto-char remember-pos)
-      (with-silent-modifications
-        (remove-text-properties (1- tc-beg) tc-end '(read-only)))
-      t)))
+      ;; Check the length of both overlays
+      ;; if different, abort live-sync
+      (if (not (= (- (overlay-end tc-ov) (overlay-start tc-ov))
+                  (- (overlay-end src-ov) (overlay-start src-ov))))
+          (progn
+            (user-error (concat "No live-sync can be started.  "
+                                "Lengths of transclusion and source are not identical"))
+            nil) ; return nil
+        (org-transclusion-live-sync-modify-overlays
+         (text-clone-set-overlays src-ov tc-ov))
+        (org-transclusion-live-sync-display-buffer (overlay-buffer src-ov))
+        (goto-char remember-pos)
+        (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
+        (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
+        (with-silent-modifications
+          (remove-text-properties (1- tc-beg) tc-end '(read-only)))
+        t))))
 
 (defun org-transclusion-live-sync-exit ()
   "Exit live-sync at point.
@@ -1009,10 +1017,10 @@ content."
 Return content modified (or unmodified, if not applicable).
 
 This is the default one.  It only returns the content as is."
-    (with-temp-buffer
-      (insert content)
-      ;; Return the temp-buffer's string
-      (buffer-string)))
+  (with-temp-buffer
+    (insert content)
+    ;; Return the temp-buffer's string
+    (buffer-string)))
 
 (defun org-transclusion-content-org-marker (marker plist)
   "Return a list of payload from MARKER and PLIST.
