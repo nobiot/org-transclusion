@@ -385,7 +385,7 @@ triggers transclusion by calling `org-transclusion-add' even when
 ;;;###autoload
 (defun org-transclusion-add ()
   "Transclude text content for the #+transclude at point.
-When the `org-transclusion-mode' minor mode is inactive in the
+When minor-mode `org-transclusion-mode' is inactive in the
 current buffer, this function toggles it on.
 
 Examples of acceptable formats are as below:
@@ -650,21 +650,29 @@ a couple of org-transclusion specific keybindings; namely:
                 (deleted-tc-ov (cadr deleted-live-sync-ovs)))
       (org-transclusion-live-sync-refresh-after-exit deleted-tc-ov))
     (org-transclusion-refresh)
-    (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
-    (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
     (let* ((remember-pos (point))
            (ovs (org-transclusion-live-sync-buffers))
            (src-ov (car ovs))
            (tc-ov (cdr ovs))
            (tc-beg (overlay-start tc-ov))
            (tc-end (overlay-end tc-ov)))
-      (org-transclusion-live-sync-display-buffer (overlay-buffer src-ov))
-      (org-transclusion-live-sync-modify-overlays
-       (text-clone-set-overlays src-ov tc-ov))
-      (goto-char remember-pos)
-      (with-silent-modifications
-        (remove-text-properties (1- tc-beg) tc-end '(read-only)))
-      t)))
+      ;; Check the length of both overlays
+      ;; if different, abort live-sync
+      (if (not (= (- (overlay-end tc-ov) (overlay-start tc-ov))
+                  (- (overlay-end src-ov) (overlay-start src-ov))))
+          (progn
+            (user-error (concat "No live-sync can be started.  "
+                                "Lengths of transclusion and source are not identical"))
+            nil) ; return nil
+        (org-transclusion-live-sync-modify-overlays
+         (text-clone-set-overlays src-ov tc-ov))
+        (org-transclusion-live-sync-display-buffer (overlay-buffer src-ov))
+        (goto-char remember-pos)
+        (remove-hook 'before-save-hook #'org-transclusion-before-save-buffer t)
+        (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
+        (with-silent-modifications
+          (remove-text-properties (1- tc-beg) tc-end '(read-only)))
+        t))))
 
 (defun org-transclusion-live-sync-exit ()
   "Exit live-sync at point.
@@ -934,11 +942,11 @@ based on the following arguments:
             (when diff
               (cond ((< diff 0) ; demote
                      (org-map-entries (lambda ()
-                                        (dotimes (v (abs diff))
+                                        (dotimes (_ (abs diff))
                                           (org-do-demote)))))
                     ((> diff 0) ; promote
                      (org-map-entries (lambda ()
-                                        (dotimes (v diff)
+                                        (dotimes (_ diff)
                                           (org-do-promote))))))))
             (setq content (buffer-string)))))
     (insert
@@ -1022,10 +1030,10 @@ content."
 Return content modified (or unmodified, if not applicable).
 
 This is the default one.  It only returns the content as is."
-    (with-temp-buffer
-      (insert content)
-      ;; Return the temp-buffer's string
-      (buffer-string)))
+  (with-temp-buffer
+    (insert content)
+    ;; Return the temp-buffer's string
+    (buffer-string)))
 
 (defun org-transclusion-content-org-marker (marker plist)
   "Return a list of payload from MARKER and PLIST.
