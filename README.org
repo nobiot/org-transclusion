@@ -6,11 +6,13 @@
 
 ⚠⚠⚠
 
-*NOTICE*: Please refer to notice [[https://github.com/nobiot/org-transclusion/issues/81][(issue 81)]] on the changes and new features that have been introduced with v0.2.0 -- it includes information on breaking changes (minor) and how you can adjust your Emacs to them if applicable to you.
+*NOTICE*: Please refer to notice [[https://github.com/nobiot/org-transclusion/issues/81][(issue 81)]] on the changes and new features that have been introduced with v0.2.0 as of 12 June 2021 -- it includes information on breaking changes (minor) and how you can adjust your Emacs to them if applicable to you.
 
 README below has also been updated to reflect these changes; new users can ignore the notice.
 
 [[https://youtu.be/idlFzWeygwA][A video demo on v0.2.0 on YouTube]] is available for a quick rundown of the changes and new features.
+
+A new [[https://youtu.be/ueaPiA622wA][video demo on v0.2.1]] on YouTube is available demonstrating new features to transclude a source file into a src-block and function to specify a range of text/source lines
 
 ⚠⚠⚠
 
@@ -30,9 +32,12 @@ I am dabbling in the [[https://writingcooperative.com/zettelkasten-how-one-germa
 [[./resources/2021-05-01-org-transclusion-0.1.0-live-sync.gif]]
 *Figure 2*. Animation to show live sync from transclusion to source
 
-[[./resources/demo8-title.png]]
-*Figure 3* [[https://youtu.be/idlFzWeygwA][Video demo on v0.2.0 on YouTube]] featuring minor breaking changes and new transclusion filters
+[[./resources/demo9-title.png]]
+*Figure 3* [[https://youtu.be/ueaPiA622wA][Video demo on v0.2.1 on YouTube]] demonstrating new features to transclude a source file into a src-block and function to specify a range of text/source lines
 
+- Recent videos ::
+  + [[https://youtu.be/idlFzWeygwA][Video demo on v0.2.0 on YouTube]] featuring minor breaking changes and new transclusion filters
+ 
 - Older videos ::
   + [[https://youtu.be/idlFzWeygwA][Video demo on v0.1.1 on YouTube]] featuring basic syntax and live-sync edit
 
@@ -49,6 +54,8 @@ I am dabbling in the [[https://writingcooperative.com/zettelkasten-how-one-germa
   - [[#controlling-levels-of-headlines-in-transclusions][Controlling levels of headlines in transclusions]]
   - [[#filtering-org-elements-per-transclusion][Filtering Org elements per transclusion]]
   - [[#live-sync-edit][Live-sync edit]]
+  - [[#transclude-source-file-into-src-block][Transclude source file into src-block]]
+  - [[#transclude-range-of-lines-for-text-and-source-files][Transclude range of lines for text and source files]]
 - [[#customizing][Customizing]]
   - [[#customizable-filter-to-exclude-certain-org-elements][Customizable filter to exclude certain Org elements]]
   - [[#include-the-section-before-the-first-headline-org-file-only][Include the section before the first headline (Org file only)]]
@@ -349,6 +356,68 @@ In the live-sync edit region, the normal =yank= command (=C-y=) is replaced with
  *Also inherits ‘org-mode-map’
 #+end_example
  
+** Transclude source file into src-block
+:PROPERTIES:
+:CUSTOM_ID: transclude-source-file-into-src-block
+:END:
+
+You can transclude a source file into an Org's src block. Use the =:src= property and specify the language you would like to use like this:
+
+#+begin_example
+#+transclude: [[file:../../test/python-1.py]] :src python
+#+end_example
+
+The content you specify in the link gets wrapped into a src-block with the language like this:
+
+#+begin_example
+#+begin_src python
+[... content of python-1.py]
+#+end_src
+#+end_example
+
+Use =:rest= property to define additional properties you would like to add for the src-block. The double quotation marks are mandatory for the =:rest= property. 
+
+#+begin_example
+#+transclude: [[file:../../test/python-3.py]]  :src python :rest ":session :results value"
+#+end_example
+
+The source block will have the additional properties:
+#+begin_example
+#+begin_src python :session :results value
+#+end_example
+
+** Transclude range of lines for text and source files
+:PROPERTIES:
+:CUSTOM_ID: transclude-range-of-lines-for-text-and-source-files
+:END:
+
+You can specify a range of lines to transclude from a source and text file. Use the =:lines= property like this.
+
+#+begin_example
+#+transclude: [[file:../../test/test.txt]] :lines 3-5
+#+end_example
+
+The rage is specified by the number "3-5"; in this case, lines from 3 to 5, both lines inclusive.
+
+To transclude a single line, have the the same number in both places (e.g. 10-10, meaning line 10 only).
+
+One of the numbers can be omitted.  When the first number is omitted (e.g. -10), it means from the beginning of the file to line 10. Likewise, when the second number is omitted (e.g. 10-), it means from line 10 to the end of file.
+
+You can combine the =:lines= property with the =:src= property to transclude only a certain range of source files (Example 1 below).
+
+
+For Org's file links, you can use [[https://orgmode.org/manual/Search-Options.html][search options]] specified by the "::" (two colons) notation. When a search finds a line that includes the string, the Org-transclude counts it as the starting line 1 for the  =:lines= property. 
+
+Example 1: This transcludes the four lines of the source file from the line that contains string "id-1234" (including that line counted as line 1).
+#+begin_example
+#+transclude: [[file:../../test/python-1.py::id-1234]] :lines 1-4 :src python
+#+end_example
+
+Example 2: This transcludes only the single line that contains the line found by the search option for text string "Transcendental Ontology"
+#+begin_example
+#+transclude: [[file:../../test/test.txt::Transcendental Ontology]] :lines 1-1
+#+end_example
+
 ** COMMENT List of Commands
 
 - =org-transclusion-mode= ::
