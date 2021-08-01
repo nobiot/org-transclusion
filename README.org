@@ -370,9 +370,9 @@ You can transclude a source file into an Org's src block. Use the =:src= propert
 The content you specify in the link gets wrapped into a src-block with the language like this:
 
 #+begin_example
-#+begin_src python
+,#+begin_src python
 [... content of python-1.py]
-#+end_src
+,#+end_src
 #+end_example
 
 Use =:rest= property to define additional properties you would like to add for the src-block. The double quotation marks are mandatory for the =:rest= property. 
