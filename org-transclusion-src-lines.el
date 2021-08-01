@@ -106,7 +106,11 @@ it means from line 10 to the end of file."
                  :src-end end)))))))
 
 (defun org-transclusion-content-src-lines (link plist)
-  "Return a list of payload from LINK and PLIST in a src-block."
+  "Return a list of payload from LINK and PLIST in a src-block.
+This function is also able to transclude only a certain range of
+lines with using :lines n-m property.  Refer to
+`org-transclusion-content-range-of-lines' for how the notation
+for the range works."
   (let* ((payload (org-transclusion-content-range-of-lines link plist))
          (src-lang (plist-get plist :src))
          (rest (plist-get plist :rest)))
