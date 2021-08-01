@@ -4,10 +4,10 @@
 
 ;;; Code:
 
-(require 'org)
 (require 'org-element)
-(require 'text-clone)
 (declare-function text-clone-make-overlay 'text-clone)
+(declare-function org-transclusion-live-sync-buffers-others-default
+                  'org-transclusion)
 
 ;;;; Setting up the extension
 
@@ -23,6 +23,7 @@
           #'org-transclusion-keyword-value-rest)
 (add-hook 'org-transclusion-keyword-plist-to-string-functions
           #'org-transclusion-keyword-plist-to-string-src-lines)
+
 ;; Transclusion content formating
 ;; Not needed. Default works for text files.
 
@@ -51,20 +52,24 @@ Return nil if PLIST does not contain \":src\" or \":lines\" properties."
 (defun org-transclusion-content-src-lines (link plist)
   "Return a list of payload from LINK and PLIST.
 
-TODO need to handle when the file does not exist.  The logic to
-pars n-m for :lines is taken from
-`org-export--inclusion-absolute-lines' in ox.el with one
-exception.  Instead of :lines 1-10 to exclude line 10, the logic
-below has been adjusted to include line 10.  This should be more
-intuitive when it comes to including lines of code.
+You can specify a range of lines to transclude by adding the :line
+property to a transclusion keyword like this:
+
+    #+transclude: [[file:path/to/file.ext]] :lines 1-10
+
+This is taken from Org Export (function
+`org-export--inclusion-absolute-lines' in ox.el) with one
+exception.  Instead of :lines 1-10 to exclude line 10, it has
+been adjusted to include line 10.  This should be more intuitive
+when it comes to including lines of code.
+
+In order to transclude a single line, have the the same number in
+both places (e.g. 10-10, meaning line 10 only).
 
 One of the numbers can be omitted.  When the first number is
 omitted (e.g. -10), it means from the beginning of the file to
 line 10. Likewise, when the second number is omitted (e.g. 10-),
-it means from line 10 to the end of file.
-
-In order to include a single line, have the the same number in
-both places (e.g. 10-10, meaning line 10 only)."
+it means from line 10 to the end of file."
   (let* ((path (org-element-property :path link))
          (search-option (org-element-property :search-option link))
          (buf (find-file-noselect path))
@@ -175,19 +180,7 @@ for non-Org text files including program source files."
     ;; Let's not allow live-sync when source is transcluded into a source block.
     (when (string= "src" type)
       (user-error "No live sync for src-code block"))
-    (let* ((tc-pair (get-text-property (point) 'org-transclusion-pair))
-           (src-ov (text-clone-make-overlay
-                    (overlay-start tc-pair)
-                    (overlay-end tc-pair)
-                    (overlay-buffer tc-pair)))
-           (beg (marker-position (get-text-property (point) 'org-transclusion-beg-mkr)))
-           (end (marker-position (get-text-property (point) 'org-transclusion-end-mkr)))
-           (tc-ov)
-           (src-ov-len (- (overlay-end src-ov) (overlay-start src-ov))))
-      (if (/= src-ov-len (- end beg))
-          (user-error "Error.  Lengths of transclusion and source are not identical")
-        (setq tc-ov (text-clone-make-overlay beg end))
-        (cons src-ov tc-ov)))))
+    (org-transclusion-live-sync-buffers-others-default nil)))
 
 (provide 'org-transclusion-src-lines)
 ;;; org-transclusion-src-lines.el ends here
