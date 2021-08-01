@@ -45,12 +45,13 @@ Return nil if PLIST does not contain \":src\" or \":lines\" properties."
    ((plist-get plist :src)
     (append '(:tc-type "src")
             (org-transclusion-content-src-lines link plist)))
+   ;; :lines needs to be the last condition to check because :src INCLUDE :lines
    ((plist-get plist :lines)
     (append '(:tc-type "lines")
-            (org-transclusion-content-src-lines link plist)))))
+            (org-transclusion-content-range-of-lines link plist)))))
 
-(defun org-transclusion-content-src-lines (link plist)
-  "Return a list of payload from LINK and PLIST.
+(defun org-transclusion-content-range-of-lines (link plist)
+  "Return a list of payload for a range of lines from LINK and PLIST.
 
 You can specify a range of lines to transclude by adding the :line
 property to a transclusion keyword like this:
@@ -73,9 +74,7 @@ it means from line 10 to the end of file."
   (let* ((path (org-element-property :path link))
          (search-option (org-element-property :search-option link))
          (buf (find-file-noselect path))
-         (src-lines (plist-get plist :lines))
-         (src-lang (plist-get plist :src))
-         (rest (plist-get plist :rest)))
+         (lines (plist-get plist :lines)))
     (when buf
       (with-current-buffer buf
         (org-with-wide-buffer
@@ -85,10 +84,10 @@ it means from line 10 to the end of file."
                                      (org-link-search search-option)
                                      (line-beginning-position))))
                                (point-min)))
-                (lines (when src-lines (split-string src-lines "-")))
-                (lbeg (if lines (string-to-number (car lines))
+                (range (when lines (split-string lines "-")))
+                (lbeg (if range (string-to-number (car range))
                         0))
-                (lend (if lines (string-to-number (cadr lines))
+                (lend (if range (string-to-number (cadr range))
                         0))
                 (beg (if (zerop lbeg) (point-min)
                        (goto-char start-pos)
@@ -100,20 +99,29 @@ it means from line 10 to the end of file."
                        (end-of-line);; include the line
                        ;; Ensure to include the \n into the end point
                        (1+ (point))))
-                (content))
-           (setq content
-                 (concat
-                  (when src-lang
-                    (concat
-                     (format "#+begin_src %s" src-lang)
-                     (when rest (format " %s" rest))
-                     "\n"))
-                  (buffer-substring-no-properties beg end)
-                  (when src-lang "#+end_src\n")))
+                (content (buffer-substring-no-properties beg end)))
            (list :src-content content
                  :src-buf (current-buffer)
                  :src-beg beg
                  :src-end end)))))))
+
+(defun org-transclusion-content-src-lines (link plist)
+  "Return a list of payload from LINK and PLIST in a src-block."
+  (let* ((payload (org-transclusion-content-range-of-lines link plist))
+         (src-lang (plist-get plist :src))
+         (rest (plist-get plist :rest)))
+    ;; Modify :src-content if applicable
+    (when src-lang
+      (setq payload
+            (plist-put payload :src-content
+                       (concat
+                        (format "#+begin_src %s" src-lang)
+                        (when rest (format " %s" rest))
+                        "\n"
+                        (plist-get payload :src-content)
+                        "#+end_src\n"))))
+    ;; Return the payload either modified or unmodified
+    payload))
 
 (defun org-transclusion-keyword-value-lines (string)
   "It is a utility function used converting a keyword STRING to plist.
@@ -126,10 +134,12 @@ Double qutations are optional \"1-10\"."
 (defun org-transclusion-keyword-value-src (string)
   "It is a utility function used converting a keyword STRING to plist.
 It is meant to be used by `org-transclusion-get-string-to-plist'.
-It needs to be set in
-`org-transclusion-get-keyword-values-hook'.
-Double qutations are optional :src \"python\"."
-  (when (string-match ":src +\\(\"?\\w*\"?\\)" string)
+It needs to be set in `org-transclusion-get-keyword-values-hook'.
+Double qutations are optional :src \"python\".  The regex should
+match a name of language that is one word (e.g. \"python\"), or
+two words connected with a hyphen (e.g. \"emacs-lisp\"); however,
+it does not match any name with two or more hyphens."
+  (when (string-match ":src +\\(\"?\\w*-?\\w*\"?\\)" string)
     (list :src (org-strip-quotes (match-string 1 string)))))
 
 (defun org-transclusion-keyword-value-rest (string)
