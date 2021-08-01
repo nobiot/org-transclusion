@@ -383,7 +383,7 @@ Use =:rest= property to define additional properties you would like to add for t
 
 The source block will have the additional properties:
 #+begin_example
-#+begin_src python :session :results value
+,#+begin_src python :session :results value
 #+end_example
 
 ** Transclude range of lines for text and source files
