@@ -100,7 +100,7 @@ See `display-buffer' for example options."
 
 (defcustom org-transclusion-mode-lighter
   " OT"
-  "Mode-line indicator for `org-transclusion-mode'."
+  "Mode-line indicator for minor-mode variable `org-transclusion-mode'."
   :type '(choice (const :tag "No lighter" "") string)
   :safe 'stringp
   :group 'org-transclusion)
@@ -111,7 +111,7 @@ See `display-buffer' for example options."
   '((((class color) (min-colors 88) (background light)))
     (((class color) (min-colors 88) (background dark)))
     (t ))
-  "Face for source region's fringe transcluded in another buffer."
+  "Face for source region's fringe being transcluded in another buffer."
   :group 'org-transclusion)
 
 (defface org-transclusion-source
@@ -173,7 +173,7 @@ point after `before-save-hook' and `after-save-hook' pair;
 `org-transclusion-after-save-buffer' use this variable.")
 
 (defvar-local org-transclusion-remember-transclusions nil
-  "This variable is to remember the active transclusions before `save-buffer'.
+  "Remember the active transclusions before `save-buffer'.
 It is meant to be used to keep the file the current buffer is
 visiting clear of the transcluded text content.  Instead of
 blindly deactivate and activate all transclusions with t flag,
@@ -185,8 +185,9 @@ a text content.
 `org-transclusion-after-save-buffer' use this variable.")
 
 (defvar-local org-transclusion-remember-window-config nil
-  "Rember window config (the arrangment of windows) for the current buffer.
-This is for live-sync.  Analogous to `org-edit-src-code'.")
+  "Remember window config (the arrangment of windows) for the current buffer.
+This is for live-sync.  Analogous to
+`org-edit-src-code'.")
 
 (defvar org-transclusion-add-functions
   '(org-transclusion-add-org-id
@@ -217,7 +218,8 @@ regexp from the string.")
 (defvar org-transclusion-keyword-plist-to-string-functions '())
 
 (defvar org-transclusion-content-format-functions
-  '(org-transclusion-content-format))
+  '(org-transclusion-content-format-org
+    org-transclusion-content-format))
 
 (defvar org-transclusion-open-source-marker-functions
   '(org-transclusion-open-source-marker))
@@ -726,7 +728,7 @@ Intended to be used with `kill-buffer-hook' and `kill-emacs-hook'
 to clear the file of the transcluded text regions.  This function
 also flags the buffer modified and `save-buffer'.  Calling
 `save-buffer' after remove-all and live-sync has been existed
-ensures the clearing process to occur. This is reqiured because
+ensures the clearing process to occur.  This is reqiured because
 during live-sync, some hooks that manage the clearing process are
 temporarily turned off (removed)."
   (org-transclusion-remove-all)
@@ -919,7 +921,7 @@ based on the following arguments:
          (ov-src (text-clone-make-overlay sbeg send sbuf)) ;; source-buffer overlay
          (tc-pair ov-src)
          (content content))
-    (when (string-prefix-p "org" type 'ignore-case)
+    (when (org-transclusion-type-is-org type)
         (with-temp-buffer
           ;; This temp buffer needs to be in Org Mode
           ;; Otherwise, subtree won't be recognized as a Org subtree
@@ -990,12 +992,14 @@ This function sssumes the buffer is an Org buffer."
         (push (org-element-property :level h) list)))
     (when list (seq-min list))))
 
-(defun org-transclusion-content-format (_type content)
+(defun org-transclusion-content-format-org (type content)
   "Format text CONTENT from source before transcluding.
 Return content modified (or unmodified, if not applicable).
-Currently it only re-aligns table with links in the content.
 
-This is the default one"
+This function is the default for org-transclusion-type (TYPE)
+\"org-*\". Currently it only re-aligns table with links in the
+content."
+  (when (org-transclusion-type-is-org type)
   (with-temp-buffer
     (let ((org-inhibit-startup t))
       (delay-mode-hooks (org-mode))
@@ -1011,7 +1015,17 @@ This is the default one"
       ;; Fix indentation when `org-adapt-indentation' is non-nil
       (org-indent-region (point-min) (point-max))
       ;; Return the temp-buffer's string
-      (buffer-string))))
+      (buffer-string)))))
+
+(defun org-transclusion-content-format (_type content)
+  "Format text CONTENT from source before transcluding.
+Return content modified (or unmodified, if not applicable).
+
+This is the default one.  It only returns the content as is."
+    (with-temp-buffer
+      (insert content)
+      ;; Return the temp-buffer's string
+      (buffer-string)))
 
 (defun org-transclusion-content-org-marker (marker plist)
   "Return a list of payload from MARKER and PLIST.
@@ -1277,6 +1291,12 @@ string \"nil\", return symbol t."
      `(left-fringe empty-line
                    org-transclusion-source-fringe))))
 
+(defun org-transclusion-type-is-org (type)
+  "Return non-nil if TYPE begins with \"org\".
+TYPE is assumed to be a text-property \"org-transclusion-type\"
+and is a string."
+  (string-prefix-p "org" type 'ignore-case))
+
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for open-source
 
@@ -1463,7 +1483,7 @@ The cons cell to be returned is in this format:
 
 This function uses TYPE to identify Org files to work on only Org
 links and IDs."
-  (when (string-prefix-p "org" type 'ignore-case)
+  (when (org-transclusion-type-is-org type)
     (let* ((tc-elem (org-transclusion-live-sync-enclosing-element))
            (tc-beg (org-element-property :begin tc-elem))
            (tc-end (org-element-property :end tc-elem))
