@@ -442,17 +442,21 @@ does not support all the elements.
                    "No content found with \"%s\".  Check the link at point %d, line %d"
                    (org-element-property :raw-link link) (point) (org-current-line))
                   nil))
-        (org-transclusion-with-silent-modifications
-          (when (save-excursion
-                  (end-of-line) (insert-char ?\n)
-                  (org-transclusion-content-insert
-                   keyword-plist tc-type src-content
-                   src-buf src-beg src-end)
-                  (unless (eobp) (delete-char 1))
-                  t)
-            ;; `org-transclusion-keyword-remove' checks element at point is a
-            ;; keyword or not
-            (org-transclusion-keyword-remove)))
+	(let ((beg (point))
+	      (end))
+          (org-transclusion-with-silent-modifications
+            (when (save-excursion
+                    (end-of-line) (insert-char ?\n)
+		    (setq end (+ beg
+				 (org-transclusion-content-insert
+				  keyword-plist tc-type src-content
+				  src-buf src-beg src-end)))
+                    (unless (eobp) (delete-char 1))
+                    t)
+              ;; `org-transclusion-keyword-remove' checks element at point is a
+              ;; keyword or not
+              (org-transclusion-keyword-remove)))
+	  (when org-indent-mode (org-indent-add-properties beg end)))
         t))))
 
 ;;;###autoload
@@ -525,7 +529,8 @@ When success, return the beginning point of the keyword re-inserted."
             ;; inevitably have the same position (location "between" lines)
             (when mkr-at-beg (move-marker mkr-at-beg beg))
             ;; Go back to the beginning of the inserted keyword line
-            (goto-char beg))
+            (goto-char beg)
+	    (when org-indent-mode (org-indent-add-properties beg (line-end-position))))
           beg))
     (message "Nothing done. No transclusion exists here.") nil))
 
@@ -985,7 +990,8 @@ based on the following arguments:
     ;; TODO this should not be necessary, but it is at the moment
     ;; live-sync-enclosing-element fails without tc-pair on source overlay
     (overlay-put ov-src 'org-transclusion-pair tc-pair)
-    t))
+    ;; Return the size of inserted region as integer
+    (- end beg)))
 
 (defun org-transclusion-content-highest-org-headline ()
   "Return the highest level as an integer of all the headlines in buffer.
