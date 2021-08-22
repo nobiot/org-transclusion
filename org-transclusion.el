@@ -46,6 +46,7 @@
 (require 'org-element)
 (require 'org-id)
 (require 'text-clone)
+(require 'org-transclusion-font-lock)
 (declare-function text-clone-make-overlay 'text-clone)
 (declare-function text-clone-delete-overlays 'text-clone)
 (declare-function text-clone-set-overlays 'text-clone)
