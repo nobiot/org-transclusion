@@ -1,3 +1,13 @@
+;;; org-transclusion-font-lock.el --- font-lock for Org-transclusion -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;;  This file is part of Org-transclusion
+;;  URL: https://github.com/nobiot/org-transclusion
+
+;;; Code:
+
+(require 'org)
+
 (defface org-transclusion-keyword
   '((((class color) (min-colors 88) (background light))
      :foreground "#0030b4")
@@ -9,7 +19,7 @@
   :group 'org-transclusion)
 
 (defun org-transclusion-font-lock-set ()
-  "Add font-lock function to Org's hook.  
+  "Add font-lock function to Org's hook.
 The hook is `org-font-lock-set-keywords-hook'."
   (add-to-list 'org-font-lock-extra-keywords
 	       '(org-transclusion-fontify-meta-lines-and-blocks) 'append))
@@ -20,7 +30,10 @@ This function does the following:
 
 1. Apply face `org-transclusion-keyword' to #+keyword
 2. Re-applies Org's font-lock for links to the transclusion link
-3. Apply Org's face `org-meta-line' to transclusion properties"
+3. Apply Org's face `org-meta-line' to transclusion properties
+
+Argument LIMIT is to limit scope of `re-search-forward'; it's the
+same with `org-fontify-meta-lines-and-blocks'."
   (let ((case-fold-search t)
 	(regexp "\\(^[ 	]*#\\+TRANSCLUDE:\\)\\(.*]]\\)?\\(.*$\\)")
 	(beg)(end)(keyword-end)(prop-beg)(prop-end))
@@ -43,3 +56,7 @@ This function does the following:
 	(org-activate-links end)))))
 
 (add-hook 'org-font-lock-set-keywords-hook #'org-transclusion-font-lock-set)
+
+(provide 'org-transclusion-font-lock)
+
+;;; org-transclusion-font-lock.el ends here
