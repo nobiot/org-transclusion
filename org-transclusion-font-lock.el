@@ -7,6 +7,7 @@
 ;;; Code:
 
 (require 'org)
+(add-hook 'org-font-lock-set-keywords-hook #'org-transclusion-font-lock-set)
 
 (defface org-transclusion-keyword
   '((((class color) (min-colors 88) (background light))
@@ -54,8 +55,6 @@ same with `org-fontify-meta-lines-and-blocks'."
       (save-excursion
 	(goto-char beg)
 	(org-activate-links end)))))
-
-(add-hook 'org-font-lock-set-keywords-hook #'org-transclusion-font-lock-set)
 
 (provide 'org-transclusion-font-lock)
 
