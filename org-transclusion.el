@@ -448,16 +448,16 @@ does not support all the elements.
           (org-transclusion-with-silent-modifications
             (when (save-excursion
                     (end-of-line) (insert-char ?\n)
-		    (setq end (+ beg
-				 (org-transclusion-content-insert
-				  keyword-plist tc-type src-content
-				  src-buf src-beg src-end)))
+		    (org-transclusion-content-insert
+		     keyword-plist tc-type src-content
+		     src-buf src-beg src-end)
                     (unless (eobp) (delete-char 1))
+		    (setq end (point))
                     t)
               ;; `org-transclusion-keyword-remove' checks element at point is a
               ;; keyword or not
               (org-transclusion-keyword-remove)))
-	  (when org-indent-mode (org-indent-add-properties beg end)))
+	  (when org-indent-mode (org-translusion-indent-add-properties beg end)))
         t))))
 
 ;;;###autoload
@@ -531,7 +531,7 @@ When success, return the beginning point of the keyword re-inserted."
             (when mkr-at-beg (move-marker mkr-at-beg beg))
             ;; Go back to the beginning of the inserted keyword line
             (goto-char beg)
-	    (when org-indent-mode (org-indent-add-properties beg (line-end-position))))
+	    (when org-indent-mode (org-translusion-indent-add-properties beg (line-end-position))))
           beg))
     (message "Nothing done. No transclusion exists here.") nil))
 
@@ -991,8 +991,7 @@ based on the following arguments:
     ;; TODO this should not be necessary, but it is at the moment
     ;; live-sync-enclosing-element fails without tc-pair on source overlay
     (overlay-put ov-src 'org-transclusion-pair tc-pair)
-    ;; Return the size of inserted region as integer
-    (- end beg)))
+    t))
 
 (defun org-transclusion-content-highest-org-headline ()
   "Return the highest level as an integer of all the headlines in buffer.
