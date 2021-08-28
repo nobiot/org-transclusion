@@ -47,13 +47,14 @@
 (require 'org-id)
 (require 'text-clone)
 (require 'org-transclusion-font-lock)
-(declare-function text-clone-make-overlay 'text-clone)
-(declare-function text-clone-delete-overlays 'text-clone)
-(declare-function text-clone-set-overlays 'text-clone)
-(declare-function text-property-search-forward 'text-property-search)
-(declare-function text-property-search-backward 'text-property-search)
-(declare-function prop-match-value 'text-property-search)
-(declare-function prop-match-beginning 'text-property-search)
+(require 'text-property-search)
+;;(declare-function text-clone-make-overlay 'text-clone)
+;;(declare-function text-clone-delete-overlays 'text-clone)
+;;(declare-function text-clone-set-overlays 'text-clone)
+;;(declare-function text-property-search-forward 'text-property-search)
+;;(declare-function text-property-search-backward 'text-property-search)
+;;(declare-function prop-match-value 'text-property-search)
+;;(declare-function prop-match-beginning 'text-property-search)
 
 ;;;; Customization
 
@@ -63,12 +64,22 @@
   :prefix "org-transclusion-"
   :link '(url-link :tag "Github" "https://github.com/nobiot/org-transclusion"))
 
+(defun org-transclusion-set-extensions (var value)
+  "Set VAR to VALUE and `org-transclusion-load-extensions-maybe'.
+Intended for :set property for `customize'."
+  (set var value)
+  (when (featurep 'org-transclusion)
+    (org-transclusion-load-extensions-maybe 'force)))
+
 (defcustom org-transclusion-extensions '(org-transclusion-src-lines)
   "Extensions to be loaded with org-transclusion.el."
   :group 'org-transclusion
+  :set 'org-transclusion-set-extensions
   :type
   '(set :greedy t
         (const :tag "src-lines: Add :src and :lines" org-transclusion-src-lines)
+
+	(const :tag "indent-mode: Support org-indent-mode" org-transclusion-indent-mode)
         (repeat :tag "Other packages" :inline t (symbol :tag "Package"))))
 
 (defcustom org-transclusion-add-all-on-activate t
@@ -457,7 +468,10 @@ does not support all the elements.
               ;; `org-transclusion-keyword-remove' checks element at point is a
               ;; keyword or not
               (org-transclusion-keyword-remove)))
-	  (when org-indent-mode (org-translusion-indent-add-properties beg end)))
+	  (when (and (featurep 'org-indent) org-indent-mode
+		     (featurep 'org-transclusion-indent-mode)
+		     (memq 'org-transclusion-indent-mode org-transclusion-extensions))
+	    (org-translusion-indent-add-properties beg end)))
         t))))
 
 ;;;###autoload
@@ -531,7 +545,10 @@ When success, return the beginning point of the keyword re-inserted."
             (when mkr-at-beg (move-marker mkr-at-beg beg))
             ;; Go back to the beginning of the inserted keyword line
             (goto-char beg)
-	    (when org-indent-mode (org-translusion-indent-add-properties beg (line-end-position))))
+	    (when (and (featurep 'org-indent) org-indent-mode
+		       (featurep 'org-transclusion-indent-mode)
+		       (memq 'org-transclusion-indent-mode org-transclusion-extensions))
+	      (org-translusion-indent-add-properties beg (line-end-position))))
           beg))
     (message "Nothing done. No transclusion exists here.") nil))
 
@@ -1644,6 +1661,7 @@ When DEMOTE is non-nil, demote."
 
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for extensions
+;;   It's based on `org-modules'
 
 (defun org-transclusion-load-extensions-maybe (&optional force)
   "Load all extensions listed in `org-transclusion-extensions'."

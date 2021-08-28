@@ -1,4 +1,17 @@
+;;; org-transclusion-indent-mode.el --- support org-indent-mode -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;;  This file is part of Org-transclusion
+
+;;; Code:
+
+(require 'org-indent)
+(declare-function org-transclusion-within-transclusion-p
+                  'org-transclusion)
+
+
 (defun org-translusion-indent-add-properties (beg end)
+  "BEG END."
   (advice-add #'org-indent-set-line-properties
 	      :override
 	      #'org-transclusion-indent-set-line-properties-ad)
@@ -52,3 +65,7 @@ have `org-warning' face."
     (add-text-properties (line-beginning-position) (line-beginning-position 2)
 			 `(line-prefix ,line wrap-prefix ,wrap)))
   (forward-line))
+
+(provide 'org-transclusion-indent-mode)
+
+;;; org-transclusion-indent-mode.el ends here
