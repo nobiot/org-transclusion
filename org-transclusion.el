@@ -48,13 +48,9 @@
 (require 'text-clone)
 (require 'org-transclusion-font-lock)
 (require 'text-property-search)
-;;(declare-function text-clone-make-overlay 'text-clone)
-;;(declare-function text-clone-delete-overlays 'text-clone)
-;;(declare-function text-clone-set-overlays 'text-clone)
-;;(declare-function text-property-search-forward 'text-property-search)
-;;(declare-function text-property-search-backward 'text-property-search)
-;;(declare-function prop-match-value 'text-property-search)
-;;(declare-function prop-match-beginning 'text-property-search)
+(require 'seq)
+(declare-function org-translusion-indent-add-properties
+		  org-transclusion-indent-mode)
 
 ;;;; Customization
 
@@ -469,7 +465,6 @@ does not support all the elements.
               ;; keyword or not
               (org-transclusion-keyword-remove)))
 	  (when (and (featurep 'org-indent) org-indent-mode
-		     (featurep 'org-transclusion-indent-mode)
 		     (memq 'org-transclusion-indent-mode org-transclusion-extensions))
 	    (org-translusion-indent-add-properties beg end)))
         t))))
@@ -546,7 +541,6 @@ When success, return the beginning point of the keyword re-inserted."
             ;; Go back to the beginning of the inserted keyword line
             (goto-char beg)
 	    (when (and (featurep 'org-indent) org-indent-mode
-		       (featurep 'org-transclusion-indent-mode)
 		       (memq 'org-transclusion-indent-mode org-transclusion-extensions))
 	      (org-translusion-indent-add-properties beg (line-end-position))))
           beg))
@@ -1674,7 +1668,9 @@ When DEMOTE is non-nil, demote."
 ;;   It's based on `org-modules'
 
 (defun org-transclusion-load-extensions-maybe (&optional force)
-  "Load all extensions listed in `org-transclusion-extensions'."
+  "Load all extensions listed in `org-transclusion-extensions'.
+FORCE will let this function ignore
+`org-transclusion-extensions-loaded' and load extensions again."
   (when (or force (not org-transclusion-extensions-loaded))
     (dolist (ext org-transclusion-extensions)
       (condition-case nil (require ext)
