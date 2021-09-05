@@ -65,6 +65,12 @@ I am dabbling in the [[https://writingcooperative.com/zettelkasten-how-one-germa
   - [[#moving-from-00x-to-01x][Moving from 0.0.x to 0.1.x]]
 - [[#known-limitations][Known Limitations]]
 - [[#changelog][Changelog]]
+- [[#022][0.2.2]]
+- [[#021][0.2.1]]
+  - [[#020][0.2.0]]
+  - [[#012][0.1.2]]
+  - [[#011][0.1.1]]
+  - [[#010][0.1.0]]
 - [[#credits][Credits]]
   - [[#original-idea-by-john-kitchin][Original idea by John Kitchin]]
   - [[#text-clone][Text-Clone]]
@@ -552,6 +558,15 @@ Note this section is still incomplete, far from being exhaustive for "known" lim
 :TOC:      :depth 0
 :END:
 Main features and changes only.
+
+* 0.2.2
+
+* 0.2.1
+- New Features ::
+  - Transclude a source file into a =src= block
+  - Transclude a range of lines for text and source files
+  - Main relevant commits:
+    + 6e0e4bf * | feat: :src, :lines, :rest props (WIP)
 
 ** 0.2.0
 - Breaking changes ::
