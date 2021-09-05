@@ -1310,8 +1310,18 @@ and is a string."
 ;;;; Functions for open-source
 
 (defun org-transclusion-open-source-marker (_type)
-  "."
-  (let* ((tc-elem (org-transclusion-live-sync-enclosing-element))
+  "Return a marker pointing to the position and soure buffer.
+It is intended to be used for `org-transclusion-open-source' and
+`org-transclusion-move-to-source'.
+
+This function relies on `org-transclusion-find-source-marker' to
+locate the position in the source buffer; thus, the same
+limitation applies. It depends on which org elements whether or
+not this function can identify the beginnning of the element at
+point. If it cannot, it will return the beginning of the
+transclusion, which can be far away from the element at point, if
+the transcluded region is large."
+  (let* ((tc-elem (org-element-context))
          (tc-beg (org-element-property :begin tc-elem))
          (tc-end (org-element-property :end tc-elem))
          (src-beg-mkr
