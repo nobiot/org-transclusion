@@ -146,5 +146,6 @@ t/nil will be dropped after remove-at-point
 
 #+transclude: [[file:bertrand-russell.org::*Bertrand Russell - Wikipedia]] :level 2 :exclude-elements "keyword drawer"
 
-
+* Open Source
+#+transclude: [[file:open.org]]
 
