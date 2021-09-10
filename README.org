@@ -25,8 +25,8 @@ Transclusion helps me do this.
 I am dabbling in the [[https://writingcooperative.com/zettelkasten-how-one-german-scholar-was-so-freakishly-productive-997e4e0ca125][Zettelkasten method]] with using [[https://www.orgroam.com/][Org-roam]] to feed my ideas into the repository. As such, although Org-transclusion is a standalone package, I would like to keep workflow seamless between Org-roam and Org-transclusion.
 
 #+caption: Figure 1. Animation to show creation of a transclusion from an ID link
-[[./resources/2021-05-01-org-transclusion-0.1.0-create.gif]]
-*Figure 1*. Animation to show creation of a transclusion from an ID link
+[[./resources/2021-09-10-transclusion.gif]]
+*Figure 1*. Animation to show transclusion from the buffer on the right
 
 #+caption: Figure 2. Animation to show live sync from transclusion to source
 [[./resources/2021-05-01-org-transclusion-0.1.0-live-sync.gif]]
@@ -56,26 +56,23 @@ I am dabbling in the [[https://writingcooperative.com/zettelkasten-how-one-germa
   - [[#live-sync-edit][Live-sync edit]]
   - [[#transclude-source-file-into-src-block][Transclude source file into src-block]]
   - [[#transclude-range-of-lines-for-text-and-source-files][Transclude range of lines for text and source files]]
+  - [[#extensions---support-org-indent-mode][Extensions - Support `org-indent-mode`]]
 - [[#customizing][Customizing]]
   - [[#customizable-filter-to-exclude-certain-org-elements][Customizable filter to exclude certain Org elements]]
   - [[#include-the-section-before-the-first-headline-org-file-only][Include the section before the first headline (Org file only)]]
   - [[#faces--fringe-bitmap][Faces & fringe bitmap]]
+    - [[#face-for-the-transclude-keyword][Face for the #+transclude keyword]]
+    - [[#faces-for-the-fringes-next-to-transcluded-region-and-source-region][Faces for the fringes next to transcluded region and source region]]
   - [[#keybindings][Keybindings]]
 - [[#tips][Tips]]
   - [[#moving-from-00x-to-01x][Moving from 0.0.x to 0.1.x]]
 - [[#known-limitations][Known Limitations]]
 - [[#changelog][Changelog]]
-- [[#022][0.2.2]]
-- [[#021][0.2.1]]
-  - [[#020][0.2.0]]
-  - [[#012][0.1.2]]
-  - [[#011][0.1.1]]
-  - [[#010][0.1.0]]
 - [[#credits][Credits]]
   - [[#original-idea-by-john-kitchin][Original idea by John Kitchin]]
   - [[#text-clone][Text-Clone]]
 - [[#development][Development]]
-  - [[#notes-on-pull-requests][Notes on pull requests]]
+  - [[#notes-on-pull-requests-and-fsf-copy-right-assignment][Notes on pull requests and FSF copy right assignment]]
 - [[#license][License]]
 :END:
 
@@ -96,7 +93,7 @@ Download or clone this repo, put all the =.el= files in it into your load-path, 
     (define-key global-map (kbd "C-n t") #'org-transclusion-mode))
 #+END_SRC
 
-It is important that you get all the =.el= files ready, not just =org-transclusion.el=. As at the time of this writing, the live-sync feature is contained in =text-clone.el= (also available in this repo) and a new feature to transclude lines of source code file is being developed as an extension to be available in another =.el= file. You will need to have all the =.el= files to use Org-transclusion as a package.
+It is important tha:cot you get all the =.el= files ready, not just =org-transclusion.el=. As at the time of this writing, the live-sync feature is contained in =text-clone.el= (also available in this repo) and some new features and extensions are made available as separate =.el= files. You will need to have all the =.el= files to use Org-transclusion as a package.
 
 If you use Doom and packages such as Straight, etc. to install files from GitHub repositories, you can do something like this below (it's an example using Doom's =package!= macro).
 
@@ -424,6 +421,26 @@ Example 2: This transcludes only the single line that contains the line found by
 #+transclude: [[file:../../test/test.txt::Transcendental Ontology]] :lines 1-1
 #+end_example
 
+** Extensions - Support `org-indent-mode`
+
+Org-transclusion provides a simple extension framework, where you can use `customize` to selectively add new features. Currently there are two extensions provided. Support for `org-indent-mode` is an extension, which is inactive by default.
+
+- (on by defaul) org-transclusion-src-lines :: Add features for `:src` and `:lines` properties to #+transclude
+- (off by default) org-transclusion-indent-mode :: Support org-indent-mode
+
+[[file:resources/2021-09-05T164930.png]]
+
+If you use `customize`, the features are loaded automatically. Note that it does not "unload" the feature until you relaunch Emacs. 
+
+If you do not use `customize` (e.g. Doom), you may need to explicitly require an extension. For example, to activate `org-transclusion-indent-mode`, you might need to add something like this in your configuration file.
+
+``` emacs-lisp
+;; Ensure that load-path to org-transclusion is already added
+;; (add-to-list  'load-path "path/to/org-transclusion/")
+(add-to-list 'org-transclusion-extensions 'org-transclusion-indent-mode)
+(require 'org-transclusion-indent-mode)
+```
+
 ** COMMENT List of Commands
 
 - =org-transclusion-mode= ::
@@ -445,17 +462,28 @@ Example 2: This transcludes only the single line that contains the line found by
 
 You can customize settings in the =org-transclusion= group.
 
-- =org-transclusion-add-all-on-activate= :: Defines whether or not all the active transclusions (with =t=) get automatically transcluded on minor mode activation (=org-transclusion-mode=). This does not affect the manual activation when you directly call =org-transclusion-activate=
+- =org-transclusion-extensions= :: Defines extensions to be loaded with
+  org-transclusion.el. If you use `customize`, the extensions are loaded by it.
+  If you don't, you likely need to explicitly use `require` to load them.
+
+- =org-transclusion-add-all-on-activate= :: Defines whether or not all the
+  active transclusions (with =t=) get automatically transcluded on minor mode
+  activation (=org-transclusion-mode=). This does not affect the manual
+  activation when you directly call =org-transclusion-activate=
 
 - =org-transclusion-exclude-elements= :: See [[#customizable-filter-to-exclude-certain-org-elements][sub-section]] below
   
 - =org-transclusion-include-first-section= :: See [[#include-the-section-before-the-first-headline-org-file-only][sub-section]] below
   
-- =org-transclusion-open-source-display-action-list= ::
-   You can customize the way the =org-transclusion-open-source= function displays the source buffer for the transclusion. You specify the "action" in the way defined by the built-in =display-buffer= function. Refer to its in-system documentation (with =C-h f=) for the accepted values. =M-x customize= can also guide you with the types of values with the widget.
+- =org-transclusion-open-source-display-action-list= :: You can customize the
+  way the =org-transclusion-open-source= function displays the source buffer for
+  the transclusion. You specify the "action" in the way defined by the built-in
+  =display-buffer= function. Refer to its in-system documentation (with =C-h f=)
+  for the accepted values. =M-x customize= can also guide you with the types of
+  values with the widget.
 
-- =org-transclusion-mode-lighter= ::
-  Define the lighter for Org-transclusion minor mode. The default is " OT".
+- =org-transclusion-mode-lighter= :: Define the lighter for Org-transclusion
+  minor mode. The default is " OT".
 
 ** Customizable filter to exclude certain Org elements
 :PROPERTIES:
@@ -478,6 +506,12 @@ You can also fine-tune the exclusion filter per transclusion. Refer to the sub-s
 You can include the first section (section before the first headline) of an Org file. It is toggled via customizable variable =org-transclusion-include-first-section=. Its default value is =nil=. Set it to =t= (or non-nil) to transclude the first section. It also works when the first section is followed by headlines.
 
 ** Faces & fringe bitmap
+
+*** Face for the =#+transclude= keyword
+
+You can set your own face to the =#+transclude= keyword with using the =org-transclusion-keyword= face.
+
+*** Faces for the fringes next to transcluded region and source region
 
 If the fringes that indicate transcluding and source regions are not visible in your system (e.g. Doom), try adding background and/or foreground colors to these custom faces.
 
@@ -559,9 +593,15 @@ Note this section is still incomplete, far from being exhaustive for "known" lim
 :END:
 Main features and changes only.
 
-* 0.2.2
+** 0.2.2
+- New Features ::
+  - #+transclude font-lock and new face `org-transclusion-keyword`
+  - Selective extentions with `org-transclusion-extensions`
+  - (optional extension) Support for org-indent
+- Fix ::
+  - fix: #93 open-source error "Live sync cannot start here"
 
-* 0.2.1
+** 0.2.1
 - New Features ::
   - Transclude a source file into a =src= block
   - Transclude a range of lines for text and source files
@@ -643,7 +683,7 @@ It seems like this could work well for headlines, and named tables, src blocks, 
 
 - Create issues, discussion, and/or pull requests. All welcome.
 
-** Notes on pull requests
+** Notes on pull requests and FSF copy right assignment
 
 I am considering of submitting Org-transclusion for inclusion into the upstream Org Mode at some point, hopefully towards the end of year 2021. This was suggested a while ago in a Reddit discussion.
 
