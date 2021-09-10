@@ -56,7 +56,7 @@ I am dabbling in the [[https://writingcooperative.com/zettelkasten-how-one-germa
   - [[#live-sync-edit][Live-sync edit]]
   - [[#transclude-source-file-into-src-block][Transclude source file into src-block]]
   - [[#transclude-range-of-lines-for-text-and-source-files][Transclude range of lines for text and source files]]
-  - [[#extensions---support-org-indent-mode][Extensions - Support `org-indent-mode`]]
+  - [[#extensions---support-org-indent-mode][Extensions - Support org-indent-mode]]
 - [[#customizing][Customizing]]
   - [[#customizable-filter-to-exclude-certain-org-elements][Customizable filter to exclude certain Org elements]]
   - [[#include-the-section-before-the-first-headline-org-file-only][Include the section before the first headline (Org file only)]]
@@ -421,25 +421,25 @@ Example 2: This transcludes only the single line that contains the line found by
 #+transclude: [[file:../../test/test.txt::Transcendental Ontology]] :lines 1-1
 #+end_example
 
-** Extensions - Support `org-indent-mode`
+** Extensions - Support =org-indent-mode=
 
 Org-transclusion provides a simple extension framework, where you can use `customize` to selectively add new features. Currently there are two extensions provided. Support for `org-indent-mode` is an extension, which is inactive by default.
 
-- (on by defaul) org-transclusion-src-lines :: Add features for `:src` and `:lines` properties to #+transclude
+- (on by defaul) org-transclusion-src-lines :: Add features for =:src= and =:lines= properties to #+transclude
 - (off by default) org-transclusion-indent-mode :: Support org-indent-mode
 
 [[file:resources/2021-09-05T164930.png]]
 
-If you use `customize`, the features are loaded automatically. Note that it does not "unload" the feature until you relaunch Emacs. 
+If you use =customize=, the features are loaded automatically. Note that it does not "unload" the feature until you relaunch Emacs. 
 
-If you do not use `customize` (e.g. Doom), you may need to explicitly require an extension. For example, to activate `org-transclusion-indent-mode`, you might need to add something like this in your configuration file.
+If you do not use =customize= (e.g. Doom), you may need to explicitly require an extension. For example, to activate =org-transclusion-indent-mode=, you might need to add something like this in your configuration file.
 
-``` emacs-lisp
+ #+begin_src  emacs-lisp
 ;; Ensure that load-path to org-transclusion is already added
 ;; (add-to-list  'load-path "path/to/org-transclusion/")
 (add-to-list 'org-transclusion-extensions 'org-transclusion-indent-mode)
 (require 'org-transclusion-indent-mode)
-```
+ #+end_src
 
 ** COMMENT List of Commands
 
