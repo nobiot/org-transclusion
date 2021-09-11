@@ -295,7 +295,7 @@ In addition to the global user options above, you can fine-tune the default excl
 
 *** Combining =:only-contents= and =:exclude-elements=
 
-You can combine `:only-contents` and `:exclude-elements` to control how you transclude a subtree. Refer to the example screen shots below (the colored labels are added to the images for illustration purposes and not part of the Emacs buffers).
+You can combine =:only-contents= and =:exclude-elements= to control how you transclude a subtree. Refer to the example screen shots below (the colored labels are added to the images for illustration purposes and not part of the Emacs buffers).
 
 [[./resources/2021-06-05_v0.2.0-01.png]]
 *Figure 1*. *Left*. Three transclusions with different properties; *Right*. Source to be transcluded
@@ -423,7 +423,7 @@ Example 2: This transcludes only the single line that contains the line found by
 
 ** Extensions - Support =org-indent-mode=
 
-Org-transclusion provides a simple extension framework, where you can use `customize` to selectively add new features. Currently there are two extensions provided. Support for `org-indent-mode` is an extension, which is inactive by default.
+Org-transclusion provides a simple extension framework, where you can use =customize= to selectively add new features. Currently there are two extensions provided. Support for =org-indent-mode= is an extension, which is inactive by default.
 
 - (on by defaul) org-transclusion-src-lines :: Add features for =:src= and =:lines= properties to #+transclude
 - (off by default) org-transclusion-indent-mode :: Support org-indent-mode
@@ -463,8 +463,8 @@ If you do not use =customize= (e.g. Doom), you may need to explicitly require an
 You can customize settings in the =org-transclusion= group.
 
 - =org-transclusion-extensions= :: Defines extensions to be loaded with
-  org-transclusion.el. If you use `customize`, the extensions are loaded by it.
-  If you don't, you likely need to explicitly use `require` to load them.
+  org-transclusion.el. If you use =customize=, the extensions are loaded by it.
+  If you don't, you likely need to explicitly use =require= to load them.
 
 - =org-transclusion-add-all-on-activate= :: Defines whether or not all the
   active transclusions (with =t=) get automatically transcluded on minor mode
@@ -595,8 +595,8 @@ Main features and changes only.
 
 ** 0.2.2
 - New Features ::
-  - #+transclude font-lock and new face `org-transclusion-keyword`
-  - Selective extentions with `org-transclusion-extensions`
+  - #+transclude font-lock and new face =org-transclusion-keyword=
+  - Selective extentions with =org-transclusion-extensions=
   - (optional extension) Support for org-indent
 - Fix ::
   - fix: #93 open-source error "Live sync cannot start here"
