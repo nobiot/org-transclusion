@@ -50,7 +50,7 @@
 (require 'text-property-search)
 (require 'seq)
 (declare-function org-translusion-indent-add-properties
-		  org-transclusion-indent-mode)
+                  org-transclusion-indent-mode)
 
 ;;;; Customization
 
@@ -75,7 +75,7 @@ Intended for :set property for `customize'."
   '(set :greedy t
         (const :tag "src-lines: Add :src and :lines" org-transclusion-src-lines)
 
-	(const :tag "indent-mode: Support org-indent-mode" org-transclusion-indent-mode)
+        (const :tag "indent-mode: Support org-indent-mode"org-transclusion-indent-mode)
         (repeat :tag "Other packages" :inline t (symbol :tag "Package"))))
 
 (defcustom org-transclusion-add-all-on-activate t
@@ -450,23 +450,23 @@ does not support all the elements.
                    "No content found with \"%s\".  Check the link at point %d, line %d"
                    (org-element-property :raw-link link) (point) (org-current-line))
                   nil))
-	(let ((beg (point))
-	      (end))
+        (let ((beg (point))
+              (end))
           (org-transclusion-with-silent-modifications
             (when (save-excursion
                     (end-of-line) (insert-char ?\n)
-		    (org-transclusion-content-insert
-		     keyword-plist tc-type src-content
-		     src-buf src-beg src-end)
+                    (org-transclusion-content-insert
+                     keyword-plist tc-type src-content
+                     src-buf src-beg src-end)
                     (unless (eobp) (delete-char 1))
-		    (setq end (point))
+                    (setq end (point))
                     t)
               ;; `org-transclusion-keyword-remove' checks element at point is a
               ;; keyword or not
               (org-transclusion-keyword-remove)))
-	  (when (and (featurep 'org-indent) org-indent-mode
-		     (memq 'org-transclusion-indent-mode org-transclusion-extensions))
-	    (org-translusion-indent-add-properties beg end)))
+          (when (and (featurep 'org-indent) org-indent-mode
+                     (memq 'org-transclusion-indent-mode org-transclusion-extensions))
+            (org-translusion-indent-add-properties beg end)))
         t))))
 
 ;;;###autoload
@@ -540,9 +540,10 @@ When success, return the beginning point of the keyword re-inserted."
             (when mkr-at-beg (move-marker mkr-at-beg beg))
             ;; Go back to the beginning of the inserted keyword line
             (goto-char beg)
-	    (when (and (featurep 'org-indent) org-indent-mode
-		       (memq 'org-transclusion-indent-mode org-transclusion-extensions))
-	      (org-translusion-indent-add-properties beg (line-end-position))))
+            (when (and (featurep 'org-indent) org-indent-mode
+                       (memq 'org-transclusion-indent-mode
+                             org-transclusion-extensions))
+              (org-translusion-indent-add-properties beg (line-end-position))))
           beg))
     (message "Nothing done. No transclusion exists here.") nil))
 
@@ -614,11 +615,13 @@ remain in the source buffer for further editing."
          (buf (current-buffer))
          (pos (point)))
     (if (not src-buf)
-        (user-error (format "No paired source buffer found here: at %d" (point)))
+        (user-error
+         (format "No paired source buffer found here: at %d" (point)))
       (unwind-protect
           (progn
-            (when (display-buffer src-buf
-                                  org-transclusion-open-source-display-action-list)
+            (when (display-buffer
+                   src-buf
+                   org-transclusion-open-source-display-action-list)
               (pop-to-buffer src-buf)
               (goto-char src-mkr)
               (recenter-top-bottom)))
@@ -678,8 +681,10 @@ a couple of org-transclusion specific keybindings; namely:
       (if (not (= (- (overlay-end tc-ov) (overlay-start tc-ov))
                   (- (overlay-end src-ov) (overlay-start src-ov))))
           (progn
-            (user-error (concat "No live-sync can be started.  "
-                                "Lengths of transclusion and source are not identical"))
+            (user-error
+             (concat
+              "No live-sync can be started.  "
+              "Lengths of transclusion and source are not identical"))
             nil) ; return nil
         (org-transclusion-live-sync-modify-overlays
          (text-clone-set-overlays src-ov tc-ov))
@@ -715,7 +720,7 @@ This is meant to be used within live-sync overlay as part of
   (interactive)
   (insert-and-inherit (current-kill 0)))
 
-;;;;-----------------------------------------------------------------------------
+;;;;---------------------------------------------------------------------------
 ;;;; Private Functions
 ;;;; Functions for Activate / Deactiveate / save-buffer hooks
 
@@ -760,7 +765,7 @@ temporarily turned off (removed)."
   (set-buffer-modified-p t)
   (save-buffer))
 
-;;;;-----------------------------------------------------------------------------
+;;;;---------------------------------------------------------------------------
 ;;;; Functions for Transclude Keyword
 
 (defun org-transclusion-keyword-string-to-plist ()
@@ -768,7 +773,8 @@ temporarily turned off (removed)."
   (save-excursion
     (beginning-of-line)
     (let ((plist))
-      (when (string= "TRANSCLUDE" (org-element-property :key (org-element-at-point)))
+      (when (string= "TRANSCLUDE"
+                     (org-element-property :key (org-element-at-point)))
         ;; #+transclude: keyword exists.
         ;; Further checking the value
         (when-let ((str (org-element-property :value (org-element-at-point))))

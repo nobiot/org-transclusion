@@ -23,7 +23,7 @@
   "Add font-lock function to Org's hook.
 The hook is `org-font-lock-set-keywords-hook'."
   (add-to-list 'org-font-lock-extra-keywords
-	       '(org-transclusion-fontify-meta-lines-and-blocks) 'append))
+               '(org-transclusion-fontify-meta-lines-and-blocks) 'append))
 
 (defun org-transclusion-fontify-meta-lines-and-blocks (limit)
   "Override Org's font-lock for #+transclude keyword.
@@ -36,8 +36,8 @@ This function does the following:
 Argument LIMIT is to limit scope of `re-search-forward'; it's the
 same with `org-fontify-meta-lines-and-blocks'."
   (let ((case-fold-search t)
-	(regexp "\\(^[ 	]*#\\+TRANSCLUDE:\\)\\(.*]]\\)?\\(.*$\\)")
-	(beg)(end)(keyword-end)(prop-beg)(prop-end))
+        (regexp "\\(^[ 	]*#\\+TRANSCLUDE:\\)\\(.*]]\\)?\\(.*$\\)")
+        (beg)(end)(keyword-end)(prop-beg)(prop-end))
     (when (re-search-forward regexp limit t)
       (setq beg (match-beginning 0))
       (setq end (match-end 0))
@@ -45,16 +45,16 @@ same with `org-fontify-meta-lines-and-blocks'."
       (setq prop-beg (match-beginning 3))
       (setq prop-end (match-end 3))
       (remove-text-properties beg end
-			      '(font-lock-fontified t face org-meta-line))
+                              '(font-lock-fontified t face org-meta-line))
       (add-text-properties beg keyword-end
-			   '(font-lock-fontified t
-			     face org-transclusion-keyword))
+                           '(font-lock-fontified t
+                                                 face org-transclusion-keyword))
       (add-text-properties prop-beg prop-end
-			   '(font-lock-fontified t
-			     face org-meta-line))
+                           '(font-lock-fontified t
+                                                 face org-meta-line))
       (save-excursion
-	(goto-char beg)
-	(org-activate-links end)))))
+        (goto-char beg)
+        (org-activate-links end)))))
 
 (provide 'org-transclusion-font-lock)
 
