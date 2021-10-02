@@ -761,9 +761,9 @@ also flags the buffer modified and `save-buffer'.  Calling
 ensures the clearing process to occur.  This is reqiured because
 during live-sync, some hooks that manage the clearing process are
 temporarily turned off (removed)."
-  (org-transclusion-remove-all)
-  (set-buffer-modified-p t)
-  (save-buffer))
+  (when (org-transclusion-remove-all)
+    (set-buffer-modified-p t)
+    (save-buffer)))
 
 ;;;;---------------------------------------------------------------------------
 ;;;; Functions for Transclude Keyword
