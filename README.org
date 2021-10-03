@@ -411,7 +411,7 @@ Example 2: This transcludes only the single line that contains the line found by
 
 ** Extensions - Support =org-indent-mode=
 :PROPERTIES:
-:CUSTOM_ID: support-org-indent-mode
+:CUSTOM_ID: extensions---support-org-indent-mode
 :END:
 
 Org-transclusion provides a simple extension framework, where you can use =customize= to selectively add new features. Currently there are two extensions provided. Support for =org-indent-mode= is an extension, which is inactive by default.
@@ -564,7 +564,7 @@ Note this section is still incomplete, far from being exhaustive for "known" lim
 
 - =org-indent-mode= may not work well with Org-transclusion ::
   A new extension has been added to support =org-indent-mode=
-  Refer to [[support-org-indent-mode][this section]].
+  Refer to [[extensions---support-org-indent-mode][this section]].
 
 - Doom's customization may interfere with Org-transclusion ::
    Refer to [[https://github.com/nobiot/org-transclusion/issues/52][this issue]]. The symptom is that in your Doom and you get an error message that includes this: "progn: ‘recenter’ing a window that does not display current-buffer." Adding this in your configuration has been reported to fix the issue:
