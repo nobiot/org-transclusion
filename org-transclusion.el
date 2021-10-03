@@ -757,10 +757,10 @@ set in `before-save-hook'.  It also move the point back to
 Intended to be used with `kill-buffer-hook' and `kill-emacs-hook'
 to clear the file of the transcluded text regions.  This function
 also flags the buffer modified and `save-buffer'.  Calling
-`save-buffer' after remove-all and live-sync has been existed
-ensures the clearing process to occur.  This is reqiured because
-during live-sync, some hooks that manage the clearing process are
-temporarily turned off (removed)."
+`save-buffer' after remove-all and live-sync ensures the clearing
+process to occur.  This is reqiured because during live-sync,
+some hooks that manage the clearing process are temporarily
+turned off (removed)."
   (when (org-transclusion-remove-all)
     (set-buffer-modified-p t)
     (save-buffer)))
