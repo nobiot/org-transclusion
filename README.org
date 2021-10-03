@@ -4,18 +4,6 @@
 
 # Note: I use the readme template that alphapapa shares on his GitHub repo <https://github.com/alphapapa/emacs-package-dev-handbook#template>. It works with the org-make-toc <https://github.com/alphapapa/org-make-toc> package, which automatically updates the table of contents.
 
-⚠⚠⚠
-
-*NOTICE*: Please refer to notice [[https://github.com/nobiot/org-transclusion/issues/81][(issue 81)]] on the changes and new features that have been introduced with v0.2.0 as of 12 June 2021 -- it includes information on breaking changes (minor) and how you can adjust your Emacs to them if applicable to you.
-
-README below has also been updated to reflect these changes; new users can ignore the notice.
-
-[[https://youtu.be/idlFzWeygwA][A video demo on v0.2.0 on YouTube]] is available for a quick rundown of the changes and new features.
-
-A new [[https://youtu.be/ueaPiA622wA][video demo on v0.2.1]] on YouTube is available demonstrating new features to transclude a source file into a src-block and function to specify a range of text/source lines
-
-⚠⚠⚠
-
 [[https://en.wikipedia.org/wiki/Transclusion][Transclusion]] is the ability to include content from one file into another by reference. Org-transclusion is an Org Mode version of it. It lets you insert a copy of text content via a file link or ID link within an Org file. It is my take on the [[#original-idea-by-john-kitchin][idea by John Kitchin]].
 
 When I start writing a long-form material, I want to begin with looking through my notes and assemble relevant ones to form a basis of the first draft quickly. As I organise my notes in a repository, I also want to avoid having multiple copies of notes flying around.
@@ -93,7 +81,7 @@ Download or clone this repo, put all the =.el= files in it into your load-path, 
     (define-key global-map (kbd "C-n t") #'org-transclusion-mode))
 #+END_SRC
 
-It is important tha:cot you get all the =.el= files ready, not just =org-transclusion.el=. As at the time of this writing, the live-sync feature is contained in =text-clone.el= (also available in this repo) and some new features and extensions are made available as separate =.el= files. You will need to have all the =.el= files to use Org-transclusion as a package.
+It is important that you get all the =.el= files ready, not just =org-transclusion.el=. As at the time of this writing, the live-sync feature is contained in =text-clone.el= (also available in this repo) and some new features and extensions are made available as separate =.el= files. You will need to have all the =.el= files to use Org-transclusion as a package.
 
 If you use Doom and packages such as Straight, etc. to install files from GitHub repositories, you can do something like this below (it's an example using Doom's =package!= macro).
 
@@ -182,7 +170,7 @@ C-c C-c         org-ctrl-c-ctrl-c
 
 #+end_example
 
-This should get you started with Org-transclusion. There are more options and cusutomizing options available for you to fine-tune the text contents you transclude. More about them in README below.
+This should get you started with Org-transclusion. There are more options and customizing options available for you to fine-tune the text contents you transclude. More about them in README below.
 
 As your next step, I recommend the section on [[#filtering-org-elements-per-transclusion][filtering Org elements per transclusion]], which shows features that give you the power to control what part of the source to transclude in the way you like and let you experiment on the fly.
 
@@ -333,7 +321,7 @@ If you are transcluding only one subtree, this should be intuitive. If you trans
 
 If you have other windows open, they will be temporarily hidden -- Org-transclusion will remembers your current window layout and attempts to recover it when you exit live-sync edit.
 
-In the live-sync edit region, you can freely type to edit the tranclusion or source regions; they will sync simultaneously.
+In the live-sync edit region, you can freely type to edit the transclusion or source regions; they will sync simultaneously.
 
 Once done with editing, press =C-c C-c= to exit live-sync edit. The key is bound to =org-transclusion-live-sync-exit=. It will turn off the live sync edit but keep the transclusion on.
 
@@ -422,10 +410,13 @@ Example 2: This transcludes only the single line that contains the line found by
 #+end_example
 
 ** Extensions - Support =org-indent-mode=
+:PROPERTIES:
+:CUSTOM_ID: support-org-indent-mode
+:END:
 
 Org-transclusion provides a simple extension framework, where you can use =customize= to selectively add new features. Currently there are two extensions provided. Support for =org-indent-mode= is an extension, which is inactive by default.
 
-- (on by defaul) org-transclusion-src-lines :: Add features for =:src= and =:lines= properties to #+transclude
+- (on by default) org-transclusion-src-lines :: Add features for =:src= and =:lines= properties to #+transclude
 - (off by default) org-transclusion-indent-mode :: Support org-indent-mode
 
 [[file:resources/2021-09-05T164930.png]]
@@ -522,7 +513,7 @@ Here is an example image from [[https://github.com/nobiot/org-transclusion/issue
 
 [[https://user-images.githubusercontent.com/12507865/118443158-de6a2480-b6eb-11eb-81d0-a2778ed5f779.png]]
 
-To customize a face, it's probably the easiest to use =M-x customze-face=. If you want to use Elisp for some reason (e.g. on Doom), something like this below should set faces. Experiment with the colors of your choice. By default, the faces above have no values.
+To customize a face, it's probably the easiest to use =M-x customize-face=. If you want to use Elisp for some reason (e.g. on Doom), something like this below should set faces. Experiment with the colors of your choice. By default, the faces above have no values.
 
 #+begin_src elisp
   (set-face-attribute
@@ -572,7 +563,8 @@ Note this section is still incomplete, far from being exhaustive for "known" lim
   Work is in progress to lift this limitation but I'm still experimenting different ideas.
 
 - =org-indent-mode= may not work well with Org-transclusion ::
-  It should not break anything, but both packages uses =line-prefix= and =wrap-prefix= text-properties for modifying the visual appearance of text. =org-indent-mode= uses them to make the text's indententation appears aligned; Org-transclusion uses them for the fringes to indicate transclusion and source regions. 
+  A new extension has been added to support =org-indent-mode=
+  Refer to [[support-org-indent-mode][this section]].
 
 - Doom's customization may interfere with Org-transclusion ::
    Refer to [[https://github.com/nobiot/org-transclusion/issues/52][this issue]]. The symptom is that in your Doom and you get an error message that includes this: "progn: ‘recenter’ing a window that does not display current-buffer." Adding this in your configuration has been reported to fix the issue:
@@ -596,7 +588,7 @@ Main features and changes only.
 ** 0.2.2
 - New Features ::
   - #+transclude font-lock and new face =org-transclusion-keyword=
-  - Selective extentions with =org-transclusion-extensions=
+  - Selective extensions with =org-transclusion-extensions=
   - (optional extension) Support for org-indent
 - Fix ::
   - fix: #93 open-source error "Live sync cannot start here"
@@ -625,14 +617,14 @@ Main features and changes only.
   - 765d8ee * add :disable-auto
   - afd6d80 * add: :only-contents
   - cbb1c25 * add: apply :level to buffer with first section ::
-    Fix #47 The firsrt section itself does not get influenced by :level property.  The first headline, when present, is treated as the first headline, thus :exclude-element "headline" affets its sub-headlines; this means that the content of the first headline is transcluded even when with "headline" in the list of excluded elements.
+    Fix #47 The first section itself does not get influenced by :level property.  The first headline, when present, is treated as the first headline, thus :exclude-element "headline" affects its sub-headlines; this means that the content of the first headline is transcluded even when with "headline" in the list of excluded elements.
 
 ** 0.1.2 
 - e08df47 * add: live-sync for non-Org text file ::
   So far Non-Org text files could be transcluded but live-sync was not available. This version enables live-sync for them. Only for the whole file at the moment (ability to specify parts of a text file is considered)
 
 - a576b34 * add: text-clone library (rename) ::
-  Live-sync features are now factored out into =text-clone= as a standalone liberary (available with =text-clone.el= also included in this repo). Refactored so that  =org-transclusion= uses (and requires)  =text-clone=.
+  Live-sync features are now factored out into =text-clone= as a standalone library (available with =text-clone.el= also included in this repo). Refactored so that  =org-transclusion= uses (and requires)  =text-clone=.
   
 ** 0.1.1
 - 49f03b1 * feat: current-indentation ::
@@ -642,7 +634,7 @@ Main features and changes only.
   Instead of blindly deactivate and activate all transclusions with t flag, this variable is meant to provide mechanism to deactivate/activate only the transclusions currently in effect to copy a text content.
   
 - 64fd182 * add: remove live-sync overlays when deleted ::
-  Closes issue [[https://github.com/nobiot/org-transclusion/issues/8][#8]]  Adding a mechanism to remove both of the live-sync overlays (transclusion and source) when transclusion is completedly deleted. This solves the problem of a source overlay to be orphaned in such cases.
+  Closes issue [[https://github.com/nobiot/org-transclusion/issues/8][#8]]  Adding a mechanism to remove both of the live-sync overlays (transclusion and source) when transclusion is completely deleted. This solves the problem of a source overlay to be orphaned in such cases.
   
 ** 0.1.0
 As described in this version.
@@ -675,7 +667,7 @@ It seems like this could work well for headlines, and named tables, src blocks, 
 #+end_quote
 
 ** Text-Clone
-=text-clone.el= is an extention of text-clone functions written as part of GNU Emacs in =subr.el=.  The first adaption to extend text-clone functions to work across buffers was published in StackExchange by the user named Tobias in March 2020. It can be found at https://emacs.stackexchange.com/questions/56201/is-there-an-emacs-package-which-can-mirror-a-region/56202#56202. The text-clone library takes this line of work further.
+=text-clone.el= is an extension of text-clone functions written as part of GNU Emacs in =subr.el=.  The first adaption to extend text-clone functions to work across buffers was published in StackExchange by the user named Tobias in March 2020. It can be found at https://emacs.stackexchange.com/questions/56201/is-there-an-emacs-package-which-can-mirror-a-region/56202#56202. The text-clone library takes this line of work further.
 
 * Development
 
