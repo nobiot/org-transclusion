@@ -519,8 +519,11 @@ When success, return the beginning point of the keyword re-inserted."
         (let ((mkr-at-beg
                ;; Check the points to look at exist in buffer.  Then look for
                ;; adjacent transclusions' markers if any.
-               (when (>= (1- beg)(point-min))
-                 (get-text-property (1- beg) 'org-transclusion-end-mkr))))
+               (let ((prev-end (get-text-property (1- beg) 'org-transclusion-end-mkr)))
+                 (when (and (>= (1- beg) (point-min))
+                            prev-end
+                            (< prev-end (point)))
+                   prev-end))))
           ;; If within live-sync, exit.  It's not absolutely
           ;; required. delete-region below will evaporate the live-sync
           ;; overlay, and text-clone's post-command correctly handles the
@@ -532,7 +535,7 @@ When success, return the beginning point of the keyword re-inserted."
             (save-excursion
               (delete-region beg end)
               (when (> indent 0) (indent-to indent))
-              (insert-before-markers keyword))
+              (insert-before-markers-and-inherit keyword))
             ;; Move markers of adjacent transclusions if any to their original
             ;; potisions.  Some markers move if two transclusions are placed
             ;; without any blank lines, and either of beg and end markers will
