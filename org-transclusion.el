@@ -517,7 +517,7 @@ When success, return the beginning point of the keyword re-inserted."
         ;; if any.  If their positions differ after insert, move them back
         ;; beg or end
         (let* ((prev-end (get-text-property (1- beg) 'org-transclusion-end-mkr))
-               (is-nested (and prev-end (< prev-end beg)))
+               (is-nested (and prev-end (> prev-end beg)))
                (mkr-at-beg
                ;; Check the points to look at exist in buffer.  Then look for
                ;; adjacent transclusions' markers if any.
