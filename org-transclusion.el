@@ -423,10 +423,7 @@ does not support all the elements.
 
 \\{org-transclusion-map}"
   (interactive)
-  (if (let ((elm (org-element-at-point)))
-        (not (and (string= "keyword" (org-element-type elm))
-                  (string= "TRANSCLUDE" (org-element-property :key elm)))))
-      (user-error "Not at a transclude keyword")
+  (when (org-transclusion-check-add)
     ;; Turn on the minor mode to load extensions before staring to add.
     (unless org-transclusion-mode
       (let ((org-transclusion-add-all-on-activate nil))
@@ -1291,6 +1288,26 @@ The latter form of extension ending with .gpg means it is an encrypted org file.
 It is like `org-not-nil', but when the V is non-nil or not
 string \"nil\", return symbol t."
   (when (org-not-nil v) t))
+
+(defun org-transclusion-check-add ()
+  "Return t if `org-transclusion-add' should work on the point.
+Error if transclusion is not allowed.
+
+Currently the following cases are prevented:
+
+Case 1. Element at point is NOT #+transclude:
+Case 2. #+transclude inside another transclusion"
+  (cond
+   ;; Case 1. Element at point is NOT #+transclude:
+   ((let ((elm (org-element-at-point)))
+       (not (and (string= "keyword" (org-element-type elm))
+		 (string= "TRANSCLUDE" (org-element-property :key elm)))))
+    (user-error "Not at a transclude keyword"))
+   ;; Case 2. #+transclude inside another transclusion
+   ((org-transclusion-within-transclusion-p)
+    (user-error "Cannot transclude in another transclusion"))
+   (t
+    t)))
 
 (defun org-transclusion-within-transclusion-p ()
   "Return t if the current point is within a tranclusion region."
