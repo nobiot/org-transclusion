@@ -758,7 +758,12 @@ also flags the buffer modified and `save-buffer'.  Calling
 process to occur.  This is reqiured because during live-sync,
 some hooks that manage the clearing process are temporarily
 turned off (removed)."
-  (when (org-transclusion-remove-all)
+  ;; Remove transclusions first. To deal with an edge case where transclusions
+  ;; were added for a capture buffer -- e.g. `org-capture' or `org-roam-catpure'
+  ;; --, check is done for `buffer-file-name' to see if there is a file visited
+  ;; by the buffer. If a "temp" buffer, there is no file being visited.
+  (when (and (org-transclusion-remove-all)
+	     (buffer-file-name))
     (set-buffer-modified-p t)
     (save-buffer)))
 
@@ -1163,10 +1168,18 @@ etc.)."
           (setq obj (org-element-map obj org-element-all-elements
                       #'org-transclusion-content-filter-org-only-contents
                       nil nil '(section) nil)))
+	
+	(setq obj (org-element-map obj '(comment-block paragraph)
+                    #'test-filter-add-prop))
+	
         (list :src-content (org-element-interpret-data obj)
               :src-buf (current-buffer)
               :src-beg (point-min)
               :src-end (point-max))))))
+
+(defun test-filter-add-prop (data)
+  "Add origin prop to every element"
+    (org-element-put-property data :origin "origin"))
 
 (defun org-transclusion-content-filter-org-exclude-elements (data)
   "Exclude specific elements from DATA.
