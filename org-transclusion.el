@@ -1169,17 +1169,10 @@ etc.)."
                       #'org-transclusion-content-filter-org-only-contents
                       nil nil '(section) nil)))
 	
-	(setq obj (org-element-map obj '(comment-block paragraph)
-                    #'test-filter-add-prop))
-	
         (list :src-content (org-element-interpret-data obj)
               :src-buf (current-buffer)
               :src-beg (point-min)
               :src-end (point-max))))))
-
-(defun test-filter-add-prop (data)
-  "Add origin prop to every element"
-    (org-element-put-property data :origin "origin"))
 
 (defun org-transclusion-content-filter-org-exclude-elements (data)
   "Exclude specific elements from DATA.
