@@ -585,6 +585,12 @@ Note this section is still incomplete, far from being exhaustive for "known" lim
 :END:
 Main features and changes only.
 
+** Current
+- Fix ::
+  - =org-transclusion-before-kill= now checks if the buffer to be killed
+    contains any transclusion AND it is visting a file before saving. This
+    fixes some issues related to temp buffers, etc.
+
 ** 0.2.2
 - New Features ::
   - #+transclude font-lock and new face =org-transclusion-keyword=
