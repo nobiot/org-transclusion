@@ -257,7 +257,7 @@ The following two customizable variables are applicable to all transclusions glo
   Refer also to the [[#customizable-filter-to-exclude-certain-org-elements][sub-section on this user option]]. 
   
 - =org-transclusion-include-first-section= ::
-  This customizing variable globally defines whether or not to include the first section of the source Org file. The first section is the part before the first headline -- that's the section that typically contains =#+title=, =#+author=, and so on. Many people also write notes in it without adding any headlines. Note that this user option is by default set to =nil= -- not to include the first section. Turn it to =t= if you wish to transclude the content from the first section of your Org files. If you wish to exclude the "meta data" defined by =#+title= and others, exclude =keyword= as described in this section -- these meta data are defined with using the =keyword= element of Org Mode.
+  This customizing variable globally defines whether or not to include the first section of the source Org file. The first section is the part before the first headline -- that's the section that typically contains =#+title=, =#+author=, and so on. Many people also write notes in it without adding any headlines. Note that this user option's default is now =t= (changed from =nil= as users seem to spend time to "correct" this issue). Turn it to =t= if you wish to transclude the content from the first section of your Org files. If you wish to exclude the "meta data" defined by =#+title= and others, exclude =keyword= as described in this section -- these meta data are defined with using the =keyword= element of Org Mode.
   
   Refer also to the [[#include-the-section-before-the-first-headline-org-file-only][sub-section on this user option]]. 
 
@@ -494,7 +494,7 @@ You can also fine-tune the exclusion filter per transclusion. Refer to the sub-s
 :CUSTOM_ID: include-the-section-before-the-first-headline-org-file-only
 :END:
 
-You can include the first section (section before the first headline) of an Org file. It is toggled via customizable variable =org-transclusion-include-first-section=. Its default value is =nil=. Set it to =t= (or non-nil) to transclude the first section. It also works when the first section is followed by headlines.
+You can include the first section (section before the first headline) of an Org file. It is toggled via customizable variable =org-transclusion-include-first-section=. Its default value is =t=. Set it to =t= (or non-nil) to transclude the first section. It also works when the first section is followed by headlines.
 
 ** Faces & fringe bitmap
 
@@ -586,6 +586,9 @@ Note this section is still incomplete, far from being exhaustive for "known" lim
 Main features and changes only.
 
 ** Current
+- Change ::
+  - Now user option =org-transclusion-include-first-section='s default value
+    is changed to =t=. This seems to be more intuitive for more users
 - Fix ::
   - =org-transclusion-before-kill= now checks if the buffer to be killed
     contains any transclusion AND it is visting a file before saving. This

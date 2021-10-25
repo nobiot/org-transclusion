@@ -91,10 +91,10 @@ Refer to variable `org-element-all-elements' for names of elements accepted."
   :type '(repeat symbol)
   :group 'org-transclusion)
 
-(defcustom org-transclusion-include-first-section nil
+(defcustom org-transclusion-include-first-section t
   "Define whether or not transclusion for Org files includes \"first section\".
 If t, the section before the first headline is
-transcluded. Default is nil."
+transcluded. Default is t."
   :type 'boolean
   :group 'org-transclusion)
 
