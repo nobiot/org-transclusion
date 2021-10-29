@@ -214,6 +214,8 @@ Transclusion has been tested to work for the following types of links:
 - ID link =id:uuid=
 - File link for non-org files (tested with =.txt= and =.md=); for these, the whole buffer gets transcluded
 
+Note search-options =::/regex/= and =::number= do not work as intentended.
+
 For transcluding a specific paragraph, there are two main ways: Org Mode's [[https://orgmode.org/manual/Internal-Links.html#Internal-Links][dedicated-target]] and =:only-contents= property.
 
 For dedicated targets, the target paragraph must be identifiable by a dedicated target with a =<<paragraph-id>>=: 
@@ -409,6 +411,8 @@ Example 2: This transcludes only the single line that contains the line found by
 #+transclude: [[file:../../test/test.txt::Transcendental Ontology]] :lines 1-1
 #+end_example
 
+Note search-options =::/regex/= and =::number= do not work as intended.
+
 ** Extensions - Support =org-indent-mode=
 :PROPERTIES:
 :CUSTOM_ID: extensions---support-org-indent-mode
@@ -540,7 +544,6 @@ I do not know if bitmap can be customizable after it's been defined (TBC).
 - =org-transclusion-live-sync-map=
 
 * Tips
-
 ** Moving from 0.0.x to 0.1.x
 GitHub user @lytex has provided a [[https://github.com/lytex/doom.d/blob/3e48c37f6e6beadf69b57e803d6d2c282aee353d/utils/org-transclusion.sh][bash script]] that converts old syntax to the new one [[https://github.com/nobiot/org-transclusion/issues/71#issuecomment-846618510][in this issue]]. Thank you.
 
@@ -550,6 +553,8 @@ I've made a bash one-liner to migrate from the old syntax to the new one (manage
 
 * Known Limitations
 Note this section is still incomplete, far from being exhaustive for "known" limitations.
+
+- Org link's search-options =::/regex/= and =::number= do not work as intended.
 
 - =org-transclusion-live-sync-start= does not support all Org elements ::
   For transclusions of Org elements or buffers, live-sync works only on the following elements:
