@@ -49,7 +49,9 @@ Return nil if PLIST does not contain \":src\" or \":lines\" properties."
     (append '(:tc-type "src")
             (org-transclusion-content-src-lines link plist)))
    ;; :lines needs to be the last condition to check because :src INCLUDE :lines
-   ((or (plist-get plist :lines) (plist-get plist :end))
+   ((or (plist-get plist :lines)
+	(plist-get plist :end)
+	(org-element-property :search-option link))
     (append '(:tc-type "lines")
             (org-transclusion-content-range-of-lines link plist)))))
 
@@ -85,33 +87,43 @@ it means from line 10 to the end of file."
          (let* ((start-pos (or (when search-option
                                  (save-excursion
                                    (ignore-errors
-                                     (org-link-search search-option)
-                                     (line-beginning-position))))
+				     ;; FIXME `org-link-search' does not return
+				     ;; postion when ::/regex/ and ;;number are
+				     ;; used
+                                     (if (org-link-search search-option)
+					 (line-beginning-position)))))
                                (point-min)))
 		(end-pos (when end-search-op
                            (save-excursion
-                                   (ignore-errors
-                                     (org-link-search end-search-op)
-                                     (line-beginning-position)))))
-                (range (when lines (split-string lines "-")))
-                (lbeg (if range (string-to-number (car range))
-                        0))
+                             (ignore-errors
+			       ;; FIXME `org-link-search' does not return
+			       ;; postion when ::/regex/ and ;;number are
+			       ;; used
+                               (when (org-link-search end-search-op)
+                                 (line-beginning-position))))))
+		(range (when lines (split-string lines "-")))
+		(lbeg (if range (string-to-number (car range))
+			0))
 		(lend (if range (string-to-number (cadr range))
-                        0))	
-                (beg (if (zerop lbeg) (point-min)
-                       (goto-char start-pos)
-                       (forward-line (1- lbeg))
-                       (point)))
-                (end (cond
-		      ((when (and end-pos (> end-pos start-pos))
+			0))
+		;; This means beginning part of the range
+		;; can be mixed with search-option
+		;;; only positive number works
+		(beg  (progn (goto-char (or start-pos (point-min)))
+			     (when (> lbeg 0)(forward-line (1- lbeg)))
+			     (point)))
+		;;; This `cond' means :end prop has priority over the end
+		;;; position of the range. They don't mix.
+		(end (cond
+		      ((when (and end-pos (> end-pos beg))
 			 end-pos))
 		      ((if (zerop lend) (point-max)
-			 (goto-char start-pos)
+			 (goto-char beg)
 			 (forward-line (1- lend))
 			 (end-of-line);; include the line
 			 ;; Ensure to include the \n into the end point
 			 (1+ (point))))))
-                (content (buffer-substring-no-properties beg end)))
+		(content (buffer-substring-no-properties beg end)))
            (list :src-content content
                  :src-buf (current-buffer)
                  :src-beg beg
