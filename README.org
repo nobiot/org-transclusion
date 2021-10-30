@@ -214,6 +214,8 @@ Transclusion has been tested to work for the following types of links:
 - ID link =id:uuid=
 - File link for non-org files (tested with =.txt= and =.md=); for these, the whole buffer gets transcluded
 
+Note search-options =::/regex/= and =::number= do not work as intentended.
+
 For transcluding a specific paragraph, there are two main ways: Org Mode's [[https://orgmode.org/manual/Internal-Links.html#Internal-Links][dedicated-target]] and =:only-contents= property.
 
 For dedicated targets, the target paragraph must be identifiable by a dedicated target with a =<<paragraph-id>>=: 
@@ -382,6 +384,7 @@ The source block will have the additional properties:
 :CUSTOM_ID: transclude-range-of-lines-for-text-and-source-files
 :END:
 
+*** =:lines= property to specify a range of lines
 You can specify a range of lines to transclude from a source and text file. Use the =:lines= property like this.
 
 #+begin_example
@@ -396,7 +399,6 @@ One of the numbers can be omitted.  When the first number is omitted (e.g. -10),
 
 You can combine the =:lines= property with the =:src= property to transclude only a certain range of source files (Example 1 below).
 
-
 For Org's file links, you can use [[https://orgmode.org/manual/Search-Options.html][search options]] specified by the "::" (two colons) notation. When a search finds a line that includes the string, the Org-transclude counts it as the starting line 1 for the  =:lines= property. 
 
 Example 1: This transcludes the four lines of the source file from the line that contains string "id-1234" (including that line counted as line 1).
@@ -407,6 +409,21 @@ Example 1: This transcludes the four lines of the source file from the line that
 Example 2: This transcludes only the single line that contains the line found by the search option for text string "Transcendental Ontology"
 #+begin_example
 #+transclude: [[file:../../test/test.txt::Transcendental Ontology]] :lines 1-1
+#+end_example
+
+Note search-options =::/regex/= and =::number= do not work as intended.
+
+*** =:end= property to specify a search term to dynamically look for the end of a range
+
+You can add =:end= property and specify the search term as its value.  Surround the search term with double quotation marks (mandatory).
+
+See Example 3 below. This transclusion will look for =id-1234= as the beginning line of the range as specified by the search option =::id-1234= in the link. With the =:end= property, the search term =id-1234 end here= defines the end of the range. The search looks for =id-123 end here= in the body text, and use the line one before the one where the text is find (thus, the transcluded range will not contain =id-1234 end here=). 
+
+You can also combined =:lines= property with =:end= property.  It will only displace the beginning, and the end part of the range (the second number after the hyphen "-")  is ignored. In the same example, the beginning of the range is the one line after the line where "id-1234" is found; it's the "second line, or line 2".  Instead of transcluding until the end of the buffer, the end is defined by the =:end= property. 
+
+Example 3: 
+#+begin_example
+#+transclude: [[file:../../test/python-1.py::id-1234]] :lines 2- :src python :end "id-1234 end here"
 #+end_example
 
 ** Extensions - Support =org-indent-mode=
@@ -540,7 +557,6 @@ I do not know if bitmap can be customizable after it's been defined (TBC).
 - =org-transclusion-live-sync-map=
 
 * Tips
-
 ** Moving from 0.0.x to 0.1.x
 GitHub user @lytex has provided a [[https://github.com/lytex/doom.d/blob/3e48c37f6e6beadf69b57e803d6d2c282aee353d/utils/org-transclusion.sh][bash script]] that converts old syntax to the new one [[https://github.com/nobiot/org-transclusion/issues/71#issuecomment-846618510][in this issue]]. Thank you.
 
@@ -550,6 +566,8 @@ I've made a bash one-liner to migrate from the old syntax to the new one (manage
 
 * Known Limitations
 Note this section is still incomplete, far from being exhaustive for "known" limitations.
+
+- Org link's search-options =::/regex/= and =::number= do not work as intended.
 
 - =org-transclusion-live-sync-start= does not support all Org elements ::
   For transclusions of Org elements or buffers, live-sync works only on the following elements:
@@ -586,13 +604,20 @@ Note this section is still incomplete, far from being exhaustive for "known" lim
 Main features and changes only.
 
 ** Current
+
+- Feature ::
+  - : =:end= property and a search term to dynamically define a range of lines to transclude for text and
+    source code block
+
 - Change ::
   - Now user option =org-transclusion-include-first-section='s default value
     is changed to =t=. This seems to be more intuitive for more users
+    
 - Fix ::
   - =org-transclusion-before-kill= now checks if the buffer to be killed
     contains any transclusion AND it is visting a file before saving. This
     fixes some issues related to temp buffers, etc.
+- fix: search options for src-lines extension for =:lines=, =:src=, and =:end= properties
 
 ** 0.2.2
 - New Features ::
