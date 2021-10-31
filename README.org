@@ -142,7 +142,7 @@ Put your cursor somewhere on this keyword line and call =M-x org-transclusion-ad
 
 The transcluded text is *read-only* but you can copy it and export it as normal text. Org-transclusion remembers where it has transcluded the text from (its source buffer).  You can call a number of useful commands with a single letter (by default). 
 
-For example, you can press =o= to open the source buffer of the transclusion at point, or =O= (capital "o") to move to it. Press =r= to refresh the transclusion. Press =e= to start live-sync edit. For more detail, inspect the documentation of each command.
+For example, you can press =o= to open the source buffer of the transclusion at point, or =O= (capital "o") to move to it. Press =g= to refresh the transclusion. Press =e= to start live-sync edit. For more detail, inspect the documentation of each command.
 
 This single-letter-context-menu is defined in  =org-transclusion-map=. The default keybindings are shown below. Adapt them to your liking, especially if you use vim keybindings with Evil Mode, etc.
 
