@@ -118,7 +118,7 @@ it means from line 10 to the end of file."
 		      ((when (and end-pos (> end-pos beg))
 			 end-pos))
 		      ((if (zerop lend) (point-max)
-			 (goto-char beg)
+			 (goto-char start-pos)
 			 (forward-line (1- lend))
 			 (end-of-line);; include the line
 			 ;; Ensure to include the \n into the end point
