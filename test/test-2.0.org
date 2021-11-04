@@ -1,7 +1,7 @@
 * Regression
 ** make from link
 This is a link to a [[id:20210501T171427.051019][Bertrand Russell]] wikipedia excerpt
-#+transclude: [[id:20210501T171427.051019][Bertrand Russell]]
+#+transclude: [[id:fac76146-492c-4541-9540-91707b945f2c][Bertrand Russell]] 
 
 ** test empty file
 #+transclude: [[file:empty.txt::2][empty text file]]
@@ -31,6 +31,8 @@ t/nil will be dropped after remove-at-point
 
 
 #+transclude: [[file:./paragraph.org::para1]]
+
+#+transclude: [[file:./paragraph.org::para2]] 
 
 ** Table
 #+transclude: [[file:paragraph.org::table][Link to a table]]
