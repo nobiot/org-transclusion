@@ -1,6 +1,8 @@
 ;;; org-transclusion-src-lines.el --- Extension -*- lexical-binding: t; -*-
 
 ;;; Commentary:
+;;  This is an extension to `org-transclusion'.  When active, it adds features
+;;  for non-Org files such as program source and text files
 
 ;;; Code:
 
@@ -51,7 +53,10 @@ Return nil if PLIST does not contain \":src\" or \":lines\" properties."
    ;; :lines needs to be the last condition to check because :src INCLUDE :lines
    ((or (plist-get plist :lines)
 	(plist-get plist :end)
-	(org-element-property :search-option link))
+        ;; Link contains a search-option ::<string>
+        ;; and NOT for an Org file
+	(and (org-element-property :search-option link)
+             (not (org-transclusion-org-file-p (org-element-property :path link)))))
     (append '(:tc-type "lines")
             (org-transclusion-content-range-of-lines link plist)))))
 

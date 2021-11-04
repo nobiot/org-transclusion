@@ -1,0 +1,112 @@
+Including lines of source code
+
+[[file:../org-transclusion-source-line.el]]
+
+[[file:./paragraph.org::10]]
+
+[[file:./paragraph.org::/Lorem/]]
+
+#+transclude: [[file:../org-transclusion-src-lines.el]] :lines 1-10 :src elisp
+#+transclude: [[file:test-src.el]] :lines 1-
+#+transclude: [[file:test-src.el]] :lines 2-4 :src elisp
+
+#+transclude: [[file:python-2.py]]  :src python
+
+#+transclude: [[file:python-1.py]]  :src python :rest ":results file"
+
+#+RESULTS:
+[[file:pyfig.png]]
+
+You can use the Org file link's search option with adding "::". The =:lines= option considers the line that the search hits as the first line.
+
+#+transclude: [[file:test.txt::Transcendental Ontology]] :lines 1-1
+
+#+transclude: [[file:python-1.py::id-1234]]  :src python :end "id-1234 end here"
+
+#+transclude: [[file:python-1.py::id-1234]]  :src python
+
+"end here is present before id-1234"
+#+transclude: [[file:python-1.py::id-1234]] :lines 2- :src python :end "end here"
+
+#+transclude: [[file:python-1.py::id-1234]] :lines 2- :src python :end "id-1234 end here"
+
+#+transclude: [[file:python-1.py::id-1234]]  :end "id-1234 end here"
+
+#+transclude: [[file:test.txt::Markus Gabriel]] :lines 3-7
+
+#+transclude: [[file:test.txt]] :lines 3-7
+
+#+transclude: [[file:test.txt::/Transcendental Ontology/]]  :end "Idea"
+
+#+transclude: [[file:test.txt::Transcendental Ontology]] 
+
+This is the next paragraph.
+
+offset before and after 
+
+* src-blocks
+
+#+begin_src python :results file
+  import matplotlib
+  import matplotlib.pyplot as plt
+  fig=plt.figure(figsize=(9,6))
+  plt.plot([1,3,2])
+  fig.tight_layout()
+  fname = 'myfig.png'
+  plt.savefig(fname)
+  return fname # return this to org-mode
+#+end_src
+
+#+RESULTS:
+[[file:myfig.png]]
+
+#+begin_src python :results file
+import matplotlib, numpy
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+fig=plt.figure(figsize=(12,6))
+x=numpy.linspace(-15,15)
+plt.plot(numpy.sin(x)/x)
+fig.tight_layout()
+plt.savefig('python-matplot-fig.png')
+return 'python-matplot-fig.png' # return filename to org-mode
+#+end_src
+
+#+RESULTS:
+[[file:]]
+
+#+begin_src python
+  def foo(x):
+    if x>0:
+      return x+1
+
+    else:
+      return x-1
+
+  return foo(5)
+#+end_src
+
+#+RESULTS:
+: 6
+
+
+#+begin_src python :session :results value
+  import random
+  if random.randint(0,10) % 2 == 0:
+      ret = "even"
+  else:
+      ret = "odd"
+  ret
+#+end_src
+
+#+begin_src python :session :results value
+import random
+if random.randint(0,10) % 2 == 0:
+    ret = "even"
+else:
+    ret = "odd"
+ret
+#+end_src
+
+#+RESULTS:
+: even
