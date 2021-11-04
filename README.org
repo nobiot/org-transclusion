@@ -433,7 +433,7 @@ Example 3:
 
 Org-transclusion provides a simple extension framework, where you can use =customize= to selectively add new features. Currently there are two extensions provided. Support for =org-indent-mode= is an extension, which is inactive by default.
 
-- (on by default) org-transclusion-src-lines :: Add features for =:src= and =:lines= properties to #+transclude
+- (on by default) org-transclusion-src-lines :: Add features for =:src= and =:lines= properties to #+transclude. It is meant for non-Org files such as program source and text files
 - (off by default) org-transclusion-indent-mode :: Support org-indent-mode
 
 [[file:resources/2021-09-05T164930.png]]
