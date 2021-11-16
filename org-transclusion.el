@@ -1,15 +1,6 @@
 ;;; org-transclusion.el --- transclude text contents of linked target -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2020-21 Noboru Ota
-
-;; Author: Noboru Ota <me@nobiot.com>
-;; URL: https://github.com/nobiot/org-transclusion
-;; Keywords: org-mode, transclusion, writing
-
-;; Version: 0.2.2
-;; Package-Requires: ((emacs "27.1") (org "9.4"))
-
-;; This file is not part of GNU Emacs.
+;; Copyright (C) 2021  Free Software Foundation, Inc.
 
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the
@@ -23,6 +14,17 @@
 
 ;; You should have received a copy of the GNU General Public License along
 ;; with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;; Author: Noboru Ota <me@nobiot.com>
+;; Created: 2021
+
+;; URL: https://github.com/nobiot/org-transclusion
+;; Keywords: org-mode, transclusion, writing
+
+;; Version: 0.2.2
+;; Package-Requires: ((emacs "27.1") (org "9.4"))
+
+;; This file is not part of GNU Emacs.
 
 ;;; Commentary:
 
