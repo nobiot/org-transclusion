@@ -28,9 +28,9 @@
 (require 'org-element)
 (declare-function text-clone-make-overlay 'text-clone)
 (declare-function org-transclusion-live-sync-buffers-others-default
-                  'org-transclusion)
+                  "org-transclusion.el")
 (declare-function org-transclusion-org-file-p
-                  'org-transclusion)
+                  "org-transclusion.el")
 
 ;;;; Setting up the extension
 
