@@ -29,6 +29,8 @@
 (declare-function text-clone-make-overlay 'text-clone)
 (declare-function org-transclusion-live-sync-buffers-others-default
                   'org-transclusion)
+(declare-function org-transclusion-org-file-p
+                  'org-transclusion)
 
 ;;;; Setting up the extension
 
