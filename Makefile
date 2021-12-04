@@ -1,3 +1,4 @@
+
 clean:
 	find . -name "*.elc" -delete
 
@@ -11,3 +12,5 @@ test-compile:
 	                                     (byte-compile-file \"org-transclusion-indent-mode.el\"))"
 	emacs --quick --batch --eval "(progn (add-to-list 'load-path default-directory) \
 	                                     (byte-compile-file \"org-transclusion-src-lines.el\"))"
+	emacs --quick --batch --eval "(progn (add-to-list 'load-path default-directory) \
+	                                     (byte-compile-file \"org-transclusion-font-lock.el\"))"
