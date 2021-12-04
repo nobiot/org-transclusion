@@ -1355,9 +1355,9 @@ It is intended to be used for `org-transclusion-open-source' and
 
 This function relies on `org-transclusion-find-source-marker' to
 locate the position in the source buffer; thus, the same
-limitation applies. It depends on which org elements whether or
+limitation applies.  It depends on which org elements whether or
 not this function can identify the beginnning of the element at
-point. If it cannot, it will return the beginning of the
+point.  If it cannot, it will return the beginning of the
 transclusion, which can be far away from the element at point, if
 the transcluded region is large."
   (let* ((tc-elem (org-element-context))
