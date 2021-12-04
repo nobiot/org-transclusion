@@ -16,7 +16,8 @@
 ;; with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ;; Author: Noboru Ota <me@nobiot.com>
-;; Created: 2021
+;; Created: 22 August 2021
+;; Last modified: 4 December 2021
 
 ;;; Commentary:
 ;;  This file is part of Org-transclusion

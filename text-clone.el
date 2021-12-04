@@ -16,17 +16,17 @@
 ;; with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ;; Author: Noboru Ota <me@nobiot.com>
-;; Created: 2021
+;; Created: 22 May 2021
+;; Last modified: 4 December 2021
 
-;; URL: https://github.com/nobiot/org-transclusion
-;; Keywords: text-clone, transclusion
+;; Keywords: text-clone, transclusion, org-transclusion
 
-;; Version: 0.0.1
+;; Version: 1.0.0
 ;; Package-Requires: ((emacs "27.1"))
 
-;; This file is not part of GNU Emacs.
-
 ;;; Commentary:
+;;  This file is part of Org-transclusion
+;;  URL: https://github.com/nobiot/org-transclusion
 
 ;;;; Credits
 

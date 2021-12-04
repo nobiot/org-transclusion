@@ -16,7 +16,8 @@
 ;; with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ;; Author: Noboru Ota <me@nobiot.com>
-;; Created: 2021
+;; Created: 24 May 2021
+;; Last modified: 4 December 2021
 
 ;;; Commentary:
 ;;  This is an extension to `org-transclusion'.  When active, it adds features

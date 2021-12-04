@@ -16,12 +16,13 @@
 ;; with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ;; Author: Noboru Ota <me@nobiot.com>
-;; Created: 2021
+;; Created: 10 Oct 2020
+;; Last modified: 4 December 2021
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
 
-;; Version: 0.2.2
+;; Version: 1.0.0
 ;; Package-Requires: ((emacs "27.1") (org "9.4"))
 
 ;; This file is not part of GNU Emacs.
@@ -31,15 +32,6 @@
 ;; This library is an attempt to enable transclusion with Org Mode.
 ;; Transclusion is the ability to include content from one file into
 ;; another by reference.
-
-;; It is still VERY experimental.  As it modifies your files (notes), use
-;; it with care.  The author and contributors cannot be held responsible
-;; for loss of important work.
-
-;; Org-transclusion is a buffer-local minor mode.  It is suggested to set a
-;; keybinding like this to make it easy to toggle it:
-;;     (define-key global-map (kbd "<f12>") #'org-transclusion-add)
-;;     (define-key global-map (kbd "C-c n t") #'org-transclusion-mode)
 
 ;;; Code:
 
