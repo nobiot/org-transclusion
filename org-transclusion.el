@@ -45,6 +45,7 @@
 (require 'seq)
 (declare-function org-translusion-indent-add-properties
                   org-transclusion-indent-mode)
+(defvar org-indent-mode)
 
 ;;;; Customization
 
