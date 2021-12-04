@@ -44,7 +44,7 @@
 (require 'text-property-search)
 (require 'seq)
 (declare-function org-translusion-indent-add-properties
-                  "org-transclusion-indent-mode.el")
+                  "org-transclusion-indent-mode")
 (defvar org-indent-mode)
 
 ;;;; Customization

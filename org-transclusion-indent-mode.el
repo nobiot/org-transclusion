@@ -27,7 +27,7 @@
 
 (require 'org-indent)
 (declare-function org-transclusion-within-transclusion-p
-                  "org-transclusion.el")
+                  "org-transclusion")
 
 (defun org-translusion-indent-add-properties (beg end)
   "BEG END."
