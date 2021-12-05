@@ -25,7 +25,7 @@ I am dabbling in the [[https://writingcooperative.com/zettelkasten-how-one-germa
 
 - Recent videos ::
   + [[https://youtu.be/idlFzWeygwA][Video demo on v0.2.0 on YouTube]] featuring minor breaking changes and new transclusion filters
- 
+
 - Older videos ::
   + [[https://youtu.be/idlFzWeygwA][Video demo on v0.1.1 on YouTube]] featuring basic syntax and live-sync edit
 
@@ -96,7 +96,7 @@ If you use Doom and packages such as Straight, etc. to install files from GitHub
 
 For Doom, add =use-package!= to load the package by adding something like this in the code excerpt below in your =config.el=.
 
-As of v0.2.0, some commands are defined with =autoload=. This means that adding some properties such as =:defer= lets you lazy-load the =org-transclusion= package. Please consult Doom's documentation for further instruction (I don't use Doom, but I have lightly tested this snippet). There are other ways to configure Doom; also refer to comments in [[https://github.com/nobiot/org-transclusion/issues/79][issue #79]] (thank you, @Ma-Nu-El). 
+As of v0.2.0, some commands are defined with =autoload=. This means that adding some properties such as =:defer= lets you lazy-load the =org-transclusion= package. Please consult Doom's documentation for further instruction (I don't use Doom, but I have lightly tested this snippet). There are other ways to configure Doom; also refer to comments in [[https://github.com/nobiot/org-transclusion/issues/79][issue #79]] (thank you, @Ma-Nu-El).
 
 #+begin_src elisp
   ;; In ~/.doom.d/config.el
@@ -116,7 +116,7 @@ As of v0.2.0, some commands are defined with =autoload=. This means that adding 
 :CUSTOM_ID: getting-started
 :END:
 
-The basic idea of Org-transclusion is simple: insert a copy of text content via a file link or ID link within an Org file. This is an Org Mode version of [[https://en.wikipedia.org/wiki/Transclusion][transclusion]]. 
+The basic idea of Org-transclusion is simple: insert a copy of text content via a file link or ID link within an Org file. This is an Org Mode version of [[https://en.wikipedia.org/wiki/Transclusion][transclusion]].
 
 To transclude content via a reference, use one of the following commands:
 
@@ -140,7 +140,7 @@ Put your cursor somewhere on this keyword line and call =M-x org-transclusion-ad
 
 [[./resources/2021-05-09T190918.png]]
 
-The transcluded text is *read-only* but you can copy it and export it as normal text. Org-transclusion remembers where it has transcluded the text from (its source buffer).  You can call a number of useful commands with a single letter (by default). 
+The transcluded text is *read-only* but you can copy it and export it as normal text. Org-transclusion remembers where it has transcluded the text from (its source buffer).  You can call a number of useful commands with a single letter (by default).
 
 For example, you can press =o= to open the source buffer of the transclusion at point, or =O= (capital "o") to move to it. Press =g= to refresh the transclusion. Press =e= to start live-sync edit. For more detail, inspect the documentation of each command.
 
@@ -181,13 +181,13 @@ As your next step, I recommend the section on [[#filtering-org-elements-per-tran
 
 ** Org-transclusion mode, activate, and deactivate
 
-Org-transclusion is a local minor mode; however, you do not need to explicitly call =org-transclusion-mode=. The minor mode is intended to be just a convenient wrapper to let you easily toggle between =activate= and =deactivate=. 
+Org-transclusion is a local minor mode; however, you do not need to explicitly call =org-transclusion-mode=. The minor mode is intended to be just a convenient wrapper to let you easily toggle between =activate= and =deactivate=.
 
 As you saw in the [[#getting-started][Getting Started section]] above, calling =org-transclusion-add= or =org-transclusion-add-all= is enough to add transclusions in your current buffer.
 
-The minor mode is automatically turned on locally for your current buffer through one of these commands. All it does is to call =org-transclusion-activate=  to activate hooks and some other variables. Their main purpose is to keep files in the filesystem clear of the transcluded content. 
+The minor mode is automatically turned on locally for your current buffer through one of these commands. All it does is to call =org-transclusion-activate=  to activate hooks and some other variables. Their main purpose is to keep files in the filesystem clear of the transcluded content.
 
-Turn off the minor mode or use =org-transclusion-deactivate=; you will remove all the transclusions in the current buffer and clear the hooks and other setup variables. 
+Turn off the minor mode or use =org-transclusion-deactivate=; you will remove all the transclusions in the current buffer and clear the hooks and other setup variables.
 
 If you prefer, you can use =org-transclusion-mode= as your entry command for transclusion. When customizable variable =org-transclusion-add-all-on-activate= is non-nil (it is =t= by default), turning on the minor mode calls the =org-transclusion-add-all= command to attempt to add all transclusions automatically in the current buffer.
 
@@ -218,7 +218,7 @@ Note search-options =::/regex/= and =::number= do not work as intentended.
 
 For transcluding a specific paragraph, there are two main ways: Org Mode's [[https://orgmode.org/manual/Internal-Links.html#Internal-Links][dedicated-target]] and =:only-contents= property.
 
-For dedicated targets, the target paragraph must be identifiable by a dedicated target with a =<<paragraph-id>>=: 
+For dedicated targets, the target paragraph must be identifiable by a dedicated target with a =<<paragraph-id>>=:
 
 #+begin_example
 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
@@ -229,7 +229,7 @@ tincidunt quam. <<paragraph-id>>
 It is generally assumed that the =paragraph-id= is placed after its content, but it is not an absolute requirement; it can be in the beginning (before the content) or in the middle of it.
 
 For the =:only-contents= property, refer to sub-section [[#filtering-org-elements-per-transclusion][Filtering Org elements per transclusion]].
- 
+
 ** Controlling levels of headlines in transclusions
 
 You can specify a different level of transcluded headlines than that of the source Org file.
@@ -242,7 +242,7 @@ Use the =:level= property with a value of single digit number from 1 to 9 like t
 
 The top level of the transcluded headline will set to the value of =:level= property -- in this example, level 2 regardless of that in the source. When the headline contains sub-headlines, they will be all automatically promoted or demoted to align according to how many levels the top of the subtree will move.
 
-When you transclude an entire Org file, it may contain multiple subtrees. In such cases, the top-most level among the subtrees will be set according to the =:level= property; the rest of headlines in the buffer will align accordingly. 
+When you transclude an entire Org file, it may contain multiple subtrees. In such cases, the top-most level among the subtrees will be set according to the =:level= property; the rest of headlines in the buffer will align accordingly.
 
 ** Filtering Org elements per transclusion
 :PROPERTIES:
@@ -255,31 +255,31 @@ The following two customizable variables are applicable to all transclusions glo
 
 - =org-transclusion-exclude-elements= ::
   This customizable variable globally defines the exclusion filter for elements. It is a list of symbols; the acceptable values can be seen by inspecting =org-element-all-elements=. The default is to exclude =property-drawer=.
-  
-  Refer also to the [[#customizable-filter-to-exclude-certain-org-elements][sub-section on this user option]]. 
-  
+
+  Refer also to the [[#customizable-filter-to-exclude-certain-org-elements][sub-section on this user option]].
+
 - =org-transclusion-include-first-section= ::
   This customizing variable globally defines whether or not to include the first section of the source Org file. The first section is the part before the first headline -- that's the section that typically contains =#+title=, =#+author=, and so on. Many people also write notes in it without adding any headlines. Note that this user option's default is now =t= (changed from =nil= as users seem to spend time to "correct" this issue). Turn it to =t= if you wish to transclude the content from the first section of your Org files. If you wish to exclude the "meta data" defined by =#+title= and others, exclude =keyword= as described in this section -- these meta data are defined with using the =keyword= element of Org Mode.
-  
-  Refer also to the [[#include-the-section-before-the-first-headline-org-file-only][sub-section on this user option]]. 
+
+  Refer also to the [[#include-the-section-before-the-first-headline-org-file-only][sub-section on this user option]].
 
 In addition to the global user options above, you can fine-tune the default exclusion filter per transclusion. Add following properties to transclusions you wish to apply additional filters.
 
 - =:only-contents= ::
   This property lets you exclude titles of headlines when you transclude a subtree (headline); you transclude only the contents. When the subtree contains sub-headlines, all the contents will be transcluded.
-  
+
   Add =:only-contents= without any value like this example:
-  
+
 #+begin_example
 #+transclude: [[file:path/to/file.org]] :only-contents
 #+end_example
-  
+
 - =:exclude-elements= ::
   This property lets you *add* elements to exclude per transclusion on top of the variable =org-transclusion-exclude-elements= defines. You cannot *remove* the ones defined by it; thus, it is intended that you use the customizable variable as your global default and fine-tune it by the property per transclusion.
-  
+
   Add =:exclude-elements= with a list of elements (each one as defined by =org-element-all-elements=) separated by a space inside double quotation marks like this example:
-  
-#+begin_example
+
+#+begin_example
 #+transclude: [[file:path/to/file.org]] :exclude-elements "drawer keyword"
 #+end_example
 
@@ -327,7 +327,7 @@ In the live-sync edit region, you can freely type to edit the transclusion or so
 
 Once done with editing, press =C-c C-c= to exit live-sync edit. The key is bound to =org-transclusion-live-sync-exit=. It will turn off the live sync edit but keep the transclusion on.
 
-In the live-sync edit region, the normal =yank= command (=C-y=) is replaced with a special command =org-transclusion-live-sync-paste=. This command lets the pasted text inherit the text-properties of the transcluded region correctly; the normal yank does not have this feature and thus causes some inconvenience in live-sync edit. If you use vim keybindings (e.g. =evil-mode=), it is advised that you review the default keybindings. You can customize the local keybindings for the live-sync region by =org-transclusion-live-sync-map=. 
+In the live-sync edit region, the normal =yank= command (=C-y=) is replaced with a special command =org-transclusion-live-sync-paste=. This command lets the pasted text inherit the text-properties of the transcluded region correctly; the normal yank does not have this feature and thus causes some inconvenience in live-sync edit. If you use vim keybindings (e.g. =evil-mode=), it is advised that you review the default keybindings. You can customize the local keybindings for the live-sync region by =org-transclusion-live-sync-map=.
 
 *Note*: that during live-sync edit, file's content gets saved to the filesystem as is -- i.e. the transcluded text will be saved instead of the =#+transclude:= keyword. If you kill buffer or quit Emacs, other hooks will still remove the transclusion to keep the file clear of the transcluded copy, leaving only the keyword in the file system.
 
@@ -340,15 +340,15 @@ In the live-sync edit region, the normal =yank= command (=C-y=) is replaced with
 #+begin_example
  key                   binding
  ---                   -------
- 
+
  C-c                   Prefix Command
  C-y                   org-transclusion-live-sync-paste
- 
+
  C-c C-c               org-transclusion-live-sync-exit
 
  *Also inherits ‘org-mode-map’
 #+end_example
- 
+
 ** Transclude source file into src-block
 :PROPERTIES:
 :CUSTOM_ID: transclude-source-file-into-src-block
@@ -368,7 +368,7 @@ The content you specify in the link gets wrapped into a src-block with the langu
 ,#+end_src
 #+end_example
 
-Use =:rest= property to define additional properties you would like to add for the src-block. The double quotation marks are mandatory for the =:rest= property. 
+Use =:rest= property to define additional properties you would like to add for the src-block. The double quotation marks are mandatory for the =:rest= property.
 
 #+begin_example
 #+transclude: [[file:../../test/python-3.py]]  :src python :rest ":session :results value"
@@ -399,7 +399,7 @@ One of the numbers can be omitted.  When the first number is omitted (e.g. -10),
 
 You can combine the =:lines= property with the =:src= property to transclude only a certain range of source files (Example 1 below).
 
-For Org's file links, you can use [[https://orgmode.org/manual/Search-Options.html][search options]] specified by the "::" (two colons) notation. When a search finds a line that includes the string, the Org-transclude counts it as the starting line 1 for the  =:lines= property. 
+For Org's file links, you can use [[https://orgmode.org/manual/Search-Options.html][search options]] specified by the "::" (two colons) notation. When a search finds a line that includes the string, the Org-transclude counts it as the starting line 1 for the  =:lines= property.
 
 Example 1: This transcludes the four lines of the source file from the line that contains string "id-1234" (including that line counted as line 1).
 #+begin_example
@@ -417,11 +417,11 @@ Note search-options =::/regex/= and =::number= do not work as intended.
 
 You can add =:end= property and specify the search term as its value.  Surround the search term with double quotation marks (mandatory).
 
-See Example 3 below. This transclusion will look for =id-1234= as the beginning line of the range as specified by the search option =::id-1234= in the link. With the =:end= property, the search term =id-1234 end here= defines the end of the range. The search looks for =id-123 end here= in the body text, and use the line one before the one where the text is find (thus, the transcluded range will not contain =id-1234 end here=). 
+See Example 3 below. This transclusion will look for =id-1234= as the beginning line of the range as specified by the search option =::id-1234= in the link. With the =:end= property, the search term =id-1234 end here= defines the end of the range. The search looks for =id-123 end here= in the body text, and use the line one before the one where the text is find (thus, the transcluded range will not contain =id-1234 end here=).
 
-You can also combined =:lines= property with =:end= property.  It will only displace the beginning, and the end part of the range (the second number after the hyphen "-")  is ignored. In the same example, the beginning of the range is the one line after the line where "id-1234" is found; it's the "second line, or line 2".  Instead of transcluding until the end of the buffer, the end is defined by the =:end= property. 
+You can also combined =:lines= property with =:end= property.  It will only displace the beginning, and the end part of the range (the second number after the hyphen "-")  is ignored. In the same example, the beginning of the range is the one line after the line where "id-1234" is found; it's the "second line, or line 2".  Instead of transcluding until the end of the buffer, the end is defined by the =:end= property.
 
-Example 3: 
+Example 3:
 #+begin_example
 #+transclude: [[file:../../test/python-1.py::id-1234]] :lines 2- :src python :end "id-1234 end here"
 #+end_example
@@ -438,7 +438,7 @@ Org-transclusion provides a simple extension framework, where you can use =custo
 
 [[file:resources/2021-09-05T164930.png]]
 
-If you use =customize=, the features are loaded automatically. Note that it does not "unload" the feature until you relaunch Emacs. 
+If you use =customize=, the features are loaded automatically. Note that it does not "unload" the feature until you relaunch Emacs.
 
 If you do not use =customize= (e.g. Doom), you may need to explicitly require an extension. For example, to activate =org-transclusion-indent-mode=, you might need to add something like this in your configuration file.
 
@@ -455,15 +455,15 @@ If you do not use =customize= (e.g. Doom), you may need to explicitly require an
 - =org-transclusion-make-from-link= ::
 - =org-transclusion-add= ::
 - =org-transclusion-add-all= ::
-- =org-transclusion-remove= :: 
-- =org-transclusion-remove-all= :: 
-- =org-transclusion-refresh= :: 
-- =org-transclusion-promote-subtree= :: 
-- =org-transclusion-demote-subtree= :: 
+- =org-transclusion-remove= ::
+- =org-transclusion-remove-all= ::
+- =org-transclusion-refresh= ::
+- =org-transclusion-promote-subtree= ::
+- =org-transclusion-demote-subtree= ::
 - =org-transclusion-open-source= ::
-- =org-transclusion-move-to-source= :: 
-- =org-transclusion-live-sync-start= :: 
-- =org-transclusion-live-sync-exit= :: 
+- =org-transclusion-move-to-source= ::
+- =org-transclusion-live-sync-start= ::
+- =org-transclusion-live-sync-exit= ::
 - =org-transclusion-live-sync-paste= ::
 
 * Customizing
@@ -480,9 +480,9 @@ You can customize settings in the =org-transclusion= group.
   activation when you directly call =org-transclusion-activate=
 
 - =org-transclusion-exclude-elements= :: See [[#customizable-filter-to-exclude-certain-org-elements][sub-section]] below
-  
+
 - =org-transclusion-include-first-section= :: See [[#include-the-section-before-the-first-headline-org-file-only][sub-section]] below
-  
+
 - =org-transclusion-open-source-display-action-list= :: You can customize the
   way the =org-transclusion-open-source= function displays the source buffer for
   the transclusion. You specify the "action" in the way defined by the built-in
@@ -546,7 +546,7 @@ Other faces:
 - org-transclusion-source-edit
 - org-transclusion
 - org-transclusion-edit
-  
+
 I do not know if bitmap can be customizable after it's been defined (TBC).
 - org-transclusion-fringe-bitmap ::
   It is used for the fringe that indicates the transcluded region. It works only in a graphical environment (not in terminal).
@@ -572,10 +572,10 @@ Note this section is still incomplete, far from being exhaustive for "known" lim
 - =org-transclusion-live-sync-start= does not support all Org elements ::
   For transclusions of Org elements or buffers, live-sync works only on the following elements:
   =center-block=, =drawer=, =dynamic-block=, =latex-environment=, =paragraph=, =plain-list=, =quote-block=, =special-block=, =table=, and =verse-block=.
-  
+
   It is known that live-sync does not work for the other elements; namely:
   =comment-block=, =export-block=, =example-block=, =fixed-width=, =keyword=, =src-block=, and =property-drawerd=.
-  
+
   More technical reason for this limitation is documented in the docstring of function =org-transclusion-live-sync-enclosing-element=.
 
   Work is in progress to lift this limitation but I'm still experimenting different ideas.
@@ -586,7 +586,7 @@ Note this section is still incomplete, far from being exhaustive for "known" lim
 
 - Doom's customization may interfere with Org-transclusion ::
    Refer to [[https://github.com/nobiot/org-transclusion/issues/52][this issue]]. The symptom is that in your Doom and you get an error message that includes this: "progn: ‘recenter’ing a window that does not display current-buffer." Adding this in your configuration has been reported to fix the issue:
-      
+
   =(advice-remove 'org-link-search '+org--recenter-after-follow-link-a)=
 
   It is probably rather drastic a measure. I will appreciate it if you find a less drastic way that works. Thank you.
@@ -596,7 +596,7 @@ Note this section is still incomplete, far from being exhaustive for "known" lim
 
 - Org-transclusion does not support expansion of [[https://orgmode.org/manual/Noweb-Reference-Syntax.html][noweb references]] when a transcluded source block code has them ::
   Refer to [[https://github.com/nobiot/org-transclusion/issues/86][issue #86]]. You will get "Text-only" error when export tries to expand the noweb references into the source code.
-  
+
 * Changelog
 :PROPERTIES:
 :TOC:      :depth 0
@@ -612,7 +612,7 @@ Main features and changes only.
 - Change ::
   - Now user option =org-transclusion-include-first-section='s default value
     is changed to =t=. This seems to be more intuitive for more users
-    
+
 - Fix ::
   - =org-transclusion-before-kill= now checks if the buffer to be killed
     contains any transclusion AND it is visting a file before saving. This
@@ -653,30 +653,30 @@ Main features and changes only.
   - cbb1c25 * add: apply :level to buffer with first section ::
     Fix #47 The first section itself does not get influenced by :level property.  The first headline, when present, is treated as the first headline, thus :exclude-element "headline" affects its sub-headlines; this means that the content of the first headline is transcluded even when with "headline" in the list of excluded elements.
 
-** 0.1.2 
+** 0.1.2
 - e08df47 * add: live-sync for non-Org text file ::
   So far Non-Org text files could be transcluded but live-sync was not available. This version enables live-sync for them. Only for the whole file at the moment (ability to specify parts of a text file is considered)
 
 - a576b34 * add: text-clone library (rename) ::
   Live-sync features are now factored out into =text-clone= as a standalone library (available with =text-clone.el= also included in this repo). Refactored so that  =org-transclusion= uses (and requires)  =text-clone=.
-  
+
 ** 0.1.1
 - 49f03b1 * feat: current-indentation ::
   Org-transclusion now keeps the original indentation of the keyword. When a transclusion text region is removed, its keyword will be indented as it was
-  
+
 - d55fc39 * chg: save-buffer hooks ::
   Instead of blindly deactivate and activate all transclusions with t flag, this variable is meant to provide mechanism to deactivate/activate only the transclusions currently in effect to copy a text content.
-  
+
 - 64fd182 * add: remove live-sync overlays when deleted ::
   Closes issue [[https://github.com/nobiot/org-transclusion/issues/8][#8]]  Adding a mechanism to remove both of the live-sync overlays (transclusion and source) when transclusion is completely deleted. This solves the problem of a source overlay to be orphaned in such cases.
-  
+
 ** 0.1.0
 As described in this version.
 
 * Credits
 ** Original idea by John Kitchin
 :PROPERTIES:
-:CUSTOM_ID: john-kitchin
+:CUSTOM_ID: original-idea-by-john-kitchin
 :END:
 
 https://github.com/alphapapa/transclusion-in-emacs#org-mode
