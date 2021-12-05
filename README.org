@@ -603,7 +603,7 @@ Note this section is still incomplete, far from being exhaustive for "known" lim
 :END:
 Main features and changes only.
 
-** Current
+** 1.0.0 (initial version on [[https://elpa.gnu.org/][ELPA]])
 
 - Feature ::
   - : =:end= property and a search term to dynamically define a range of lines to transclude for text and
