@@ -14,3 +14,6 @@ test-compile:
 	                                     (byte-compile-file \"org-transclusion-src-lines.el\"))"
 	emacs --quick --batch --eval "(progn (add-to-list 'load-path default-directory) \
 	                                     (byte-compile-file \"org-transclusion-font-lock.el\"))"
+	# Check declare-function
+	emacs --quick --batch --eval "(check-declare-directory default-directory)"
+
