@@ -1,3 +1,8 @@
+* Version 1.0.1
+
+- Add .elpaignore
+- Bump up version only to enable ELPA; no functional changes
+
 * Version 1.0.0
 
 - Initial version available on ELPA (https://elpa.gnu.org/)
