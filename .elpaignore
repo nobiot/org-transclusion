@@ -1,2 +1,5 @@
-test/
-docs/
+test
+docs
+resources
+Makefile
+.gitignore
