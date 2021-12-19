@@ -1,6 +1,12 @@
-[[file:https://img.shields.io/badge/License-GPLv3-blue.svg]]
 #+title: Org-transclusion
+#+language: en
+#+export_file_name: org-transclusion.texi
+#+texinfo_dir_category: Emacs
+#+texinfo_dir_title: Org-transclusion: (org-transclusion).
+#+texinfo_dir_desc: Transclusion in Org mode
 #+property: LOGGING nil
+
+#+html: <img alt="GPLv3" src="https://img.shields.io/badge/License-GPLv3-blue.svg">
 
 # Note: I use the readme template that alphapapa shares on his GitHub repo <https://github.com/alphapapa/emacs-package-dev-handbook#template>. It works with the org-make-toc <https://github.com/alphapapa/org-make-toc> package, which automatically updates the table of contents.
 
@@ -69,39 +75,27 @@ I am dabbling in the [[https://writingcooperative.com/zettelkasten-how-one-germa
 :TOC:      :depth 0
 :END:
 
-This package is not available on MELPA or ELPA. Manual installation is required.
-
-Download or clone this repo, put all the =.el= files in it into your load-path, and put something like this in your init file.
+This package is available on [[https://elpa.gnu.org/packages/org-transclusion.html][GNU ELPA]]. You can do =M-x package-install RET
+org-transclusion= to install it.  After installation, you can start using
+Org-transclusion (refer to the [[#getting-started][Getting Started]] section).  You can define
+keybindings in your configuration like this below.
 
 #+BEGIN_SRC elisp
-  (with-eval-after-load 'org
-    (add-to-list  'load-path "path/to/org-transclusion/")
-    (require 'org-transclusion)
-    (define-key global-map (kbd "<f12>") #'org-transclusion-add)
-    (define-key global-map (kbd "C-n t") #'org-transclusion-mode))
+  (define-key global-map (kbd "<f12>") #'org-transclusion-add)
+  (define-key global-map (kbd "C-n t") #'org-transclusion-mode)
 #+END_SRC
 
-It is important that you get all the =.el= files ready, not just =org-transclusion.el=. As at the time of this writing, the live-sync feature is contained in =text-clone.el= (also available in this repo) and some new features and extensions are made available as separate =.el= files. You will need to have all the =.el= files to use Org-transclusion as a package.
-
-If you use Doom and packages such as Straight, etc. to install files from GitHub repositories, you can do something like this below (it's an example using Doom's =package!= macro).
+If you use Doom, you can do something like this below to install the package.  Then add =use-package!= to load the package in your =config.el= like an example below.
 
 #+begin_src elisp
-  ;; In ~/.doom.d/package.el
-  (package! org-transclusion
-    :recipe (:host github
-             :repo "nobiot/org-transclusion"
-             :branch "main"
-             :files ("*.el")))
+  ;; ~/.doom.d/package.el
+  (package! org-transclusion)
 #+end_src
 
-For Doom, add =use-package!= to load the package by adding something like this in the code excerpt below in your =config.el=.
-
-As of v0.2.0, some commands are defined with =autoload=. This means that adding some properties such as =:defer= lets you lazy-load the =org-transclusion= package. Please consult Doom's documentation for further instruction (I don't use Doom, but I have lightly tested this snippet). There are other ways to configure Doom; also refer to comments in [[https://github.com/nobiot/org-transclusion/issues/79][issue #79]] (thank you, @Ma-Nu-El).
 
 #+begin_src elisp
-  ;; In ~/.doom.d/config.el
+  ;; ~/.doom.d/config.el
   (use-package! org-transclusion
-    :defer
     :after org
     :init
     (map!
