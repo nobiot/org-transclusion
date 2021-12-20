@@ -1,4 +1,5 @@
 #+title: Org-transclusion
+#+author: Noboru Ota <me@nobiot.com>
 #+language: en
 #+export_file_name: org-transclusion.texi
 #+texinfo_dir_category: Emacs
@@ -6,6 +7,9 @@
 #+texinfo_dir_desc: Transclusion in Org mode
 #+property: LOGGING nil
 
+#+html: <a href="https://www.gnu.org/software/emacs/"><img alt="GNU Emacs" src="https://img.shields.io/static/v1?logo=gnuemacs&logoColor=fafafa&label=Made%20for&message=GNU%20Emacs&color=7F5AB6&style=flat"/></a>
+#+html: <a href="http://elpa.gnu.org/packages/org-transclusion.html"><img alt="GNU ELPA" src="https://elpa.gnu.org/packages/org-transclusion.svg"/></a>
+#+html: <a href="http://elpa.gnu.org/devel/org-transclusion.html"><img alt="GNU-devel ELPA" src="https://elpa.gnu.org/devel/org-transclusion.svg"/></a>
 #+html: <img alt="GPLv3" src="https://img.shields.io/badge/License-GPLv3-blue.svg">
 
 # Note: I use the readme template that alphapapa shares on his GitHub repo <https://github.com/alphapapa/emacs-package-dev-handbook#template>. It works with the org-make-toc <https://github.com/alphapapa/org-make-toc> package, which automatically updates the table of contents.
@@ -34,29 +38,28 @@
     - [[#face-for-the-transclude-keyword][Face for the #+transclude keyword]]
     - [[#faces-for-the-fringes-next-to-transcluded-region-and-source-region][Faces for the fringes next to transcluded region and source region]]
   - [[#keybindings][Keybindings]]
-- [[#tips][Tips]]
-  - [[#moving-from-00x-to-01x][Moving from 0.0.x to 0.1.x]]
 - [[#known-limitations][Known Limitations]]
 - [[#credits][Credits]]
   - [[#original-idea-by-john-kitchin][Original idea by John Kitchin]]
   - [[#text-clone][Text-Clone]]
 - [[#development][Development]]
-  - [[#notes-on-pull-requests-and-fsf-copy-right-assignment][Notes on pull requests and FSF copy right assignment]]
+  - [[#notes-on-pull-requests-and-free-software-foundation-fsf-copy-right-assignment][Notes on pull requests and Free Software Foundation (FSF) copy right assignment]]
 - [[#license][License]]
 :END:
 
 * Introduction
 :PROPERTIES:
-:TOC:      :depth 0
+:CUSTOM_ID: introduction
+:TOC:     :depth 0
 :END:
 
-[[https://en.wikipedia.org/wiki/Transclusion][Transclusion]] is the ability to include content from one file into another by reference. Org-transclusion is an Org Mode version of it. It lets you insert a copy of text content via a file link or ID link within an Org file. It is my take on the [[#original-idea-by-john-kitchin][idea by John Kitchin]].
+Transclusion [fn:1:https://en.wikipedia.org/wiki/Transclusion] is the ability to include content from one file into another by reference. Org-transclusion is an Org Mode version of it. It lets you insert a copy of text content via a file link or ID link within an Org file. It is my take on the [[#original-idea-by-john-kitchin][idea by John Kitchin]].
 
 When I start writing a long-form material, I want to begin with looking through my notes and assemble relevant ones to form a basis of the first draft quickly. As I organise my notes in a repository, I also want to avoid having multiple copies of notes flying around.
 
 Transclusion helps me do this.
 
-I am dabbling in the [[https://writingcooperative.com/zettelkasten-how-one-german-scholar-was-so-freakishly-productive-997e4e0ca125][Zettelkasten method]] with using [[https://www.orgroam.com/][Org-roam]] to feed my ideas into the repository. As such, although Org-transclusion is a standalone package, I would like to keep workflow seamless between Org-roam and Org-transclusion.
+I am dabbling in the Zettelkasten [fn:2:https://writingcooperative.com/zettelkasten-how-one-german-scholar-was-so-freakishly-productive-997e4e0ca125] method with using Org-roam [fn:3:https://www.orgroam.com/] to feed my ideas into the repository. As such, although Org-transclusion is a standalone package, I would like to keep workflow seamless between Org-roam and Org-transclusion.
 
 #+caption: Animation to show creation of a transclusion from an ID link
 [[./resources/2021-09-10-transclusion.gif]]
@@ -67,12 +70,14 @@ I am dabbling in the [[https://writingcooperative.com/zettelkasten-how-one-germa
 #+caption: Video demo on v0.2.1 on YouTube demonstrating new features to transclude a source file into a src-block and function to specify a range of text/source line
 [[./resources/demo9-title.png]]
 
-- Recent videos ::
+- Recent videos
+  
   + [[https://youtu.be/ueaPiA622wA][Video demo on v0.2.1 on YouTube]] demonstrating new features to transclude a source file into a src-block and function to specify a range of text/source lines
     
   + [[https://youtu.be/idlFzWeygwA][Video demo on v0.2.0 on YouTube]] featuring minor breaking changes and new transclusion filters
 
-- Older videos ::
+- Older videos
+  
   + [[https://youtu.be/idlFzWeygwA][Video demo on v0.1.1 on YouTube]] featuring basic syntax and live-sync edit
 
 * Installation
@@ -555,16 +560,8 @@ I do not know if bitmap can be customizable after it's been defined (TBC).
 - =org-transclusion-map=
 - =org-transclusion-live-sync-map=
 
-* Tips
-** Moving from 0.0.x to 0.1.x
-GitHub user @lytex has provided a [[https://github.com/lytex/doom.d/blob/3e48c37f6e6beadf69b57e803d6d2c282aee353d/utils/org-transclusion.sh][bash script]] that converts old syntax to the new one [[https://github.com/nobiot/org-transclusion/issues/71#issuecomment-846618510][in this issue]]. Thank you.
-
-#+begin_quote
-I've made a bash one-liner to migrate from the old syntax to the new one (manages transclude and hlevel -> level), feel free to copy or link it in the docs
-#+end_quote
-
 * Known Limitations
-Note this section is still incomplete, far from being exhaustive for "known" limitations.
+Note this section is still incomplete, not exhaustive for "known" limitations.
 
 - Org link's search-options =::/regex/= and =::number= do not work as intended.
 
@@ -584,17 +581,17 @@ Note this section is still incomplete, far from being exhaustive for "known" lim
   Refer to [[#extensions---support-org-indent-mode][this section]].
 
 - Doom's customization may interfere with Org-transclusion ::
-   Refer to [[https://github.com/nobiot/org-transclusion/issues/52][this issue]]. The symptom is that in your Doom and you get an error message that includes this: "progn: ‘recenter’ing a window that does not display current-buffer." Adding this in your configuration has been reported to fix the issue:
+  Refer to issue #52[fn:4:https://github.com/nobiot/org-transclusion/issues/52]. The symptom is that in Doom you get an error message that includes this: "progn: ‘recenter’ing a window that does not display current-buffer." Adding this in your configuration has been reported to fix the issue:
 
   =(advice-remove 'org-link-search '+org--recenter-after-follow-link-a)=
 
   It is probably rather drastic a measure. I will appreciate it if you find a less drastic way that works. Thank you.
 
 - Org refile does not work "properly" on the transcluded headlines ::
-  Refer to [[https://github.com/nobiot/org-transclusion/issues/20][issue #20]]. I don't intend to support this -- refile the source, not the transcluded copy.
+  Refer to issue #20[fn:5:https://github.com/nobiot/org-transclusion/issues/20]. I don't intend to support this -- refile the source, not the transcluded copy.
 
-- Org-transclusion does not support expansion of [[https://orgmode.org/manual/Noweb-Reference-Syntax.html][noweb references]] when a transcluded source block code has them ::
-  Refer to [[https://github.com/nobiot/org-transclusion/issues/86][issue #86]]. You will get "Text-only" error when export tries to expand the noweb references into the source code.
+- Org-transclusion does not support expansion of noweb references when a transcluded source block code has them ::
+  Refer to issue #86[fn:6:https://github.com/nobiot/org-transclusion/issues/86]. You will get "Text read-only" error when export tries to expand the noweb references into the source code. †noweb reference[fn:7:https://orgmode.org/manual/Noweb-Reference-Syntax.html]
 
 * Credits
 ** Original idea by John Kitchin
@@ -632,21 +629,19 @@ It seems like this could work well for headlines, and named tables, src blocks, 
 
 - Create issues, discussion, and/or pull requests. All welcome.
 
-** Notes on pull requests and FSF copy right assignment
+** Notes on pull requests and Free Software Foundation (FSF) copy right assignment
 
-I am considering of submitting Org-transclusion for inclusion into the upstream Org Mode at some point, hopefully towards the end of year 2021. This was suggested a while ago in a Reddit discussion.
+Org-transclusion is part of GNU ELPA and thus copyrighted by the Free Software Foundation[fn:8:http://fsf.org] (FSF). This means that anyone who is making a substantive code contribution will need to "assign the copyright for your contributions to the FSF so that they can be included in GNU Emacs" (Org Mode website[fn:9:https://orgmode.org/contribute.html#copyright]).
 
-This means that anyone who is making a substantive code contribution will need to "assign the copyright for your contributions to the FSF so that they can be included in GNU Emacs" ([[https://orgmode.org/contribute.html#copyright.][Org Mode website]]).
-
-I have not started a conversation about it in the Org Mode mailing list nor have I done the formal procedure for the copy right assignment yet. It will be at the discretion of Org Mode's maintainers to decide on my request for inclusion when I submit it.
-
-Please consider this when you create a pull request for Org-transclusion.
-
-Thank you!
+Thank you.
 
 * License
 
-This work is licensed under a GPLv3 license. For a full copy of the license, refer to [[./LICENSE][LICENSE]].
+Org-transclusion is licensed under a GPLv3 license. For a full copy of the license, refer to [[./LICENSE][LICENSE]].
+
+This documentation is licensed under the GNU Free Documentation License, version 1.3.
+
+#+include "./docs/fdl.texi"
 
 # Local Variables:
 # eval: (require 'org-make-toc)
