@@ -1,40 +1,38 @@
 #+title: Org-transclusion
 #+author: Noboru Ota <me@nobiot.com>
+#+language: en
+#+export_file_name: org-transclusion.texi
+#+texinfo_dir_category: Emacs
+#+texinfo_dir_title: Org-transclusion: (org-transclusion).
+#+texinfo_dir_desc: Transclusion in Org mode
+#+texinfo: @insertcopying
 
-# Note: I use the readme template that alphapapa shares on his GitHub repo <https://github.com/alphapapa/emacs-package-dev-handbook#template>. It works with the org-make-toc <https://github.com/alphapapa/org-make-toc> package, which automatically updates the table of contents.
+#+property: LOGGING nil
 
-* Contents                                                         :noexport:
+#+html: <a href="https://www.gnu.org/software/emacs/"><img alt="GNU Emacs" src="https://img.shields.io/static/v1?logo=gnuemacs&logoColor=fafafa&label=Made%20for&message=GNU%20Emacs&color=7F5AB6&style=flat"/></a>
+#+html: <a href="http://elpa.gnu.org/packages/org-transclusion.html"><img alt="GNU ELPA" src="https://elpa.gnu.org/packages/org-transclusion.svg"/></a>
+#+html: <a href="http://elpa.gnu.org/devel/org-transclusion.html"><img alt="GNU-devel ELPA" src="https://elpa.gnu.org/devel/org-transclusion.svg"/></a>
+#+html: <img alt="GPLv3" src="https://img.shields.io/badge/License-GPLv3-blue.svg">
+
+* COPYING
 :PROPERTIES:
-:TOC:      :include siblings
+:COPYING: t
 :END:
-:CONTENTS:
-- [[#introduction][Introduction]]
-- [[#installation][Installation]]
-- [[#getting-started][Getting Started]]
-- [[#usage][Usage]]
-  - [[#org-transclusion-mode-activate-and-deactivate][Org-transclusion mode, activate, and deactivate]]
-  - [[#org-links-supported][Org links supported]]
-  - [[#controlling-levels-of-headlines-in-transclusions][Controlling levels of headlines in transclusions]]
-  - [[#filtering-org-elements-per-transclusion][Filtering Org elements per transclusion]]
-  - [[#live-sync-edit][Live-sync edit]]
-  - [[#transclude-source-file-into-src-block][Transclude source file into src-block]]
-  - [[#transclude-range-of-lines-for-text-and-source-files][Transclude range of lines for text and source files]]
-  - [[#extensions---support-org-indent-mode][Extensions - Support org-indent-mode]]
-- [[#customizing][Customizing]]
-  - [[#customizable-filter-to-exclude-certain-org-elements][Customizable filter to exclude certain Org elements]]
-  - [[#include-the-section-before-the-first-headline-org-file-only][Include the section before the first headline (Org file only)]]
-  - [[#faces--fringe-bitmap][Faces & fringe bitmap]]
-    - [[#face-for-the-transclude-keyword][Face for the #+transclude keyword]]
-    - [[#faces-for-the-fringes-next-to-transcluded-region-and-source-region][Faces for the fringes next to transcluded region and source region]]
-  - [[#keybindings][Keybindings]]
-- [[#known-limitations][Known Limitations]]
-- [[#credits][Credits]]
-  - [[#original-idea-by-john-kitchin][Original idea by John Kitchin]]
-  - [[#text-clone][Text-Clone]]
-- [[#development][Development]]
-  - [[#notes-on-pull-requests-and-free-software-foundation-fsf-copy-right-assignment][Notes on pull requests and Free Software Foundation (FSF) copy right assignment]]
-- [[#license][License]]
-:END:
+
+Copyright (C) 2021  Free Software Foundation, Inc.
+
+#+begin_quote
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, with the Front-Cover Texts being “A GNU Manual,” and
+with the Back-Cover Texts as in (a) below.  A copy of the license is
+included in the section entitled “GNU Free Documentation License.”
+
+(a) The FSF’s Back-Cover Text is: “You have the freedom to copy and
+modify this GNU manual.”
+#+end_quote
+
 
 * Introduction
 :PROPERTIES:
@@ -43,31 +41,6 @@
 :END:
 
 Transclusion [fn:1:https://en.wikipedia.org/wiki/Transclusion] is the ability to include content from one file into another by reference. Org-transclusion is an Org Mode version of it. It lets you insert a copy of text content via a file link or ID link within an Org file. It is my take on the [[#original-idea-by-john-kitchin][idea by John Kitchin]].
-
-When I start writing a long-form material, I want to begin with looking through my notes and assemble relevant ones to form a basis of the first draft quickly. As I organise my notes in a repository, I also want to avoid having multiple copies of notes flying around.
-
-Transclusion helps me do this.
-
-I am dabbling in the Zettelkasten [fn:2:https://writingcooperative.com/zettelkasten-how-one-german-scholar-was-so-freakishly-productive-997e4e0ca125] method with using Org-roam [fn:3:https://www.orgroam.com/] to feed my ideas into the repository. As such, although Org-transclusion is a standalone package, I would like to keep workflow seamless between Org-roam and Org-transclusion.
-
-#+caption: Animation to show creation of a transclusion from an ID link
-[[./resources/2021-09-10-transclusion.gif]]
-
-#+caption: Animation to show live sync from transclusion to source
-[[./resources/2021-05-01-org-transclusion-0.1.0-live-sync.gif]]
-
-#+caption: Video demo on v0.2.1 on YouTube demonstrating new features to transclude a source file into a src-block and function to specify a range of text/source line
-[[./resources/demo9-title.png]]
-
-- Recent videos
-  
-  + [[https://youtu.be/ueaPiA622wA][Video demo on v0.2.1 on YouTube]] demonstrating new features to transclude a source file into a src-block and function to specify a range of text/source lines
-    
-  + [[https://youtu.be/idlFzWeygwA][Video demo on v0.2.0 on YouTube]] featuring minor breaking changes and new transclusion filters
-
-- Older videos
-  
-  + [[https://youtu.be/idlFzWeygwA][Video demo on v0.1.1 on YouTube]] featuring basic syntax and live-sync edit
 
 * Installation
 :PROPERTIES:
@@ -628,9 +601,8 @@ Thank you.
 
 Org-transclusion is licensed under a GPLv3 license. For a full copy of the license, refer to [[./LICENSE][LICENSE]].
 
-# Local Variables:
-# eval: (require 'org-make-toc)
-# before-save-hook: org-make-toc
-# org-export-with-properties: ()
-# org-export-with-title: t
-# End:
+This documentation is licensed under the GNU Free Documentation License, version 1.3.
+
+* GNU Free Documentation License
+
+#+texinfo: @include docs/fdl.texi
