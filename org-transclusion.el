@@ -486,7 +486,8 @@ the rest of the buffer unchanged."
           (unless (or (org-transclusion-within-transclusion-p)
                       (plist-get (org-transclusion-keyword-string-to-plist)
                                  :disable-auto))
-            (org-transclusion-add))))
+            ;; Demoted-errors so that one error does not stop the whole process
+            (with-demoted-errors (org-transclusion-add)))))
       (goto-char marker)
       (move-marker marker nil) ; point nowhere for GC
       t)))
@@ -1297,16 +1298,19 @@ Error if transclusion is not allowed.
 Currently the following cases are prevented:
 
 Case 1. Element at point is NOT #+transclude:
+        Element is in a block - e.g. example
 Case 2. #+transclude inside another transclusion"
   (cond
    ;; Case 1. Element at point is NOT #+transclude:
    ((let ((elm (org-element-at-point)))
-       (not (and (string= "keyword" (org-element-type elm))
-		 (string= "TRANSCLUDE" (org-element-property :key elm)))))
-    (user-error "Not at a transclude keyword"))
+      (not (and (string= "keyword" (org-element-type elm))
+		(string= "TRANSCLUDE" (org-element-property :key elm)))))
+    (user-error (format "Not at a transclude keyword at point %d, line %d"
+                        (point) (org-current-line))))
    ;; Case 2. #+transclude inside another transclusion
    ((org-transclusion-within-transclusion-p)
-    (user-error "Cannot transclude in another transclusion"))
+    (user-error (format "Cannot transclude in another transclusion at point %d, line %d")
+                (point) (org-current-line)))
    (t
     t)))
 
