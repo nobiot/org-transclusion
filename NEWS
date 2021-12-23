@@ -1,3 +1,7 @@
+* Current
+
+- fix:add-all not to stop with error in one trasclusion
+
 * Version 1.0.1
 
 - Add .elpaignore
