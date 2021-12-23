@@ -760,10 +760,39 @@ It is used for the fringe that indicates the transcluded region. It works only i
 @item
 @samp{org-transclusion-map}
 @end itemize
+@example
+key             binding
+---             -------
+
+C-c             Prefix Command
+TAB             org-cycle
+D               org-transclusion-demote-subtree
+O               org-transclusion-move-to-source
+P               org-transclusion-promote-subtree
+d               org-transclusion-remove
+e               org-transclusion-live-sync-start
+g               org-transclusion-refresh
+o               org-transclusion-open-source
+
+C-c C-c         org-ctrl-c-ctrl-c
+@end example
+
+
 @itemize
 @item
 @samp{org-transclusion-live-sync-map}
 @end itemize
+@example
+key                   binding
+---                   -------
+
+C-c                   Prefix Command
+C-y                   org-transclusion-live-sync-paste
+
+C-c C-c               org-transclusion-live-sync-exit
+
+*Also inherits ‘org-mode-map’
+@end example
 
 @node Known Limitations
 @chapter Known Limitations

@@ -882,7 +882,31 @@ File: org-transclusion.info,  Node: Keybindings,  Prev: Faces & fringe bitmap,  
 ===============
 
    • ‘org-transclusion-map’
+     key             binding
+     ---             -------
+
+     C-c             Prefix Command
+     TAB             org-cycle
+     D               org-transclusion-demote-subtree
+     O               org-transclusion-move-to-source
+     P               org-transclusion-promote-subtree
+     d               org-transclusion-remove
+     e               org-transclusion-live-sync-start
+     g               org-transclusion-refresh
+     o               org-transclusion-open-source
+
+     C-c C-c         org-ctrl-c-ctrl-c
+
    • ‘org-transclusion-live-sync-map’
+     key                   binding
+     ---                   -------
+
+     C-c                   Prefix Command
+     C-y                   org-transclusion-live-sync-paste
+
+     C-c C-c               org-transclusion-live-sync-exit
+
+     *Also inherits ‘org-mode-map’
 
 
 File: org-transclusion.info,  Node: Known Limitations,  Next: Credits,  Prev: Customizing,  Up: Top
@@ -1670,16 +1694,16 @@ Node: Faces & fringe bitmap33702
 Node: Face for the #+transclude keyword34043
 Node: Faces for the fringes next to transcluded region and source region34537
 Node: Keybindings36119
-Node: Known Limitations36330
-Node: Credits38964
-Node: Original idea by John Kitchin39148
-Node: Text-Clone41709
-Node: Contributing42286
-Node: Notes on pull requests and Free Software Foundation (FSF) copy right assignment42811
-Node: Index - Features43497
-Node: Index - Commands46128
-Node: Index - User Options47947
-Node: GNU Free Documentation License50289
+Node: Known Limitations37125
+Node: Credits39759
+Node: Original idea by John Kitchin39943
+Node: Text-Clone42504
+Node: Contributing43081
+Node: Notes on pull requests and Free Software Foundation (FSF) copy right assignment43606
+Node: Index - Features44292
+Node: Index - Commands46923
+Node: Index - User Options48742
+Node: GNU Free Documentation License51084
 
 End Tag Table
 
