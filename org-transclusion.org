@@ -1,11 +1,14 @@
 #+title: Org-transclusion User Manual
 #+author: Noboru Ota <me@nobiot.com>
-#+modified: 2021-12-23T164111
+#+modified: 2021-12-23T181620
 #+language: en
 #+export_file_name: org-transclusion.texi
 #+texinfo_dir_category: Emacs
 #+texinfo_dir_title: Org-transclusion: (org-transclusion)
 #+texinfo_dir_desc: Transclusion in Org mode
+#+texinfo: @noindent
+
+#+options: toc:nil
 
 #+macro: version 1.0.x
 #+macro: updated last updated 23 December 2021
@@ -15,14 +18,13 @@
 #+html: <a href="http://elpa.gnu.org/devel/org-transclusion.html"><img alt="GNU-devel ELPA" src="https://elpa.gnu.org/devel/org-transclusion.svg"/></a>
 #+html: <img alt="GPLv3" src="https://img.shields.io/badge/License-GPLv3-blue.svg">
 
+This manual is for Org-transclusion version {{{version}}}.
+
+{{{updated}}}.
+
 Org-transclusion lets you insert a copy of text content via a file link or ID link within an Org file. It lets you have the same content present in different buffers at the same time without copy-and-pasting it. Edit the source of the content, and you can refresh the transcluded copies to the up-to-date state. Org-transclusion keeps your files clear of the transcluded copies, leaving only the links to the original content. 
 
-This manual is for Org-transclusion version {{{version}}}, {{{updated}}}
-
-
 #+texinfo: @insertcopying
-
-#+toc: headlines 8
 
 * COPYING
 :PROPERTIES:
@@ -44,20 +46,42 @@ modify this GNU manual.”
 #+end_quote
 
 * Example Use Cases & Main Features
-:PROPERTIES:
-:DESCRIPTION: How others use Org-transclusion
-:END:
 
+Example Use Cases:
 
-- Book writing
+- Book writing ::
+  
+  You have a collection of notes. You can quickly transclude paragraphs and sections from them into a draft. As they are links, it's easy to re-organize them into different sequences to see which way works the best. 
 
-- Academic writing
+- Academic writing ::
+  
+  You have a collection of quotes and notes from your research and literature review. Transclude relevant elements of quotes and notes into different papers. You can keep your collection as the central repository of your research.
 
-- Technical writing  
+- Technical writing ::
 
-- Project status reports
+  You write technical documents for software. Transclude relevant lines of code into the document. As the code is only transcluded. You can keep the document up-to-date as the code evolves.
+
+- Project status reports ::
+
+  You work on multiple projects at the same time and need to report to different project managers. Transclude relevant parts of your work notes and logs into respective project reports. You can keep a single collection of your work notes and logs.
 
 Main Features:
+
+- Insert a copy of text content via a file link or ID link into an Org file
+
+- Work with any text file such as program source cod, plain text, Markdown, or other Org files
+
+- Keep the file system clear of the copies of text content -- Org-transclusion tries hard to save only the links to the file system
+
+- For Org files, use different headline levels from the source Org file
+
+- For Org files, use filters to include only relevant elements (e.g. filter out properties in the transclusions)
+
+- For program source and plain text files, transclude a certain lines or dynamically specify the from/to lines to keep the transclusion always up-to-date with the evolving source files
+
+- For program source files, transclude parts or whole code directly into Org's source block to leverage the rich Org features
+
+- Extend Org-transclusion with its extension framework
 
 * Installation
 
@@ -106,8 +130,7 @@ If you use Doom, you can do something like this below to install the package.  T
 
 The basic idea of Org-transclusion is simple: insert a copy of text content via a file link or ID link within an Org file. This is an Org Mode version of transclusion.
 
-To transclude content via a reference, use one of the following commands:
-
+To transclude content via a link, use one of the following commands:
 
 - =org-transclusion-add=
 
@@ -624,7 +647,7 @@ Note this section is still incomplete, not exhaustive for "known" limitations.
 
 - =org-indent-mode= may not work well with Org-transclusion ::
   A new extension has been added to support =org-indent-mode=
-  Refer to [[#extensions---support-org-indent-mode][this section]].
+  Refer to [[#extensions][this section]].
 
 - Doom's customization may interfere with Org-transclusion ::
   Refer to issue [[https://github.com/nobiot/org-transclusion/issues/52][#52]]. The symptom is that in Doom you get an error message that includes this: "progn: ‘recenter’ing a window that does not display current-buffer." Adding this in your configuration has been reported to fix the issue:
@@ -677,10 +700,9 @@ It seems like this could work well for headlines, and named tables, src blocks, 
 
 ** Notes on pull requests and Free Software Foundation (FSF) copy right assignment
 
-Org-transclusion is part of GNU ELPA and thus copyrighted by the Free Software Foundation[fn:6:http://fsf.org] (FSF). This means that anyone who is making a substantive code contribution will need to "assign the copyright for your contributions to the FSF so that they can be included in GNU Emacs" (Org Mode website[fn:7:https://orgmode.org/contribute.html#copyright]).
+Org-transclusion is part of GNU ELPA and thus copyrighted by the [[http://fsf.org][Free Software Foundation]] (FSF). This means that anyone who is making a substantive code contribution will need to "assign the copyright for your contributions to the FSF so that they can be included in GNU Emacs" ([[https://orgmode.org/contribute.html#copyright][Org Mode website]]).
 
 Thank you.
-
 
 * Index - Features
 :PROPERTIES:

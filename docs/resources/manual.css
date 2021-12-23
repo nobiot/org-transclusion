@@ -1,0 +1,71 @@
+/** Based on Org-roam's css
+    https://github.com/org-roam/org-roam/blob/master/doc/assets/page.css
+ **/
+:root {
+  --border: #526980;
+  --code: #007;
+}
+
+body {
+    margin: 5ex 10ex;
+    max-width: 80ex;
+    line-height: 1.5;
+    font-family: sans-serif;
+}
+
+h1, h2, h3 {
+    font-weight: normal;
+}
+
+pre, code {
+    font-family: x, monospace;
+}
+
+pre {
+    padding: 1ex;
+    background: #eee;
+    border: solid 1px #ddd;
+    min-width: 0;
+    font-size: 80%;
+    overflow: auto;
+}
+
+code {
+    color: var(--code);
+}
+
+img {
+    max-width: 100%;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+pre.menu-comment {
+  background: none;
+  border: none;
+  font-family: sans-serif;
+  padding: 0;
+  margin: 0;
+  font-size: 100%;
+}
+
+thead {
+  border-bottom: 1px solid var(--border);
+}
+
+tfoot {
+  border-top: 1px solid var(--border);
+}
+
+blockquote {
+  margin-left: 1rem;
+  font-style: italic;
+  font-family: serif;
+  border-left: 3px solid;
+  border-left-color: currentcolor;
+  border-color: var(--text-color);
+  padding-left: 1em;
+}

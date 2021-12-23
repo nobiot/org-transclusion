@@ -1,7 +1,7 @@
 \input texinfo    @c -*- texinfo -*-
 @c %**start of header
 @setfilename org-transclusion.info
-@settitle Org-transclusion
+@settitle Org-transclusion User Manual
 @documentencoding UTF-8
 @documentlanguage en
 @c %**end of header
@@ -30,33 +30,40 @@ modify this GNU manual.”
 
 @finalout
 @titlepage
-@title Org-transclusion
+@title Org-transclusion User Manual
 @author Noboru Ota <me@@nobiot.com>
 @page
 @vskip 0pt plus 1filll
 @insertcopying
 @end titlepage
 
-@contents
-
 @ifnottex
 @node Top
-@top Org-transclusion
+@top Org-transclusion User Manual
+
+@noindent
+
+This manual is for Org-transclusion version 1.0.x.
+
+last updated 23 December 2021.
+
+Org-transclusion lets you insert a copy of text content via a file link or ID link within an Org file. It lets you have the same content present in different buffers at the same time without copy-and-pasting it. Edit the source of the content, and you can refresh the transcluded copies to the up-to-date state. Org-transclusion keeps your files clear of the transcluded copies, leaving only the links to the original content. 
 
 @insertcopying
-
 @end ifnottex
 
 @menu
-* Introduction::
+* Example Use Cases & Main Features::
 * Installation::
 * Getting Started::
 * Usage::
 * Customizing::
 * Known Limitations::
 * Credits::
-* Development::
-* License::
+* Contributing::
+* Index - Features::             Key concepts & features
+* Index - Commands::             Interactive functions
+* Index - User Options::         Customizable variables & faces
 * GNU Free Documentation License::
 
 @detailmenu
@@ -66,16 +73,15 @@ Usage
 
 * Org-transclusion mode, activate, and deactivate: Org-transclusion mode activate and deactivate. 
 * Org links supported::
-* Controlling levels of headlines in transclusions::
-* Filtering Org elements per transclusion::
+* Control levels of headlines per transclusion::
+* Filter Org elements per transclusion::
 * Live-sync edit::
 * Transclude source file into src-block::
 * Transclude range of lines for text and source files::
-* Extensions - Support @samp{org-indent-mode}::
+* Extensions::
 
-Filtering Org elements per transclusion
+Filter Org elements per transclusion
 
-* Combining @samp{only-contents} and @samp{exclude-elements}::
 * Notes on excluding the headline element::
 
 Transclude range of lines for text and source files
@@ -100,17 +106,59 @@ Credits
 * Original idea by John Kitchin::
 * Text-Clone::
 
-Development
+Contributing
 
 * Notes on pull requests and Free Software Foundation (FSF) copy right assignment::
 
 @end detailmenu
 @end menu
 
-@node Introduction
-@chapter Introduction
+@node Example Use Cases & Main Features
+@chapter Example Use Cases & Main Features
 
-Transclusion @footnote{@uref{https://en.wikipedia.org/wiki/Transclusion}} is the ability to include content from one file into another by reference. Org-transclusion is an Org Mode version of it. It lets you insert a copy of text content via a file link or ID link within an Org file. It is my take on the @ref{Original idea by John Kitchin, , idea by John Kitchin}.
+Example Use Cases:
+
+@table @asis
+@item Book writing
+You have a collection of notes. You can quickly transclude paragraphs and sections from them into a draft. As they are links, it's easy to re-organize them into different sequences to see which way works the best. 
+
+@item Academic writing
+You have a collection of quotes and notes from your research and literature review. Transclude relevant elements of quotes and notes into different papers. You can keep your collection as the central repository of your research.
+
+@item Technical writing
+You write technical documents for software. Transclude relevant lines of code into the document. As the code is only transcluded. You can keep the document up-to-date as the code evolves.
+
+@item Project status reports
+You work on multiple projects at the same time and need to report to different project managers. Transclude relevant parts of your work notes and logs into respective project reports. You can keep a single collection of your work notes and logs.
+@end table
+
+Main Features:
+
+@itemize
+@item
+Insert a copy of text content via a file link or ID link into an Org file
+
+@item
+Work with any text file such as program source cod, plain text, Markdown, or other Org files
+
+@item
+Keep the file system clear of the copies of text content -- Org-transclusion tries hard to save only the links to the file system
+
+@item
+For Org files, use different headline levels from the source Org file
+
+@item
+For Org files, use filters to include only relevant elements (e.g. filter out properties in the transclusions)
+
+@item
+For program source and plain text files, transclude a certain lines or dynamically specify the from/to lines to keep the transclusion always up-to-date with the evolving source files
+
+@item
+For program source files, transclude parts or whole code directly into Org's source block to leverage the rich Org features
+
+@item
+Extend Org-transclusion with its extension framework
+@end itemize
 
 @node Installation
 @chapter Installation
@@ -148,17 +196,27 @@ If you use Doom, you can do something like this below to install the package.  T
 @node Getting Started
 @chapter Getting Started
 
-The basic idea of Org-transclusion is simple: insert a copy of text content via a file link or ID link within an Org file. This is an Org Mode version of @uref{https://en.wikipedia.org/wiki/Transclusion, transclusion}.
+@findex org-transclusion-add
+@findex org-transclusion-add-all
+@findex org-transclusion-make-from-link
+@findex org-transclusion-open-source
+@findex org-transclusion-move-to-source
+@findex org-transclusion-refresh
+@vindex org-transclusion-map
 
-To transclude content via a reference, use one of the following commands:
+The basic idea of Org-transclusion is simple: insert a copy of text content via a file link or ID link within an Org file. This is an Org Mode version of transclusion.
+
+To transclude content via a link, use one of the following commands:
 
 @itemize
 @item
-@samp{org-transclusion-make-from-link}
-@item
 @samp{org-transclusion-add}
+
 @item
 @samp{org-transclusion-add-all}
+
+@item
+@samp{org-transclusion-make-from-link}
 @end itemize
 
 For example, if you have an ID link in your Org file like this:
@@ -167,21 +225,21 @@ For example, if you have an ID link in your Org file like this:
 [[id:20210501T171427.051019][Bertrand Russell]]
 @end example
 
-Put your cursor somewhere on this link and call  @samp{M-x org-transclusion-make-from-link}. That inserts a "transclusion" keyword like this in the next empty line:
+Simply type to add @samp{#+transclude:} in front of the link like the example below.
 
 @example
 #+transclude: [[id:20210501T171427.051019][Bertrand Russell]]
 @end example
 
-Put your cursor somewhere on this keyword line and call @samp{M-x org-transclusion-add}, and you will see the content the ID points to be copied over, replacing the @samp{transclude} keyword.
+Put your cursor somewhere on this keyword line and type @samp{M-x org-transclusion-add RET}, and you will see the text content that the ID points replace the whole line. If you have multiple links with a transclude keyword, you can type @samp{M-x org-transclusion-add-all RET} to do all transclusions in the current buffer.
 
-@image{resources/2021-05-09T190918,,,,png}
+Alternatively, you can also put cursor somewhere on the link and call  @samp{M-x org-transclusion-make-from-link}. That will insert another line with @samp{#+transclusion:} keyword appended in front of a copy of the original link in the next empty line.
 
 The transcluded text is @strong{read-only} but you can copy it and export it as normal text. Org-transclusion remembers where it has transcluded the text from (its source buffer).  You can call a number of useful commands with a single letter (by default).
 
-For example, you can press @samp{o} to open the source buffer of the transclusion at point, or @samp{O} (capital "o") to move to it. Press @samp{g} to refresh the transclusion. Press @samp{e} to start live-sync edit. For more detail, inspect the documentation of each command.
+For example, you can press @samp{o} to open the source buffer of the transclusion at point, or @samp{O} (capital "o") to open and move to it. Press @samp{g} to refresh the transclusion. Press @samp{e} to start live-sync edit. For more detail, inspect the documentation of each command. Press @samp{d} to remove the transcluded content, putting the original @samp{#+transclude: [[id:id-of-the-content]]}.
 
-This single-letter-context-menu is defined in  @samp{org-transclusion-map}. The default keybindings are shown below. Adapt them to your liking, especially if you use vim keybindings with Evil Mode, etc.
+This single-letter-context-menu is defined in @samp{org-transclusion-map}. The default keybindings are shown below. Adapt them to your liking, especially if you use vim keybindings with Evil Mode, etc.
 
 @example
 key             binding
@@ -201,9 +259,7 @@ C-c C-c         org-ctrl-c-ctrl-c
 
 @end example
 
-This should get you started with Org-transclusion. There are more options and customizing options available for you to fine-tune the text contents you transclude. More about them in README below.
-
-As your next step, I recommend the section on @ref{Filtering Org elements per transclusion, , filtering Org elements per transclusion}, which shows features that give you the power to control what part of the source to transclude in the way you like and let you experiment on the fly.
+This should get you started with Org-transclusion. There are more options and customizing options available for you to fine-tune the text content you transclude. Explore the rest of the user manual and play with Org-transclusion to get familiar with it.
 
 @node Usage
 @chapter Usage
@@ -211,16 +267,24 @@ As your next step, I recommend the section on @ref{Filtering Org elements per tr
 @menu
 * Org-transclusion mode, activate, and deactivate: Org-transclusion mode activate and deactivate. 
 * Org links supported::
-* Controlling levels of headlines in transclusions::
-* Filtering Org elements per transclusion::
+* Control levels of headlines per transclusion::
+* Filter Org elements per transclusion::
 * Live-sync edit::
 * Transclude source file into src-block::
 * Transclude range of lines for text and source files::
-* Extensions - Support @samp{org-indent-mode}::
+* Extensions::
 @end menu
 
 @node Org-transclusion mode activate and deactivate
 @section Org-transclusion mode, activate, and deactivate
+
+@cindex Activate / Deactivate
+@findex org-transclusion-mode
+@findex org-transclusion-activate
+@findex org-transclusion-deactivate
+@cindex Transclusion Properties
+@cindex Property - :disable-auto
+@vindex org-transclusion-add-all-on-activate
 
 Org-transclusion is a local minor mode; however, you do not need to explicitly call @samp{org-transclusion-mode}. The minor mode is intended to be just a convenient wrapper to let you easily toggle between @samp{activate} and @samp{deactivate}.
 
@@ -243,6 +307,9 @@ You can override the @samp{:disable-auto} property by manually calling @samp{org
 @node Org links supported
 @section Org links supported
 
+@cindex Org Links Supported
+@cindex Property - :only-contents
+
 Transclusion has been tested to work for the following types of links:
 
 @itemize
@@ -262,7 +329,7 @@ ID link @samp{id:uuid}
 File link for non-org files (tested with @samp{.txt} and @samp{.md}); for these, the whole buffer gets transcluded
 @end itemize
 
-Note search-options @samp{::/regex/} and @samp{::number} do not work as intentended.
+Note search-options @samp{::/regex/} and @samp{::number} do not work as intended.
 
 For transcluding a specific paragraph, there are two main ways: Org Mode's @uref{https://orgmode.org/manual/Internal-Links.html#Internal-Links, dedicated-target} and @samp{:only-contents} property.
 
@@ -276,12 +343,17 @@ tincidunt quam. <<paragraph-id>>
 
 It is generally assumed that the @samp{paragraph-id} is placed after its content, but it is not an absolute requirement; it can be in the beginning (before the content) or in the middle of it.
 
-For the @samp{:only-contents} property, refer to sub-section @ref{Filtering Org elements per transclusion}.
+For the @samp{:only-contents} property, refer to sub-section @ref{Filter Org elements per transclusion, , Filtering Org elements per transclusion}.
 
-@node Controlling levels of headlines in transclusions
-@section Controlling levels of headlines in transclusions
+@node Control levels of headlines per transclusion
+@section Control levels of headlines per transclusion
 
-You can specify a different level of transcluded headlines than that of the source Org file.
+@cindex Property - :level
+@findex org-transclusion-demote-subtree
+@findex org-transclusion-promote-subtree
+@findex org-transclusion-make-from-link
+
+When you transclude Org contents, you can specify a different headline level than those of the source Org file.
 
 Use the @samp{:level} property with a value of single digit number from 1 to 9 like this example below.
 
@@ -293,8 +365,26 @@ The top level of the transcluded headline will set to the value of @samp{:level}
 
 When you transclude an entire Org file, it may contain multiple subtrees. In such cases, the top-most level among the subtrees will be set according to the @samp{:level} property; the rest of headlines in the buffer will align accordingly.
 
-@node Filtering Org elements per transclusion
-@section Filtering Org elements per transclusion
+Other ways to control include the following.
+
+@table @asis
+@item @samp{org-transclusion-make-from-link}
+Make a transclusion keyword from a link at point. If you pass a positive number 1-9 with @samp{digit-argument} (e.g. prefix @samp{M-x} with @samp{C-2} to pass "2"), this function automatically puts the @samp{:level} property to the resultant transclusion keyword.
+
+@item @samp{org-transclusion-promote-subtree}
+Promote transcluded subtree at point. Mapped to "P" (capital "p") by default in @samp{org-transclusion-map}
+
+@item @samp{org-transclusion-demote-subtree}
+Demote transcluded subtree at point. Mapped to "D" (capital "D") by default in @samp{org-transclusion-map}
+@end table
+
+@node Filter Org elements per transclusion
+@section Filter Org elements per transclusion
+
+@cindex Filters
+@vindex org-transclusion-exclude-elements
+@vindex org-transclusion-include-first-section
+@cindex Property - :only-content
 
 You can control what elements to include in many different ways with using various filters. The filters work in two layers: customizable variable and properties per transclude keyword.
 
@@ -336,32 +426,16 @@ Add @samp{:exclude-elements} with a list of elements (each one as defined by @sa
 #+transclude: [[file:path/to/file.org]] :exclude-elements "drawer keyword"
 @end example
 
+You can combine @samp{:only-contents} and @samp{:exclude-elements} to control how you transclude a subtree. With these properties, you can really have great control over what to include and exclude. It might be a little overwhelming at a time but the changes via properties are easy to change -- simply press @samp{d} to remove the transclusion, change the properties, and transclude again to see a new result.
+
 @menu
-* Combining @samp{only-contents} and @samp{exclude-elements}::
 * Notes on excluding the headline element::
 @end menu
-
-@node Combining @samp{only-contents} and @samp{exclude-elements}
-@subsection Combining @samp{:only-contents} and @samp{:exclude-elements}
-
-You can combine @samp{:only-contents} and @samp{:exclude-elements} to control how you transclude a subtree. Refer to the example screen shots below (the colored labels are added to the images for illustration purposes and not part of the Emacs buffers).
-
-@image{resources/2021-06-05_v0.2.0-01,,,,png}
-@strong{Figure 1}. @strong{Left}. Three transclusions with different properties; @strong{Right}. Source to be transcluded
-
-@image{resources/2021-06-05_v0.2.0-02,,,,png}
-@strong{Figure 2}. @strong{Left}. Only the root-level headline is transcluded
-
-@image{resources/2021-06-05_v0.2.0-03,,,,png}
-@strong{Figure 3}. @strong{Left}. Content of the entire subtree, including sub-headlines, is transcluded
-
-@image{resources/2021-06-05_v0.2.0-04,,,,png}
-@strong{Figure 3}. @strong{Left}. Combined; only the content of top-level headline is transcluded
 
 @node Notes on excluding the headline element
 @subsection Notes on excluding the headline element
 
-If you add @samp{headline} as a list of elements to exclude, you exclude sub-headlines within your subtrees. You will still transclude the contents of the top-most level of the subtrees.
+If you add @samp{headline} as a list of elements to exclude, you exclude sub-headlines within your subtrees and you will still transclude the content of the top-most headline of the subtrees.
 
 If you are transcluding only one subtree, this should be intuitive. If you transclude a whole buffer, you might be transcluding multiple subtrees. In some cases, this can be a little anti-intuitive. In the following examples, you will be transcluding three subtrees -- even though the first headline levels are lower than the third one, the first two are still the top-most level of their own respective subtrees.
 
@@ -377,7 +451,13 @@ If you are transcluding only one subtree, this should be intuitive. If you trans
 @node Live-sync edit
 @section Live-sync edit
 
-@strong{Experimental.} You can start live-sync edit by pressing @samp{e} (by default) on a text element you want to edit. This will put a colored overlay on top of the region being live-synced and brings up another buffer that visits the source file of the transclusion. The source buffer will also have a corresponding overlay to the region being edited and live-synced.
+@cindex Live-sync edit
+@findex org-transclusion-live-sync-start
+@findex org-transclusion-live-sync-exit
+@findex org-transclusion-live-sync-paste
+@vindex org-transclusion-live-sync-map
+
+@strong{Experimental.} You can start live-sync edit by pressing @samp{e} (by default) on a text element you want to edit. This will call @samp{org-transclusion-live-sync-start} and put a colored overlay on top of the region being live-synced and brings up another buffer that visits the source file of the transclusion. The source buffer will also have a corresponding overlay to the region being edited and live-synced.
 
 If you have other windows open, they will be temporarily hidden -- Org-transclusion will remembers your current window layout and attempts to recover it when you exit live-sync edit.
 
@@ -387,7 +467,7 @@ Once done with editing, press @samp{C-c C-c} to exit live-sync edit. The key is 
 
 In the live-sync edit region, the normal @samp{yank} command (@samp{C-y}) is replaced with a special command @samp{org-transclusion-live-sync-paste}. This command lets the pasted text inherit the text-properties of the transcluded region correctly; the normal yank does not have this feature and thus causes some inconvenience in live-sync edit. If you use vim keybindings (e.g. @samp{evil-mode}), it is advised that you review the default keybindings. You can customize the local keybindings for the live-sync region by @samp{org-transclusion-live-sync-map}.
 
-@strong{Note}: that during live-sync edit, file's content gets saved to the filesystem as is -- i.e. the transcluded text will be saved instead of the @samp{#+transclude:} keyword. If you kill buffer or quit Emacs, other hooks will still remove the transclusion to keep the file clear of the transcluded copy, leaving only the keyword in the file system.
+@strong{Note}: During live-sync edit, file's content gets saved to the file system as is -- i.e. the transcluded text will be saved instead of the @samp{#+transclude:} keyword. If you kill buffer or quit Emacs, other hooks will still remove the transclusion to keep the file clear of the transcluded copy, leaving only the keyword in the file system.
 
 @lisp
 (substitute-command-keys "\\@{org-transclusion-live-sync-map@}")
@@ -407,6 +487,12 @@ C-c C-c               org-transclusion-live-sync-exit
 
 @node Transclude source file into src-block
 @section Transclude source file into src-block
+
+@cindex Transclude into Org's src-block
+@cindex Property - :src
+@cindex Property - :rest
+
+This feature is provided as an @ref{Extensions, , extension} (default on). 
 
 You can transclude a source file into an Org's src block. Use the @samp{:src} property and specify the language you would like to use like this:
 
@@ -436,6 +522,12 @@ The source block will have the additional properties:
 @node Transclude range of lines for text and source files
 @section Transclude range of lines for text and source files
 
+@cindex Transclude range of lines
+
+This feature is provided as an @ref{Extensions, , extension} (default on). 
+
+When you transclude text files other than Org files, 
+
 @menu
 * @samp{lines} property to specify a range of lines::
 * @samp{end} property to specify a search term to dynamically look for the end of a range::
@@ -443,6 +535,8 @@ The source block will have the additional properties:
 
 @node @samp{lines} property to specify a range of lines
 @subsection @samp{:lines} property to specify a range of lines
+
+@cindex Property - :lines
 
 You can specify a range of lines to transclude from a source and text file. Use the @samp{:lines} property like this.
 
@@ -475,7 +569,9 @@ Note search-options @samp{::/regex/} and @samp{::number} do not work as intended
 @node @samp{end} property to specify a search term to dynamically look for the end of a range
 @subsection @samp{:end} property to specify a search term to dynamically look for the end of a range
 
-You can add @samp{:end} property and specify the search term as its value.  Surround the search term with double quotation marks (mandatory).
+@cindex Property - :end
+
+You can add @samp{:end} property and specify the search term as its value. Surround the search term with double quotation marks (mandatory).
 
 See Example 3 below. This transclusion will look for @samp{id-1234} as the beginning line of the range as specified by the search option @samp{::id-1234} in the link. With the @samp{:end} property, the search term @samp{id-1234 end here} defines the end of the range. The search looks for @samp{id-123 end here} in the body text, and use the line one before the one where the text is find (thus, the transcluded range will not contain @samp{id-1234 end here}).
 
@@ -486,19 +582,16 @@ Example 3:
 #+transclude: [[file:../../test/python-1.py::id-1234]] :lines 2- :src python :end "id-1234 end here"
 @end example
 
-@node Extensions - Support @samp{org-indent-mode}
-@section Extensions - Support @samp{org-indent-mode}
+@node Extensions
+@section Extensions
 
-Org-transclusion provides a simple extension framework, where you can use @samp{customize} to selectively add new features. Currently there are two extensions provided. Support for @samp{org-indent-mode} is an extension, which is inactive by default.
+@cindex Extensions
+@vindex org-transclusion-extensions
+@cindex Extension - org-transclusion-indent-mode
+@cindex Extension - org-transclusion-src-lines
+@cindex Extension - org-transclusion-font-lock
 
-@table @asis
-@item (on by default) org-transclusion-src-lines
-Add features for @samp{:src} and @samp{:lines} properties to #+transclude. It is meant for non-Org files such as program source and text files
-@item (off by default) org-transclusion-indent-mode
-Support org-indent-mode
-@end table
-
-@image{resources/2021-09-05T164930,,,,png}
+Org-transclusion provides a simple extension framework, where you can use @samp{customize} to selectively add new features. 
 
 If you use @samp{customize}, the features are loaded automatically. Note that it does not "unload" the feature until you relaunch Emacs.
 
@@ -506,13 +599,32 @@ If you do not use @samp{customize} (e.g. Doom), you may need to explicitly requi
 
 @lisp
 ;; Ensure that load-path to org-transclusion is already added
+;; If you installed it with the built-in package.el, this should be already done.
 ;; (add-to-list  'load-path "path/to/org-transclusion/")
 (add-to-list 'org-transclusion-extensions 'org-transclusion-indent-mode)
 (require 'org-transclusion-indent-mode)
 @end lisp
 
+Currently, the following extensions are available.
+
+@table @asis
+@item (off by default) @samp{org-transclusion-indent-mode}
+Support org-indent-mode.
+
+@item (on by default) @samp{org-transclusion-src-lines}
+Add features for @samp{:src} and @samp{:lines} properties to @samp{#+transclude}. It is meant for non-Org files such as program source and text files
+
+@item (on by default) @samp{org-transclusion-font-lock}
+Add font-lock for @samp{#+transclude}. Org mode's standard syntax treats the combination of a @samp{#+transclude:} keyword and a link used by Org-transclusion as a keyword. This means it applies the @samp{org-meta-line} face and the link part cannot be toggled as a normal link. This extension adds @samp{org-transclusion-keyword} face to the keyword part and lets the link part to be treated as a normal link for @samp{org-toggle-link-display}.
+@end table
+
 @node Customizing
 @chapter Customizing
+
+@vindex org-transclusion-extensions
+@vindex org-transclusion-add-all-on-activate
+@vindex org-transclusion-mode-lighter
+@vindex org-transclusion-open-source-display-action-list
 
 You can customize settings in the @samp{org-transclusion} group.
 
@@ -520,7 +632,7 @@ You can customize settings in the @samp{org-transclusion} group.
 @item @samp{org-transclusion-extensions}
 Defines extensions to be loaded with
 org-transclusion.el. If you use @samp{customize}, the extensions are loaded by it.
-If you don't, you likely need to explicitly use @samp{require} to load them.
+If you don't, you likely need to explicitly use @samp{require} to load them. See @ref{Extensions, , seb-section}
 
 @item @samp{org-transclusion-add-all-on-activate}
 Defines whether or not all the
@@ -529,18 +641,18 @@ activation (@samp{org-transclusion-mode}). This does not affect the manual
 activation when you directly call @samp{org-transclusion-activate}
 
 @item @samp{org-transclusion-exclude-elements}
-See @ref{Customizable filter to exclude certain Org elements, , sub-section} below
+See @ref{Customizable filter to exclude certain Org elements, , sub-section}
 
 @item @samp{org-transclusion-include-first-section}
-See @ref{Include the section before the first headline (Org file only), , sub-section} below
+See @ref{Include the section before the first headline (Org file only), , sub-section}
 
 @item @samp{org-transclusion-open-source-display-action-list}
 You can customize the
 way the @samp{org-transclusion-open-source} function displays the source buffer for
 the transclusion. You specify the "action" in the way defined by the built-in
 @samp{display-buffer} function. Refer to its in-system documentation (with @samp{C-h f})
-for the accepted values. @samp{M-x customize} can also guide you with the types of
-values with the widget.
+for the accepted values. @samp{M-x customize} can also guide you on what types of
+values are accepted.
 
 @item @samp{org-transclusion-mode-lighter}
 Define the lighter for Org-transclusion
@@ -557,21 +669,34 @@ minor mode. The default is " OT".
 @node Customizable filter to exclude certain Org elements
 @section Customizable filter to exclude certain Org elements
 
+@vindex org-transclusion-exclude-elements
+
 Set customizable variable @samp{org-transclusion-exclude-elements} to define which elements to be @strong{excluded} in the transclusion.
 
 The filter works for all supported types of links within an Org file when transcluding an entire Org file, and parts of it (headlines, custom ID, etc.). There is no filter for non-Org files.
 
 It is a list of symbols, and the default is @samp{(property-drawer)}. The accepted values are the ones defined by @samp{org-element-all-elements} (Org's standard set of elements; refer to its documentation for an exhaustive list).
 
-You can also fine-tune the exclusion filter per transclusion. Refer to the sub-section on @ref{Filtering Org elements per transclusion, , filtering Org elements per transclusion}.
+You can also fine-tune the exclusion filter per transclusion. Refer to the sub-section on @ref{Filter Org elements per transclusion, , filtering Org elements per transclusion}.
 
 @node Include the section before the first headline (Org file only)
 @section Include the section before the first headline (Org file only)
+
+@vindex org-transclusion-include-first-section
 
 You can include the first section (section before the first headline) of an Org file. It is toggled via customizable variable @samp{org-transclusion-include-first-section}. Its default value is @samp{t}. Set it to @samp{t} (or non-nil) to transclude the first section. It also works when the first section is followed by headlines.
 
 @node Faces & fringe bitmap
 @section Faces & fringe bitmap
+
+@vindex org-transclusion-keyword
+@vindex org-transclusion-source-fringe
+@vindex org-transclusion-fringe
+@vindex org-transclusion-source
+@vindex org-transclusion-source-edit
+@vindex org-transclusion
+@vindex org-transclusion-edit
+@vindex org-transclusion-fringe-bitmap
 
 @menu
 * Face for the @samp{#+transclude} keyword::
@@ -581,7 +706,12 @@ You can include the first section (section before the first headline) of an Org 
 @node Face for the @samp{#+transclude} keyword
 @subsection Face for the @samp{#+transclude} keyword
 
+This feature is provided as an @ref{Extensions, , extension} (default on). 
+
+@table @asis
+@item @samp{org-transclusion-keyword}
 You can set your own face to the @samp{#+transclude} keyword with using the @samp{org-transclusion-keyword} face.
+@end table
 
 @node Faces for the fringes next to transcluded region and source region
 @subsection Faces for the fringes next to transcluded region and source region
@@ -590,14 +720,10 @@ If the fringes that indicate transcluding and source regions are not visible in 
 
 @itemize
 @item
-org-transclusion-source-fringe
+@samp{org-transclusion-source-fringe}
 @item
-org-transclusion-fringe
+@samp{org-transclusion-fringe}
 @end itemize
-
-Here is an example image from @uref{https://github.com/nobiot/org-transclusion/issues/75, this issue}:
-
-@uref{https://user-images.githubusercontent.com/12507865/118443158-de6a2480-b6eb-11eb-81d0-a2778ed5f779.png}
 
 To customize a face, it's probably the easiest to use @samp{M-x customize-face}. If you want to use Elisp for some reason (e.g. on Doom), something like this below should set faces. Experiment with the colors of your choice. By default, the faces above have no values.
 
@@ -613,27 +739,28 @@ For colors, where "green" is,  you can also use something like "#62c86a" (Emacs 
 Other faces:
 @itemize
 @item
-org-transclusion-source
+@samp{org-transclusion-source}
 @item
-org-transclusion-source-edit
+@samp{org-transclusion-source-edit}
 @item
-org-transclusion
+@samp{org-transclusion}
 @item
-org-transclusion-edit
-@end itemize
-
-I do not know if bitmap can be customizable after it's been defined (TBC).
-@table @asis
-@item org-transclusion-fringe-bitmap
+@samp{org-transclusion-edit}
+@item @samp{org-transclusion-fringe-bitmap}
 It is used for the fringe that indicates the transcluded region. It works only in a graphical environment (not in terminal).
-@end table
+@end itemize
 
 @node Keybindings
 @section Keybindings
 
+@vindex org-transclusion-map
+@vindex org-transclusion-live-sync-map
+
 @itemize
 @item
 @samp{org-transclusion-map}
+@end itemize
+@itemize
 @item
 @samp{org-transclusion-live-sync-map}
 @end itemize
@@ -652,7 +779,7 @@ For transclusions of Org elements or buffers, live-sync works only on the follow
 @samp{center-block}, @samp{drawer}, @samp{dynamic-block}, @samp{latex-environment}, @samp{paragraph}, @samp{plain-list}, @samp{quote-block}, @samp{special-block}, @samp{table}, and @samp{verse-block}.
 
 It is known that live-sync does not work for the other elements; namely:
-@samp{comment-block}, @samp{export-block}, @samp{example-block}, @samp{fixed-width}, @samp{keyword}, @samp{src-block}, and @samp{property-drawerd}.
+@samp{comment-block}, @samp{export-block}, @samp{example-block}, @samp{fixed-width}, @samp{keyword}, @samp{src-block}, and @samp{property-drawer}.
 
 More technical reason for this limitation is documented in the docstring of function @samp{org-transclusion-live-sync-enclosing-element}.
 
@@ -660,20 +787,20 @@ Work is in progress to lift this limitation but I'm still experimenting differen
 
 @item @samp{org-indent-mode} may not work well with Org-transclusion
 A new extension has been added to support @samp{org-indent-mode}
-Refer to @ref{Extensions - Support @samp{org-indent-mode}, , this section}.
+Refer to @ref{Extensions, , this section}.
 
 @item Doom's customization may interfere with Org-transclusion
-Refer to issue #52@footnote{@uref{https://github.com/nobiot/org-transclusion/issues/52}}. The symptom is that in Doom you get an error message that includes this: "progn: ‘recenter’ing a window that does not display current-buffer." Adding this in your configuration has been reported to fix the issue:
+Refer to issue @uref{https://github.com/nobiot/org-transclusion/issues/52, #52}. The symptom is that in Doom you get an error message that includes this: "progn: ‘recenter’ing a window that does not display current-buffer." Adding this in your configuration has been reported to fix the issue:
 
 @samp{(advice-remove 'org-link-search '+org--recenter-after-follow-link-a)}
 
 It is probably rather drastic a measure. I will appreciate it if you find a less drastic way that works. Thank you.
 
 @item Org refile does not work "properly" on the transcluded headlines
-Refer to issue #20@footnote{@uref{https://github.com/nobiot/org-transclusion/issues/20}}. I don't intend to support this -- refile the source, not the transcluded copy.
+Refer to issue @uref{https://github.com/nobiot/org-transclusion/issues/20, #20}. I don't intend to support this -- refile the source, not the transcluded copy.
 
 @item Org-transclusion does not support expansion of noweb references when a transcluded source block code has them
-Refer to issue #86@footnote{@uref{https://github.com/nobiot/org-transclusion/issues/86}}. You will get "Text read-only" error when export tries to expand the noweb references into the source code. †noweb reference@footnote{@uref{https://orgmode.org/manual/Noweb-Reference-Syntax.html}}
+Refer to issue @uref{https://github.com/nobiot/org-transclusion/issues/86, #86}. You will get "Text read-only" error when export tries to expand the noweb references into the source code. †@uref{https://orgmode.org/manual/Noweb-Reference-Syntax.html, noweb reference}
 @end itemize
 
 @node Credits
@@ -714,8 +841,8 @@ It seems like this could work well for headlines, and named tables, src blocks, 
 
 @samp{text-clone.el} is an extension of text-clone functions written as part of GNU Emacs in @samp{subr.el}.  The first adaption to extend text-clone functions to work across buffers was published in StackExchange by the user named Tobias in March 2020. It can be found at @uref{https://emacs.stackexchange.com/questions/56201/is-there-an-emacs-package-which-can-mirror-a-region/56202#56202}. The text-clone library takes this line of work further.
 
-@node Development
-@chapter Development
+@node Contributing
+@chapter Contributing
 
 @itemize
 @item
@@ -732,19 +859,27 @@ Create issues, discussion, and/or pull requests. All welcome.
 @node Notes on pull requests and Free Software Foundation (FSF) copy right assignment
 @section Notes on pull requests and Free Software Foundation (FSF) copy right assignment
 
-Org-transclusion is part of GNU ELPA and thus copyrighted by the Free Software Foundation@footnote{@uref{http://fsf.org}} (FSF). This means that anyone who is making a substantive code contribution will need to "assign the copyright for your contributions to the FSF so that they can be included in GNU Emacs" (Org Mode website@footnote{@uref{https://orgmode.org/contribute.html#copyright}}).
+Org-transclusion is part of GNU ELPA and thus copyrighted by the @uref{http://fsf.org, Free Software Foundation} (FSF). This means that anyone who is making a substantive code contribution will need to "assign the copyright for your contributions to the FSF so that they can be included in GNU Emacs" (@uref{https://orgmode.org/contribute.html#copyright, Org Mode website}).
 
 Thank you.
 
-@node License
-@chapter License
+@node Index - Features
+@appendix Index - Features
 
-Org-transclusion is licensed under a GPLv3 license. For a full copy of the license, refer to @uref{./LICENSE, LICENSE}.
+@printindex cp
 
-This documentation is licensed under the GNU Free Documentation License, version 1.3.
+@node Index - Commands
+@appendix Index - Commands
+
+@printindex fn
+
+@node Index - User Options
+@appendix Index - User Options
+
+@printindex vr
 
 @node GNU Free Documentation License
-@chapter GNU Free Documentation License
+@appendix GNU Free Documentation License
 
 @include docs/fdl.texi
 
