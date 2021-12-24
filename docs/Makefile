@@ -13,7 +13,7 @@ run: html install clear
 
 manual:
 	@printf "\n\n### Generating manual .texi and .info files \n\n"
-	$(EMACS) -Q --batch -L ../ --file org-transclusion.org -l manual-gen.el
+	$(EMACS) --batch -L ../ --file org-transclusion.org -l manual-gen.el
 
 html:
 	@printf "\n\n### Generating manual .html files \n\n"
