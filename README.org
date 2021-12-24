@@ -12,9 +12,9 @@ Org-transclusion lets you insert a copy of text content via a file link or ID li
 
 A complete [[https://nobiot.github.io/org-transclusion/][user manual]] is available online or Emacs in-system as an Info document (=C-h i= and find the =Org-transclusion= node).
 
-For instalaltion and minimum configuration, refer to [[#installation][Instalaltion]] below or the corresponding section in the user manaul.
+For installation and minimum configuration, refer to [[#installation][Installation]] below or the corresponding section in the user manual.
 
-[[https://nobiot.github.io/org-transclusion/#Getting-Started][Getting Started]] in the user manaul will get you started in 5 minutes.
+[[https://nobiot.github.io/org-transclusion/#Getting-Started][Getting Started]] in the user manual will get you started in 5 minutes.
 
 #+caption: Animation to show creation of a transclusion from an ID link
 [[./resources/2021-09-10-transclusion.gif]]
@@ -62,7 +62,7 @@ Main Features:
 
 - Insert a copy of text content via a file link or ID link into an Org file
 
-- Work with any text file such as program source cod, plain text, Markdown, or other Org files
+- Work with any text file such as program source code, plain text, Markdown, or other Org files
 
 - Keep the file system clear of the copies of text content -- Org-transclusion tries hard to save only the links to the file system
 
