@@ -142,7 +142,7 @@ Main Features:
    • Insert a copy of text content via a file link or ID link into an
      Org file
 
-   • Work with any text file such as program source cod, plain text,
+   • Work with any text file such as program source code, plain text,
      Markdown, or other Org files
 
    • Keep the file system clear of the copies of text content –
@@ -1656,36 +1656,36 @@ Tag Table:
 Node: Top846
 Ref: whatis1507
 Node: Example Use Cases & Main Features3574
-Node: Installation5894
-Node: Getting Started7030
-Node: Usage10017
-Node: Org-transclusion mode activate and deactivate10487
-Node: Org links supported12522
-Node: Control levels of headlines per transclusion14264
-Node: Filter Org elements per transclusion16056
-Node: Notes on excluding the headline element19723
-Node: Live-sync edit20693
-Node: Transclude source file into src-block23063
-Node: Transclude range of lines for text and source files24148
-Node: lines property to specify a range of lines24700
-Node: end property to specify a search term to dynamically look for the end of a range26621
-Node: Extensions28189
-Node: Customizing30047
-Node: Customizable filter to exclude certain Org elements31874
-Node: Include the section before the first headline (Org file only)32899
-Node: Faces & fringe bitmap33574
-Node: Face for the #+transclude keyword33915
-Node: Faces for the fringes next to transcluded region and source region34409
-Node: Keybindings35982
-Node: Known Limitations36988
-Node: Credits39622
-Node: Original idea by John Kitchin39806
-Node: Text-Clone42367
-Node: Contributing42944
-Node: Index - Features43751
-Node: Index - Commands46382
-Node: Index - User Options48201
-Node: GNU Free Documentation License50543
+Node: Installation5895
+Node: Getting Started7031
+Node: Usage10018
+Node: Org-transclusion mode activate and deactivate10488
+Node: Org links supported12523
+Node: Control levels of headlines per transclusion14265
+Node: Filter Org elements per transclusion16057
+Node: Notes on excluding the headline element19724
+Node: Live-sync edit20694
+Node: Transclude source file into src-block23064
+Node: Transclude range of lines for text and source files24149
+Node: lines property to specify a range of lines24701
+Node: end property to specify a search term to dynamically look for the end of a range26622
+Node: Extensions28190
+Node: Customizing30048
+Node: Customizable filter to exclude certain Org elements31875
+Node: Include the section before the first headline (Org file only)32900
+Node: Faces & fringe bitmap33575
+Node: Face for the #+transclude keyword33916
+Node: Faces for the fringes next to transcluded region and source region34410
+Node: Keybindings35983
+Node: Known Limitations36989
+Node: Credits39623
+Node: Original idea by John Kitchin39807
+Node: Text-Clone42368
+Node: Contributing42945
+Node: Index - Features43752
+Node: Index - Commands46383
+Node: Index - User Options48202
+Node: GNU Free Documentation License50544
 
 End Tag Table
 

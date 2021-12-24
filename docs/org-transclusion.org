@@ -1,6 +1,6 @@
 #+title: Org-transclusion User Manual
 #+author: Noboru Ota <me@nobiot.com>
-#+modified: 2021-12-24T144841
+#+modified: 2021-12-24T174740
 #+language: en
 #+export_file_name: org-transclusion.texi
 #+texinfo_dir_category: Emacs
@@ -46,9 +46,13 @@ modify this GNU manual.”
 #+end_quote
 
 
-#+transclude: [[../README.org::#use-cases]] 
+* Example Use Cases & Main Features
 
-#+transclude: [[../README.org::*Installation]] 
+#+transclude: [[../README.org::#use-cases]] :only-contents 
+
+* Installation
+
+#+transclude: [[../README.org::*Installation]] :only-contents 
 
 * Getting Started
 :PROPERTIES:
@@ -629,7 +633,9 @@ It seems like this could work well for headlines, and named tables, src blocks, 
 ** Text-Clone
 =text-clone.el= is an extension of text-clone functions written as part of GNU Emacs in =subr.el=.  The first adaption to extend text-clone functions to work across buffers was published in StackExchange by the user named Tobias in March 2020. It can be found at https://emacs.stackexchange.com/questions/56201/is-there-an-emacs-package-which-can-mirror-a-region/56202#56202. The text-clone library takes this line of work further.
 
-#+transclude: [[../README.org::*Contributing]] 
+* Contributing
+
+#+transclude: [[../README.org::*Contributing]] :only-contents 
 
 * Index - Features
 :PROPERTIES:
