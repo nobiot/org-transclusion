@@ -3,9 +3,13 @@
 #+email:  me@nobiot.com
 #+options: toc:nil
 
-* Introduction
-
 Org-transclusion lets you insert a copy of text content via a file link or ID link within an Org file. It lets you have the same content present in different buffers at the same time without copy-and-pasting it. Edit the source of the content, and you can refresh the transcluded copies to the up-to-date state. Org-transclusion keeps your files clear of the transcluded copies, leaving only the links to the original content.<<whatis>>
+
+A complete user manual is available [[https://nobiot.github.io/org-transclusion/][online]] or Emacs in-system as an Info document (=C-h i= and find the =Org-transclusion= node).
+
+For installation, refer to [[*Installation][Instalaltion]] below or the corresponding section in the user manaul.
+
+The [[https://nobiot.github.io/org-transclusion/#Getting-Started][Getting Started]] in the user manaul will get you started in 5 minutes.
 
 #+caption: Animation to show creation of a transclusion from an ID link
 [[./resources/2021-09-10-transclusion.gif]]
@@ -71,7 +75,7 @@ Main Features:
 
 This package is available on [[https://elpa.gnu.org/packages/org-transclusion.html][GNU ELPA]]. You can do =M-x package-install RET
 org-transclusion= to install it.  After installation, you can start using
-Org-transclusion (refer to the [[#getting-started][Getting Started]] section).
+Org-transclusion.
 
 Below are some example keybindings that can be put into your Emacs configuration.
 
@@ -104,8 +108,6 @@ For Doom users, you would need to do something like this below to install the pa
 - Get involved in a discussion in [[https://org-roam.discourse.group/t/prototype-transclusion-block-reference-with-emacs-org-mode/830][Org-roam forum]] (the package is originally aimed for its users, me included)
 
 - Create issues, discussion, and/or pull requests. All welcome.
-
-** Notes on pull requests and Free Software Foundation (FSF) copy right assignment
 
 Org-transclusion is part of GNU ELPA and thus copyrighted by the [[http://fsf.org][Free Software Foundation]] (FSF). This means that anyone who is making a substantive code contribution will need to "assign the copyright for your contributions to the FSF so that they can be included in GNU Emacs" ([[https://orgmode.org/contribute.html#copyright][Org Mode website]]).
 

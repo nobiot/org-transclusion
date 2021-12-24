@@ -104,10 +104,6 @@ Credits
 * Original idea by John Kitchin::
 * Text-Clone::
 
-Contributing
-
-* Notes on pull requests and Free Software Foundation (FSF) copy right assignment::
-
 
 
 File: org-transclusion.info,  Node: Example Use Cases & Main Features,  Next: Installation,  Prev: Top,  Up: Top
@@ -177,8 +173,7 @@ File: org-transclusion.info,  Node: Installation,  Next: Getting Started,  Prev:
 This package is available on GNU ELPA
 (https://elpa.gnu.org/packages/org-transclusion.html).  You can do ‘M-x
 package-install RET org-transclusion’ to install it.  After
-installation, you can start using Org-transclusion (refer to the *note
-Getting Started:: section).
+installation, you can start using Org-transclusion.
 
 Below are some example keybindings that can be put into your Emacs
 configuration.
@@ -1054,16 +1049,6 @@ File: org-transclusion.info,  Node: Contributing,  Next: Index - Features,  Prev
 
    • Create issues, discussion, and/or pull requests.  All welcome.
 
-* Menu:
-
-* Notes on pull requests and Free Software Foundation (FSF) copy right assignment::
-
-
-File: org-transclusion.info,  Node: Notes on pull requests and Free Software Foundation (FSF) copy right assignment,  Up: Contributing
-
-8.1 Notes on pull requests and Free Software Foundation (FSF) copy right assignment
-===================================================================================
-
 Org-transclusion is part of GNU ELPA and thus copyrighted by the Free
 Software Foundation (http://fsf.org) (FSF). This means that anyone who
 is making a substantive code contribution will need to "assign the
@@ -1670,38 +1655,37 @@ their use in free software.
 Tag Table:
 Node: Top846
 Ref: whatis1507
-Node: Example Use Cases & Main Features3673
-Node: Installation5993
-Node: Getting Started7176
-Node: Usage10163
-Node: Org-transclusion mode activate and deactivate10633
-Node: Org links supported12668
-Node: Control levels of headlines per transclusion14410
-Node: Filter Org elements per transclusion16202
-Node: Notes on excluding the headline element19869
-Node: Live-sync edit20839
-Node: Transclude source file into src-block23209
-Node: Transclude range of lines for text and source files24294
-Node: lines property to specify a range of lines24846
-Node: end property to specify a search term to dynamically look for the end of a range26767
-Node: Extensions28335
-Node: Customizing30193
-Node: Customizable filter to exclude certain Org elements32020
-Node: Include the section before the first headline (Org file only)33045
-Node: Faces & fringe bitmap33720
-Node: Face for the #+transclude keyword34061
-Node: Faces for the fringes next to transcluded region and source region34555
-Node: Keybindings36128
-Node: Known Limitations37134
-Node: Credits39768
-Node: Original idea by John Kitchin39952
-Node: Text-Clone42513
-Node: Contributing43090
-Node: Notes on pull requests and Free Software Foundation (FSF) copy right assignment43615
-Node: Index - Features44298
-Node: Index - Commands46929
-Node: Index - User Options48748
-Node: GNU Free Documentation License51090
+Node: Example Use Cases & Main Features3574
+Node: Installation5894
+Node: Getting Started7030
+Node: Usage10017
+Node: Org-transclusion mode activate and deactivate10487
+Node: Org links supported12522
+Node: Control levels of headlines per transclusion14264
+Node: Filter Org elements per transclusion16056
+Node: Notes on excluding the headline element19723
+Node: Live-sync edit20693
+Node: Transclude source file into src-block23063
+Node: Transclude range of lines for text and source files24148
+Node: lines property to specify a range of lines24700
+Node: end property to specify a search term to dynamically look for the end of a range26621
+Node: Extensions28189
+Node: Customizing30047
+Node: Customizable filter to exclude certain Org elements31874
+Node: Include the section before the first headline (Org file only)32899
+Node: Faces & fringe bitmap33574
+Node: Face for the #+transclude keyword33915
+Node: Faces for the fringes next to transcluded region and source region34409
+Node: Keybindings35982
+Node: Known Limitations36988
+Node: Credits39622
+Node: Original idea by John Kitchin39806
+Node: Text-Clone42367
+Node: Contributing42944
+Node: Index - Features43751
+Node: Index - Commands46382
+Node: Index - User Options48201
+Node: GNU Free Documentation License50543
 
 End Tag Table
 
