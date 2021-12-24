@@ -1,12 +1,12 @@
 #+title: Org-transclusion User Manual
 #+author: Noboru Ota <me@nobiot.com>
-#+modified: 2021-12-24T111248
+#+modified: 2021-12-24T113454
 #+language: en
 #+export_file_name: org-transclusion.texi
 #+texinfo_dir_category: Emacs
 #+texinfo_dir_title: Org-transclusion: (org-transclusion)
 #+texinfo_dir_desc: Transclusion in Org mode
-#+texinfo: @noindent
+#+texinfo: @paragraphindent asis
 
 #+options: toc:nil
 
