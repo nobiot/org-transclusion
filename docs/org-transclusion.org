@@ -1,6 +1,6 @@
 #+title: Org-transclusion User Manual
 #+author: Noboru Ota <me@nobiot.com>
-#+modified: 2021-12-24T174740
+#+modified: 2021-12-24T180026
 #+language: en
 #+export_file_name: org-transclusion.texi
 #+texinfo_dir_category: Emacs
@@ -44,7 +44,6 @@ included in the section entitled “GNU Free Documentation License.”
 (a) The FSF’s Back-Cover Text is: “You have the freedom to copy and
 modify this GNU manual.”
 #+end_quote
-
 
 * Example Use Cases & Main Features
 

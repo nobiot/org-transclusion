@@ -69,6 +69,7 @@ Intended for :set property for `customize'."
   :type
   '(set :greedy t
         (const :tag "src-lines: Add :src and :lines for non-Org files" org-transclusion-src-lines)
+        (const :tag "font-lock: Add font-lock for Org-transclusion" org-transclusion-font-lock)
 
         (const :tag "indent-mode: Support org-indent-mode" org-transclusion-indent-mode)
         (repeat :tag "Other packages" :inline t (symbol :tag "Package"))))
