@@ -1,5 +1,5 @@
 test
-docs/*.md
+docs
 resources
 Makefile
 .gitignore
