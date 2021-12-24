@@ -16,23 +16,22 @@ For installation and minimum configuration, refer to [[#installation][Installati
 
 [[https://nobiot.github.io/org-transclusion/#Getting-Started][Getting Started]] in the user manual will get you started in 5 minutes.
 
-#+caption: Animation to show creation of a transclusion from an ID link
+Below are images and videos demonstrating some of the key features of
+Org-transclusion.
+
 [[./resources/2021-09-10-transclusion.gif]]
+*Figure 1*. Animation to show creation of a transclusion from an ID link
 
-#+caption: Animation to show live sync from transclusion to source
 [[./resources/2021-05-01-org-transclusion-0.1.0-live-sync.gif]]
+*Figure 2*. Animation to show live sync from transclusion to source
 
-#+caption: Video demo on v0.2.1 on YouTube demonstrating new features to transclude a source file into a src-block and function to specify a range of text/source line
 [[./resources/demo9-title.png]]
-
-- Recent videos
+*Figure 3*. [[https://youtu.be/ueaPiA622wA][Video demo on v0.2.1 on YouTube]] demonstrating new features to transclude a source file into a src-block and function to specify a range of text/source line
   
-  + [[https://youtu.be/ueaPiA622wA][Video demo on v0.2.1 on YouTube]] demonstrating new features to transclude a source file into a src-block and function to specify a range of text/source lines
-    
+- Older videos
+      
   + [[https://youtu.be/idlFzWeygwA][Video demo on v0.2.0 on YouTube]] featuring minor breaking changes and new transclusion filters
 
-- Older videos
-  
   + [[https://youtu.be/idlFzWeygwA][Video demo on v0.1.1 on YouTube]] featuring basic syntax and live-sync edit
 
 * Example Use Cases & Main Features
@@ -97,7 +96,6 @@ For Doom users, you would need to do something like this below to install the pa
 #+BEGIN_SRC elisp
 ;; ~/.doom.d/package.el
 (package! org-transclusion)
-
 #+END_SRC
 
 #+BEGIN_SRC elisp
