@@ -192,16 +192,15 @@ install the package and configure the keybindings.
      ;; ~/.doom.d/package.el
      (package! org-transclusion)
 
-
      ;; ~/.doom.d/config.el
      (use-package! org-transclusion
-       :after org
-       :init
-       (map!
-        :map global-map "<f12>" #'org-transclusion-add
-        :leader
-        :prefix "n"
-        :desc "Org Transclusion Mode" "t" #'org-transclusion-mode))
+                   :after org
+                   :init
+                   (map!
+                    :map global-map "<f12>" #'org-transclusion-add
+                    :leader
+                    :prefix "n"
+                    :desc "Org Transclusion Mode" "t" #'org-transclusion-mode))
 
 
 File: org-transclusion.info,  Node: Getting Started,  Next: Usage,  Prev: Installation,  Up: Top
@@ -1670,38 +1669,39 @@ their use in free software.
 
 Tag Table:
 Node: Top846
+Ref: whatis1507
 Node: Example Use Cases & Main Features3673
 Node: Installation5993
-Node: Getting Started7093
-Node: Usage10080
-Node: Org-transclusion mode activate and deactivate10550
-Node: Org links supported12585
-Node: Control levels of headlines per transclusion14327
-Node: Filter Org elements per transclusion16119
-Node: Notes on excluding the headline element19786
-Node: Live-sync edit20756
-Node: Transclude source file into src-block23126
-Node: Transclude range of lines for text and source files24211
-Node: lines property to specify a range of lines24763
-Node: end property to specify a search term to dynamically look for the end of a range26684
-Node: Extensions28252
-Node: Customizing30110
-Node: Customizable filter to exclude certain Org elements31937
-Node: Include the section before the first headline (Org file only)32962
-Node: Faces & fringe bitmap33637
-Node: Face for the #+transclude keyword33978
-Node: Faces for the fringes next to transcluded region and source region34472
-Node: Keybindings36045
-Node: Known Limitations37051
-Node: Credits39685
-Node: Original idea by John Kitchin39869
-Node: Text-Clone42430
-Node: Contributing43007
-Node: Notes on pull requests and Free Software Foundation (FSF) copy right assignment43532
-Node: Index - Features44215
-Node: Index - Commands46846
-Node: Index - User Options48665
-Node: GNU Free Documentation License51007
+Node: Getting Started7176
+Node: Usage10163
+Node: Org-transclusion mode activate and deactivate10633
+Node: Org links supported12668
+Node: Control levels of headlines per transclusion14410
+Node: Filter Org elements per transclusion16202
+Node: Notes on excluding the headline element19869
+Node: Live-sync edit20839
+Node: Transclude source file into src-block23209
+Node: Transclude range of lines for text and source files24294
+Node: lines property to specify a range of lines24846
+Node: end property to specify a search term to dynamically look for the end of a range26767
+Node: Extensions28335
+Node: Customizing30193
+Node: Customizable filter to exclude certain Org elements32020
+Node: Include the section before the first headline (Org file only)33045
+Node: Faces & fringe bitmap33720
+Node: Face for the #+transclude keyword34061
+Node: Faces for the fringes next to transcluded region and source region34555
+Node: Keybindings36128
+Node: Known Limitations37134
+Node: Credits39768
+Node: Original idea by John Kitchin39952
+Node: Text-Clone42513
+Node: Contributing43090
+Node: Notes on pull requests and Free Software Foundation (FSF) copy right assignment43615
+Node: Index - Features44298
+Node: Index - Commands46929
+Node: Index - User Options48748
+Node: GNU Free Documentation License51090
 
 End Tag Table
 
