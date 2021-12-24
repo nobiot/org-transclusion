@@ -12,7 +12,7 @@ Org-transclusion lets you insert a copy of text content via a file link or ID li
 
 A complete user manual is available [[https://nobiot.github.io/org-transclusion/][online]] or Emacs in-system as an Info document (=C-h i= and find the =Org-transclusion= node).
 
-For installation, refer to [[*Installation][Instalaltion]] below or the corresponding section in the user manaul.
+For installation, refer to [[#installation][Instalaltion]] below or the corresponding section in the user manaul.
 
 The [[https://nobiot.github.io/org-transclusion/#Getting-Started][Getting Started]] in the user manaul will get you started in 5 minutes.
 
@@ -77,6 +77,9 @@ Main Features:
 - Extend Org-transclusion with its extension framework
 
 * Installation
+:PROPERTIES:
+:CUSTOM_ID: installation
+:END:
 
 This package is available on [[https://elpa.gnu.org/packages/org-transclusion.html][GNU ELPA]]. You can do =M-x package-install RET
 org-transclusion= to install it.  After installation, you can start using
