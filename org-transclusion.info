@@ -26,9 +26,9 @@ Org-transclusion User Manual
 ****************************
 
 
-   This manual is for Org-transclusion version 1.0.x.
+   This manual is for Org-transclusion 1.0.x.
 
-   last updated 23 December 2021.
+   Last updated 24 December 2021.
 
    Org-transclusion lets you insert a copy of text content via a file
 link or ID link within an Org file.  It lets you have the same content
@@ -885,7 +885,31 @@ File: org-transclusion.info,  Node: Keybindings,  Prev: Faces & fringe bitmap,  
 ===============
 
    • ‘org-transclusion-map’
+     key             binding
+     ---             -------
+
+     C-c             Prefix Command
+     TAB             org-cycle
+     D               org-transclusion-demote-subtree
+     O               org-transclusion-move-to-source
+     P               org-transclusion-promote-subtree
+     d               org-transclusion-remove
+     e               org-transclusion-live-sync-start
+     g               org-transclusion-refresh
+     o               org-transclusion-open-source
+
+     C-c C-c         org-ctrl-c-ctrl-c
+
    • ‘org-transclusion-live-sync-map’
+     key                   binding
+     ---                   -------
+
+     C-c                   Prefix Command
+     C-y                   org-transclusion-live-sync-paste
+
+     C-c C-c               org-transclusion-live-sync-exit
+
+     *Also inherits ‘org-mode-map’
 
 
 File: org-transclusion.info,  Node: Known Limitations,  Next: Credits,  Prev: Customizing,  Up: Top
@@ -1651,38 +1675,38 @@ their use in free software.
 
 Tag Table:
 Node: Top846
-Node: Example Use Cases & Main Features3694
-Node: Installation6017
-Node: Getting Started7123
-Node: Usage10137
-Node: Org-transclusion mode activate and deactivate10607
-Node: Org links supported12660
-Node: Control levels of headlines per transclusion14414
-Node: Filter Org elements per transclusion16218
-Node: Notes on excluding the headline element19894
-Node: Live-sync edit20866
-Node: Transclude source file into src-block23251
-Node: Transclude range of lines for text and source files24348
-Node: lines property to specify a range of lines24903
-Node: end property to specify a search term to dynamically look for the end of a range26848
-Node: Extensions28425
-Node: Customizing30292
-Node: Customizable filter to exclude certain Org elements32119
-Node: Include the section before the first headline (Org file only)33153
-Node: Faces & fringe bitmap33828
-Node: Face for the #+transclude keyword34169
-Node: Faces for the fringes next to transcluded region and source region34663
-Node: Keybindings36245
-Node: Known Limitations36456
-Node: Credits39090
-Node: Original idea by John Kitchin39274
-Node: Text-Clone41835
-Node: Contributing42412
-Node: Notes on pull requests and Free Software Foundation (FSF) copy right assignment42937
-Node: Index - Features43623
-Node: Index - Commands46254
-Node: Index - User Options48073
-Node: GNU Free Documentation License50415
+Node: Example Use Cases & Main Features3686
+Node: Installation6009
+Node: Getting Started7115
+Node: Usage10129
+Node: Org-transclusion mode activate and deactivate10599
+Node: Org links supported12652
+Node: Control levels of headlines per transclusion14406
+Node: Filter Org elements per transclusion16210
+Node: Notes on excluding the headline element19886
+Node: Live-sync edit20858
+Node: Transclude source file into src-block23243
+Node: Transclude range of lines for text and source files24340
+Node: lines property to specify a range of lines24895
+Node: end property to specify a search term to dynamically look for the end of a range26840
+Node: Extensions28417
+Node: Customizing30284
+Node: Customizable filter to exclude certain Org elements32111
+Node: Include the section before the first headline (Org file only)33145
+Node: Faces & fringe bitmap33820
+Node: Face for the #+transclude keyword34161
+Node: Faces for the fringes next to transcluded region and source region34655
+Node: Keybindings36237
+Node: Known Limitations37243
+Node: Credits39877
+Node: Original idea by John Kitchin40061
+Node: Text-Clone42622
+Node: Contributing43199
+Node: Notes on pull requests and Free Software Foundation (FSF) copy right assignment43724
+Node: Index - Features44410
+Node: Index - Commands47041
+Node: Index - User Options48860
+Node: GNU Free Documentation License51202
 
 End Tag Table
 

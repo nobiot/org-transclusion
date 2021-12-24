@@ -2,8 +2,9 @@
 
 (require 'org-transclusion)
 
-(ignore-error
-    (org-transclusion-add-all))
+;; Need to fix this
+;; Currently it does not work
+(org-transclusion-add-all)
 
 (let ((inhibit-read-only t))
   (org-texinfo-export-to-info))

@@ -9,6 +9,7 @@ MANUAL_HTML_ARGS =--html --no-split --footnote-style=separate --css-ref=resource
 ## Build #############################################################
 
 all: manual html install clear
+run: html install clear
 
 manual:
 	@printf "\n\n### Generating manual .texi and .info files \n\n"
