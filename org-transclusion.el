@@ -1,4 +1,4 @@
-;;; org-transclusion.el --- transclude text contents of linked target -*- lexical-binding: t; -*-
+;;; org-transclusion.el --- Transclude text content via links -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2021  Free Software Foundation, Inc.
 
@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 10 Oct 2020
-;; Last modified: 4 December 2021
+;; Last modified: 24 December 2021
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -760,7 +760,7 @@ turned off (removed)."
   ;; --, check is done for `buffer-file-name' to see if there is a file visited
   ;; by the buffer. If a "temp" buffer, there is no file being visited.
   (when (and (org-transclusion-remove-all)
-	     (buffer-file-name))
+             (buffer-file-name))
     (set-buffer-modified-p t)
     (save-buffer)))
 
@@ -1165,11 +1165,14 @@ etc.)."
           (setq obj (org-element-map obj org-element-all-elements
                       #'org-transclusion-content-filter-org-only-contents
                       nil nil '(section) nil)))
-	
-        (list :src-content (org-element-interpret-data obj)
+        ;; For Org content, an extra +1 point seems to be added to the end of
+        ;; each element in the normalized content. This adds an extra empty
+        ;; line, which we would like to remove; hence content and src-end gets
+        ;; -1 here.
+        (list :src-content (substring (org-element-interpret-data obj) 0 -1)
               :src-buf (current-buffer)
               :src-beg (point-min)
-              :src-end (point-max))))))
+              :src-end (1- (point-max)))))))
 
 (defun org-transclusion-content-filter-org-exclude-elements (data)
   "Exclude specific elements from DATA.
@@ -1196,7 +1199,7 @@ is non-nil."
       nil
     data))
 
-;;;;-----------------------------------------------------------------------------
+;;;;---------------------------------------------------------------------------
 ;;;; Functions to support non-Org-mode link types
 
 (defun org-transclusion-content-others-default (link _plist)
@@ -1305,7 +1308,7 @@ Case 2. #+transclude inside another transclusion"
    ;; Case 1. Element at point is NOT #+transclude:
    ((let ((elm (org-element-at-point)))
       (not (and (string= "keyword" (org-element-type elm))
-		(string= "TRANSCLUDE" (org-element-property :key elm)))))
+                (string= "TRANSCLUDE" (org-element-property :key elm)))))
     (user-error (format "Not at a transclude keyword at point %d, line %d"
                         (point) (org-current-line))))
    ;; Case 2. #+transclude inside another transclusion
