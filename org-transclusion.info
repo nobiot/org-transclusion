@@ -56,7 +56,7 @@ content.
 * Example Use Cases & Main Features::
 * Installation::
 * Getting Started::
-* Usage::
+* Usage::                        Features in detail
 * Customizing::
 * Known Limitations::
 * Credits::
@@ -233,13 +233,13 @@ example below.
 
    Put your cursor somewhere on this keyword line and type ‘M-x
 org-transclusion-add RET’, and you will see the text content that the ID
-points replace the whole line.  If you have multiple links with a
+points to replace the whole line.  If you have multiple links with a
 transclude keyword, you can type ‘M-x org-transclusion-add-all RET’ to
-do all transclusions in the current buffer.
+add all transclusions in the current buffer.
 
-   Alternatively, you can also put cursor somewhere on the link and call
-‘M-x org-transclusion-make-from-link’.  That will insert another line
-with ‘#+transclusion:’ keyword appended in front of a copy of the
+   Alternatively, you can also put cursor somewhere on the link and type
+‘M-x org-transclusion-make-from-link RET’.  That will insert another
+line with ‘#+transclusion:’ keyword added in front of a copy of the
 original link in the next empty line.
 
    The transcluded text is *read-only* but you can copy it and export it
@@ -256,7 +256,7 @@ Press ‘d’ to remove the transcluded content, putting the original
 
    This single-letter-context-menu is defined in ‘org-transclusion-map’.
 The default keybindings are shown below.  Adapt them to your liking,
-especially if you use vim keybindings with Evil Mode, etc.
+especially if you use Vim keybindings with Evil Mode, etc.
 
      key             binding
      ---             -------
@@ -360,8 +360,8 @@ Transclusion has been tested to work for the following types of links:
    • File link for non-org files (tested with ‘.txt’ and ‘.md’); for
      these, the whole buffer gets transcluded
 
-   Note search-options ‘::/regex/’ and ‘::number’ do not work as
-intended.
+     Note: Search-options ‘::/regex/’ and ‘::number’ do not work as
+     intended.
 
    For transcluding a specific paragraph, there are two main ways: Org
 Mode’s dedicated-target
@@ -885,31 +885,7 @@ File: org-transclusion.info,  Node: Keybindings,  Prev: Faces & fringe bitmap,  
 ===============
 
    • ‘org-transclusion-map’
-     key             binding
-     ---             -------
-
-     C-c             Prefix Command
-     TAB             org-cycle
-     D               org-transclusion-demote-subtree
-     O               org-transclusion-move-to-source
-     P               org-transclusion-promote-subtree
-     d               org-transclusion-remove
-     e               org-transclusion-live-sync-start
-     g               org-transclusion-refresh
-     o               org-transclusion-open-source
-
-     C-c C-c         org-ctrl-c-ctrl-c
-
    • ‘org-transclusion-live-sync-map’
-     key                   binding
-     ---                   -------
-
-     C-c                   Prefix Command
-     C-y                   org-transclusion-live-sync-paste
-
-     C-c C-c               org-transclusion-live-sync-exit
-
-     *Also inherits ‘org-mode-map’
 
 
 File: org-transclusion.info,  Node: Known Limitations,  Next: Credits,  Prev: Customizing,  Up: Top
@@ -1675,38 +1651,38 @@ their use in free software.
 
 Tag Table:
 Node: Top846
-Node: Example Use Cases & Main Features3652
-Node: Installation5975
-Node: Getting Started7081
-Node: Usage10090
-Node: Org-transclusion mode activate and deactivate10560
-Node: Org links supported12613
-Node: Control levels of headlines per transclusion14359
-Node: Filter Org elements per transclusion16163
-Node: Notes on excluding the headline element19839
-Node: Live-sync edit20811
-Node: Transclude source file into src-block23196
-Node: Transclude range of lines for text and source files24293
-Node: lines property to specify a range of lines24848
-Node: end property to specify a search term to dynamically look for the end of a range26793
-Node: Extensions28370
-Node: Customizing30237
-Node: Customizable filter to exclude certain Org elements32064
-Node: Include the section before the first headline (Org file only)33098
-Node: Faces & fringe bitmap33773
-Node: Face for the #+transclude keyword34114
-Node: Faces for the fringes next to transcluded region and source region34608
-Node: Keybindings36190
-Node: Known Limitations37196
-Node: Credits39830
-Node: Original idea by John Kitchin40014
-Node: Text-Clone42575
-Node: Contributing43152
-Node: Notes on pull requests and Free Software Foundation (FSF) copy right assignment43677
-Node: Index - Features44363
-Node: Index - Commands46994
-Node: Index - User Options48813
-Node: GNU Free Documentation License51155
+Node: Example Use Cases & Main Features3694
+Node: Installation6017
+Node: Getting Started7123
+Node: Usage10137
+Node: Org-transclusion mode activate and deactivate10607
+Node: Org links supported12660
+Node: Control levels of headlines per transclusion14414
+Node: Filter Org elements per transclusion16218
+Node: Notes on excluding the headline element19894
+Node: Live-sync edit20866
+Node: Transclude source file into src-block23251
+Node: Transclude range of lines for text and source files24348
+Node: lines property to specify a range of lines24903
+Node: end property to specify a search term to dynamically look for the end of a range26848
+Node: Extensions28425
+Node: Customizing30292
+Node: Customizable filter to exclude certain Org elements32119
+Node: Include the section before the first headline (Org file only)33153
+Node: Faces & fringe bitmap33828
+Node: Face for the #+transclude keyword34169
+Node: Faces for the fringes next to transcluded region and source region34663
+Node: Keybindings36245
+Node: Known Limitations36456
+Node: Credits39090
+Node: Original idea by John Kitchin39274
+Node: Text-Clone41835
+Node: Contributing42412
+Node: Notes on pull requests and Free Software Foundation (FSF) copy right assignment42937
+Node: Index - Features43623
+Node: Index - Commands46254
+Node: Index - User Options48073
+Node: GNU Free Documentation License50415
 
 End Tag Table
 

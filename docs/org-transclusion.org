@@ -1,6 +1,6 @@
 #+title: Org-transclusion User Manual
 #+author: Noboru Ota <me@nobiot.com>
-#+modified: 2021-12-23T184320
+#+modified: 2021-12-24T101247
 #+language: en
 #+export_file_name: org-transclusion.texi
 #+texinfo_dir_category: Emacs
@@ -18,9 +18,9 @@
 #+html: <a href="http://elpa.gnu.org/devel/org-transclusion.html"><img alt="GNU-devel ELPA" src="https://elpa.gnu.org/devel/org-transclusion.svg"/></a>
 #+html: <img alt="GPLv3" src="https://img.shields.io/badge/License-GPLv3-blue.svg">
 
-This manual is for Org-transclusion version {{{version}}}.
+This manual is for Org-transclusion version 1.0.x.
 
-{{{updated}}}.
+last updated 23 December 2021.
 
 Org-transclusion lets you insert a copy of text content via a file link or ID link within an Org file. It lets you have the same content present in different buffers at the same time without copy-and-pasting it. Edit the source of the content, and you can refresh the transcluded copies to the up-to-date state. Org-transclusion keeps your files clear of the transcluded copies, leaving only the links to the original content. 
 
@@ -92,32 +92,33 @@ Org-transclusion (refer to the [[#getting-started][Getting Started]] section).
 Below are some example keybindings that can be put into your Emacs configuration.
 
 #+BEGIN_SRC elisp
-  (define-key global-map (kbd "<f12>") #'org-transclusion-add)
-  (define-key global-map (kbd "C-n t") #'org-transclusion-mode)
+(define-key global-map (kbd "<f12>") #'org-transclusion-add)
+(define-key global-map (kbd "C-n t") #'org-transclusion-mode)
 #+END_SRC
 
 For Doom users, you would need to do something like this below to install the package and configure the keybindings. 
 
-#+begin_src elisp
-  ;; ~/.doom.d/package.el
-  (package! org-transclusion)
+#+BEGIN_SRC elisp
+;; ~/.doom.d/package.el
+(package! org-transclusion)
 
-#+end_src
+#+END_SRC
 
-#+begin_src elisp
-  ;; ~/.doom.d/config.el
-  (use-package! org-transclusion
-    :after org
-    :init
-    (map!
-     :map global-map "<f12>" #'org-transclusion-add
-     :leader
-     :prefix "n"
-     :desc "Org Transclusion Mode" "t" #'org-transclusion-mode))
-#+end_src
+#+BEGIN_SRC elisp
+;; ~/.doom.d/config.el
+(use-package! org-transclusion
+  :after org
+  :init
+  (map!
+   :map global-map "<f12>" #'org-transclusion-add
+   :leader
+   :prefix "n"
+   :desc "Org Transclusion Mode" "t" #'org-transclusion-mode))
+#+END_SRC
 
 * Getting Started
 :PROPERTIES:
+:DESCRIPT: To get running in 5 minutes
 :CUSTOM_ID: getting-started
 :END:
 
@@ -151,19 +152,15 @@ Simply type to add =#+transclude:= in front of the link like the example below.
 #+transclude: [[id:20210501T171427.051019][Bertrand Russell]]
 #+end_example
 
-Put your cursor somewhere on this keyword line and type =M-x org-transclusion-add RET=, and you will see the text content that the ID points replace the whole line. If you have multiple links with a transclude keyword, you can type =M-x org-transclusion-add-all RET= to do all transclusions in the current buffer.
+Put your cursor somewhere on this keyword line and type =M-x org-transclusion-add RET=, and you will see the text content that the ID points to replace the whole line. If you have multiple links with a transclude keyword, you can type =M-x org-transclusion-add-all RET= to add all transclusions in the current buffer.
 
-Alternatively, you can also put cursor somewhere on the link and call  =M-x org-transclusion-make-from-link=. That will insert another line with =#+transclusion:= keyword appended in front of a copy of the original link in the next empty line.
+Alternatively, you can also put cursor somewhere on the link and type  =M-x org-transclusion-make-from-link RET=. That will insert another line with =#+transclusion:= keyword added in front of a copy of the original link in the next empty line.
 
 The transcluded text is *read-only* but you can copy it and export it as normal text. Org-transclusion remembers where it has transcluded the text from (its source buffer).  You can call a number of useful commands with a single letter (by default).
 
 For example, you can press =o= to open the source buffer of the transclusion at point, or =O= (capital "o") to open and move to it. Press =g= to refresh the transclusion. Press =e= to start live-sync edit. For more detail, inspect the documentation of each command. Press =d= to remove the transcluded content, putting the original =#+transclude: [[id:id-of-the-content]]=.
 
-This single-letter-context-menu is defined in =org-transclusion-map=. The default keybindings are shown below. Adapt them to your liking, especially if you use vim keybindings with Evil Mode, etc.
-
-#+begin_src elisp :exports none
-(substitute-command-keys "\\{org-transclusion-map}")
-#+end_src
+This single-letter-context-menu is defined in =org-transclusion-map=. The default keybindings are shown below. Adapt them to your liking, especially if you use Vim keybindings with Evil Mode, etc.
 
 #+name: org-transclusion-map
 #+caption: Default org-transclusion-map
@@ -189,6 +186,7 @@ This should get you started with Org-transclusion. There are more options and cu
 
 * Usage
 :PROPERTIES:
+:DESCRIPTION: Features in detail
 :CUSTOM_ID: usage
 :END:
 ** Org-transclusion mode, activate, and deactivate
@@ -237,7 +235,11 @@ Transclusion has been tested to work for the following types of links:
 - ID link =id:uuid=
 - File link for non-org files (tested with =.txt= and =.md=); for these, the whole buffer gets transcluded
 
-Note search-options =::/regex/= and =::number= do not work as intended.
+#+ATTR_TEXINFO: :tag Note
+#+begin_quote
+Search-options =::/regex/= and =::number= do not work as intended.
+#+end_quote
+
 
 For transcluding a specific paragraph, there are two main ways: Org Mode's [[https://orgmode.org/manual/Internal-Links.html#Internal-Links][dedicated-target]] and =:only-contents= property.
 
@@ -498,13 +500,13 @@ If you use =customize=, the features are loaded automatically. Note that it does
 
 If you do not use =customize= (e.g. Doom), you may need to explicitly require an extension. For example, to activate =org-transclusion-indent-mode=, you might need to add something like this in your configuration file.
 
- #+begin_src  emacs-lisp
-   ;; Ensure that load-path to org-transclusion is already added
-   ;; If you installed it with the built-in package.el, this should be already done.
-   ;; (add-to-list  'load-path "path/to/org-transclusion/")
-   (add-to-list 'org-transclusion-extensions 'org-transclusion-indent-mode)
-   (require 'org-transclusion-indent-mode)
- #+end_src
+ #+BEGIN_SRC emacs-lisp
+ ;; Ensure that load-path to org-transclusion is already added
+ ;; If you installed it with the built-in package.el, this should be already done.
+ ;; (add-to-list  'load-path "path/to/org-transclusion/")
+ (add-to-list 'org-transclusion-extensions 'org-transclusion-indent-mode)
+ (require 'org-transclusion-indent-mode)
+ #+END_SRC
 
 Currently, the following extensions are available.
  
@@ -602,12 +604,12 @@ If the fringes that indicate transcluding and source regions are not visible in 
 
 To customize a face, it's probably the easiest to use =M-x customize-face=. If you want to use Elisp for some reason (e.g. on Doom), something like this below should set faces. Experiment with the colors of your choice. By default, the faces above have no values.
 
-#+begin_src elisp
-  (set-face-attribute
-   'org-transclusion-fringe nil
-   :foreground "green"
-   :background "green")
-#+end_src
+#+BEGIN_SRC elisp
+(set-face-attribute
+ 'org-transclusion-fringe nil
+ :foreground "green"
+ :background "green")
+#+END_SRC
 
 For colors, where "green" is,  you can also use something like "#62c86a" (Emacs calls it "RGB triple"; you can refer to in-system manual Emacs > Colors). You might also like to refer to a list of currently defined faces in your Emacs by =list-faces-display=.
 
@@ -731,7 +733,7 @@ Thank you.
 :appendix: t
 :END:
 
-#+texinfo: @include docs/fdl.texi
+#+texinfo: @include fdl.texi
 
 #  LocalWords:  href img src devel GPLv texinfo insertcopying toc RET findex
 #  LocalWords:  vindex cindex dir

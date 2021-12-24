@@ -88,7 +88,7 @@ modify this GNU manual.”
 </td></tr>
 <tr><td align="left" valign="top">&bull; <a href="#Getting-Started" accesskey="3">Getting Started</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
 </td></tr>
-<tr><td align="left" valign="top">&bull; <a href="#Usage" accesskey="4">Usage</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+<tr><td align="left" valign="top">&bull; <a href="#Usage" accesskey="4">Usage</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Features in detail
 </td></tr>
 <tr><td align="left" valign="top">&bull; <a href="#Customizing" accesskey="5">Customizing</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
 </td></tr>
@@ -296,15 +296,15 @@ Next: <a href="#Usage" accesskey="n" rel="next">Usage</a>, Previous: <a href="#I
 <pre class="example">#+transclude: [[id:20210501T171427.051019][Bertrand Russell]]
 </pre></div>
 
-<p>Put your cursor somewhere on this keyword line and type &lsquo;<samp>M-x org-transclusion-add RET</samp>&rsquo;, and you will see the text content that the ID points replace the whole line. If you have multiple links with a transclude keyword, you can type &lsquo;<samp>M-x org-transclusion-add-all RET</samp>&rsquo; to do all transclusions in the current buffer.
+<p>Put your cursor somewhere on this keyword line and type &lsquo;<samp>M-x org-transclusion-add RET</samp>&rsquo;, and you will see the text content that the ID points to replace the whole line. If you have multiple links with a transclude keyword, you can type &lsquo;<samp>M-x org-transclusion-add-all RET</samp>&rsquo; to add all transclusions in the current buffer.
 </p>
-<p>Alternatively, you can also put cursor somewhere on the link and call  &lsquo;<samp>M-x org-transclusion-make-from-link</samp>&rsquo;. That will insert another line with &lsquo;<samp>#+transclusion:</samp>&rsquo; keyword appended in front of a copy of the original link in the next empty line.
+<p>Alternatively, you can also put cursor somewhere on the link and type  &lsquo;<samp>M-x org-transclusion-make-from-link RET</samp>&rsquo;. That will insert another line with &lsquo;<samp>#+transclusion:</samp>&rsquo; keyword added in front of a copy of the original link in the next empty line.
 </p>
 <p>The transcluded text is <strong>read-only</strong> but you can copy it and export it as normal text. Org-transclusion remembers where it has transcluded the text from (its source buffer).  You can call a number of useful commands with a single letter (by default).
 </p>
 <p>For example, you can press &lsquo;<samp>o</samp>&rsquo; to open the source buffer of the transclusion at point, or &lsquo;<samp>O</samp>&rsquo; (capital &quot;o&quot;) to open and move to it. Press &lsquo;<samp>g</samp>&rsquo; to refresh the transclusion. Press &lsquo;<samp>e</samp>&rsquo; to start live-sync edit. For more detail, inspect the documentation of each command. Press &lsquo;<samp>d</samp>&rsquo; to remove the transcluded content, putting the original &lsquo;<samp>#+transclude: [[id:id-of-the-content]]</samp>&rsquo;.
 </p>
-<p>This single-letter-context-menu is defined in &lsquo;<samp>org-transclusion-map</samp>&rsquo;. The default keybindings are shown below. Adapt them to your liking, especially if you use vim keybindings with Evil Mode, etc.
+<p>This single-letter-context-menu is defined in &lsquo;<samp>org-transclusion-map</samp>&rsquo;. The default keybindings are shown below. Adapt them to your liking, especially if you use Vim keybindings with Evil Mode, etc.
 </p>
 <div class="example">
 <pre class="example">key             binding
@@ -407,8 +407,12 @@ Next: <a href="#Control-levels-of-headlines-per-transclusion" accesskey="n" rel=
 </li><li> File link for non-org files (tested with &lsquo;<samp>.txt</samp>&rsquo; and &lsquo;<samp>.md</samp>&rsquo;); for these, the whole buffer gets transcluded
 </li></ul>
 
-<p>Note search-options &lsquo;<samp>::/regex/</samp>&rsquo; and &lsquo;<samp>::number</samp>&rsquo; do not work as intended.
+<blockquote>
+<p><b>Note:</b> Search-options &lsquo;<samp>::/regex/</samp>&rsquo; and &lsquo;<samp>::number</samp>&rsquo; do not work as intended.
 </p>
+</blockquote>
+
+
 <p>For transcluding a specific paragraph, there are two main ways: Org Mode&rsquo;s <a href="https://orgmode.org/manual/Internal-Links.html#Internal-Links">dedicated-target</a> and &lsquo;<samp>:only-contents</samp>&rsquo; property.
 </p>
 <p>For dedicated targets, the target paragraph must be identifiable by a dedicated target with a &lsquo;<samp>&lt;&lt;paragraph-id&gt;&gt;</samp>&rsquo;:
@@ -921,38 +925,9 @@ Previous: <a href="#Faces-_0026-fringe-bitmap" accesskey="p" rel="prev">Faces &a
 <ul>
 <li> &lsquo;<samp>org-transclusion-map</samp>&rsquo;
 </li></ul>
-<div class="example">
-<pre class="example">key             binding
----             -------
-
-C-c             Prefix Command
-TAB             org-cycle
-D               org-transclusion-demote-subtree
-O               org-transclusion-move-to-source
-P               org-transclusion-promote-subtree
-d               org-transclusion-remove
-e               org-transclusion-live-sync-start
-g               org-transclusion-refresh
-o               org-transclusion-open-source
-
-C-c C-c         org-ctrl-c-ctrl-c
-</pre></div>
-
-
 <ul>
 <li> &lsquo;<samp>org-transclusion-live-sync-map</samp>&rsquo;
 </li></ul>
-<div class="example">
-<pre class="example">key                   binding
----                   -------
-
-C-c                   Prefix Command
-C-y                   org-transclusion-live-sync-paste
-
-C-c C-c               org-transclusion-live-sync-exit
-
-*Also inherits ‘org-mode-map’
-</pre></div>
 
 <hr>
 <span id="Known-Limitations"></span><div class="header">
