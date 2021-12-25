@@ -4,3 +4,4 @@ resources
 Makefile
 .gitignore
 text-clone-docs
+.dir-local.el
