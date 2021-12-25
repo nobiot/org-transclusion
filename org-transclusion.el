@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 10 Oct 2020
-;; Last modified: 24 December 2021
+;; Last modified: 25 December 2021
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -325,6 +325,8 @@ and variables."
   (add-hook 'after-save-hook #'org-transclusion-after-save-buffer nil t)
   (add-hook 'kill-buffer-hook #'org-transclusion-before-kill nil t)
   (add-hook 'kill-emacs-hook #'org-transclusion-before-kill nil t)
+  (add-hook 'org-export-before-processing-hook
+            #'org-transclusion-inhibit-read-only nil t) 
   (org-transclusion-yank-excluded-properties-set)
   (org-transclusion-load-extensions-maybe))
 
@@ -337,6 +339,8 @@ This function also removes all the transclusions in the current buffer."
   (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
   (remove-hook 'kill-buffer-hook #'org-transclusion-before-kill t)
   (remove-hook 'kill-emacs-hook #'org-transclusion-before-kill t)
+  (remove-hook 'org-export-before-processing-hook
+               #'org-transclusion-inhibit-read-only nil t)
   (org-transclusion-yank-excluded-properties-remove))
 
 ;;;###autoload
@@ -1694,6 +1698,17 @@ When DEMOTE is non-nil, demote."
             (if demote (org-demote-subtree) (org-promote-subtree))
             (org-transclusion-promote-adjust-after)))
         (goto-char pos)))))
+
+;;-----------------------------------------------------------------------------
+;;;; Functions to support Org-export
+
+(defun org-transclusion-inhibit-read-only (&rest _args)
+  "Set `inhibit-read-only' to t for Org export functions.
+Org export may need the buffer not to contain read-only elements.
+This function is meant to be added to
+`org-export-before-processing-hook' to temporarily inhibit
+read-only."
+  (setq-local inhibit-read-only t))
 
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for extensions
