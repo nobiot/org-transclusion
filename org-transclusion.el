@@ -494,7 +494,8 @@ the rest of the buffer unchanged."
             ;; Demoted-errors so that one error does not stop the whole process
             (with-demoted-errors
                 "Not transcluded. Continue to next: %S"
-              (org-transclusion-add)))))
+              (when (org-transclusion-add)
+                (message (format "Transcluded at %d %d" (point) (org-current-line))))))))
       (goto-char marker)
       (move-marker marker nil) ; point nowhere for GC
       t)))
