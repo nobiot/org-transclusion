@@ -3,5 +3,6 @@ docs
 resources
 Makefile
 .gitignore
+.elpaignore
 text-clone-docs
-.dir-local.el
+.dir-locals.el
