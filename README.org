@@ -4,6 +4,8 @@
 #+options: toc:nil
 
 #+html: <a href="https://www.gnu.org/software/emacs/"><img alt="GNU Emacs" src="https://img.shields.io/static/v1?logo=gnuemacs&logoColor=fafafa&label=Made%20for&message=GNU%20Emacs&color=7F5AB6&style=flat"/></a>
+#+html: <a href="http://elpa.gnu.org/packages/org-transclusion.html"><img alt="GNU ELPA" src="https://elpa.gnu.org/packages/org-transclusion.svg"/></a>
+#+html: <a href="http://elpa.gnu.org/devel/org-transclusion.html"><img alt="GNU-devel ELPA" src="https://elpa.gnu.org/devel/org-transclusion.svg"/></a>
 #+html: <img alt="GPLv3" src="https://img.shields.io/badge/License-GPLv3-blue.svg">
 
 Org-transclusion lets you insert a copy of text content via a file link or ID link within an Org file. It lets you have the same content present in different buffers at the same time without copy-and-pasting it. Edit the source of the content, and you can refresh the transcluded copies to the up-to-date state. Org-transclusion keeps your files clear of the transcluded copies, leaving only the links to the original content.<<whatis>>
