@@ -1,5 +1,8 @@
 #+title: Org-transclusion User Manual
 #+author: Noboru Ota <me@nobiot.com>
+#+macro: version 1.0.x
+#+macro: modified 26 December 2021
+
 #+language: en
 #+export_file_name: org-transclusion.texi
 #+texinfo_dir_category: Emacs
@@ -9,17 +12,14 @@
 
 #+options: toc:nil
 
-#+macro: version 1.0.x.
-#+macro: updated Last updated 24 December 2021.
-
 #+html: <a href="https://www.gnu.org/software/emacs/"><img alt="GNU Emacs" src="https://img.shields.io/static/v1?logo=gnuemacs&logoColor=fafafa&label=Made%20for&message=GNU%20Emacs&color=7F5AB6&style=flat"/></a>
 #+html: <a href="http://elpa.gnu.org/packages/org-transclusion.html"><img alt="GNU ELPA" src="https://elpa.gnu.org/packages/org-transclusion.svg"/></a>
 #+html: <a href="http://elpa.gnu.org/devel/org-transclusion.html"><img alt="GNU-devel ELPA" src="https://elpa.gnu.org/devel/org-transclusion.svg"/></a>
 #+html: <img alt="GPLv3" src="https://img.shields.io/badge/License-GPLv3-blue.svg">
 
-This manual is for Org-transclusion {{{version}}}
+This manual is for Org-transclusion {{{version}}}.
 
-{{{updated}}}
+Last updated: {{{modified}}}.
 
 #+transclude: [[../README.org::whatis]] 
 
@@ -562,10 +562,10 @@ Other faces:
 #+vindex: org-transclusion-live-sync-map
 
 - =org-transclusion-map=
-#+transclude: [[./org-transclusion.org::org-transclusion-map]] 
+#+transclude: [[./org-transclusion-manual.org::org-transclusion-map]] 
 
 - =org-transclusion-live-sync-map=
-#+transclude: [[./org-transclusion.org::org-transclusion-live-sync-map]] 
+#+transclude: [[./org-transclusion-manual.org::org-transclusion-live-sync-map]] 
 
 * Known Limitations
 
@@ -665,3 +665,7 @@ It seems like this could work well for headlines, and named tables, src blocks, 
 
 #  LocalWords:  href img src devel GPLv texinfo insertcopying toc RET findex
 #  LocalWords:  vindex cindex dir
+
+# Local Variables:
+# time-stamp-start: "modified +\\\\?"
+# End:

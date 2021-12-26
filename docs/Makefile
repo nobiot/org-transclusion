@@ -13,7 +13,7 @@ run: html install clear
 
 manual:
 	@printf "\n\n### Generating manual .texi and .info files \n\n"
-	$(EMACS) --batch -L ../ --file org-transclusion.org \
+	$(EMACS) --batch -L ../ --file org-transclusion-manual.org \
                  --eval="(progn (require 'org-transclusion)(org-transclusion-add-all)(org-texinfo-export-to-info))"
 
 html:

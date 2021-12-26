@@ -1,19 +1,12 @@
+docs/org-transclusion.org: docs/org-transclusion-manual.org
+	emacs --batch -L "$$(pwd)" -l org-transclusion $< \
+	      --eval '(progn (org-transclusion-add-all) (write-region nil nil "org-transclusion.org"))'
+
+test-compile:
+	emacs --batch --eval "(add-to-list 'load-path default-directory)" \
+              -f batch-byte-compile ./*.el
+        # Check declare-function
+	emacs --batch --eval "(check-declare-directory default-directory)"
 
 clean:
 	find . -name "*.elc" -delete
-
-
-test-compile:
-	emacs --quick --batch --eval "(progn (add-to-list 'load-path default-directory) \
-	                                     (byte-compile-file \"org-transclusion.el\"))"
-	emacs --quick --batch --eval "(progn (add-to-list 'load-path default-directory) \
-	                                     (byte-compile-file \"text-clone.el\"))"
-	emacs --quick --batch --eval "(progn (add-to-list 'load-path default-directory) \
-	                                     (byte-compile-file \"org-transclusion-indent-mode.el\"))"
-	emacs --quick --batch --eval "(progn (add-to-list 'load-path default-directory) \
-	                                     (byte-compile-file \"org-transclusion-src-lines.el\"))"
-	emacs --quick --batch --eval "(progn (add-to-list 'load-path default-directory) \
-	                                     (byte-compile-file \"org-transclusion-font-lock.el\"))"
-	# Check declare-function
-	emacs --quick --batch --eval "(check-declare-directory default-directory)"
-

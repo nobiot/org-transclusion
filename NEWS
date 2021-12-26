@@ -1,6 +1,10 @@
 * Current
 
 - fix:add-all not to stop with error in one trasclusion
+- fix:Remove extra space/line added to Org elements transcluded
+- add:inhibit-read-only: fix:Org export errors with read-only
+  With this, noweb expansion seems to work now
+- README, Info doc user manual, online user manual
 
 * Version 1.0.1
 
