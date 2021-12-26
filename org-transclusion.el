@@ -15,9 +15,9 @@
 ;; You should have received a copy of the GNU General Public License along
 ;; with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-;; Author: Noboru Ota <me@nobiot.com>
-;; Created: 10 Oct 2020
-;; Last modified: 25 December 2021
+;; Author:        Noboru Ota <me@nobiot.com>
+;; Created:       10 October 2020
+;; Last modified: 26 December 2021
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -326,7 +326,7 @@ and variables."
   (add-hook 'kill-buffer-hook #'org-transclusion-before-kill nil t)
   (add-hook 'kill-emacs-hook #'org-transclusion-before-kill nil t)
   (add-hook 'org-export-before-processing-hook
-            #'org-transclusion-inhibit-read-only nil t) 
+            #'org-transclusion-inhibit-read-only nil t)
   (org-transclusion-yank-excluded-properties-set)
   (org-transclusion-load-extensions-maybe))
 
@@ -340,7 +340,7 @@ This function also removes all the transclusions in the current buffer."
   (remove-hook 'kill-buffer-hook #'org-transclusion-before-kill t)
   (remove-hook 'kill-emacs-hook #'org-transclusion-before-kill t)
   (remove-hook 'org-export-before-processing-hook
-               #'org-transclusion-inhibit-read-only nil t)
+               #'org-transclusion-inhibit-read-only t)
   (org-transclusion-yank-excluded-properties-remove))
 
 ;;;###autoload
@@ -1317,8 +1317,8 @@ Case 2. #+transclude inside another transclusion"
                         (point) (org-current-line))))
    ;; Case 2. #+transclude inside another transclusion
    ((org-transclusion-within-transclusion-p)
-    (user-error (format "Cannot transclude in another transclusion at point %d, line %d")
-                (point) (org-current-line)))
+    (user-error (format "Cannot transclude in another transclusion at point %d, line %d"
+                        (point) (org-current-line))))
    (t
     t)))
 
