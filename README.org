@@ -80,15 +80,24 @@ Main Features:
 :CUSTOM_ID: installation
 :END:
 
-This package is available on [[https://elpa.gnu.org/packages/org-transclusion.html][GNU ELPA]]. You can do =M-x package-install RET
-org-transclusion= to install it.  After installation, you can start using
-Org-transclusion.
+This package is available on:
 
-Below are some example keybindings that can be put into your Emacs configuration.
+- [[https://elpa.gnu.org/packages/org-transclusion.html][GNU ELPA]] (releases only; equivalent to MELPA-Stable)
+- [[https://elpa.gnu.org/devel/org-transclusion.html][GNU-devel ELPA]] (unreleased development branch; equivalent to MELPA)
+
+GNU ELPA should be already set up in your Emacs by default. If you wish to add GNU-devel ELPA, simply add its URL to =package-archives= like this:
 
 #+BEGIN_SRC elisp
-(define-key global-map (kbd "<f12>") #'org-transclusion-add)
-(define-key global-map (kbd "C-n t") #'org-transclusion-mode)
+  (add-to-list 'package-archives '("gnu-devel" . "https://elpa.gnu.org/devel/") t)
+#+END_SRC
+
+Refresh the archive with =M-x package-refresh-contents RET= and you can do =M-x package-install RET org-transclusion= to install it. Alternatively, you can use =package-list-packages=. 
+
+After installation, you can start using Org-transclusion with no additional configuration. Below are some example keybindings that can be put into your Emacs configuration.
+
+#+BEGIN_SRC elisp
+  (define-key global-map (kbd "<f12>") #'org-transclusion-add)
+  (define-key global-map (kbd "C-n t") #'org-transclusion-mode)
 #+END_SRC
 
 For Doom users, you would need to do something like this below to install the package and configure the keybindings. 
@@ -111,6 +120,7 @@ For Doom users, you would need to do something like this below to install the pa
 #+END_SRC
 
 * Contributing
+
 - Get involved in a discussion in [[https://org-roam.discourse.group/t/prototype-transclusion-block-reference-with-emacs-org-mode/830][Org-roam forum]] (the package is originally aimed for its users, me included)
 
 - Create issues, discussion, and/or pull requests. All welcome.
@@ -120,4 +130,5 @@ Org-transclusion is part of GNU ELPA and thus copyrighted by the [[http://fsf.or
 Thank you.
 
 * License
+
 Org-transclusion is licensed under a GPLv3 license. For a full copy of the license, refer to [[./LICENSE][LICENSE]].
