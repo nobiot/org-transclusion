@@ -492,7 +492,9 @@ the rest of the buffer unchanged."
                       (plist-get (org-transclusion-keyword-string-to-plist)
                                  :disable-auto))
             ;; Demoted-errors so that one error does not stop the whole process
-            (with-demoted-errors (org-transclusion-add)))))
+            (with-demoted-errors
+                "Not transcluded. Continue to next: %S"
+              (org-transclusion-add)))))
       (goto-char marker)
       (move-marker marker nil) ; point nowhere for GC
       t)))
@@ -1313,7 +1315,7 @@ Case 2. #+transclude inside another transclusion"
    ((let ((elm (org-element-at-point)))
       (not (and (string= "keyword" (org-element-type elm))
                 (string= "TRANSCLUDE" (org-element-property :key elm)))))
-    (user-error (format "Not at a transclude keyword at point %d, line %d"
+    (user-error (format "Not at a transclude keyword or transclusion in a block at point %d, line %d"
                         (point) (org-current-line))))
    ;; Case 2. #+transclude inside another transclusion
    ((org-transclusion-within-transclusion-p)
