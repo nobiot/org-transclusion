@@ -495,7 +495,7 @@ the rest of the buffer unchanged."
             (with-demoted-errors
                 "Not transcluded. Continue to next: %S"
               (when (org-transclusion-add)
-                (message (format "Transcluded at %d %d" (point) (org-current-line))))))))
+                (message (format "Transcluded at point %d, line %d" (point) (org-current-line))))))))
       (goto-char marker)
       (move-marker marker nil) ; point nowhere for GC
       t)))
