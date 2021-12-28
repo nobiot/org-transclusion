@@ -268,19 +268,12 @@ specific keybindings; namely:
 ;;;; Macro
 ;;;; Definining macros before they are used in the rest of package
 ;;;; Flycheck warns with "macro X defined too late"
-(defmacro org-transclusion-with-silent-modifications (&rest body)
-  "Run BODY silently.
-It's like `with-silent-modifications' but keeps the undo list."
+(defmacro org-transclusion-with-inhibit-read-only (&rest body)
+  "Run BODY with `'inhibit-read-only` t."
   (declare (debug t) (indent 0))
-  (let ((modified (make-symbol "modified")))
-    `(let* ((,modified (buffer-modified-p))
-            (inhibit-read-only t)
-            (inhibit-modification-hooks t))
-       (unwind-protect
-           (progn
-             ,@body)
-         (unless ,modified
-           (restore-buffer-modified-p nil))))))
+  `(let* ((inhibit-read-only t))
+     (progn
+           ,@body)))
 
 ;;;; Commands
 
@@ -433,7 +426,7 @@ does not support all the elements.
                   nil))
         (let ((beg (point))
               (end))
-          (org-transclusion-with-silent-modifications
+          (org-transclusion-with-inhibit-read-only
             (when (save-excursion
                     (end-of-line) (insert-char ?\n)
                     (org-transclusion-content-insert
@@ -513,7 +506,7 @@ When success, return the beginning point of the keyword re-inserted."
           (when (org-transclusion-within-live-sync-p)
             (org-transclusion-live-sync-exit))
           (delete-overlay tc-pair-ov)
-          (org-transclusion-with-silent-modifications
+          (org-transclusion-with-inhibit-read-only
             (save-excursion
               (delete-region beg end)
               (when (> indent 0) (indent-to indent))
@@ -730,6 +723,9 @@ set in `before-save-hook'.  It also move the point back to
           (save-excursion
             (goto-char p)
             (org-transclusion-add)))
+        ;; After save and adding all transclusions, the modified flag should be
+        ;; set to nil
+        (restore-buffer-modified-p nil)
         (when org-transclusion-remember-point
           (goto-char org-transclusion-remember-point))
     (progn
