@@ -1,8 +1,6 @@
 org-transclusion.org: docs/org-transclusion-manual.org
 	-emacs --batch -L "$$(pwd)" -l org-transclusion $< \
 	       --eval '(progn (org-transclusion-add-all) (write-region nil nil "org-transclusion.org"))'
-	mv docs/org-transclusion.org org-transclusion.org
-
 
 .PHONY: test-compile
 test-compile:

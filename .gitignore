@@ -2,3 +2,7 @@ test/
 refile/
 *.elc
 /docs/org-transclusion.org
+/org-transclusion.org
+/org-transclusion.texi
+/org-transclusion-autoloads.el
+/org-transclusion-pkg.el
