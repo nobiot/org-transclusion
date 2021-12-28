@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 24 May 2021
-;; Last modified: 4 December 2021
+;; Last modified: 28 December 2021
 
 ;;; Commentary:
 ;;  This is an extension to `org-transclusion'.  When active, it adds features
@@ -220,12 +220,11 @@ This function is meant to be used as an extension for function
 `org-transclusion-keyword-plist-to-string'.  Add it to the
 abnormal hook
 `org-transclusion-keyword-plist-to-string-functions'."
-  (let ((string nil)
-        (lines (plist-get plist :lines))
+  (let ((lines (plist-get plist :lines))
         (src (plist-get plist :src))
         (rest (plist-get plist :rest))
-	(end (plist-get plist :end)))
-    (concat string
+        (end (plist-get plist :end)))
+    (concat
      (when lines (format ":lines %s" lines))
      (when src (format " :src %s" src))
      (when rest (format " :rest \"%s\"" rest))
