@@ -60,9 +60,9 @@ Next: <a href="#Example-Use-Cases-_0026-Main-Features" accesskey="n" rel="next">
 <span id="Org_002dtransclusion-User-Manual"></span><h1 class="top">Org-transclusion User Manual</h1>
 
 
-<p>This manual is for Org-transclusion {{{version:}}}.
+<p>This manual is for Org-transclusion 1.0.x.
 </p>
-<p>Last updated: {{{modified:}}}.
+<p>Last updated: 26 December 2021.
 </p>
 <p>Org-transclusion lets you insert a copy of text content via a file link or ID link within an Org file. It lets you have the same content present in different buffers at the same time without copy-and-pasting it. Edit the source of the content, and you can refresh the transcluded copies to the up-to-date state. Org-transclusion keeps your files clear of the transcluded copies, leaving only the links to the original content.<span id="whatis"></span></p>
 <p>Copyright (C) 2021  Free Software Foundation, Inc.
@@ -220,11 +220,22 @@ Next: <a href="#Getting-Started" accesskey="n" rel="next">Getting Started</a>, P
 </div>
 <span id="Installation-1"></span><h2 class="chapter">2 Installation</h2>
 
-<p>This package is available on <a href="https://elpa.gnu.org/packages/org-transclusion.html">GNU ELPA</a>. You can do &lsquo;<samp>M-x package-install RET
-org-transclusion</samp>&rsquo; to install it.  After installation, you can start using
-Org-transclusion.
+<p>This package is available on:
 </p>
-<p>Below are some example keybindings that can be put into your Emacs configuration.
+<ul>
+<li> <a href="https://elpa.gnu.org/packages/org-transclusion.html">GNU ELPA</a> (releases only; equivalent to MELPA-Stable)
+</li><li> <a href="https://elpa.gnu.org/devel/org-transclusion.html">GNU-devel ELPA</a> (unreleased development branch; equivalent to MELPA)
+</li></ul>
+
+<p>GNU ELPA should be already set up in your Emacs by default. If you wish to add GNU-devel ELPA, simply add its URL to &lsquo;<samp>package-archives</samp>&rsquo; like this:
+</p>
+<div class="lisp">
+<pre class="lisp">(add-to-list 'package-archives '(&quot;gnu-devel&quot; . &quot;https://elpa.gnu.org/devel/&quot;) t)
+</pre></div>
+
+<p>Refresh the archive with &lsquo;<samp>M-x package-refresh-contents RET</samp>&rsquo; and you can do &lsquo;<samp>M-x package-install RET org-transclusion</samp>&rsquo; to install it. Alternatively, you can use &lsquo;<samp>package-list-packages</samp>&rsquo;. 
+</p>
+<p>After installation, you can start using Org-transclusion with no additional configuration. Below are some example keybindings that can be put into your Emacs configuration.
 </p>
 <div class="lisp">
 <pre class="lisp">(define-key global-map (kbd &quot;&lt;f12&gt;&quot;) #'org-transclusion-add)

@@ -48,6 +48,7 @@ modify this GNU manual.”
 
 #+transclude: [[../README.org::#use-cases]] :only-contents 
 
+
 * Installation
 
 #+transclude: [[../README.org::*Installation]] :only-contents 
@@ -634,6 +635,7 @@ It seems like this could work well for headlines, and named tables, src blocks, 
 * Contributing
 
 #+transclude: [[../README.org::*Contributing]] :only-contents 
+
 
 * Index - Features
 :PROPERTIES:
