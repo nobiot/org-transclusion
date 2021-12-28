@@ -54,7 +54,7 @@
   :group 'org
   :prefix "org-transclusion-"
   :link '(url-link :tag "Github" "https://github.com/nobiot/org-transclusion")
-  :package-version "1.0.0")
+  :package-version '("Org-transclusion" . "1.0.0"))
 
 (defun org-transclusion-set-extensions (var value)
   "Set VAR to VALUE and `org-transclusion-load-extensions-maybe'.
