@@ -17,6 +17,10 @@ h1, h2, h3 {
     font-weight: normal;
 }
 
+.settitle {
+    display: none;
+}
+
 pre, code {
     font-family: x, monospace;
 }
