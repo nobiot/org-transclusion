@@ -6,3 +6,4 @@ Makefile
 .elpaignore
 text-clone-docs
 .dir-locals.el
+org-transclusion-pkg.el
