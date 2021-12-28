@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 26 December 2021
+;; Last modified: 28 December 2021
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -574,9 +574,8 @@ the rest of the buffer unchanged."
       (goto-char (point-min))
       (while (setq match (text-property-search-forward 'org-transclusion-type))
         (goto-char (prop-match-beginning match))
-        (org-transclusion-with-silent-modifications
-          (setq point (org-transclusion-remove))
-          (when point (push point list))))
+        (setq point (org-transclusion-remove))
+        (when point (push point list)))
       (goto-char marker)
       (move-marker marker nil) ; point nowhere for GC
       list)))
