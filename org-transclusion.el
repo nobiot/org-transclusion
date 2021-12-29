@@ -271,9 +271,14 @@ specific keybindings; namely:
 (defmacro org-transclusion-with-inhibit-read-only (&rest body)
   "Run BODY with `'inhibit-read-only` t."
   (declare (debug t) (indent 0))
-  `(let* ((inhibit-read-only t))
-     (progn
-           ,@body)))
+  (let ((modified (make-symbol "modified")))
+    `(let* ((,modified (buffer-modified-p))
+            (inhibit-read-only t))
+       (unwind-protect
+           (progn
+             ,@body)
+         (unless ,modified
+           (restore-buffer-modified-p nil))))))
 
 ;;;; Commands
 
@@ -747,7 +752,7 @@ turned off (removed)."
   ;; by the buffer. If a "temp" buffer, there is no file being visited.
   (when (and (org-transclusion-remove-all)
              (buffer-file-name))
-    (set-buffer-modified-p t)
+    (restore-buffer-modified-p t)
     (save-buffer)))
 
 ;;;;---------------------------------------------------------------------------
