@@ -17,5 +17,7 @@ jobs:
     - name: Install texinfo
       run: sudo apt-get install texinfo
       
-    - name: Run make gh-html
-      run: make gh-html
+    - name: Run docs/make gh-html
+      run: |
+        cd docs
+        make gh-html
