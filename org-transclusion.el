@@ -741,20 +741,18 @@ set in `before-save-hook'.  It also move the point back to
   "Remove transclusions before `kill-buffer' or `kill-emacs'.
 Intended to be used with `kill-buffer-hook' and `kill-emacs-hook'
 to clear the file of the transcluded text regions.  This function
-also flags the buffer modified and `save-buffer'.  Calling
-`save-buffer' after remove-all and live-sync ensures the clearing
-process to occur.  This is reqiured because during live-sync,
-some hooks that manage the clearing process are temporarily
-turned off (removed)."
+also flags the buffer modified and `save-buffer'.  Calling the
+second `org-transclusion-remove-all' ensures the clearing process
+to occur.  This is reqiured because during live-sync, some hooks
+that manage the clearing process are temporarily turned
+off (removed)."
   ;; Remove transclusions first. To deal with an edge case where transclusions
   ;; were added for a capture buffer -- e.g. `org-capture' or `org-roam-catpure'
   ;; --, check is done for `buffer-file-name' to see if there is a file visited
   ;; by the buffer. If a "temp" buffer, there is no file being visited.
   (when (and (org-transclusion-remove-all)
-             (buffer-file-name)
-             (buffer-modified-p))
-    (restore-buffer-modified-p t)
-    (save-buffer)))
+             (buffer-file-name))
+    (org-transclusion-remove-all)))
 
 ;;;;---------------------------------------------------------------------------
 ;;;; Functions for Transclude Keyword
