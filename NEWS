@@ -1,5 +1,7 @@
 * Current
 
+- fix:#105 org-element--cache issue for Org v9.6
+  Remove use of silent-modificaiton & inhibit-modification-hook
 - fix:add-all not to stop with error in one trasclusion
 - fix:Remove extra space/line added to Org elements transcluded
 - add:inhibit-read-only: fix:Org export errors with read-only
@@ -28,7 +30,6 @@
     contains any transclusion AND it is visting a file before saving. This
     fixes some issues related to temp buffers, etc.    
   - fix: search options for src-lines extension for =:lines=, =:src=, and =:end= properties
-
 
 * Changelog before Version 1.0.0
 

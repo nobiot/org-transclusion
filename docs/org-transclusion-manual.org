@@ -1,7 +1,7 @@
 #+title: Org-transclusion User Manual
 #+author: Noboru Ota <me@nobiot.com>
 #+macro: version 1.0.x
-#+macro: modified 26 December 2021
+#+macro: modified 29 December 2021
 
 #+language: en
 #+export_file_name: org-transclusion.texi
@@ -47,7 +47,6 @@ modify this GNU manual.”
 * Example Use Cases & Main Features
 
 #+transclude: [[../README.org::#use-cases]] :only-contents 
-
 
 * Installation
 
@@ -635,7 +634,6 @@ It seems like this could work well for headlines, and named tables, src blocks, 
 * Contributing
 
 #+transclude: [[../README.org::*Contributing]] :only-contents 
-
 
 * Index - Features
 :PROPERTIES:

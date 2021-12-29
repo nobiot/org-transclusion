@@ -71,7 +71,7 @@ Main Features:
 
 - For program source and plain text files, transclude a certain lines or dynamically specify the from/to lines to keep the transclusion always up-to-date with the evolving source files
 
-- For program source files, transclude parts or whole code directly into Org's source block to leverage the rich Org features
+- For program source files, transclude parts or whole code directly into Org's source block to leverage the rich Org features including noweb style syntax
 
 - Extend Org-transclusion with its extension framework
 
