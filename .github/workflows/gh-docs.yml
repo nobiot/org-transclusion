@@ -21,7 +21,7 @@ jobs:
       run: |
         cd docs
     - name: Deploy 🚀
-       uses: JamesIves/github-pages-deploy-action@4.1.7
-       with:
-         branch: main # The branch the action should deploy to.
-         folder: docs # The folder the action should deploy.
+      uses: JamesIves/github-pages-deploy-action@4.1.7
+      with:
+        branch: main # The branch the action should deploy to.
+        folder: docs # The folder the action should deploy.
