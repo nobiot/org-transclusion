@@ -17,7 +17,7 @@
 #+html: <a href="http://elpa.gnu.org/devel/org-transclusion.html"><img alt="GNU-devel ELPA" src="https://elpa.gnu.org/devel/org-transclusion.svg"/></a>
 #+html: <img alt="GPLv3" src="https://img.shields.io/badge/License-GPLv3-blue.svg">
 
-This manual is for Org-transclusion {{{version}}}.
+This manual is for Org-transclusion version {{{version}}}.
 
 Last updated: {{{modified}}}.
 
