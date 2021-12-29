@@ -10,7 +10,7 @@
 #+texinfo_dir_desc: Transclusion in Org mode
 #+texinfo: @paragraphindent asis
 
-#+options: toc:nil
+#+options: toc:nil ':t
 
 #+html: <a href="https://www.gnu.org/software/emacs/"><img alt="GNU Emacs" src="https://img.shields.io/static/v1?logo=gnuemacs&logoColor=fafafa&label=Made%20for&message=GNU%20Emacs&color=7F5AB6&style=flat"/></a>
 #+html: <a href="http://elpa.gnu.org/packages/org-transclusion.html"><img alt="GNU ELPA" src="https://elpa.gnu.org/packages/org-transclusion.svg"/></a>

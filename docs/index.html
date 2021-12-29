@@ -11,7 +11,7 @@ included in the section entitled “GNU Free Documentation License.”
 
 (a) The FSF’s Back-Cover Text is: “You have the freedom to copy and
 modify this GNU manual.”
- -->
+ -->
 <!-- Created by GNU Texinfo 6.7, http://www.gnu.org/software/texinfo/ -->
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -62,7 +62,7 @@ Next: <a href="#Example-Use-Cases-_0026-Main-Features" accesskey="n" rel="next">
 
 <p>This manual is for Org-transclusion 1.0.x.
 </p>
-<p>Last updated: 26 December 2021.
+<p>Last updated: 29 December 2021.
 </p>
 <p>Org-transclusion lets you insert a copy of text content via a file link or ID link within an Org file. It lets you have the same content present in different buffers at the same time without copy-and-pasting it. Edit the source of the content, and you can refresh the transcluded copies to the up-to-date state. Org-transclusion keeps your files clear of the transcluded copies, leaving only the links to the original content.<span id="whatis"></span></p>
 <p>Copyright (C) 2021  Free Software Foundation, Inc.
@@ -106,6 +106,7 @@ modify this GNU manual.”
 <tr><td align="left" valign="top">&bull; <a href="#GNU-Free-Documentation-License">GNU Free Documentation License</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
 </td></tr>
 <tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+
 </pre></th></tr><tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">&mdash; The Detailed Node Listing &mdash;
 
 Usage
@@ -127,11 +128,13 @@ Usage
 <tr><td align="left" valign="top">&bull; <a href="#Extensions">Extensions</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
 </td></tr>
 <tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+
 Filter Org elements per transclusion
 
 </pre></th></tr><tr><td align="left" valign="top">&bull; <a href="#Notes-on-excluding-the-headline-element">Notes on excluding the headline element</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
 </td></tr>
 <tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+
 Transclude range of lines for text and source files
 
 </pre></th></tr><tr><td align="left" valign="top">&bull; <a href="#lines-property-to-specify-a-range-of-lines">&lsquo;<samp>lines</samp>&rsquo; property to specify a range of lines</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
@@ -139,6 +142,7 @@ Transclude range of lines for text and source files
 <tr><td align="left" valign="top">&bull; <a href="#end-property-to-specify-a-search-term-to-dynamically-look-for-the-end-of-a-range">&lsquo;<samp>end</samp>&rsquo; property to specify a search term to dynamically look for the end of a range</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
 </td></tr>
 <tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+
 Customizing
 
 </pre></th></tr><tr><td align="left" valign="top">&bull; <a href="#Customizable-filter-to-exclude-certain-Org-elements">Customizable filter to exclude certain Org elements</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
@@ -150,6 +154,7 @@ Customizing
 <tr><td align="left" valign="top">&bull; <a href="#Keybindings">Keybindings</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
 </td></tr>
 <tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+
 Faces &amp; fringe bitmap
 
 </pre></th></tr><tr><td align="left" valign="top">&bull; <a href="#Face-for-the-_0023_002btransclude-keyword">Face for the &lsquo;<samp>#+transclude</samp>&rsquo; keyword</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
@@ -157,6 +162,7 @@ Faces &amp; fringe bitmap
 <tr><td align="left" valign="top">&bull; <a href="#Faces-for-the-fringes-next-to-transcluded-region-and-source-region">Faces for the fringes next to transcluded region and source region</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
 </td></tr>
 <tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+
 Credits
 
 </pre></th></tr><tr><td align="left" valign="top">&bull; <a href="#Original-idea-by-John-Kitchin">Original idea by John Kitchin</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
@@ -164,6 +170,7 @@ Credits
 <tr><td align="left" valign="top">&bull; <a href="#Text_002dClone">Text-Clone</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
 </td></tr>
 <tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+
 </pre></th></tr></table>
 
 <hr>
@@ -208,7 +215,7 @@ Next: <a href="#Installation" accesskey="n" rel="next">Installation</a>, Previou
 
 </li><li> For program source and plain text files, transclude a certain lines or dynamically specify the from/to lines to keep the transclusion always up-to-date with the evolving source files
 
-</li><li> For program source files, transclude parts or whole code directly into Org&rsquo;s source block to leverage the rich Org features
+</li><li> For program source files, transclude parts or whole code directly into Org&rsquo;s source block to leverage the rich Org features including noweb style syntax
 
 </li><li> Extend Org-transclusion with its extension framework
 </li></ul>
@@ -304,9 +311,11 @@ Next: <a href="#Usage" accesskey="n" rel="next">Usage</a>, Previous: <a href="#I
 </p>
 <p>Alternatively, you can also put cursor somewhere on the link and type  &lsquo;<samp>M-x org-transclusion-make-from-link RET</samp>&rsquo;. That will insert another line with &lsquo;<samp>#+transclusion:</samp>&rsquo; keyword added in front of a copy of the original link in the next empty line.
 </p>
-<p>The transcluded text is <strong>read-only</strong> but you can copy it and export it as normal text. Org-transclusion remembers where it has transcluded the text from (its source buffer).  You can call a number of useful commands with a single letter (by default).
+<p>The transcluded paragraphs will be visually marked with &ldquo;| &rdquo; in the fringe (on graphical display) or in the beginning of line (on a text-only terminal) by default. The source (original) of the transcluded paragraphs will be also visually marked with an overlay. The appearance of these visual elements can be customized (refer to section <a href="#Faces-_0026-fringe-bitmap">Faces &amp; fringe bitmap</a>).
 </p>
-<p>For example, you can press &lsquo;<samp>o</samp>&rsquo; to open the source buffer of the transclusion at point, or &lsquo;<samp>O</samp>&rsquo; (capital &quot;o&quot;) to open and move to it. Press &lsquo;<samp>g</samp>&rsquo; to refresh the transclusion. Press &lsquo;<samp>e</samp>&rsquo; to start live-sync edit. For more detail, inspect the documentation of each command. Press &lsquo;<samp>d</samp>&rsquo; to remove the transcluded content, putting the original &lsquo;<samp>#+transclude: [[id:id-of-the-content]]</samp>&rsquo;.
+<p>The transcluded text is <strong>read-only</strong> but you can copy it and export it as normal text. Org-transclusion remembers where it has transcluded the text from (its source buffer).
+</p>
+<p>You can call a number of useful commands with a single letter (by default). For example, you can press &lsquo;<samp>o</samp>&rsquo; to open the source buffer of the transclusion at point, or &lsquo;<samp>O</samp>&rsquo; (capital &ldquo;o&rdquo;) to open and move to it. Press &lsquo;<samp>g</samp>&rsquo; to refresh the transclusion. Press &lsquo;<samp>e</samp>&rsquo; to start live-sync edit. For more detail, inspect the documentation of each command. Press &lsquo;<samp>d</samp>&rsquo; to remove the transcluded content, putting the original &lsquo;<samp>#+transclude: [[id:id-of-the-content]]</samp>&rsquo;.
 </p>
 <p>This single-letter-context-menu is defined in &lsquo;<samp>org-transclusion-map</samp>&rsquo;. The default keybindings are shown below. Adapt them to your liking, especially if you use Vim keybindings with Evil Mode, etc.
 </p>
@@ -367,7 +376,7 @@ Next: <a href="#Org-links-supported" accesskey="n" rel="next">Org links supporte
 <span id="index-org_002dtransclusion_002dmode"></span>
 <span id="index-org_002dtransclusion_002dactivate"></span>
 <span id="index-org_002dtransclusion_002ddeactivate"></span>
-<span id="index-Transclusion-Properties"></span>
+<span id="index-Properties"></span>
 <span id="index-Property-_002d-_003adisable_002dauto"></span>
 <span id="index-org_002dtransclusion_002dadd_002dall_002don_002dactivate"></span>
 
@@ -387,7 +396,7 @@ Next: <a href="#Org-links-supported" accesskey="n" rel="next">Org links supporte
 <pre class="example">#+transclude: [[file:path/to/file.org]] :disable-auto
 </pre></div>
 
-<p>You can override the &lsquo;<samp>:disable-auto</samp>&rsquo; property by manually calling &lsquo;<samp>org-transclusion-add</samp>&rsquo; at point.
+<p>You can override the &lsquo;<samp>:disable-auto</samp>&rsquo; property by manually calling &lsquo;<samp>org-transclusion-add</samp>&rsquo; at point. There are various properties like &lsquo;<samp>:disable-auto</samp>&rsquo; to control each transclusion (refer to <a href="#Index-_002d-Features">Index - Features</a> for a list).
 </p>
 <hr>
 <span id="Org-links-supported"></span><div class="header">
@@ -459,15 +468,15 @@ Next: <a href="#Filter-Org-elements-per-transclusion" accesskey="n" rel="next">F
 </p>
 <dl compact="compact">
 <dt>&lsquo;<samp>org-transclusion-make-from-link</samp>&rsquo;</dt>
-<dd><p>Make a transclusion keyword from a link at point. If you pass a positive number 1-9 with &lsquo;<samp>digit-argument</samp>&rsquo; (e.g. prefix &lsquo;<samp>M-x</samp>&rsquo; with &lsquo;<samp>C-2</samp>&rsquo; to pass &quot;2&quot;), this function automatically puts the &lsquo;<samp>:level</samp>&rsquo; property to the resultant transclusion keyword.
+<dd><p>Make a transclusion keyword from a link at point. If you pass a positive number 1-9 with &lsquo;<samp>digit-argument</samp>&rsquo; (e.g. prefix &lsquo;<samp>M-x</samp>&rsquo; with &lsquo;<samp>C-2</samp>&rsquo; to pass &ldquo;2&rdquo;), this function automatically puts the &lsquo;<samp>:level</samp>&rsquo; property to the resultant transclusion keyword.
 </p>
 </dd>
 <dt>&lsquo;<samp>org-transclusion-promote-subtree</samp>&rsquo;</dt>
-<dd><p>Promote transcluded subtree at point. Mapped to &quot;P&quot; (capital &quot;p&quot;) by default in &lsquo;<samp>org-transclusion-map</samp>&rsquo;
+<dd><p>Promote transcluded subtree at point. Mapped to &ldquo;P&rdquo; (capital &ldquo;p&rdquo;) by default in &lsquo;<samp>org-transclusion-map</samp>&rsquo;
 </p>
 </dd>
 <dt>&lsquo;<samp>org-transclusion-demote-subtree</samp>&rsquo;</dt>
-<dd><p>Demote transcluded subtree at point. Mapped to &quot;D&quot; (capital &quot;D&quot;) by default in &lsquo;<samp>org-transclusion-map</samp>&rsquo;
+<dd><p>Demote transcluded subtree at point. Mapped to &ldquo;D&rdquo; (capital &ldquo;D&rdquo;) by default in &lsquo;<samp>org-transclusion-map</samp>&rsquo;
 </p></dd>
 </dl>
 
@@ -495,7 +504,7 @@ Next: <a href="#Live_002dsync-edit" accesskey="n" rel="next">Live-sync edit</a>,
 </p>
 </dd>
 <dt>&lsquo;<samp>org-transclusion-include-first-section</samp>&rsquo;</dt>
-<dd><p>This customizing variable globally defines whether or not to include the first section of the source Org file. The first section is the part before the first headline &ndash; that&rsquo;s the section that typically contains &lsquo;<samp>#+title</samp>&rsquo;, &lsquo;<samp>#+author</samp>&rsquo;, and so on. Many people also write notes in it without adding any headlines. Note that this user option&rsquo;s default is now &lsquo;<samp>t</samp>&rsquo; (changed from &lsquo;<samp>nil</samp>&rsquo; as users seem to spend time to &quot;correct&quot; this issue). Turn it to &lsquo;<samp>t</samp>&rsquo; if you wish to transclude the content from the first section of your Org files. If you wish to exclude the &quot;meta data&quot; defined by &lsquo;<samp>#+title</samp>&rsquo; and others, exclude &lsquo;<samp>keyword</samp>&rsquo; as described in this section &ndash; these meta data are defined with using the &lsquo;<samp>keyword</samp>&rsquo; element of Org Mode.
+<dd><p>This customizing variable globally defines whether or not to include the first section of the source Org file. The first section is the part before the first headline &ndash; that&rsquo;s the section that typically contains &lsquo;<samp>#+title</samp>&rsquo;, &lsquo;<samp>#+author</samp>&rsquo;, and so on. Many people also write notes in it without adding any headlines. Note that this user option&rsquo;s default is now &lsquo;<samp>t</samp>&rsquo; (changed from &lsquo;<samp>nil</samp>&rsquo; as users seem to spend time to &ldquo;correct&rdquo; this issue). Turn it to &lsquo;<samp>t</samp>&rsquo; if you wish to transclude the content from the first section of your Org files. If you wish to exclude the &ldquo;meta data&rdquo; defined by &lsquo;<samp>#+title</samp>&rsquo; and others, exclude &lsquo;<samp>keyword</samp>&rsquo; as described in this section &ndash; these meta data are defined with using the &lsquo;<samp>keyword</samp>&rsquo; element of Org Mode.
 </p>
 <p>Refer also to the <a href="#Include-the-section-before-the-first-headline-_0028Org-file-only_0029">sub-section on this user option</a>.
 </p></dd>
@@ -644,7 +653,7 @@ Next: <a href="#Extensions" accesskey="n" rel="next">Extensions</a>, Previous: <
 
 <p>This feature is provided as an <a href="#Extensions">extension</a> (default on). 
 </p>
-<p>When you transclude text files other than Org files, 
+<p>When you transclude text files other than Org files, you can use following properties to specify a range of lines to transclude.
 </p>
 <table class="menu" border="0" cellspacing="0">
 <tr><td align="left" valign="top">&bull; <a href="#lines-property-to-specify-a-range-of-lines" accesskey="1">&lsquo;<samp>lines</samp>&rsquo; property to specify a range of lines</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
@@ -668,7 +677,7 @@ Next: <a href="#end-property-to-specify-a-search-term-to-dynamically-look-for-th
 <pre class="example">#+transclude: [[file:../../test/test.txt]] :lines 3-5
 </pre></div>
 
-<p>The rage is specified by the number &quot;3-5&quot;; in this case, lines from 3 to 5, both lines inclusive.
+<p>The rage is specified by the number &ldquo;3-5&rdquo;; in this case, lines from 3 to 5, both lines inclusive.
 </p>
 <p>To transclude a single line, have the the same number in both places (e.g. 10-10, meaning line 10 only).
 </p>
@@ -676,14 +685,14 @@ Next: <a href="#end-property-to-specify-a-search-term-to-dynamically-look-for-th
 </p>
 <p>You can combine the &lsquo;<samp>:lines</samp>&rsquo; property with the &lsquo;<samp>:src</samp>&rsquo; property to transclude only a certain range of source files (Example 1 below).
 </p>
-<p>For Org&rsquo;s file links, you can use <a href="https://orgmode.org/manual/Search-Options.html">search options</a> specified by the &quot;::&quot; (two colons) notation. When a search finds a line that includes the string, the Org-transclude counts it as the starting line 1 for the  &lsquo;<samp>:lines</samp>&rsquo; property.
+<p>For Org&rsquo;s file links, you can use <a href="https://orgmode.org/manual/Search-Options.html">search options</a> specified by the &ldquo;::&rdquo; (two colons) notation. When a search finds a line that includes the string, the Org-transclude counts it as the starting line 1 for the  &lsquo;<samp>:lines</samp>&rsquo; property.
 </p>
-<p>Example 1: This transcludes the four lines of the source file from the line that contains string &quot;id-1234&quot; (including that line counted as line 1).
+<p>Example 1: This transcludes the four lines of the source file from the line that contains string &ldquo;id-1234&rdquo; (including that line counted as line 1).
 </p><div class="example">
 <pre class="example">#+transclude: [[file:../../test/python-1.py::id-1234]] :lines 1-4 :src python
 </pre></div>
 
-<p>Example 2: This transcludes only the single line that contains the line found by the search option for text string &quot;Transcendental Ontology&quot;
+<p>Example 2: This transcludes only the single line that contains the line found by the search option for text string &ldquo;Transcendental Ontology&rdquo;
 </p><div class="example">
 <pre class="example">#+transclude: [[file:../../test/test.txt::Transcendental Ontology]] :lines 1-1
 </pre></div>
@@ -703,7 +712,7 @@ Previous: <a href="#lines-property-to-specify-a-range-of-lines" accesskey="p" re
 </p>
 <p>See Example 3 below. This transclusion will look for &lsquo;<samp>id-1234</samp>&rsquo; as the beginning line of the range as specified by the search option &lsquo;<samp>::id-1234</samp>&rsquo; in the link. With the &lsquo;<samp>:end</samp>&rsquo; property, the search term &lsquo;<samp>id-1234 end here</samp>&rsquo; defines the end of the range. The search looks for &lsquo;<samp>id-123 end here</samp>&rsquo; in the body text, and use the line one before the one where the text is find (thus, the transcluded range will not contain &lsquo;<samp>id-1234 end here</samp>&rsquo;).
 </p>
-<p>You can also combined &lsquo;<samp>:lines</samp>&rsquo; property with &lsquo;<samp>:end</samp>&rsquo; property.  It will only displace the beginning, and the end part of the range (the second number after the hyphen &quot;-&quot;)  is ignored. In the same example, the beginning of the range is the one line after the line where &quot;id-1234&quot; is found; it&rsquo;s the &quot;second line, or line 2&quot;.  Instead of transcluding until the end of the buffer, the end is defined by the &lsquo;<samp>:end</samp>&rsquo; property.
+<p>You can also combined &lsquo;<samp>:lines</samp>&rsquo; property with &lsquo;<samp>:end</samp>&rsquo; property.  It will only displace the beginning, and the end part of the range (the second number after the hyphen &ldquo;-&rdquo;)  is ignored. In the same example, the beginning of the range is the one line after the line where &ldquo;id-1234&rdquo; is found; it&rsquo;s the &ldquo;second line, or line 2&rdquo;.  Instead of transcluding until the end of the buffer, the end is defined by the &lsquo;<samp>:end</samp>&rsquo; property.
 </p>
 <p>Example 3:
 </p><div class="example">
@@ -725,7 +734,7 @@ Previous: <a href="#Transclude-range-of-lines-for-text-and-source-files" accessk
 
 <p>Org-transclusion provides a simple extension framework, where you can use &lsquo;<samp>customize</samp>&rsquo; to selectively add new features. 
 </p>
-<p>If you use &lsquo;<samp>customize</samp>&rsquo;, the features are loaded automatically. Note that it does not &quot;unload&quot; the feature until you relaunch Emacs.
+<p>If you use &lsquo;<samp>customize</samp>&rsquo;, the features are loaded automatically. Note that it does not &ldquo;unload&rdquo; the feature until you relaunch Emacs.
 </p>
 <p>If you do not use &lsquo;<samp>customize</samp>&rsquo; (e.g. Doom), you may need to explicitly require an extension. For example, to activate &lsquo;<samp>org-transclusion-indent-mode</samp>&rsquo;, you might need to add something like this in your configuration file.
 </p>
@@ -771,7 +780,7 @@ Next: <a href="#Known-Limitations" accesskey="n" rel="next">Known Limitations</a
 <dt>&lsquo;<samp>org-transclusion-extensions</samp>&rsquo;</dt>
 <dd><p>Defines extensions to be loaded with
 org-transclusion.el. If you use &lsquo;<samp>customize</samp>&rsquo;, the extensions are loaded by it.
-If you don&rsquo;t, you likely need to explicitly use &lsquo;<samp>require</samp>&rsquo; to load them. See <a href="#Extensions">seb-section</a>
+If you don&rsquo;t, you likely need to explicitly use &lsquo;<samp>require</samp>&rsquo; to load them. See <a href="#Extensions">sub-section</a>
 </p>
 </dd>
 <dt>&lsquo;<samp>org-transclusion-add-all-on-activate</samp>&rsquo;</dt>
@@ -792,7 +801,7 @@ activation when you directly call &lsquo;<samp>org-transclusion-activate</samp>&
 <dt>&lsquo;<samp>org-transclusion-open-source-display-action-list</samp>&rsquo;</dt>
 <dd><p>You can customize the
 way the &lsquo;<samp>org-transclusion-open-source</samp>&rsquo; function displays the source buffer for
-the transclusion. You specify the &quot;action&quot; in the way defined by the built-in
+the transclusion. You specify the &ldquo;action&rdquo; in the way defined by the built-in
 &lsquo;<samp>display-buffer</samp>&rsquo; function. Refer to its in-system documentation (with &lsquo;<samp>C-h f</samp>&rsquo;)
 for the accepted values. &lsquo;<samp>M-x customize</samp>&rsquo; can also guide you on what types of
 values are accepted.
@@ -800,7 +809,7 @@ values are accepted.
 </dd>
 <dt>&lsquo;<samp>org-transclusion-mode-lighter</samp>&rsquo;</dt>
 <dd><p>Define the lighter for Org-transclusion
-minor mode. The default is &quot; OT&quot;.
+minor mode. The default is &ldquo; OT&rdquo;.
 </p></dd>
 </dl>
 
@@ -904,7 +913,7 @@ Previous: <a href="#Face-for-the-_0023_002btransclude-keyword" accesskey="p" rel
  :background &quot;green&quot;)
 </pre></div>
 
-<p>For colors, where &quot;green&quot; is,  you can also use something like &quot;#62c86a&quot; (Emacs calls it &quot;RGB triple&quot;; you can refer to in-system manual Emacs &gt; Colors). You might also like to refer to a list of currently defined faces in your Emacs by &lsquo;<samp>list-faces-display</samp>&rsquo;.
+<p>For colors, where &ldquo;green&rdquo; is,  you can also use something like &ldquo;#62c86a&rdquo; (Emacs calls it &ldquo;RGB triple&rdquo;; you can refer to in-system manual Emacs &gt; Colors). You might also like to refer to a list of currently defined faces in your Emacs by &lsquo;<samp>list-faces-display</samp>&rsquo;.
 </p>
 <p>Other faces:
 </p><ul>
@@ -913,7 +922,7 @@ Previous: <a href="#Face-for-the-_0023_002btransclude-keyword" accesskey="p" rel
 </li><li> &lsquo;<samp>org-transclusion</samp>&rsquo;
 </li><li> &lsquo;<samp>org-transclusion-edit</samp>&rsquo;
 </li><li> &lsquo;<samp>org-transclusion-fringe-bitmap</samp>&rsquo;
-It is used for the fringe that indicates the transcluded region. It works only in a graphical environment (not in terminal).
+It is used for the fringe that indicates the transcluded region. It works only in on a graphical display (not on a text-only terminal).
 </li></ul>
 
 <hr>
@@ -968,7 +977,7 @@ Next: <a href="#Credits" accesskey="n" rel="next">Credits</a>, Previous: <a href
 </div>
 <span id="Known-Limitations-1"></span><h2 class="chapter">6 Known Limitations</h2>
 
-<p>Note this section is still incomplete, not exhaustive for &quot;known&quot; limitations.
+<p>Note this section is still incomplete, not exhaustive for &ldquo;known&rdquo; limitations.
 </p>
 <ul>
 <li> Org link&rsquo;s search-options &lsquo;<samp>::/regex/</samp>&rsquo; and &lsquo;<samp>::number</samp>&rsquo; do not work as intended.
@@ -989,17 +998,17 @@ A new extension has been added to support &lsquo;<samp>org-indent-mode</samp>&rs
 Refer to <a href="#Extensions">this section</a>.
 
 </li><li> Doom&rsquo;s customization may interfere with Org-transclusion
-Refer to issue <a href="https://github.com/nobiot/org-transclusion/issues/52">#52</a>. The symptom is that in Doom you get an error message that includes this: &quot;progn: ‘recenter’ing a window that does not display current-buffer.&quot; Adding this in your configuration has been reported to fix the issue:
+Refer to issue <a href="https://github.com/nobiot/org-transclusion/issues/52">#52</a>. The symptom is that in Doom you get an error message that includes this: &ldquo;progn: ‘recenter’ing a window that does not display current-buffer.&rdquo; Adding this in your configuration has been reported to fix the issue:
 
 <p>&lsquo;<samp>(advice-remove 'org-link-search '+org--recenter-after-follow-link-a)</samp>&rsquo;
 </p>
 <p>It is probably rather drastic a measure. I will appreciate it if you find a less drastic way that works. Thank you.
 </p>
-</li><li> Org refile does not work &quot;properly&quot; on the transcluded headlines
+</li><li> Org refile does not work &ldquo;properly&rdquo; on the transcluded headlines
 Refer to issue <a href="https://github.com/nobiot/org-transclusion/issues/20">#20</a>. I don&rsquo;t intend to support this &ndash; refile the source, not the transcluded copy.
 
 </li><li> Org-transclusion does not support expansion of noweb references when a transcluded source block code has them
-Refer to issue <a href="https://github.com/nobiot/org-transclusion/issues/86">#86</a>. You will get &quot;Text read-only&quot; error when export tries to expand the noweb references into the source code. †<a href="https://orgmode.org/manual/Noweb-Reference-Syntax.html">noweb reference</a>
+Refer to issue <a href="https://github.com/nobiot/org-transclusion/issues/86">#86</a>. You will get &ldquo;Text read-only&rdquo; error when export tries to expand the noweb references into the source code. †<a href="https://orgmode.org/manual/Noweb-Reference-Syntax.html">noweb reference</a>
 </li></ul>
 
 <hr>
@@ -1067,7 +1076,7 @@ Next: <a href="#Index-_002d-Features" accesskey="n" rel="next">Index - Features<
 </li><li> Create issues, discussion, and/or pull requests. All welcome.
 </li></ul>
 
-<p>Org-transclusion is part of GNU ELPA and thus copyrighted by the <a href="http://fsf.org">Free Software Foundation</a> (FSF). This means that anyone who is making a substantive code contribution will need to &quot;assign the copyright for your contributions to the FSF so that they can be included in GNU Emacs&quot; (<a href="https://orgmode.org/contribute.html#copyright">Org Mode website</a>).
+<p>Org-transclusion is part of GNU ELPA and thus copyrighted by the <a href="http://fsf.org">Free Software Foundation</a> (FSF). This means that anyone who is making a substantive code contribution will need to &ldquo;assign the copyright for your contributions to the FSF so that they can be included in GNU Emacs&rdquo; (<a href="https://orgmode.org/contribute.html#copyright">Org Mode website</a>).
 </p>
 <p>Thank you.
 </p>
@@ -1115,6 +1124,7 @@ Next: <a href="#Index-_002d-Commands" accesskey="n" rel="next">Index - Commands<
 <tr><td></td><td valign="top"><a href="#index-Org-Links-Supported">Org Links Supported</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Org-links-supported">Org links supported</a></td></tr>
 <tr><td colspan="4"> <hr></td></tr>
 <tr><th id="Index-_002d-Features_cp_letter-P">P</th><td></td><td></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Properties">Properties</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Org_002dtransclusion-mode-activate-and-deactivate">Org-transclusion mode activate and deactivate</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-Property-_002d-_003adisable_002dauto">Property - :disable-auto</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Org_002dtransclusion-mode-activate-and-deactivate">Org-transclusion mode activate and deactivate</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-Property-_002d-_003aend">Property - :end</a>:</td><td>&nbsp;</td><td valign="top"><a href="#end-property-to-specify-a-search-term-to-dynamically-look-for-the-end-of-a-range">&lsquo;<samp>end</samp>&rsquo; property to specify a search term to dynamically look for the end of a range</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-Property-_002d-_003alevel">Property - :level</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Control-levels-of-headlines-per-transclusion">Control levels of headlines per transclusion</a></td></tr>
@@ -1127,7 +1137,6 @@ Next: <a href="#Index-_002d-Commands" accesskey="n" rel="next">Index - Commands<
 <tr><th id="Index-_002d-Features_cp_letter-T">T</th><td></td><td></td></tr>
 <tr><td></td><td valign="top"><a href="#index-Transclude-into-Org_0027s-src_002dblock">Transclude into Org&rsquo;s src-block</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Transclude-source-file-into-src_002dblock">Transclude source file into src-block</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-Transclude-range-of-lines">Transclude range of lines</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Transclude-range-of-lines-for-text-and-source-files">Transclude range of lines for text and source files</a></td></tr>
-<tr><td></td><td valign="top"><a href="#index-Transclusion-Properties">Transclusion Properties</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Org_002dtransclusion-mode-activate-and-deactivate">Org-transclusion mode activate and deactivate</a></td></tr>
 <tr><td colspan="4"> <hr></td></tr>
 </table>
 <table><tr><th valign="top">Jump to: &nbsp; </th><td><a class="summary-letter" href="#Index-_002d-Features_cp_letter-A"><b>A</b></a>
