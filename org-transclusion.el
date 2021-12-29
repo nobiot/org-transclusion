@@ -751,7 +751,8 @@ turned off (removed)."
   ;; --, check is done for `buffer-file-name' to see if there is a file visited
   ;; by the buffer. If a "temp" buffer, there is no file being visited.
   (when (and (org-transclusion-remove-all)
-             (buffer-file-name))
+             (buffer-file-name)
+             (buffer-modified-p))
     (restore-buffer-modified-p t)
     (save-buffer)))
 
