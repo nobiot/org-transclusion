@@ -14,8 +14,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     
-    - name: Install texinfo
-      run: sudo apt-get install texinfo
+    - name: Install dependencies
+      run: sudo apt-get install emacs texinfo
       
     - name: Run docs/make gh-html
       run: |
