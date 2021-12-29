@@ -92,7 +92,7 @@ Put your cursor somewhere on this keyword line and type =M-x org-transclusion-ad
 
 Alternatively, you can also put cursor somewhere on the link and type  =M-x org-transclusion-make-from-link RET=. That will insert another line with =#+transclusion:= keyword added in front of a copy of the original link in the next empty line.
 
-The transcluded paragraphs will be visually marked with "| " in the fringe (on graphical display) or in the beginning of line (on a text-only terminal) by default. The source (original) of the transcluded paragraphs will be also visually marked with an overlay. The appearance of these visual elements can be customized (refer to section [[#faces][Faces & fringe bitmap]]).
+The transcluded paragraphs will be visually marked with a vertical line "| " in the fringe (on graphical display) or in the beginning of line (on a text-only terminal) by default. The source (original) of the transcluded paragraphs will be also visually marked with an overlay. The appearance of these visual elements can be customized (refer to section [[#faces][Faces & fringe bitmap]]).
 
 The transcluded text is *read-only* but you can copy it and export it as normal text. Org-transclusion remembers where it has transcluded the text from (its source buffer).
 

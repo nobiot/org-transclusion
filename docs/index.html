@@ -311,7 +311,7 @@ Next: <a href="#Usage" accesskey="n" rel="next">Usage</a>, Previous: <a href="#I
 </p>
 <p>Alternatively, you can also put cursor somewhere on the link and type  &lsquo;<samp>M-x org-transclusion-make-from-link RET</samp>&rsquo;. That will insert another line with &lsquo;<samp>#+transclusion:</samp>&rsquo; keyword added in front of a copy of the original link in the next empty line.
 </p>
-<p>The transcluded paragraphs will be visually marked with &ldquo;| &rdquo; in the fringe (on graphical display) or in the beginning of line (on a text-only terminal) by default. The source (original) of the transcluded paragraphs will be also visually marked with an overlay. The appearance of these visual elements can be customized (refer to section <a href="#Faces-_0026-fringe-bitmap">Faces &amp; fringe bitmap</a>).
+<p>The transcluded paragraphs will be visually marked with a vertical line &ldquo;| &rdquo; in the fringe (on graphical display) or in the beginning of line (on a text-only terminal) by default. The source (original) of the transcluded paragraphs will be also visually marked with an overlay. The appearance of these visual elements can be customized (refer to section <a href="#Faces-_0026-fringe-bitmap">Faces &amp; fringe bitmap</a>).
 </p>
 <p>The transcluded text is <strong>read-only</strong> but you can copy it and export it as normal text. Org-transclusion remembers where it has transcluded the text from (its source buffer).
 </p>
@@ -460,7 +460,7 @@ Next: <a href="#Filter-Org-elements-per-transclusion" accesskey="n" rel="next">F
 <pre class="example">#+transclude: [[file:path/to/file.org::*Headline]] :level 2
 </pre></div>
 
-<p>The top level of the transcluded headline will set to the value of &lsquo;<samp>:level</samp>&rsquo; property &ndash; in this example, level 2 regardless of that in the source. When the headline contains sub-headlines, they will be all automatically promoted or demoted to align according to how many levels the top of the subtree will move.
+<p>The top level of the transcluded headline will be set to the value of &lsquo;<samp>:level</samp>&rsquo; property &ndash; in this example, level 2 regardless of that in the source. When the headline contains sub-headlines, they will be all automatically promoted or demoted to align according to how many levels the top of the subtree will move.
 </p>
 <p>When you transclude an entire Org file, it may contain multiple subtrees. In such cases, the top-most level among the subtrees will be set according to the &lsquo;<samp>:level</samp>&rsquo; property; the rest of headlines in the buffer will align accordingly.
 </p>
@@ -681,9 +681,9 @@ Next: <a href="#end-property-to-specify-a-search-term-to-dynamically-look-for-th
 </p>
 <p>To transclude a single line, have the the same number in both places (e.g. 10-10, meaning line 10 only).
 </p>
-<p>One of the numbers can be omitted.  When the first number is omitted (e.g. -10), it means from the beginning of the file to line 10. Likewise, when the second number is omitted (e.g. 10-), it means from line 10 to the end of file.
+<p>One of the numbers can be omitted. When the first number is omitted (e.g. -10), it means from the beginning of the file to line 10. Likewise, when the second number is omitted (e.g. 10-), it means from line 10 to the end of file.
 </p>
-<p>You can combine the &lsquo;<samp>:lines</samp>&rsquo; property with the &lsquo;<samp>:src</samp>&rsquo; property to transclude only a certain range of source files (Example 1 below).
+<p>You can combine &lsquo;<samp>:lines</samp>&rsquo; with &lsquo;<samp>:src</samp>&rsquo; to transclude only a certain range of source files (Example 1 below).
 </p>
 <p>For Org&rsquo;s file links, you can use <a href="https://orgmode.org/manual/Search-Options.html">search options</a> specified by the &ldquo;::&rdquo; (two colons) notation. When a search finds a line that includes the string, the Org-transclude counts it as the starting line 1 for the  &lsquo;<samp>:lines</samp>&rsquo; property.
 </p>
@@ -697,8 +697,11 @@ Next: <a href="#end-property-to-specify-a-search-term-to-dynamically-look-for-th
 <pre class="example">#+transclude: [[file:../../test/test.txt::Transcendental Ontology]] :lines 1-1
 </pre></div>
 
-<p>Note search-options &lsquo;<samp>::/regex/</samp>&rsquo; and &lsquo;<samp>::number</samp>&rsquo; do not work as intended.
+<blockquote>
+<p><b>Note:</b> Search-options &lsquo;<samp>::/regex/</samp>&rsquo; and &lsquo;<samp>::number</samp>&rsquo; do not work as intended.
 </p>
+</blockquote>
+
 <hr>
 <span id="end-property-to-specify-a-search-term-to-dynamically-look-for-the-end-of-a-range"></span><div class="header">
 <p>
@@ -710,9 +713,9 @@ Previous: <a href="#lines-property-to-specify-a-range-of-lines" accesskey="p" re
 
 <p>You can add &lsquo;<samp>:end</samp>&rsquo; property and specify the search term as its value. Surround the search term with double quotation marks (mandatory).
 </p>
-<p>See Example 3 below. This transclusion will look for &lsquo;<samp>id-1234</samp>&rsquo; as the beginning line of the range as specified by the search option &lsquo;<samp>::id-1234</samp>&rsquo; in the link. With the &lsquo;<samp>:end</samp>&rsquo; property, the search term &lsquo;<samp>id-1234 end here</samp>&rsquo; defines the end of the range. The search looks for &lsquo;<samp>id-123 end here</samp>&rsquo; in the body text, and use the line one before the one where the text is find (thus, the transcluded range will not contain &lsquo;<samp>id-1234 end here</samp>&rsquo;).
+<p>See Example 3 below. This transclusion will look for &lsquo;<samp>id-1234</samp>&rsquo; as the beginning line of the range as specified by the search option &lsquo;<samp>::id-1234</samp>&rsquo; in the link. With the &lsquo;<samp>:end</samp>&rsquo; property, the search string &lsquo;<samp>id-1234 end here</samp>&rsquo; defines the end of the range. The search looks for &lsquo;<samp>id-123 end here</samp>&rsquo; in the body text. When found, the line one before the search string is used as the ending line (thus, the transcluded range will not contain string &lsquo;<samp>id-1234 end here</samp>&rsquo;).
 </p>
-<p>You can also combined &lsquo;<samp>:lines</samp>&rsquo; property with &lsquo;<samp>:end</samp>&rsquo; property.  It will only displace the beginning, and the end part of the range (the second number after the hyphen &ldquo;-&rdquo;)  is ignored. In the same example, the beginning of the range is the one line after the line where &ldquo;id-1234&rdquo; is found; it&rsquo;s the &ldquo;second line, or line 2&rdquo;.  Instead of transcluding until the end of the buffer, the end is defined by the &lsquo;<samp>:end</samp>&rsquo; property.
+<p>You can also combine &lsquo;<samp>:lines</samp>&rsquo; with &lsquo;<samp>:end</samp>&rsquo;.  It will only displace the beginning, and the end part of the range (the second number after the hyphen &ldquo;-&rdquo;) is ignored. In the same example, the beginning of the range is the next line after &ldquo;id-1234&rdquo; (line 2).  Instead of transcluding all the text until the end of the buffer, the end is defined by the &lsquo;<samp>:end</samp>&rsquo; property (one line before the string &lsquo;<samp>id-1234 end here</samp>&rsquo; is found).
 </p>
 <p>Example 3:
 </p><div class="example">
