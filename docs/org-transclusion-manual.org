@@ -1,6 +1,6 @@
 #+title: Org-transclusion User Manual
 #+author: Noboru Ota <me@nobiot.com>
-#+macro: version 1.0.x
+#+macro: version 1.1.x
 #+macro: modified 29 December 2021
 
 #+language: en
