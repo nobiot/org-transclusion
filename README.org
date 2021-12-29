@@ -20,15 +20,18 @@ Below are images and videos demonstrating some of the key features of
 Org-transclusion.
 
 #+attr_html: :max-width 80%
-https://github.com/nobiot/org-transclusion/blob/main/resources/2021-09-10-transclusion.gif?raw=true
+[[https://github.com/nobiot/org-transclusion/blob/main/resources/2021-09-10-transclusion.gif?raw=true]]
+
 *Figure 1*. Animation to show creation of a transclusion from an ID link
 
 #+attr_html: :max-width 80%
-https://github.com/nobiot/org-transclusion/blob/main/resources/2021-05-01-org-transclusion-0.1.0-live-sync.gif?raw=true
+[[https://github.com/nobiot/org-transclusion/blob/main/resources/2021-05-01-org-transclusion-0.1.0-live-sync.gif?raw=true]]
+
 *Figure 2*. Animation to show live sync from transclusion to source
 
 #+attr_html: :max-width 80%
-https://github.com/nobiot/org-transclusion/blob/main/resources/demo9-title.png?raw=true
+[[https://github.com/nobiot/org-transclusion/blob/main/resources/demo9-title.png?raw=true]]
+
 *Figure 3*. [[https://youtu.be/ueaPiA622wA][Video demo on v0.2.1 on YouTube]] demonstrating new features to transclude a source file into a src-block and function to specify a range of text/source line
   
 - Older videos
@@ -42,7 +45,7 @@ https://github.com/nobiot/org-transclusion/blob/main/resources/demo9-title.png?r
 :CUSTOM_ID: use-cases
 :END:
 
-Here are a summary of some real use cases that users have shared with the author, including his own.
+Here is a summary of some real use cases that users have shared with the author, including his own.
 
 - Book writing ::
   
