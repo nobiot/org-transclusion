@@ -1,4 +1,4 @@
-name: Makefile CI
+name: GH-Page AutoGen
 
 on:
   push:
@@ -8,22 +8,15 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-    
     continue-on-error: false
-
     steps:
-    
     - uses: actions/checkout@v2
-
     - uses: purcell/setup-emacs@master
       with:
         version: '27.2'
-    
     - name: Install dependencies
       run: sudo apt-get install texinfo
-      
     - name: Run docs/make gh-html
       run: |
         cd docs
