@@ -23,5 +23,6 @@ jobs:
     - name: Deploy 🚀
       uses: JamesIves/github-pages-deploy-action@4.1.7
       with:
+        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         branch: main # The branch the action should deploy to.
         folder: docs # The folder the action should deploy.
