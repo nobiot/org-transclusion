@@ -92,9 +92,11 @@ Put your cursor somewhere on this keyword line and type =M-x org-transclusion-ad
 
 Alternatively, you can also put cursor somewhere on the link and type  =M-x org-transclusion-make-from-link RET=. That will insert another line with =#+transclusion:= keyword added in front of a copy of the original link in the next empty line.
 
-The transcluded text is *read-only* but you can copy it and export it as normal text. Org-transclusion remembers where it has transcluded the text from (its source buffer).  You can call a number of useful commands with a single letter (by default).
+The transcluded paragraphs will be visually marked with "| " in the fringe (on graphical display) or in the beginning of line (on a text-only terminal) by default. The source (original) of the transcluded paragraphs will be also visually marked with an overlay. The appearance of these visual elements can be customized (refer to section [[#faces][Faces & fringe bitmap]]).
 
-For example, you can press =o= to open the source buffer of the transclusion at point, or =O= (capital "o") to open and move to it. Press =g= to refresh the transclusion. Press =e= to start live-sync edit. For more detail, inspect the documentation of each command. Press =d= to remove the transcluded content, putting the original =#+transclude: [[id:id-of-the-content]]=.
+The transcluded text is *read-only* but you can copy it and export it as normal text. Org-transclusion remembers where it has transcluded the text from (its source buffer).
+
+You can call a number of useful commands with a single letter (by default). For example, you can press =o= to open the source buffer of the transclusion at point, or =O= (capital "o") to open and move to it. Press =g= to refresh the transclusion. Press =e= to start live-sync edit. For more detail, inspect the documentation of each command. Press =d= to remove the transcluded content, putting the original =#+transclude: [[id:id-of-the-content]]=.
 
 This single-letter-context-menu is defined in =org-transclusion-map=. The default keybindings are shown below. Adapt them to your liking, especially if you use Vim keybindings with Evil Mode, etc.
 
@@ -131,7 +133,7 @@ This should get you started with Org-transclusion. There are more options and cu
 #+findex: org-transclusion-mode
 #+findex: org-transclusion-activate
 #+findex: org-transclusion-deactivate
-#+cindex: Transclusion Properties
+#+cindex: Properties
 #+cindex: Property - :disable-auto
 #+vindex: org-transclusion-add-all-on-activate
 
@@ -151,7 +153,7 @@ You can control whether or not transclusions are to be added automatically per t
 #+transclude: [[file:path/to/file.org]] :disable-auto
 #+end_example
 
-You can override the =:disable-auto= property by manually calling =org-transclusion-add= at point.
+You can override the =:disable-auto= property by manually calling =org-transclusion-add= at point. There are various properties like =:disable-auto= to control each transclusion (refer to [[#cindex][Index - Features]] for a list).
 
 ** Org links supported
 :PROPERTIES:
@@ -370,7 +372,7 @@ The source block will have the additional properties:
 
 This feature is provided as an [[#extensions][extension]] (default on). 
 
-When you transclude text files other than Org files, 
+When you transclude text files other than Org files, you can use following properties to specify a range of lines to transclude.
 
 *** =:lines= property to specify a range of lines
 
@@ -467,7 +469,7 @@ You can customize settings in the =org-transclusion= group.
 
 - =org-transclusion-extensions= :: Defines extensions to be loaded with
   org-transclusion.el. If you use =customize=, the extensions are loaded by it.
-  If you don't, you likely need to explicitly use =require= to load them. See [[#extensions][seb-section]]
+  If you don't, you likely need to explicitly use =require= to load them. See [[#extensions][sub-section]]
 
 - =org-transclusion-add-all-on-activate= :: Defines whether or not all the
   active transclusions (with =t=) get automatically transcluded on minor mode
@@ -513,6 +515,9 @@ You can also fine-tune the exclusion filter per transclusion. Refer to the sub-s
 You can include the first section (section before the first headline) of an Org file. It is toggled via customizable variable =org-transclusion-include-first-section=. Its default value is =t=. Set it to =t= (or non-nil) to transclude the first section. It also works when the first section is followed by headlines.
 
 ** Faces & fringe bitmap
+:PROPERTIES:
+:CUSTOM_ID: faces
+:END:
 
 #+vindex: org-transclusion-keyword
 #+vindex: org-transclusion-source-fringe
@@ -555,7 +560,7 @@ Other faces:
 - =org-transclusion=
 - =org-transclusion-edit=
 - =org-transclusion-fringe-bitmap= ::
-  It is used for the fringe that indicates the transcluded region. It works only in a graphical environment (not in terminal).
+  It is used for the fringe that indicates the transcluded region. It works only in on a graphical display (not on a text-only terminal).
 
 ** Keybindings
 #+vindex: org-transclusion-map
@@ -637,6 +642,7 @@ It seems like this could work well for headlines, and named tables, src blocks, 
 
 * Index - Features
 :PROPERTIES:
+:CUSTOM_ID: cindex
 :APPENDIX: t
 :INDEX:    cp
 :DESCRIPTION: Key concepts & features
