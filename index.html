@@ -1,0 +1,1718 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!-- Copyright (C) 2021  Free Software Foundation, Inc.
+
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, with the Front-Cover Texts being “A GNU Manual,” and
+with the Back-Cover Texts as in (a) below.  A copy of the license is
+included in the section entitled “GNU Free Documentation License.”
+
+(a) The FSF’s Back-Cover Text is: “You have the freedom to copy and
+modify this GNU manual.”
+ -->
+<!-- Created by GNU Texinfo 6.7, http://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Org-transclusion User Manual</title>
+
+<meta name="description" content="Org-transclusion User Manual">
+<meta name="keywords" content="Org-transclusion User Manual">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<link href="#Top" rel="start" title="Top">
+<link href="#Index-_002d-Features" rel="index" title="Index - Features">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+blockquote.indentedblock {margin-right: 0em}
+div.display {margin-left: 3.2em}
+div.example {margin-left: 3.2em}
+div.lisp {margin-left: 3.2em}
+kbd {font-style: oblique}
+pre.display {font-family: inherit}
+pre.format {font-family: inherit}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+span.nolinebreak {white-space: nowrap}
+span.roman {font-family: initial; font-weight: normal}
+span.sansserif {font-family: sans-serif; font-weight: normal}
+ul.no-bullet {list-style: none}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="resources/manual.css">
+
+
+</head>
+
+<body lang="en">
+<h1 class="settitle" align="center">Org-transclusion User Manual</h1>
+
+
+
+
+<span id="Top"></span><div class="header">
+<p>
+Next: <a href="#Example-Use-Cases-_0026-Main-Features" accesskey="n" rel="next">Example Use Cases &amp; Main Features</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Org_002dtransclusion-User-Manual"></span><h1 class="top">Org-transclusion User Manual</h1>
+
+
+<p>This manual is for Org-transclusion version 1.1.x.
+</p>
+<p>Last updated: 29 December 2021.
+</p>
+<p>Org-transclusion lets you insert a copy of text content via a file link or ID link within an Org file. It lets you have the same content present in different buffers at the same time without copy-and-pasting it. Edit the source of the content, and you can refresh the transcluded copies to the up-to-date state. Org-transclusion keeps your files clear of the transcluded copies, leaving only the links to the original content.<span id="whatis"></span></p>
+<p>Copyright (C) 2021  Free Software Foundation, Inc.
+</p>
+<blockquote>
+<p>Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, with the Front-Cover Texts being “A GNU Manual,” and
+with the Back-Cover Texts as in (a) below.  A copy of the license is
+included in the section entitled “GNU Free Documentation License.”
+</p>
+<p>(a) The FSF’s Back-Cover Text is: “You have the freedom to copy and
+modify this GNU manual.”
+</p>
+</blockquote>
+
+<table class="menu" border="0" cellspacing="0">
+<tr><td align="left" valign="top">&bull; <a href="#Example-Use-Cases-_0026-Main-Features" accesskey="1">Example Use Cases &amp; Main Features</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Installation" accesskey="2">Installation</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Getting-Started" accesskey="3">Getting Started</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Usage" accesskey="4">Usage</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Features in detail
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Customizing" accesskey="5">Customizing</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Known-Limitations" accesskey="6">Known Limitations</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Credits" accesskey="7">Credits</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Contributing" accesskey="8">Contributing</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Index-_002d-Features" rel="index" accesskey="9">Index - Features</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Key concepts &amp; features
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Index-_002d-Commands" rel="index">Index - Commands</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Interactive functions
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Index-_002d-User-Options" rel="index">Index - User Options</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Customizable variables &amp; faces
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#GNU-Free-Documentation-License">GNU Free Documentation License</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+
+</pre></th></tr><tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">&mdash; The Detailed Node Listing &mdash;
+
+Usage
+
+</pre></th></tr><tr><td align="left" valign="top">&bull; <a href="#Org_002dtransclusion-mode-activate-and-deactivate">Org-transclusion mode, activate, and deactivate</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Org-links-supported">Org links supported</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Control-levels-of-headlines-per-transclusion">Control levels of headlines per transclusion</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Filter-Org-elements-per-transclusion">Filter Org elements per transclusion</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Live_002dsync-edit">Live-sync edit</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Transclude-source-file-into-src_002dblock">Transclude source file into src-block</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Transclude-range-of-lines-for-text-and-source-files">Transclude range of lines for text and source files</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Extensions">Extensions</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+
+Filter Org elements per transclusion
+
+</pre></th></tr><tr><td align="left" valign="top">&bull; <a href="#Notes-on-excluding-the-headline-element">Notes on excluding the headline element</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+
+Transclude range of lines for text and source files
+
+</pre></th></tr><tr><td align="left" valign="top">&bull; <a href="#lines-property-to-specify-a-range-of-lines">&lsquo;<samp>:lines</samp>&rsquo; property to specify a range of lines</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#end-property-to-specify-a-search-term-to-dynamically-look-for-the-end-of-a-range">&lsquo;<samp>:end</samp>&rsquo; property to specify a search term to dynamically look for the end of a range</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+
+Customizing
+
+</pre></th></tr><tr><td align="left" valign="top">&bull; <a href="#Customizable-filter-to-exclude-certain-Org-elements">Customizable filter to exclude certain Org elements</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Include-the-section-before-the-first-headline-_0028Org-file-only_0029">Include the section before the first headline (Org file only)</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Faces-_0026-fringe-bitmap">Faces &amp; fringe bitmap</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Keybindings">Keybindings</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+
+Faces &amp; fringe bitmap
+
+</pre></th></tr><tr><td align="left" valign="top">&bull; <a href="#Face-for-the-_0023_002btransclude-keyword">Face for the &lsquo;<samp>#+transclude</samp>&rsquo; keyword</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Faces-for-the-fringes-next-to-transcluded-region-and-source-region">Faces for the fringes next to transcluded region and source region</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+
+Credits
+
+</pre></th></tr><tr><td align="left" valign="top">&bull; <a href="#Original-idea-by-John-Kitchin">Original idea by John Kitchin</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Text_002dClone">Text-Clone</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+
+</pre></th></tr></table>
+
+<hr>
+<span id="Example-Use-Cases-_0026-Main-Features"></span><div class="header">
+<p>
+Next: <a href="#Installation" accesskey="n" rel="next">Installation</a>, Previous: <a href="#Top" accesskey="p" rel="prev">Top</a>, Up: <a href="#Top" accesskey="u" rel="up">Top</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Example-Use-Cases-_0026-Main-Features-1"></span><h2 class="chapter">1 Example Use Cases &amp; Main Features</h2>
+
+<p>Here is a summary of some real use cases that users have shared with the author, including his own.
+</p>
+<dl compact="compact">
+<dt>Book writing</dt>
+<dd><p>You have a collection of notes. You can quickly transclude paragraphs and sections from your notes and put together a draft. As transclusions are links, it&rsquo;s easy to re-organize them into different sequences to see which way works the best. 
+</p>
+</dd>
+<dt>Academic writing</dt>
+<dd><p>You have a collection of quotes and notes from your research and literature review. Transclude relevant elements of quotes and notes into different papers. You can keep your collection as the central repository of your research.
+</p>
+</dd>
+<dt>Technical writing</dt>
+<dd><p>You write technical documents for software. Transclude relevant lines of code into the document. As the code is only transcluded, you can keep the document up-to-date as the code evolves.
+</p>
+</dd>
+<dt>Project status reports</dt>
+<dd><p>You work on multiple projects at the same time and need to report to different project managers. Transclude relevant parts of your work notes and logs into respective project reports. You can keep a single collection of your work notes and logs.
+</p></dd>
+</dl>
+
+<p>Main Features:
+</p>
+<ul>
+<li> Insert a copy of text content via a file link or ID link into an Org file
+
+</li><li> Work with any text file such as program source code, plain text, Markdown, or other Org files
+
+</li><li> Keep the file system clear of the copies of text content &ndash; Org-transclusion tries hard to save only the links to the file system
+
+</li><li> For Org files, use different headline levels from the source Org file
+
+</li><li> For Org files, use filters to include only relevant elements (e.g. filter out properties in the transclusions)
+
+</li><li> For program source and plain text files, transclude a certain lines or dynamically specify the from/to lines to keep the transclusion always up-to-date with the evolving source files
+
+</li><li> For program source files, transclude parts or whole code directly into Org&rsquo;s source block to leverage the rich Org features including noweb style syntax
+
+</li><li> Extend Org-transclusion with its extension framework
+</li></ul>
+
+<hr>
+<span id="Installation"></span><div class="header">
+<p>
+Next: <a href="#Getting-Started" accesskey="n" rel="next">Getting Started</a>, Previous: <a href="#Example-Use-Cases-_0026-Main-Features" accesskey="p" rel="prev">Example Use Cases &amp; Main Features</a>, Up: <a href="#Top" accesskey="u" rel="up">Top</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Installation-1"></span><h2 class="chapter">2 Installation</h2>
+
+<p>This package is available on:
+</p>
+<ul>
+<li> <a href="https://elpa.gnu.org/packages/org-transclusion.html">GNU ELPA</a> (releases only; equivalent to MELPA-Stable)
+</li><li> <a href="https://elpa.gnu.org/devel/org-transclusion.html">GNU-devel ELPA</a> (unreleased development branch; equivalent to MELPA)
+</li></ul>
+
+<p>GNU ELPA should be already set up in your Emacs by default. If you wish to add GNU-devel ELPA, simply add its URL to &lsquo;<samp>package-archives</samp>&rsquo; like this:
+</p>
+<div class="lisp">
+<pre class="lisp">(add-to-list 'package-archives '(&quot;gnu-devel&quot; . &quot;https://elpa.gnu.org/devel/&quot;) t)
+</pre></div>
+
+<p>Refresh the archive with &lsquo;<samp>M-x package-refresh-contents RET</samp>&rsquo; and you can do &lsquo;<samp>M-x package-install RET org-transclusion</samp>&rsquo; to install it. Alternatively, you can use &lsquo;<samp>package-list-packages</samp>&rsquo;. 
+</p>
+<p>After installation, you can start using Org-transclusion with no additional configuration. Below are some example keybindings that can be put into your Emacs configuration.
+</p>
+<div class="lisp">
+<pre class="lisp">(define-key global-map (kbd &quot;&lt;f12&gt;&quot;) #'org-transclusion-add)
+(define-key global-map (kbd &quot;C-n t&quot;) #'org-transclusion-mode)
+</pre></div>
+
+<p>For Doom users, you would need to do something like this below to install the package and configure the keybindings. 
+</p>
+<div class="lisp">
+<pre class="lisp">;; ~/.doom.d/package.el
+(package! org-transclusion)
+</pre></div>
+
+<div class="lisp">
+<pre class="lisp">;; ~/.doom.d/config.el
+(use-package! org-transclusion
+              :after org
+              :init
+              (map!
+               :map global-map &quot;&lt;f12&gt;&quot; #'org-transclusion-add
+               :leader
+               :prefix &quot;n&quot;
+               :desc &quot;Org Transclusion Mode&quot; &quot;t&quot; #'org-transclusion-mode))
+</pre></div>
+
+<hr>
+<span id="Getting-Started"></span><div class="header">
+<p>
+Next: <a href="#Usage" accesskey="n" rel="next">Usage</a>, Previous: <a href="#Installation" accesskey="p" rel="prev">Installation</a>, Up: <a href="#Top" accesskey="u" rel="up">Top</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Getting-Started-1"></span><h2 class="chapter">3 Getting Started</h2>
+
+<span id="index-org_002dtransclusion_002dadd"></span>
+<span id="index-org_002dtransclusion_002dadd_002dall"></span>
+<span id="index-org_002dtransclusion_002dmake_002dfrom_002dlink"></span>
+<span id="index-org_002dtransclusion_002dopen_002dsource"></span>
+<span id="index-org_002dtransclusion_002dmove_002dto_002dsource"></span>
+<span id="index-org_002dtransclusion_002drefresh"></span>
+<span id="index-org_002dtransclusion_002dmap"></span>
+
+<p>The basic idea of Org-transclusion is simple: insert a copy of text content via a file link or ID link within an Org file. This is an Org Mode version of transclusion.
+</p>
+<p>To transclude content via a link, use one of the following commands:
+</p>
+<ul>
+<li> &lsquo;<samp>org-transclusion-add</samp>&rsquo;
+
+</li><li> &lsquo;<samp>org-transclusion-add-all</samp>&rsquo;
+
+</li><li> &lsquo;<samp>org-transclusion-make-from-link</samp>&rsquo;
+</li></ul>
+
+<p>For example, if you have an ID link in your Org file like this:
+</p>
+<div class="example">
+<pre class="example">[[id:20210501T171427.051019][Bertrand Russell]]
+</pre></div>
+
+<p>Simply type to add &lsquo;<samp>#+transclude:</samp>&rsquo; in front of the link like the example below.
+</p>
+<div class="example">
+<pre class="example">#+transclude: [[id:20210501T171427.051019][Bertrand Russell]]
+</pre></div>
+
+<p>Put your cursor somewhere on this keyword line and type &lsquo;<samp>M-x org-transclusion-add RET</samp>&rsquo;, and you will see the text content that the ID points to replace the whole line. If you have multiple links with a transclude keyword, you can type &lsquo;<samp>M-x org-transclusion-add-all RET</samp>&rsquo; to add all transclusions in the current buffer.
+</p>
+<p>Alternatively, you can also put cursor somewhere on the link and type  &lsquo;<samp>M-x org-transclusion-make-from-link RET</samp>&rsquo;. That will insert another line with &lsquo;<samp>#+transclusion:</samp>&rsquo; keyword added in front of a copy of the original link in the next empty line.
+</p>
+<p>The transcluded paragraphs will be visually marked with a vertical line &ldquo;| &rdquo; in the fringe (on graphical display) or in the beginning of line (on a text-only terminal) by default. The source (original) of the transcluded paragraphs will be also visually marked with an overlay. The appearance of these visual elements can be customized (refer to section <a href="#Faces-_0026-fringe-bitmap">Faces &amp; fringe bitmap</a>).
+</p>
+<p>The transcluded text is <strong>read-only</strong> but you can copy it and export it as normal text. Org-transclusion remembers where it has transcluded the text from (its source buffer).
+</p>
+<p>You can call a number of useful commands with a single letter (by default). For example, you can press &lsquo;<samp>o</samp>&rsquo; to open the source buffer of the transclusion at point, or &lsquo;<samp>O</samp>&rsquo; (capital &ldquo;o&rdquo;) to open and move to it. Press &lsquo;<samp>g</samp>&rsquo; to refresh the transclusion. Press &lsquo;<samp>e</samp>&rsquo; to start live-sync edit. For more detail, inspect the documentation of each command. Press &lsquo;<samp>d</samp>&rsquo; to remove the transcluded content, putting the original &lsquo;<samp>#+transclude: [[id:id-of-the-content]]</samp>&rsquo;.
+</p>
+<p>This single-letter-context-menu is defined in &lsquo;<samp>org-transclusion-map</samp>&rsquo;. The default keybindings are shown below. Adapt them to your liking, especially if you use Vim keybindings with Evil Mode, etc.
+</p>
+<div class="example">
+<pre class="example">key             binding
+---             -------
+
+C-c             Prefix Command
+TAB             org-cycle
+D               org-transclusion-demote-subtree
+O               org-transclusion-move-to-source
+P               org-transclusion-promote-subtree
+d               org-transclusion-remove
+e               org-transclusion-live-sync-start
+g               org-transclusion-refresh
+o               org-transclusion-open-source
+
+C-c C-c         org-ctrl-c-ctrl-c
+
+</pre></div>
+
+<p>This should get you started with Org-transclusion. There are more options and customizing options available for you to fine-tune the text content you transclude. Explore the rest of the user manual and play with Org-transclusion to get familiar with it.
+</p>
+<hr>
+<span id="Usage"></span><div class="header">
+<p>
+Next: <a href="#Customizing" accesskey="n" rel="next">Customizing</a>, Previous: <a href="#Getting-Started" accesskey="p" rel="prev">Getting Started</a>, Up: <a href="#Top" accesskey="u" rel="up">Top</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Usage-1"></span><h2 class="chapter">4 Usage</h2>
+
+<table class="menu" border="0" cellspacing="0">
+<tr><td align="left" valign="top">&bull; <a href="#Org_002dtransclusion-mode-activate-and-deactivate" accesskey="1">Org-transclusion mode, activate, and deactivate</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Org-links-supported" accesskey="2">Org links supported</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Control-levels-of-headlines-per-transclusion" accesskey="3">Control levels of headlines per transclusion</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Filter-Org-elements-per-transclusion" accesskey="4">Filter Org elements per transclusion</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Live_002dsync-edit" accesskey="5">Live-sync edit</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Transclude-source-file-into-src_002dblock" accesskey="6">Transclude source file into src-block</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Transclude-range-of-lines-for-text-and-source-files" accesskey="7">Transclude range of lines for text and source files</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Extensions" accesskey="8">Extensions</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+</table>
+
+<hr>
+<span id="Org_002dtransclusion-mode-activate-and-deactivate"></span><div class="header">
+<p>
+Next: <a href="#Org-links-supported" accesskey="n" rel="next">Org links supported</a>, Up: <a href="#Usage" accesskey="u" rel="up">Usage</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Org_002dtransclusion-mode_002c-activate_002c-and-deactivate"></span><h3 class="section">4.1 Org-transclusion mode, activate, and deactivate</h3>
+
+<span id="index-Activate-_002f-Deactivate"></span>
+<span id="index-org_002dtransclusion_002dmode"></span>
+<span id="index-org_002dtransclusion_002dactivate"></span>
+<span id="index-org_002dtransclusion_002ddeactivate"></span>
+<span id="index-Properties"></span>
+<span id="index-Property-_002d-_003adisable_002dauto"></span>
+<span id="index-org_002dtransclusion_002dadd_002dall_002don_002dactivate"></span>
+
+<p>Org-transclusion is a local minor mode; however, you do not need to explicitly call &lsquo;<samp>org-transclusion-mode</samp>&rsquo;. The minor mode is intended to be just a convenient wrapper to let you easily toggle between &lsquo;<samp>activate</samp>&rsquo; and &lsquo;<samp>deactivate</samp>&rsquo;.
+</p>
+<p>As you saw in the <a href="#Getting-Started">Getting Started section</a> above, calling &lsquo;<samp>org-transclusion-add</samp>&rsquo; or &lsquo;<samp>org-transclusion-add-all</samp>&rsquo; is enough to add transclusions in your current buffer.
+</p>
+<p>The minor mode is automatically turned on locally for your current buffer through one of these commands. All it does is to call &lsquo;<samp>org-transclusion-activate</samp>&rsquo;  to activate hooks and some other variables. Their main purpose is to keep files in the filesystem clear of the transcluded content.
+</p>
+<p>Turn off the minor mode or use &lsquo;<samp>org-transclusion-deactivate</samp>&rsquo;; you will remove all the transclusions in the current buffer and clear the hooks and other setup variables.
+</p>
+<p>If you prefer, you can use &lsquo;<samp>org-transclusion-mode</samp>&rsquo; as your entry command for transclusion. When customizable variable &lsquo;<samp>org-transclusion-add-all-on-activate</samp>&rsquo; is non-nil (it is &lsquo;<samp>t</samp>&rsquo; by default), turning on the minor mode calls the &lsquo;<samp>org-transclusion-add-all</samp>&rsquo; command to attempt to add all transclusions automatically in the current buffer.
+</p>
+<p>You can control whether or not transclusions are to be added automatically per transclude keyword. By default, &lsquo;<samp>org-transclusion-add-all</samp>&rsquo; (it is also used by &lsquo;<samp>org-transclusion-mode</samp>&rsquo;) will work on every transclude keyword in the buffer. Add &lsquo;<samp>:disable-auto</samp>&rsquo; property to a keyword as shown in the example below; &lsquo;<samp>add-all</samp>&rsquo; skips transclude keywords with it.
+</p>
+<div class="example">
+<pre class="example">#+transclude: [[file:path/to/file.org]] :disable-auto
+</pre></div>
+
+<p>You can override the &lsquo;<samp>:disable-auto</samp>&rsquo; property by manually calling &lsquo;<samp>org-transclusion-add</samp>&rsquo; at point. There are various properties like &lsquo;<samp>:disable-auto</samp>&rsquo; to control each transclusion (refer to <a href="#Index-_002d-Features">Index - Features</a> for a list).
+</p>
+<hr>
+<span id="Org-links-supported"></span><div class="header">
+<p>
+Next: <a href="#Control-levels-of-headlines-per-transclusion" accesskey="n" rel="next">Control levels of headlines per transclusion</a>, Previous: <a href="#Org_002dtransclusion-mode-activate-and-deactivate" accesskey="p" rel="prev">Org-transclusion mode activate and deactivate</a>, Up: <a href="#Usage" accesskey="u" rel="up">Usage</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Org-links-supported-1"></span><h3 class="section">4.2 Org links supported</h3>
+
+<span id="index-Org-Links-Supported"></span>
+<span id="index-Property-_002d-_003aonly_002dcontents"></span>
+
+<p>Transclusion has been tested to work for the following types of links:
+</p>
+<ul>
+<li> File link for an entire org file/buffer; e.g. &lsquo;<samp>[[file:~/org/file.org][My Org Notes]]</samp>&rsquo;
+</li><li> File link with &lsquo;<samp>::*heading</samp>&rsquo;
+</li><li> File link with &lsquo;<samp>::#custom-id</samp>&rsquo;
+</li><li> File link with &lsquo;<samp>::name</samp>&rsquo; for blocks (e.g. blocked quotations), tables, and links
+</li><li> File link with &lsquo;<samp>::dedicated-target</samp>&rsquo;; this is intended for linking to a paragraph. See below.
+</li><li> ID link &lsquo;<samp>id:uuid</samp>&rsquo;
+</li><li> File link for non-org files (tested with &lsquo;<samp>.txt</samp>&rsquo; and &lsquo;<samp>.md</samp>&rsquo;); for these, the whole buffer gets transcluded
+</li></ul>
+
+<blockquote>
+<p><b>Note:</b> Search-options &lsquo;<samp>::/regex/</samp>&rsquo; and &lsquo;<samp>::number</samp>&rsquo; do not work as intended.
+</p>
+</blockquote>
+
+
+<p>For transcluding a specific paragraph, there are two main ways: Org Mode&rsquo;s <a href="https://orgmode.org/manual/Internal-Links.html#Internal-Links">dedicated-target</a> and &lsquo;<samp>:only-contents</samp>&rsquo; property.
+</p>
+<p>For dedicated targets, the target paragraph must be identifiable by a dedicated target with a &lsquo;<samp>&lt;&lt;paragraph-id&gt;&gt;</samp>&rsquo;:
+</p>
+<div class="example">
+<pre class="example">Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Suspendisse ac velit fermentum, sodales nunc in,
+tincidunt quam. &lt;&lt;paragraph-id&gt;&gt;
+</pre></div>
+
+<p>It is generally assumed that the &lsquo;<samp>paragraph-id</samp>&rsquo; is placed after its content, but it is not an absolute requirement; it can be in the beginning (before the content) or in the middle of it.
+</p>
+<p>For the &lsquo;<samp>:only-contents</samp>&rsquo; property, refer to sub-section <a href="#Filter-Org-elements-per-transclusion">Filtering Org elements per transclusion</a>.
+</p>
+<hr>
+<span id="Control-levels-of-headlines-per-transclusion"></span><div class="header">
+<p>
+Next: <a href="#Filter-Org-elements-per-transclusion" accesskey="n" rel="next">Filter Org elements per transclusion</a>, Previous: <a href="#Org-links-supported" accesskey="p" rel="prev">Org links supported</a>, Up: <a href="#Usage" accesskey="u" rel="up">Usage</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Control-levels-of-headlines-per-transclusion-1"></span><h3 class="section">4.3 Control levels of headlines per transclusion</h3>
+
+<span id="index-Property-_002d-_003alevel"></span>
+<span id="index-org_002dtransclusion_002ddemote_002dsubtree"></span>
+<span id="index-org_002dtransclusion_002dpromote_002dsubtree"></span>
+<span id="index-org_002dtransclusion_002dmake_002dfrom_002dlink-1"></span>
+
+<p>When you transclude Org contents, you can specify a different headline level than those of the source Org file.
+</p>
+<p>Use the &lsquo;<samp>:level</samp>&rsquo; property with a value of single digit number from 1 to 9 like this example below.
+</p>
+<div class="example">
+<pre class="example">#+transclude: [[file:path/to/file.org::*Headline]] :level 2
+</pre></div>
+
+<p>The top level of the transcluded headline will be set to the value of &lsquo;<samp>:level</samp>&rsquo; property &ndash; in this example, level 2 regardless of that in the source. When the headline contains sub-headlines, they will be all automatically promoted or demoted to align according to how many levels the top of the subtree will move.
+</p>
+<p>When you transclude an entire Org file, it may contain multiple subtrees. In such cases, the top-most level among the subtrees will be set according to the &lsquo;<samp>:level</samp>&rsquo; property; the rest of headlines in the buffer will align accordingly.
+</p>
+<p>Other ways to control include the following.
+</p>
+<dl compact="compact">
+<dt>&lsquo;<samp>org-transclusion-make-from-link</samp>&rsquo;</dt>
+<dd><p>Make a transclusion keyword from a link at point. If you pass a positive number 1-9 with &lsquo;<samp>digit-argument</samp>&rsquo; (e.g. prefix &lsquo;<samp>M-x</samp>&rsquo; with &lsquo;<samp>C-2</samp>&rsquo; to pass &ldquo;2&rdquo;), this function automatically puts the &lsquo;<samp>:level</samp>&rsquo; property to the resultant transclusion keyword.
+</p>
+</dd>
+<dt>&lsquo;<samp>org-transclusion-promote-subtree</samp>&rsquo;</dt>
+<dd><p>Promote transcluded subtree at point. Mapped to &ldquo;P&rdquo; (capital &ldquo;p&rdquo;) by default in &lsquo;<samp>org-transclusion-map</samp>&rsquo;
+</p>
+</dd>
+<dt>&lsquo;<samp>org-transclusion-demote-subtree</samp>&rsquo;</dt>
+<dd><p>Demote transcluded subtree at point. Mapped to &ldquo;D&rdquo; (capital &ldquo;D&rdquo;) by default in &lsquo;<samp>org-transclusion-map</samp>&rsquo;
+</p></dd>
+</dl>
+
+<hr>
+<span id="Filter-Org-elements-per-transclusion"></span><div class="header">
+<p>
+Next: <a href="#Live_002dsync-edit" accesskey="n" rel="next">Live-sync edit</a>, Previous: <a href="#Control-levels-of-headlines-per-transclusion" accesskey="p" rel="prev">Control levels of headlines per transclusion</a>, Up: <a href="#Usage" accesskey="u" rel="up">Usage</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Filter-Org-elements-per-transclusion-1"></span><h3 class="section">4.4 Filter Org elements per transclusion</h3>
+
+<span id="index-Filters"></span>
+<span id="index-org_002dtransclusion_002dexclude_002delements"></span>
+<span id="index-org_002dtransclusion_002dinclude_002dfirst_002dsection"></span>
+<span id="index-Property-_002d-_003aonly_002dcontent"></span>
+
+<p>You can control what elements to include in many different ways with using various filters. The filters work in two layers: customizable variable and properties per transclude keyword.
+</p>
+<p>The following two customizable variables are applicable to all transclusions globally. You can think of them as the global default.
+</p>
+<dl compact="compact">
+<dt>&lsquo;<samp>org-transclusion-exclude-elements</samp>&rsquo;</dt>
+<dd><p>This customizable variable globally defines the exclusion filter for elements. It is a list of symbols; the acceptable values can be seen by inspecting &lsquo;<samp>org-element-all-elements</samp>&rsquo;. The default is to exclude &lsquo;<samp>property-drawer</samp>&rsquo;.
+</p>
+<p>Refer also to the <a href="#Customizable-filter-to-exclude-certain-Org-elements">sub-section on this user option</a>.
+</p>
+</dd>
+<dt>&lsquo;<samp>org-transclusion-include-first-section</samp>&rsquo;</dt>
+<dd><p>This customizing variable globally defines whether or not to include the first section of the source Org file. The first section is the part before the first headline &ndash; that&rsquo;s the section that typically contains &lsquo;<samp>#+title</samp>&rsquo;, &lsquo;<samp>#+author</samp>&rsquo;, and so on. Many people also write notes in it without adding any headlines. Note that this user option&rsquo;s default is now &lsquo;<samp>t</samp>&rsquo; (changed from &lsquo;<samp>nil</samp>&rsquo; as users seem to spend time to &ldquo;correct&rdquo; this issue). Turn it to &lsquo;<samp>t</samp>&rsquo; if you wish to transclude the content from the first section of your Org files. If you wish to exclude the &ldquo;meta data&rdquo; defined by &lsquo;<samp>#+title</samp>&rsquo; and others, exclude &lsquo;<samp>keyword</samp>&rsquo; as described in this section &ndash; these meta data are defined with using the &lsquo;<samp>keyword</samp>&rsquo; element of Org Mode.
+</p>
+<p>Refer also to the <a href="#Include-the-section-before-the-first-headline-_0028Org-file-only_0029">sub-section on this user option</a>.
+</p></dd>
+</dl>
+
+<p>In addition to the global user options above, you can fine-tune the default exclusion filter per transclusion. Add following properties to transclusions you wish to apply additional filters.
+</p>
+<dl compact="compact">
+<dt>&lsquo;<samp>:only-contents</samp>&rsquo;</dt>
+<dd><p>This property lets you exclude titles of headlines when you transclude a subtree (headline); you transclude only the contents. When the subtree contains sub-headlines, all the contents will be transcluded.
+</p>
+<p>Add &lsquo;<samp>:only-contents</samp>&rsquo; without any value like this example:
+</p></dd>
+</dl>
+
+<div class="example">
+<pre class="example">#+transclude: [[file:path/to/file.org]] :only-contents
+</pre></div>
+
+<dl compact="compact">
+<dt>&lsquo;<samp>:exclude-elements</samp>&rsquo;</dt>
+<dd><p>This property lets you <strong>add</strong> elements to exclude per transclusion on top of the variable &lsquo;<samp>org-transclusion-exclude-elements</samp>&rsquo; defines. You cannot <strong>remove</strong> the ones defined by it; thus, it is intended that you use the customizable variable as your global default and fine-tune it by the property per transclusion.
+</p>
+<p>Add &lsquo;<samp>:exclude-elements</samp>&rsquo; with a list of elements (each one as defined by &lsquo;<samp>org-element-all-elements</samp>&rsquo;) separated by a space inside double quotation marks like this example:
+</p></dd>
+</dl>
+
+<div class="example">
+<pre class="example">#+transclude: [[file:path/to/file.org]] :exclude-elements &quot;drawer keyword&quot;
+</pre></div>
+
+<p>You can combine &lsquo;<samp>:only-contents</samp>&rsquo; and &lsquo;<samp>:exclude-elements</samp>&rsquo; to control how you transclude a subtree. With these properties, you can really have great control over what to include and exclude. It might be a little overwhelming at a time but the changes via properties are easy to change &ndash; simply press &lsquo;<samp>d</samp>&rsquo; to remove the transclusion, change the properties, and transclude again to see a new result.
+</p>
+<table class="menu" border="0" cellspacing="0">
+<tr><td align="left" valign="top">&bull; <a href="#Notes-on-excluding-the-headline-element" accesskey="1">Notes on excluding the headline element</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+</table>
+
+<hr>
+<span id="Notes-on-excluding-the-headline-element"></span><div class="header">
+<p>
+Up: <a href="#Filter-Org-elements-per-transclusion" accesskey="u" rel="up">Filter Org elements per transclusion</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Notes-on-excluding-the-headline-element-1"></span><h4 class="subsection">4.4.1 Notes on excluding the headline element</h4>
+
+<p>If you add &lsquo;<samp>headline</samp>&rsquo; as a list of elements to exclude, you exclude sub-headlines within your subtrees and you will still transclude the content of the top-most headline of the subtrees.
+</p>
+<p>If you are transcluding only one subtree, this should be intuitive. If you transclude a whole buffer, you might be transcluding multiple subtrees. In some cases, this can be a little anti-intuitive. In the following examples, you will be transcluding three subtrees &ndash; even though the first headline levels are lower than the third one, the first two are still the top-most level of their own respective subtrees.
+</p>
+<div class="example">
+<pre class="example">** Headline 1
+   Content of Headline 1
+** Headline 2
+   Content of Headline 2
+* Headline 3
+  Content of Headline
+</pre></div>
+
+<hr>
+<span id="Live_002dsync-edit"></span><div class="header">
+<p>
+Next: <a href="#Transclude-source-file-into-src_002dblock" accesskey="n" rel="next">Transclude source file into src-block</a>, Previous: <a href="#Filter-Org-elements-per-transclusion" accesskey="p" rel="prev">Filter Org elements per transclusion</a>, Up: <a href="#Usage" accesskey="u" rel="up">Usage</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Live_002dsync-edit-1"></span><h3 class="section">4.5 Live-sync edit</h3>
+
+<span id="index-Live_002dsync-edit"></span>
+<span id="index-org_002dtransclusion_002dlive_002dsync_002dstart"></span>
+<span id="index-org_002dtransclusion_002dlive_002dsync_002dexit"></span>
+<span id="index-org_002dtransclusion_002dlive_002dsync_002dpaste"></span>
+<span id="index-org_002dtransclusion_002dlive_002dsync_002dmap"></span>
+
+<p><strong>Experimental.</strong> You can start live-sync edit by pressing &lsquo;<samp>e</samp>&rsquo; (by default) on a text element you want to edit. This will call &lsquo;<samp>org-transclusion-live-sync-start</samp>&rsquo; and put a colored overlay on top of the region being live-synced and brings up another buffer that visits the source file of the transclusion. The source buffer will also have a corresponding overlay to the region being edited and live-synced.
+</p>
+<p>If you have other windows open, they will be temporarily hidden &ndash; Org-transclusion will remembers your current window layout and attempts to recover it when you exit live-sync edit.
+</p>
+<p>In the live-sync edit region, you can freely type to edit the transclusion or source regions; they will sync simultaneously.
+</p>
+<p>Once done with editing, press &lsquo;<samp>C-c C-c</samp>&rsquo; to exit live-sync edit. The key is bound to &lsquo;<samp>org-transclusion-live-sync-exit</samp>&rsquo;. It will turn off the live sync edit but keep the transclusion on.
+</p>
+<p>In the live-sync edit region, the normal &lsquo;<samp>yank</samp>&rsquo; command (&lsquo;<samp>C-y</samp>&rsquo;) is replaced with a special command &lsquo;<samp>org-transclusion-live-sync-paste</samp>&rsquo;. This command lets the pasted text inherit the text-properties of the transcluded region correctly; the normal yank does not have this feature and thus causes some inconvenience in live-sync edit. If you use vim keybindings (e.g. &lsquo;<samp>evil-mode</samp>&rsquo;), it is advised that you review the default keybindings. You can customize the local keybindings for the live-sync region by &lsquo;<samp>org-transclusion-live-sync-map</samp>&rsquo;.
+</p>
+<p><strong>Note</strong>: During live-sync edit, file&rsquo;s content gets saved to the file system as is &ndash; i.e. the transcluded text will be saved instead of the &lsquo;<samp>#+transclude:</samp>&rsquo; keyword. If you kill buffer or quit Emacs, other hooks will still remove the transclusion to keep the file clear of the transcluded copy, leaving only the keyword in the file system.
+</p>
+<div class="lisp">
+<pre class="lisp">(substitute-command-keys &quot;\\{org-transclusion-live-sync-map}&quot;)
+</pre></div>
+
+<div class="example">
+<pre class="example">key                   binding
+---                   -------
+
+C-c                   Prefix Command
+C-y                   org-transclusion-live-sync-paste
+
+C-c C-c               org-transclusion-live-sync-exit
+
+*Also inherits ‘org-mode-map’
+</pre></div>
+
+<hr>
+<span id="Transclude-source-file-into-src_002dblock"></span><div class="header">
+<p>
+Next: <a href="#Transclude-range-of-lines-for-text-and-source-files" accesskey="n" rel="next">Transclude range of lines for text and source files</a>, Previous: <a href="#Live_002dsync-edit" accesskey="p" rel="prev">Live-sync edit</a>, Up: <a href="#Usage" accesskey="u" rel="up">Usage</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Transclude-source-file-into-src_002dblock-1"></span><h3 class="section">4.6 Transclude source file into src-block</h3>
+
+<span id="index-Transclude-into-Org_0027s-src_002dblock"></span>
+<span id="index-Property-_002d-_003asrc"></span>
+<span id="index-Property-_002d-_003arest"></span>
+
+<p>This feature is provided as an <a href="#Extensions">extension</a> (default on). 
+</p>
+<p>You can transclude a source file into an Org&rsquo;s src block. Use the &lsquo;<samp>:src</samp>&rsquo; property and specify the language you would like to use like this:
+</p>
+<div class="example">
+<pre class="example">#+transclude: [[file:../../test/python-1.py]] :src python
+</pre></div>
+
+<p>The content you specify in the link gets wrapped into a src-block with the language like this:
+</p>
+<div class="example">
+<pre class="example">#+begin_src python
+[... content of python-1.py]
+#+end_src
+</pre></div>
+
+<p>Use &lsquo;<samp>:rest</samp>&rsquo; property to define additional properties you would like to add for the src-block. The double quotation marks are mandatory for the &lsquo;<samp>:rest</samp>&rsquo; property.
+</p>
+<div class="example">
+<pre class="example">#+transclude: [[file:../../test/python-3.py]]  :src python :rest &quot;:session :results value&quot;
+</pre></div>
+
+<p>The source block will have the additional properties:
+</p><div class="example">
+<pre class="example">#+begin_src python :session :results value
+</pre></div>
+
+<hr>
+<span id="Transclude-range-of-lines-for-text-and-source-files"></span><div class="header">
+<p>
+Next: <a href="#Extensions" accesskey="n" rel="next">Extensions</a>, Previous: <a href="#Transclude-source-file-into-src_002dblock" accesskey="p" rel="prev">Transclude source file into src-block</a>, Up: <a href="#Usage" accesskey="u" rel="up">Usage</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Transclude-range-of-lines-for-text-and-source-files-1"></span><h3 class="section">4.7 Transclude range of lines for text and source files</h3>
+
+<span id="index-Transclude-range-of-lines"></span>
+
+<p>This feature is provided as an <a href="#Extensions">extension</a> (default on). 
+</p>
+<p>When you transclude text files other than Org files, you can use following properties to specify a range of lines to transclude.
+</p>
+<table class="menu" border="0" cellspacing="0">
+<tr><td align="left" valign="top">&bull; <a href="#lines-property-to-specify-a-range-of-lines" accesskey="1">&lsquo;<samp>:lines</samp>&rsquo; property to specify a range of lines</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#end-property-to-specify-a-search-term-to-dynamically-look-for-the-end-of-a-range" accesskey="2">&lsquo;<samp>:end</samp>&rsquo; property to specify a search term to dynamically look for the end of a range</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+</table>
+
+<hr>
+<span id="lines-property-to-specify-a-range-of-lines"></span><div class="header">
+<p>
+Next: <a href="#end-property-to-specify-a-search-term-to-dynamically-look-for-the-end-of-a-range" accesskey="n" rel="next">&lsquo;<samp>end</samp>&rsquo; property to specify a search term to dynamically look for the end of a range</a>, Up: <a href="#Transclude-range-of-lines-for-text-and-source-files" accesskey="u" rel="up">Transclude range of lines for text and source files</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="g_t_003alines-property-to-specify-a-range-of-lines"></span><h4 class="subsection">4.7.1 &lsquo;<samp>:lines</samp>&rsquo; property to specify a range of lines</h4>
+
+<span id="index-Property-_002d-_003alines"></span>
+
+<p>You can specify a range of lines to transclude from a source and text file. Use the &lsquo;<samp>:lines</samp>&rsquo; property like this.
+</p>
+<div class="example">
+<pre class="example">#+transclude: [[file:../../test/test.txt]] :lines 3-5
+</pre></div>
+
+<p>The rage is specified by the number &ldquo;3-5&rdquo;; in this case, lines from 3 to 5, both lines inclusive.
+</p>
+<p>To transclude a single line, have the the same number in both places (e.g. 10-10, meaning line 10 only).
+</p>
+<p>One of the numbers can be omitted. When the first number is omitted (e.g. -10), it means from the beginning of the file to line 10. Likewise, when the second number is omitted (e.g. 10-), it means from line 10 to the end of file.
+</p>
+<p>You can combine &lsquo;<samp>:lines</samp>&rsquo; with &lsquo;<samp>:src</samp>&rsquo; to transclude only a certain range of source files (Example 1 below).
+</p>
+<p>For Org&rsquo;s file links, you can use <a href="https://orgmode.org/manual/Search-Options.html">search options</a> specified by the &ldquo;::&rdquo; (two colons) notation. When a search finds a line that includes the string, the Org-transclude counts it as the starting line 1 for the  &lsquo;<samp>:lines</samp>&rsquo; property.
+</p>
+<p>Example 1: This transcludes the four lines of the source file from the line that contains string &ldquo;id-1234&rdquo; (including that line counted as line 1).
+</p><div class="example">
+<pre class="example">#+transclude: [[file:../../test/python-1.py::id-1234]] :lines 1-4 :src python
+</pre></div>
+
+<p>Example 2: This transcludes only the single line that contains the line found by the search option for text string &ldquo;Transcendental Ontology&rdquo;
+</p><div class="example">
+<pre class="example">#+transclude: [[file:../../test/test.txt::Transcendental Ontology]] :lines 1-1
+</pre></div>
+
+<blockquote>
+<p><b>Note:</b> Search-options &lsquo;<samp>::/regex/</samp>&rsquo; and &lsquo;<samp>::number</samp>&rsquo; do not work as intended.
+</p>
+</blockquote>
+
+<hr>
+<span id="end-property-to-specify-a-search-term-to-dynamically-look-for-the-end-of-a-range"></span><div class="header">
+<p>
+Previous: <a href="#lines-property-to-specify-a-range-of-lines" accesskey="p" rel="prev">&lsquo;<samp>lines</samp>&rsquo; property to specify a range of lines</a>, Up: <a href="#Transclude-range-of-lines-for-text-and-source-files" accesskey="u" rel="up">Transclude range of lines for text and source files</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="g_t_003aend-property-to-specify-a-search-term-to-dynamically-look-for-the-end-of-a-range"></span><h4 class="subsection">4.7.2 &lsquo;<samp>:end</samp>&rsquo; property to specify a search term to dynamically look for the end of a range</h4>
+
+<span id="index-Property-_002d-_003aend"></span>
+
+<p>You can add &lsquo;<samp>:end</samp>&rsquo; property and specify the search term as its value. Surround the search term with double quotation marks (mandatory).
+</p>
+<p>See Example 3 below. This transclusion will look for &lsquo;<samp>id-1234</samp>&rsquo; as the beginning line of the range as specified by the search option &lsquo;<samp>::id-1234</samp>&rsquo; in the link. With the &lsquo;<samp>:end</samp>&rsquo; property, the search string &lsquo;<samp>id-1234 end here</samp>&rsquo; defines the end of the range. The search looks for &lsquo;<samp>id-123 end here</samp>&rsquo; in the body text. When found, the line one before the search string is used as the ending line (thus, the transcluded range will not contain string &lsquo;<samp>id-1234 end here</samp>&rsquo;).
+</p>
+<p>You can also combine &lsquo;<samp>:lines</samp>&rsquo; with &lsquo;<samp>:end</samp>&rsquo;.  It will only displace the beginning, and the end part of the range (the second number after the hyphen &ldquo;-&rdquo;) is ignored. In the same example, the beginning of the range is the next line after &ldquo;id-1234&rdquo; (line 2).  Instead of transcluding all the text until the end of the buffer, the end is defined by the &lsquo;<samp>:end</samp>&rsquo; property (one line before the string &lsquo;<samp>id-1234 end here</samp>&rsquo; is found).
+</p>
+<p>Example 3:
+</p><div class="example">
+<pre class="example">#+transclude: [[file:../../test/python-1.py::id-1234]] :lines 2- :src python :end &quot;id-1234 end here&quot;
+</pre></div>
+
+<hr>
+<span id="Extensions"></span><div class="header">
+<p>
+Previous: <a href="#Transclude-range-of-lines-for-text-and-source-files" accesskey="p" rel="prev">Transclude range of lines for text and source files</a>, Up: <a href="#Usage" accesskey="u" rel="up">Usage</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Extensions-1"></span><h3 class="section">4.8 Extensions</h3>
+
+<span id="index-Extensions"></span>
+<span id="index-org_002dtransclusion_002dextensions"></span>
+<span id="index-Extension-_002d-org_002dtransclusion_002dindent_002dmode"></span>
+<span id="index-Extension-_002d-org_002dtransclusion_002dsrc_002dlines"></span>
+<span id="index-Extension-_002d-org_002dtransclusion_002dfont_002dlock"></span>
+
+<p>Org-transclusion provides a simple extension framework, where you can use &lsquo;<samp>customize</samp>&rsquo; to selectively add new features. 
+</p>
+<p>If you use &lsquo;<samp>customize</samp>&rsquo;, the features are loaded automatically. Note that it does not &ldquo;unload&rdquo; the feature until you relaunch Emacs.
+</p>
+<p>If you do not use &lsquo;<samp>customize</samp>&rsquo; (e.g. Doom), you may need to explicitly require an extension. For example, to activate &lsquo;<samp>org-transclusion-indent-mode</samp>&rsquo;, you might need to add something like this in your configuration file.
+</p>
+<div class="lisp">
+<pre class="lisp">;; Ensure that load-path to org-transclusion is already added
+;; If you installed it with the built-in package.el, this should be already done.
+;; (add-to-list  'load-path &quot;path/to/org-transclusion/&quot;)
+(add-to-list 'org-transclusion-extensions 'org-transclusion-indent-mode)
+(require 'org-transclusion-indent-mode)
+</pre></div>
+
+<p>Currently, the following extensions are available.
+</p>
+<dl compact="compact">
+<dt>(off by default) &lsquo;<samp>org-transclusion-indent-mode</samp>&rsquo;</dt>
+<dd><p>Support org-indent-mode.
+</p>
+</dd>
+<dt>(on by default) &lsquo;<samp>org-transclusion-src-lines</samp>&rsquo;</dt>
+<dd><p>Add features for &lsquo;<samp>:src</samp>&rsquo; and &lsquo;<samp>:lines</samp>&rsquo; properties to &lsquo;<samp>#+transclude</samp>&rsquo;. It is meant for non-Org files such as program source and text files
+</p>
+</dd>
+<dt>(on by default) &lsquo;<samp>org-transclusion-font-lock</samp>&rsquo;</dt>
+<dd><p>Add font-lock for &lsquo;<samp>#+transclude</samp>&rsquo;. Org mode&rsquo;s standard syntax treats the combination of a &lsquo;<samp>#+transclude:</samp>&rsquo; keyword and a link used by Org-transclusion as a keyword. This means it applies the &lsquo;<samp>org-meta-line</samp>&rsquo; face and the link part cannot be toggled as a normal link. This extension adds &lsquo;<samp>org-transclusion-keyword</samp>&rsquo; face to the keyword part and lets the link part to be treated as a normal link for &lsquo;<samp>org-toggle-link-display</samp>&rsquo;.
+</p></dd>
+</dl>
+
+<hr>
+<span id="Customizing"></span><div class="header">
+<p>
+Next: <a href="#Known-Limitations" accesskey="n" rel="next">Known Limitations</a>, Previous: <a href="#Usage" accesskey="p" rel="prev">Usage</a>, Up: <a href="#Top" accesskey="u" rel="up">Top</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Customizing-1"></span><h2 class="chapter">5 Customizing</h2>
+
+<span id="index-org_002dtransclusion_002dextensions-1"></span>
+<span id="index-org_002dtransclusion_002dadd_002dall_002don_002dactivate-1"></span>
+<span id="index-org_002dtransclusion_002dmode_002dlighter"></span>
+<span id="index-org_002dtransclusion_002dopen_002dsource_002ddisplay_002daction_002dlist"></span>
+
+<p>You can customize settings in the &lsquo;<samp>org-transclusion</samp>&rsquo; group.
+</p>
+<dl compact="compact">
+<dt>&lsquo;<samp>org-transclusion-extensions</samp>&rsquo;</dt>
+<dd><p>Defines extensions to be loaded with
+org-transclusion.el. If you use &lsquo;<samp>customize</samp>&rsquo;, the extensions are loaded by it.
+If you don&rsquo;t, you likely need to explicitly use &lsquo;<samp>require</samp>&rsquo; to load them. See <a href="#Extensions">sub-section</a>
+</p>
+</dd>
+<dt>&lsquo;<samp>org-transclusion-add-all-on-activate</samp>&rsquo;</dt>
+<dd><p>Defines whether or not all the
+active transclusions (with &lsquo;<samp>t</samp>&rsquo;) get automatically transcluded on minor mode
+activation (&lsquo;<samp>org-transclusion-mode</samp>&rsquo;). This does not affect the manual
+activation when you directly call &lsquo;<samp>org-transclusion-activate</samp>&rsquo;
+</p>
+</dd>
+<dt>&lsquo;<samp>org-transclusion-exclude-elements</samp>&rsquo;</dt>
+<dd><p>See <a href="#Customizable-filter-to-exclude-certain-Org-elements">sub-section</a>
+</p>
+</dd>
+<dt>&lsquo;<samp>org-transclusion-include-first-section</samp>&rsquo;</dt>
+<dd><p>See <a href="#Include-the-section-before-the-first-headline-_0028Org-file-only_0029">sub-section</a>
+</p>
+</dd>
+<dt>&lsquo;<samp>org-transclusion-open-source-display-action-list</samp>&rsquo;</dt>
+<dd><p>You can customize the
+way the &lsquo;<samp>org-transclusion-open-source</samp>&rsquo; function displays the source buffer for
+the transclusion. You specify the &ldquo;action&rdquo; in the way defined by the built-in
+&lsquo;<samp>display-buffer</samp>&rsquo; function. Refer to its in-system documentation (with &lsquo;<samp>C-h f</samp>&rsquo;)
+for the accepted values. &lsquo;<samp>M-x customize</samp>&rsquo; can also guide you on what types of
+values are accepted.
+</p>
+</dd>
+<dt>&lsquo;<samp>org-transclusion-mode-lighter</samp>&rsquo;</dt>
+<dd><p>Define the lighter for Org-transclusion
+minor mode. The default is &ldquo; OT&rdquo;.
+</p></dd>
+</dl>
+
+<table class="menu" border="0" cellspacing="0">
+<tr><td align="left" valign="top">&bull; <a href="#Customizable-filter-to-exclude-certain-Org-elements" accesskey="1">Customizable filter to exclude certain Org elements</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Include-the-section-before-the-first-headline-_0028Org-file-only_0029" accesskey="2">Include the section before the first headline (Org file only)</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Faces-_0026-fringe-bitmap" accesskey="3">Faces &amp; fringe bitmap</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Keybindings" accesskey="4">Keybindings</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+</table>
+
+<hr>
+<span id="Customizable-filter-to-exclude-certain-Org-elements"></span><div class="header">
+<p>
+Next: <a href="#Include-the-section-before-the-first-headline-_0028Org-file-only_0029" accesskey="n" rel="next">Include the section before the first headline (Org file only)</a>, Up: <a href="#Customizing" accesskey="u" rel="up">Customizing</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Customizable-filter-to-exclude-certain-Org-elements-1"></span><h3 class="section">5.1 Customizable filter to exclude certain Org elements</h3>
+
+<span id="index-org_002dtransclusion_002dexclude_002delements-1"></span>
+
+<p>Set customizable variable &lsquo;<samp>org-transclusion-exclude-elements</samp>&rsquo; to define which elements to be <strong>excluded</strong> in the transclusion.
+</p>
+<p>The filter works for all supported types of links within an Org file when transcluding an entire Org file, and parts of it (headlines, custom ID, etc.). There is no filter for non-Org files.
+</p>
+<p>It is a list of symbols, and the default is &lsquo;<samp>(property-drawer)</samp>&rsquo;. The accepted values are the ones defined by &lsquo;<samp>org-element-all-elements</samp>&rsquo; (Org&rsquo;s standard set of elements; refer to its documentation for an exhaustive list).
+</p>
+<p>You can also fine-tune the exclusion filter per transclusion. Refer to the sub-section on <a href="#Filter-Org-elements-per-transclusion">filtering Org elements per transclusion</a>.
+</p>
+<hr>
+<span id="Include-the-section-before-the-first-headline-_0028Org-file-only_0029"></span><div class="header">
+<p>
+Next: <a href="#Faces-_0026-fringe-bitmap" accesskey="n" rel="next">Faces &amp; fringe bitmap</a>, Previous: <a href="#Customizable-filter-to-exclude-certain-Org-elements" accesskey="p" rel="prev">Customizable filter to exclude certain Org elements</a>, Up: <a href="#Customizing" accesskey="u" rel="up">Customizing</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Include-the-section-before-the-first-headline-_0028Org-file-only_0029-1"></span><h3 class="section">5.2 Include the section before the first headline (Org file only)</h3>
+
+<span id="index-org_002dtransclusion_002dinclude_002dfirst_002dsection-1"></span>
+
+<p>You can include the first section (section before the first headline) of an Org file. It is toggled via customizable variable &lsquo;<samp>org-transclusion-include-first-section</samp>&rsquo;. Its default value is &lsquo;<samp>t</samp>&rsquo;. Set it to &lsquo;<samp>t</samp>&rsquo; (or non-nil) to transclude the first section. It also works when the first section is followed by headlines.
+</p>
+<hr>
+<span id="Faces-_0026-fringe-bitmap"></span><div class="header">
+<p>
+Next: <a href="#Keybindings" accesskey="n" rel="next">Keybindings</a>, Previous: <a href="#Include-the-section-before-the-first-headline-_0028Org-file-only_0029" accesskey="p" rel="prev">Include the section before the first headline (Org file only)</a>, Up: <a href="#Customizing" accesskey="u" rel="up">Customizing</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Faces-_0026-fringe-bitmap-1"></span><h3 class="section">5.3 Faces &amp; fringe bitmap</h3>
+
+<span id="index-org_002dtransclusion_002dkeyword"></span>
+<span id="index-org_002dtransclusion_002dsource_002dfringe"></span>
+<span id="index-org_002dtransclusion_002dfringe"></span>
+<span id="index-org_002dtransclusion_002dsource"></span>
+<span id="index-org_002dtransclusion_002dsource_002dedit"></span>
+<span id="index-org_002dtransclusion"></span>
+<span id="index-org_002dtransclusion_002dedit"></span>
+<span id="index-org_002dtransclusion_002dfringe_002dbitmap"></span>
+
+<table class="menu" border="0" cellspacing="0">
+<tr><td align="left" valign="top">&bull; <a href="#Face-for-the-_0023_002btransclude-keyword" accesskey="1">Face for the &lsquo;<samp>#+transclude</samp>&rsquo; keyword</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Faces-for-the-fringes-next-to-transcluded-region-and-source-region" accesskey="2">Faces for the fringes next to transcluded region and source region</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+</table>
+
+<hr>
+<span id="Face-for-the-_0023_002btransclude-keyword"></span><div class="header">
+<p>
+Next: <a href="#Faces-for-the-fringes-next-to-transcluded-region-and-source-region" accesskey="n" rel="next">Faces for the fringes next to transcluded region and source region</a>, Up: <a href="#Faces-_0026-fringe-bitmap" accesskey="u" rel="up">Faces &amp; fringe bitmap</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Face-for-the-_0023_002btransclude-keyword-1"></span><h4 class="subsection">5.3.1 Face for the &lsquo;<samp>#+transclude</samp>&rsquo; keyword</h4>
+
+<p>This feature is provided as an <a href="#Extensions">extension</a> (default on). 
+</p>
+<dl compact="compact">
+<dt>&lsquo;<samp>org-transclusion-keyword</samp>&rsquo;</dt>
+<dd><p>You can set your own face to the &lsquo;<samp>#+transclude</samp>&rsquo; keyword with using the &lsquo;<samp>org-transclusion-keyword</samp>&rsquo; face.
+</p></dd>
+</dl>
+
+<hr>
+<span id="Faces-for-the-fringes-next-to-transcluded-region-and-source-region"></span><div class="header">
+<p>
+Previous: <a href="#Face-for-the-_0023_002btransclude-keyword" accesskey="p" rel="prev">Face for the &lsquo;<samp>#+transclude</samp>&rsquo; keyword</a>, Up: <a href="#Faces-_0026-fringe-bitmap" accesskey="u" rel="up">Faces &amp; fringe bitmap</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Faces-for-the-fringes-next-to-transcluded-region-and-source-region-1"></span><h4 class="subsection">5.3.2 Faces for the fringes next to transcluded region and source region</h4>
+
+<p>If the fringes that indicate transcluding and source regions are not visible in your system (e.g. Doom), try adding background and/or foreground colors to these custom faces.
+</p>
+<ul>
+<li> &lsquo;<samp>org-transclusion-source-fringe</samp>&rsquo;
+</li><li> &lsquo;<samp>org-transclusion-fringe</samp>&rsquo;
+</li></ul>
+
+<p>To customize a face, it&rsquo;s probably the easiest to use &lsquo;<samp>M-x customize-face</samp>&rsquo;. If you want to use Elisp for some reason (e.g. on Doom), something like this below should set faces. Experiment with the colors of your choice. By default, the faces above have no values.
+</p>
+<div class="lisp">
+<pre class="lisp">(set-face-attribute
+ 'org-transclusion-fringe nil
+ :foreground &quot;green&quot;
+ :background &quot;green&quot;)
+</pre></div>
+
+<p>For colors, where &ldquo;green&rdquo; is,  you can also use something like &ldquo;#62c86a&rdquo; (Emacs calls it &ldquo;RGB triple&rdquo;; you can refer to in-system manual Emacs &gt; Colors). You might also like to refer to a list of currently defined faces in your Emacs by &lsquo;<samp>list-faces-display</samp>&rsquo;.
+</p>
+<p>Other faces:
+</p><ul>
+<li> &lsquo;<samp>org-transclusion-source</samp>&rsquo;
+</li><li> &lsquo;<samp>org-transclusion-source-edit</samp>&rsquo;
+</li><li> &lsquo;<samp>org-transclusion</samp>&rsquo;
+</li><li> &lsquo;<samp>org-transclusion-edit</samp>&rsquo;
+</li><li> &lsquo;<samp>org-transclusion-fringe-bitmap</samp>&rsquo;
+It is used for the fringe that indicates the transcluded region. It works only in on a graphical display (not on a text-only terminal).
+</li></ul>
+
+<hr>
+<span id="Keybindings"></span><div class="header">
+<p>
+Previous: <a href="#Faces-_0026-fringe-bitmap" accesskey="p" rel="prev">Faces &amp; fringe bitmap</a>, Up: <a href="#Customizing" accesskey="u" rel="up">Customizing</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Keybindings-1"></span><h3 class="section">5.4 Keybindings</h3>
+
+<span id="index-org_002dtransclusion_002dmap-1"></span>
+<span id="index-org_002dtransclusion_002dlive_002dsync_002dmap-1"></span>
+
+<ul>
+<li> &lsquo;<samp>org-transclusion-map</samp>&rsquo;
+</li></ul>
+<div class="example">
+<pre class="example">key             binding
+---             -------
+
+C-c             Prefix Command
+TAB             org-cycle
+D               org-transclusion-demote-subtree
+O               org-transclusion-move-to-source
+P               org-transclusion-promote-subtree
+d               org-transclusion-remove
+e               org-transclusion-live-sync-start
+g               org-transclusion-refresh
+o               org-transclusion-open-source
+
+C-c C-c         org-ctrl-c-ctrl-c
+</pre></div>
+
+<ul>
+<li> &lsquo;<samp>org-transclusion-live-sync-map</samp>&rsquo;
+</li></ul>
+<div class="example">
+<pre class="example">key                   binding
+---                   -------
+
+C-c                   Prefix Command
+C-y                   org-transclusion-live-sync-paste
+
+C-c C-c               org-transclusion-live-sync-exit
+
+*Also inherits ‘org-mode-map’
+</pre></div>
+
+<hr>
+<span id="Known-Limitations"></span><div class="header">
+<p>
+Next: <a href="#Credits" accesskey="n" rel="next">Credits</a>, Previous: <a href="#Customizing" accesskey="p" rel="prev">Customizing</a>, Up: <a href="#Top" accesskey="u" rel="up">Top</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Known-Limitations-1"></span><h2 class="chapter">6 Known Limitations</h2>
+
+<p>Note this section is still incomplete, not exhaustive for &ldquo;known&rdquo; limitations.
+</p>
+<ul>
+<li> Org link&rsquo;s search-options &lsquo;<samp>::/regex/</samp>&rsquo; and &lsquo;<samp>::number</samp>&rsquo; do not work as intended.
+
+</li><li> &lsquo;<samp>org-transclusion-live-sync-start</samp>&rsquo; does not support all Org elements
+For transclusions of Org elements or buffers, live-sync works only on the following elements:
+&lsquo;<samp>center-block</samp>&rsquo;, &lsquo;<samp>drawer</samp>&rsquo;, &lsquo;<samp>dynamic-block</samp>&rsquo;, &lsquo;<samp>latex-environment</samp>&rsquo;, &lsquo;<samp>paragraph</samp>&rsquo;, &lsquo;<samp>plain-list</samp>&rsquo;, &lsquo;<samp>quote-block</samp>&rsquo;, &lsquo;<samp>special-block</samp>&rsquo;, &lsquo;<samp>table</samp>&rsquo;, and &lsquo;<samp>verse-block</samp>&rsquo;.
+
+<p>It is known that live-sync does not work for the other elements; namely:
+&lsquo;<samp>comment-block</samp>&rsquo;, &lsquo;<samp>export-block</samp>&rsquo;, &lsquo;<samp>example-block</samp>&rsquo;, &lsquo;<samp>fixed-width</samp>&rsquo;, &lsquo;<samp>keyword</samp>&rsquo;, &lsquo;<samp>src-block</samp>&rsquo;, and &lsquo;<samp>property-drawer</samp>&rsquo;.
+</p>
+<p>More technical reason for this limitation is documented in the docstring of function &lsquo;<samp>org-transclusion-live-sync-enclosing-element</samp>&rsquo;.
+</p>
+<p>Work is in progress to lift this limitation but I&rsquo;m still experimenting different ideas.
+</p>
+</li><li> &lsquo;<samp>org-indent-mode</samp>&rsquo; may not work well with Org-transclusion
+A new extension has been added to support &lsquo;<samp>org-indent-mode</samp>&rsquo;
+Refer to <a href="#Extensions">this section</a>.
+
+</li><li> Doom&rsquo;s customization may interfere with Org-transclusion
+Refer to issue <a href="https://github.com/nobiot/org-transclusion/issues/52">#52</a>. The symptom is that in Doom you get an error message that includes this: &ldquo;progn: ‘recenter’ing a window that does not display current-buffer.&rdquo; Adding this in your configuration has been reported to fix the issue:
+
+<p>&lsquo;<samp>(advice-remove 'org-link-search '+org--recenter-after-follow-link-a)</samp>&rsquo;
+</p>
+<p>It is probably rather drastic a measure. I will appreciate it if you find a less drastic way that works. Thank you.
+</p>
+</li><li> Org refile does not work &ldquo;properly&rdquo; on the transcluded headlines
+Refer to issue <a href="https://github.com/nobiot/org-transclusion/issues/20">#20</a>. I don&rsquo;t intend to support this &ndash; refile the source, not the transcluded copy.
+
+</li><li> Org-transclusion does not support expansion of noweb references when a transcluded source block code has them
+Refer to issue <a href="https://github.com/nobiot/org-transclusion/issues/86">#86</a>. You will get &ldquo;Text read-only&rdquo; error when export tries to expand the noweb references into the source code. †<a href="https://orgmode.org/manual/Noweb-Reference-Syntax.html">noweb reference</a>
+</li></ul>
+
+<hr>
+<span id="Credits"></span><div class="header">
+<p>
+Next: <a href="#Contributing" accesskey="n" rel="next">Contributing</a>, Previous: <a href="#Known-Limitations" accesskey="p" rel="prev">Known Limitations</a>, Up: <a href="#Top" accesskey="u" rel="up">Top</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Credits-1"></span><h2 class="chapter">7 Credits</h2>
+
+<table class="menu" border="0" cellspacing="0">
+<tr><td align="left" valign="top">&bull; <a href="#Original-idea-by-John-Kitchin" accesskey="1">Original idea by John Kitchin</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#Text_002dClone" accesskey="2">Text-Clone</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+</table>
+
+<hr>
+<span id="Original-idea-by-John-Kitchin"></span><div class="header">
+<p>
+Next: <a href="#Text_002dClone" accesskey="n" rel="next">Text-Clone</a>, Up: <a href="#Credits" accesskey="u" rel="up">Credits</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Original-idea-by-John-Kitchin-1"></span><h3 class="section">7.1 Original idea by John Kitchin</h3>
+
+<p><a href="https://github.com/alphapapa/transclusion-in-emacs#org-mode">https://github.com/alphapapa/transclusion-in-emacs#org-mode</a>
+</p>
+<blockquote>
+<p>{O} transcluding some org-elements in multiple places
+<em>[2016-12-09 Fri] </em> John Kitchin asks:
+</p>
+<p>I have an idea for how I could transclude “copies” or links to org-elements in multiple places and keep them up to date. A prototypical example of this is I have a set of org-contacts in one place, and I want to create a new list of people for a committee in a new place made of “copies” of the contact headlines. But I do not really want to duplicate the headlines, and if I modify one, I want it reflected in the other places. I do not want just links to those contacts, because then I can not do things with org-map-entries, and other org-machinery which needs the actual headlines/properties present. Another example might be I want a table in two places, but the contents of them should stay synchronized, ditto for a code block.
+</p>
+<p>This idea was inspired by <a href="https://github.com/gregdetre/emacs-freex">https://github.com/gregdetre/emacs-freex</a>.
+</p>
+<p>The idea starts with creating (wait for it…) a new link ;) In a document where I want to transclude a headline, I would enter something like:
+</p>
+<p>transclude:some-file.org::*headline title
+</p>
+<p>Then, I would rely on the font-lock system to replace that link with the headline and its contents (via the :activate-func link property), and to put an overlay on it with a bunch of useful properties, including modification hooks that would update the source if I change the the element in this document, and some visual indication that it is transcluded (e.g. light gray background/tooltip).
+</p>
+<p>I would create a kill-buffer hook function that would replace that transcluded content with the original link. A focus-in hook function would make sure the transcluded content is updated when you enter the frame. So when the file is not open, there is just a transclude link indicating what should be put there, and when it is open, the overlay modification hooks and focus hook should ensure everything stays synchronized (as long as external processes are not modifying the contents).
+</p>
+<p>It seems like this could work well for headlines, and named tables, src blocks, and probably any other element that can be addressed by a name/ID.
+</p>
+</blockquote>
+
+<hr>
+<span id="Text_002dClone"></span><div class="header">
+<p>
+Previous: <a href="#Original-idea-by-John-Kitchin" accesskey="p" rel="prev">Original idea by John Kitchin</a>, Up: <a href="#Credits" accesskey="u" rel="up">Credits</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Text_002dClone-1"></span><h3 class="section">7.2 Text-Clone</h3>
+
+<p>&lsquo;<samp>text-clone.el</samp>&rsquo; is an extension of text-clone functions written as part of GNU Emacs in &lsquo;<samp>subr.el</samp>&rsquo;.  The first adaption to extend text-clone functions to work across buffers was published in StackExchange by the user named Tobias in March 2020. It can be found at <a href="https://emacs.stackexchange.com/questions/56201/is-there-an-emacs-package-which-can-mirror-a-region/56202#56202">https://emacs.stackexchange.com/questions/56201/is-there-an-emacs-package-which-can-mirror-a-region/56202#56202</a>. The text-clone library takes this line of work further.
+</p>
+<hr>
+<span id="Contributing"></span><div class="header">
+<p>
+Next: <a href="#Index-_002d-Features" accesskey="n" rel="next">Index - Features</a>, Previous: <a href="#Credits" accesskey="p" rel="prev">Credits</a>, Up: <a href="#Top" accesskey="u" rel="up">Top</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Contributing-1"></span><h2 class="chapter">8 Contributing</h2>
+
+<ul>
+<li> Get involved in a discussion in <a href="https://org-roam.discourse.group/t/prototype-transclusion-block-reference-with-emacs-org-mode/830">Org-roam forum</a> (the package is originally aimed for its users, me included)
+
+</li><li> Create issues, discussion, and/or pull requests. All welcome.
+</li></ul>
+
+<p>Org-transclusion is part of GNU ELPA and thus copyrighted by the <a href="http://fsf.org">Free Software Foundation</a> (FSF). This means that anyone who is making a substantive code contribution will need to &ldquo;assign the copyright for your contributions to the FSF so that they can be included in GNU Emacs&rdquo; (<a href="https://orgmode.org/contribute.html#copyright">Org Mode website</a>).
+</p>
+<p>Thank you.
+</p>
+<hr>
+<span id="Index-_002d-Features"></span><div class="header">
+<p>
+Next: <a href="#Index-_002d-Commands" accesskey="n" rel="next">Index - Commands</a>, Previous: <a href="#Contributing" accesskey="p" rel="prev">Contributing</a>, Up: <a href="#Top" accesskey="u" rel="up">Top</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Index-_002d-Features-1"></span><h2 class="appendix">Appendix A Index - Features</h2>
+
+<table><tr><th valign="top">Jump to: &nbsp; </th><td><a class="summary-letter" href="#Index-_002d-Features_cp_letter-A"><b>A</b></a>
+ &nbsp; 
+<a class="summary-letter" href="#Index-_002d-Features_cp_letter-E"><b>E</b></a>
+ &nbsp; 
+<a class="summary-letter" href="#Index-_002d-Features_cp_letter-F"><b>F</b></a>
+ &nbsp; 
+<a class="summary-letter" href="#Index-_002d-Features_cp_letter-L"><b>L</b></a>
+ &nbsp; 
+<a class="summary-letter" href="#Index-_002d-Features_cp_letter-O"><b>O</b></a>
+ &nbsp; 
+<a class="summary-letter" href="#Index-_002d-Features_cp_letter-P"><b>P</b></a>
+ &nbsp; 
+<a class="summary-letter" href="#Index-_002d-Features_cp_letter-T"><b>T</b></a>
+ &nbsp; 
+</td></tr></table>
+<table class="index-cp" border="0">
+<tr><td></td><th align="left">Index Entry</th><td>&nbsp;</td><th align="left"> Section</th></tr>
+<tr><td colspan="4"> <hr></td></tr>
+<tr><th id="Index-_002d-Features_cp_letter-A">A</th><td></td><td></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Activate-_002f-Deactivate">Activate / Deactivate</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Org_002dtransclusion-mode-activate-and-deactivate">Org-transclusion mode activate and deactivate</a></td></tr>
+<tr><td colspan="4"> <hr></td></tr>
+<tr><th id="Index-_002d-Features_cp_letter-E">E</th><td></td><td></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Extension-_002d-org_002dtransclusion_002dfont_002dlock">Extension - org-transclusion-font-lock</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Extensions">Extensions</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Extension-_002d-org_002dtransclusion_002dindent_002dmode">Extension - org-transclusion-indent-mode</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Extensions">Extensions</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Extension-_002d-org_002dtransclusion_002dsrc_002dlines">Extension - org-transclusion-src-lines</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Extensions">Extensions</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Extensions">Extensions</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Extensions">Extensions</a></td></tr>
+<tr><td colspan="4"> <hr></td></tr>
+<tr><th id="Index-_002d-Features_cp_letter-F">F</th><td></td><td></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Filters">Filters</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Filter-Org-elements-per-transclusion">Filter Org elements per transclusion</a></td></tr>
+<tr><td colspan="4"> <hr></td></tr>
+<tr><th id="Index-_002d-Features_cp_letter-L">L</th><td></td><td></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Live_002dsync-edit">Live-sync edit</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Live_002dsync-edit">Live-sync edit</a></td></tr>
+<tr><td colspan="4"> <hr></td></tr>
+<tr><th id="Index-_002d-Features_cp_letter-O">O</th><td></td><td></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Org-Links-Supported">Org Links Supported</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Org-links-supported">Org links supported</a></td></tr>
+<tr><td colspan="4"> <hr></td></tr>
+<tr><th id="Index-_002d-Features_cp_letter-P">P</th><td></td><td></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Properties">Properties</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Org_002dtransclusion-mode-activate-and-deactivate">Org-transclusion mode activate and deactivate</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Property-_002d-_003adisable_002dauto">Property - :disable-auto</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Org_002dtransclusion-mode-activate-and-deactivate">Org-transclusion mode activate and deactivate</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Property-_002d-_003aend">Property - :end</a>:</td><td>&nbsp;</td><td valign="top"><a href="#end-property-to-specify-a-search-term-to-dynamically-look-for-the-end-of-a-range">&lsquo;<samp>end</samp>&rsquo; property to specify a search term to dynamically look for the end of a range</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Property-_002d-_003alevel">Property - :level</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Control-levels-of-headlines-per-transclusion">Control levels of headlines per transclusion</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Property-_002d-_003alines">Property - :lines</a>:</td><td>&nbsp;</td><td valign="top"><a href="#lines-property-to-specify-a-range-of-lines">&lsquo;<samp>lines</samp>&rsquo; property to specify a range of lines</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Property-_002d-_003aonly_002dcontent">Property - :only-content</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Filter-Org-elements-per-transclusion">Filter Org elements per transclusion</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Property-_002d-_003aonly_002dcontents">Property - :only-contents</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Org-links-supported">Org links supported</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Property-_002d-_003arest">Property - :rest</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Transclude-source-file-into-src_002dblock">Transclude source file into src-block</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Property-_002d-_003asrc">Property - :src</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Transclude-source-file-into-src_002dblock">Transclude source file into src-block</a></td></tr>
+<tr><td colspan="4"> <hr></td></tr>
+<tr><th id="Index-_002d-Features_cp_letter-T">T</th><td></td><td></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Transclude-into-Org_0027s-src_002dblock">Transclude into Org&rsquo;s src-block</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Transclude-source-file-into-src_002dblock">Transclude source file into src-block</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Transclude-range-of-lines">Transclude range of lines</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Transclude-range-of-lines-for-text-and-source-files">Transclude range of lines for text and source files</a></td></tr>
+<tr><td colspan="4"> <hr></td></tr>
+</table>
+<table><tr><th valign="top">Jump to: &nbsp; </th><td><a class="summary-letter" href="#Index-_002d-Features_cp_letter-A"><b>A</b></a>
+ &nbsp; 
+<a class="summary-letter" href="#Index-_002d-Features_cp_letter-E"><b>E</b></a>
+ &nbsp; 
+<a class="summary-letter" href="#Index-_002d-Features_cp_letter-F"><b>F</b></a>
+ &nbsp; 
+<a class="summary-letter" href="#Index-_002d-Features_cp_letter-L"><b>L</b></a>
+ &nbsp; 
+<a class="summary-letter" href="#Index-_002d-Features_cp_letter-O"><b>O</b></a>
+ &nbsp; 
+<a class="summary-letter" href="#Index-_002d-Features_cp_letter-P"><b>P</b></a>
+ &nbsp; 
+<a class="summary-letter" href="#Index-_002d-Features_cp_letter-T"><b>T</b></a>
+ &nbsp; 
+</td></tr></table>
+
+<hr>
+<span id="Index-_002d-Commands"></span><div class="header">
+<p>
+Next: <a href="#Index-_002d-User-Options" accesskey="n" rel="next">Index - User Options</a>, Previous: <a href="#Index-_002d-Features" accesskey="p" rel="prev">Index - Features</a>, Up: <a href="#Top" accesskey="u" rel="up">Top</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Index-_002d-Commands-1"></span><h2 class="appendix">Appendix B Index - Commands</h2>
+
+<table><tr><th valign="top">Jump to: &nbsp; </th><td><a class="summary-letter" href="#Index-_002d-Commands_fn_letter-O"><b>O</b></a>
+ &nbsp; 
+</td></tr></table>
+<table class="index-fn" border="0">
+<tr><td></td><th align="left">Index Entry</th><td>&nbsp;</td><th align="left"> Section</th></tr>
+<tr><td colspan="4"> <hr></td></tr>
+<tr><th id="Index-_002d-Commands_fn_letter-O">O</th><td></td><td></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dactivate"><code>org-transclusion-activate</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Org_002dtransclusion-mode-activate-and-deactivate">Org-transclusion mode activate and deactivate</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dadd"><code>org-transclusion-add</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Getting-Started">Getting Started</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dadd_002dall"><code>org-transclusion-add-all</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Getting-Started">Getting Started</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002ddeactivate"><code>org-transclusion-deactivate</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Org_002dtransclusion-mode-activate-and-deactivate">Org-transclusion mode activate and deactivate</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002ddemote_002dsubtree"><code>org-transclusion-demote-subtree</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Control-levels-of-headlines-per-transclusion">Control levels of headlines per transclusion</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dlive_002dsync_002dexit"><code>org-transclusion-live-sync-exit</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Live_002dsync-edit">Live-sync edit</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dlive_002dsync_002dpaste"><code>org-transclusion-live-sync-paste</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Live_002dsync-edit">Live-sync edit</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dlive_002dsync_002dstart"><code>org-transclusion-live-sync-start</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Live_002dsync-edit">Live-sync edit</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dmake_002dfrom_002dlink"><code>org-transclusion-make-from-link</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Getting-Started">Getting Started</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dmake_002dfrom_002dlink-1"><code>org-transclusion-make-from-link</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Control-levels-of-headlines-per-transclusion">Control levels of headlines per transclusion</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dmode"><code>org-transclusion-mode</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Org_002dtransclusion-mode-activate-and-deactivate">Org-transclusion mode activate and deactivate</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dmove_002dto_002dsource"><code>org-transclusion-move-to-source</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Getting-Started">Getting Started</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dopen_002dsource"><code>org-transclusion-open-source</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Getting-Started">Getting Started</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dpromote_002dsubtree"><code>org-transclusion-promote-subtree</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Control-levels-of-headlines-per-transclusion">Control levels of headlines per transclusion</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002drefresh"><code>org-transclusion-refresh</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Getting-Started">Getting Started</a></td></tr>
+<tr><td colspan="4"> <hr></td></tr>
+</table>
+<table><tr><th valign="top">Jump to: &nbsp; </th><td><a class="summary-letter" href="#Index-_002d-Commands_fn_letter-O"><b>O</b></a>
+ &nbsp; 
+</td></tr></table>
+
+<hr>
+<span id="Index-_002d-User-Options"></span><div class="header">
+<p>
+Next: <a href="#GNU-Free-Documentation-License" accesskey="n" rel="next">GNU Free Documentation License</a>, Previous: <a href="#Index-_002d-Commands" accesskey="p" rel="prev">Index - Commands</a>, Up: <a href="#Top" accesskey="u" rel="up">Top</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Index-_002d-User-Options-1"></span><h2 class="appendix">Appendix C Index - User Options</h2>
+
+<table><tr><th valign="top">Jump to: &nbsp; </th><td><a class="summary-letter" href="#Index-_002d-User-Options_vr_letter-O"><b>O</b></a>
+ &nbsp; 
+</td></tr></table>
+<table class="index-vr" border="0">
+<tr><td></td><th align="left">Index Entry</th><td>&nbsp;</td><th align="left"> Section</th></tr>
+<tr><td colspan="4"> <hr></td></tr>
+<tr><th id="Index-_002d-User-Options_vr_letter-O">O</th><td></td><td></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion"><code>org-transclusion</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Faces-_0026-fringe-bitmap">Faces &amp; fringe bitmap</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dadd_002dall_002don_002dactivate"><code>org-transclusion-add-all-on-activate</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Org_002dtransclusion-mode-activate-and-deactivate">Org-transclusion mode activate and deactivate</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dadd_002dall_002don_002dactivate-1"><code>org-transclusion-add-all-on-activate</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Customizing">Customizing</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dedit"><code>org-transclusion-edit</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Faces-_0026-fringe-bitmap">Faces &amp; fringe bitmap</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dexclude_002delements"><code>org-transclusion-exclude-elements</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Filter-Org-elements-per-transclusion">Filter Org elements per transclusion</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dexclude_002delements-1"><code>org-transclusion-exclude-elements</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Customizable-filter-to-exclude-certain-Org-elements">Customizable filter to exclude certain Org elements</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dextensions"><code>org-transclusion-extensions</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Extensions">Extensions</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dextensions-1"><code>org-transclusion-extensions</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Customizing">Customizing</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dfringe"><code>org-transclusion-fringe</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Faces-_0026-fringe-bitmap">Faces &amp; fringe bitmap</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dfringe_002dbitmap"><code>org-transclusion-fringe-bitmap</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Faces-_0026-fringe-bitmap">Faces &amp; fringe bitmap</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dinclude_002dfirst_002dsection"><code>org-transclusion-include-first-section</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Filter-Org-elements-per-transclusion">Filter Org elements per transclusion</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dinclude_002dfirst_002dsection-1"><code>org-transclusion-include-first-section</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Include-the-section-before-the-first-headline-_0028Org-file-only_0029">Include the section before the first headline (Org file only)</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dkeyword"><code>org-transclusion-keyword</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Faces-_0026-fringe-bitmap">Faces &amp; fringe bitmap</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dlive_002dsync_002dmap"><code>org-transclusion-live-sync-map</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Live_002dsync-edit">Live-sync edit</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dlive_002dsync_002dmap-1"><code>org-transclusion-live-sync-map</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Keybindings">Keybindings</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dmap"><code>org-transclusion-map</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Getting-Started">Getting Started</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dmap-1"><code>org-transclusion-map</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Keybindings">Keybindings</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dmode_002dlighter"><code>org-transclusion-mode-lighter</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Customizing">Customizing</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dopen_002dsource_002ddisplay_002daction_002dlist"><code>org-transclusion-open-source-display-action-list</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Customizing">Customizing</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dsource"><code>org-transclusion-source</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Faces-_0026-fringe-bitmap">Faces &amp; fringe bitmap</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dsource_002dedit"><code>org-transclusion-source-edit</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Faces-_0026-fringe-bitmap">Faces &amp; fringe bitmap</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dsource_002dfringe"><code>org-transclusion-source-fringe</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Faces-_0026-fringe-bitmap">Faces &amp; fringe bitmap</a></td></tr>
+<tr><td colspan="4"> <hr></td></tr>
+</table>
+<table><tr><th valign="top">Jump to: &nbsp; </th><td><a class="summary-letter" href="#Index-_002d-User-Options_vr_letter-O"><b>O</b></a>
+ &nbsp; 
+</td></tr></table>
+
+<hr>
+<span id="GNU-Free-Documentation-License"></span><div class="header">
+<p>
+Previous: <a href="#Index-_002d-User-Options" accesskey="p" rel="prev">Index - User Options</a>, Up: <a href="#Top" accesskey="u" rel="up">Top</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="GNU-Free-Documentation-License-1"></span><h2 class="appendix">Appendix D GNU Free Documentation License</h2>
+
+<div align="center">Version 1.3, 3 November 2008
+</div>
+
+<div class="display">
+<pre class="display">Copyright &copy; 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
+<a href="https://fsf.org/">https://fsf.org/</a>
+
+Everyone is permitted to copy and distribute verbatim copies
+of this license document, but changing it is not allowed.
+</pre></div>
+
+<ol start="0">
+<li> PREAMBLE
+
+<p>The purpose of this License is to make a manual, textbook, or other
+functional and useful document <em>free</em> in the sense of freedom: to
+assure everyone the effective freedom to copy and redistribute it,
+with or without modifying it, either commercially or noncommercially.
+Secondarily, this License preserves for the author and publisher a way
+to get credit for their work, while not being considered responsible
+for modifications made by others.
+</p>
+<p>This License is a kind of &ldquo;copyleft&rdquo;, which means that derivative
+works of the document must themselves be free in the same sense.  It
+complements the GNU General Public License, which is a copyleft
+license designed for free software.
+</p>
+<p>We have designed this License in order to use it for manuals for free
+software, because free software needs free documentation: a free
+program should come with manuals providing the same freedoms that the
+software does.  But this License is not limited to software manuals;
+it can be used for any textual work, regardless of subject matter or
+whether it is published as a printed book.  We recommend this License
+principally for works whose purpose is instruction or reference.
+</p>
+</li><li> APPLICABILITY AND DEFINITIONS
+
+<p>This License applies to any manual or other work, in any medium, that
+contains a notice placed by the copyright holder saying it can be
+distributed under the terms of this License.  Such a notice grants a
+world-wide, royalty-free license, unlimited in duration, to use that
+work under the conditions stated herein.  The &ldquo;Document&rdquo;, below,
+refers to any such manual or work.  Any member of the public is a
+licensee, and is addressed as &ldquo;you&rdquo;.  You accept the license if you
+copy, modify or distribute the work in a way requiring permission
+under copyright law.
+</p>
+<p>A &ldquo;Modified Version&rdquo; of the Document means any work containing the
+Document or a portion of it, either copied verbatim, or with
+modifications and/or translated into another language.
+</p>
+<p>A &ldquo;Secondary Section&rdquo; is a named appendix or a front-matter section
+of the Document that deals exclusively with the relationship of the
+publishers or authors of the Document to the Document&rsquo;s overall
+subject (or to related matters) and contains nothing that could fall
+directly within that overall subject.  (Thus, if the Document is in
+part a textbook of mathematics, a Secondary Section may not explain
+any mathematics.)  The relationship could be a matter of historical
+connection with the subject or with related matters, or of legal,
+commercial, philosophical, ethical or political position regarding
+them.
+</p>
+<p>The &ldquo;Invariant Sections&rdquo; are certain Secondary Sections whose titles
+are designated, as being those of Invariant Sections, in the notice
+that says that the Document is released under this License.  If a
+section does not fit the above definition of Secondary then it is not
+allowed to be designated as Invariant.  The Document may contain zero
+Invariant Sections.  If the Document does not identify any Invariant
+Sections then there are none.
+</p>
+<p>The &ldquo;Cover Texts&rdquo; are certain short passages of text that are listed,
+as Front-Cover Texts or Back-Cover Texts, in the notice that says that
+the Document is released under this License.  A Front-Cover Text may
+be at most 5 words, and a Back-Cover Text may be at most 25 words.
+</p>
+<p>A &ldquo;Transparent&rdquo; copy of the Document means a machine-readable copy,
+represented in a format whose specification is available to the
+general public, that is suitable for revising the document
+straightforwardly with generic text editors or (for images composed of
+pixels) generic paint programs or (for drawings) some widely available
+drawing editor, and that is suitable for input to text formatters or
+for automatic translation to a variety of formats suitable for input
+to text formatters.  A copy made in an otherwise Transparent file
+format whose markup, or absence of markup, has been arranged to thwart
+or discourage subsequent modification by readers is not Transparent.
+An image format is not Transparent if used for any substantial amount
+of text.  A copy that is not &ldquo;Transparent&rdquo; is called &ldquo;Opaque&rdquo;.
+</p>
+<p>Examples of suitable formats for Transparent copies include plain
+ASCII without markup, Texinfo input format, LaTeX input
+format, SGML or XML using a publicly available
+DTD, and standard-conforming simple HTML,
+PostScript or PDF designed for human modification.  Examples
+of transparent image formats include PNG, XCF and
+JPG.  Opaque formats include proprietary formats that can be
+read and edited only by proprietary word processors, SGML or
+XML for which the DTD and/or processing tools are
+not generally available, and the machine-generated HTML,
+PostScript or PDF produced by some word processors for
+output purposes only.
+</p>
+<p>The &ldquo;Title Page&rdquo; means, for a printed book, the title page itself,
+plus such following pages as are needed to hold, legibly, the material
+this License requires to appear in the title page.  For works in
+formats which do not have any title page as such, &ldquo;Title Page&rdquo; means
+the text near the most prominent appearance of the work&rsquo;s title,
+preceding the beginning of the body of the text.
+</p>
+<p>The &ldquo;publisher&rdquo; means any person or entity that distributes copies
+of the Document to the public.
+</p>
+<p>A section &ldquo;Entitled XYZ&rdquo; means a named subunit of the Document whose
+title either is precisely XYZ or contains XYZ in parentheses following
+text that translates XYZ in another language.  (Here XYZ stands for a
+specific section name mentioned below, such as &ldquo;Acknowledgements&rdquo;,
+&ldquo;Dedications&rdquo;, &ldquo;Endorsements&rdquo;, or &ldquo;History&rdquo;.)  To &ldquo;Preserve the Title&rdquo;
+of such a section when you modify the Document means that it remains a
+section &ldquo;Entitled XYZ&rdquo; according to this definition.
+</p>
+<p>The Document may include Warranty Disclaimers next to the notice which
+states that this License applies to the Document.  These Warranty
+Disclaimers are considered to be included by reference in this
+License, but only as regards disclaiming warranties: any other
+implication that these Warranty Disclaimers may have is void and has
+no effect on the meaning of this License.
+</p>
+</li><li> VERBATIM COPYING
+
+<p>You may copy and distribute the Document in any medium, either
+commercially or noncommercially, provided that this License, the
+copyright notices, and the license notice saying this License applies
+to the Document are reproduced in all copies, and that you add no other
+conditions whatsoever to those of this License.  You may not use
+technical measures to obstruct or control the reading or further
+copying of the copies you make or distribute.  However, you may accept
+compensation in exchange for copies.  If you distribute a large enough
+number of copies you must also follow the conditions in section 3.
+</p>
+<p>You may also lend copies, under the same conditions stated above, and
+you may publicly display copies.
+</p>
+</li><li> COPYING IN QUANTITY
+
+<p>If you publish printed copies (or copies in media that commonly have
+printed covers) of the Document, numbering more than 100, and the
+Document&rsquo;s license notice requires Cover Texts, you must enclose the
+copies in covers that carry, clearly and legibly, all these Cover
+Texts: Front-Cover Texts on the front cover, and Back-Cover Texts on
+the back cover.  Both covers must also clearly and legibly identify
+you as the publisher of these copies.  The front cover must present
+the full title with all words of the title equally prominent and
+visible.  You may add other material on the covers in addition.
+Copying with changes limited to the covers, as long as they preserve
+the title of the Document and satisfy these conditions, can be treated
+as verbatim copying in other respects.
+</p>
+<p>If the required texts for either cover are too voluminous to fit
+legibly, you should put the first ones listed (as many as fit
+reasonably) on the actual cover, and continue the rest onto adjacent
+pages.
+</p>
+<p>If you publish or distribute Opaque copies of the Document numbering
+more than 100, you must either include a machine-readable Transparent
+copy along with each Opaque copy, or state in or with each Opaque copy
+a computer-network location from which the general network-using
+public has access to download using public-standard network protocols
+a complete Transparent copy of the Document, free of added material.
+If you use the latter option, you must take reasonably prudent steps,
+when you begin distribution of Opaque copies in quantity, to ensure
+that this Transparent copy will remain thus accessible at the stated
+location until at least one year after the last time you distribute an
+Opaque copy (directly or through your agents or retailers) of that
+edition to the public.
+</p>
+<p>It is requested, but not required, that you contact the authors of the
+Document well before redistributing any large number of copies, to give
+them a chance to provide you with an updated version of the Document.
+</p>
+</li><li> MODIFICATIONS
+
+<p>You may copy and distribute a Modified Version of the Document under
+the conditions of sections 2 and 3 above, provided that you release
+the Modified Version under precisely this License, with the Modified
+Version filling the role of the Document, thus licensing distribution
+and modification of the Modified Version to whoever possesses a copy
+of it.  In addition, you must do these things in the Modified Version:
+</p>
+<ol type="A" start="1">
+<li> Use in the Title Page (and on the covers, if any) a title distinct
+from that of the Document, and from those of previous versions
+(which should, if there were any, be listed in the History section
+of the Document).  You may use the same title as a previous version
+if the original publisher of that version gives permission.
+
+</li><li> List on the Title Page, as authors, one or more persons or entities
+responsible for authorship of the modifications in the Modified
+Version, together with at least five of the principal authors of the
+Document (all of its principal authors, if it has fewer than five),
+unless they release you from this requirement.
+
+</li><li> State on the Title page the name of the publisher of the
+Modified Version, as the publisher.
+
+</li><li> Preserve all the copyright notices of the Document.
+
+</li><li> Add an appropriate copyright notice for your modifications
+adjacent to the other copyright notices.
+
+</li><li> Include, immediately after the copyright notices, a license notice
+giving the public permission to use the Modified Version under the
+terms of this License, in the form shown in the Addendum below.
+
+</li><li> Preserve in that license notice the full lists of Invariant Sections
+and required Cover Texts given in the Document&rsquo;s license notice.
+
+</li><li> Include an unaltered copy of this License.
+
+</li><li> Preserve the section Entitled &ldquo;History&rdquo;, Preserve its Title, and add
+to it an item stating at least the title, year, new authors, and
+publisher of the Modified Version as given on the Title Page.  If
+there is no section Entitled &ldquo;History&rdquo; in the Document, create one
+stating the title, year, authors, and publisher of the Document as
+given on its Title Page, then add an item describing the Modified
+Version as stated in the previous sentence.
+
+</li><li> Preserve the network location, if any, given in the Document for
+public access to a Transparent copy of the Document, and likewise
+the network locations given in the Document for previous versions
+it was based on.  These may be placed in the &ldquo;History&rdquo; section.
+You may omit a network location for a work that was published at
+least four years before the Document itself, or if the original
+publisher of the version it refers to gives permission.
+
+</li><li> For any section Entitled &ldquo;Acknowledgements&rdquo; or &ldquo;Dedications&rdquo;, Preserve
+the Title of the section, and preserve in the section all the
+substance and tone of each of the contributor acknowledgements and/or
+dedications given therein.
+
+</li><li> Preserve all the Invariant Sections of the Document,
+unaltered in their text and in their titles.  Section numbers
+or the equivalent are not considered part of the section titles.
+
+</li><li> Delete any section Entitled &ldquo;Endorsements&rdquo;.  Such a section
+may not be included in the Modified Version.
+
+</li><li> Do not retitle any existing section to be Entitled &ldquo;Endorsements&rdquo; or
+to conflict in title with any Invariant Section.
+
+</li><li> Preserve any Warranty Disclaimers.
+</li></ol>
+
+<p>If the Modified Version includes new front-matter sections or
+appendices that qualify as Secondary Sections and contain no material
+copied from the Document, you may at your option designate some or all
+of these sections as invariant.  To do this, add their titles to the
+list of Invariant Sections in the Modified Version&rsquo;s license notice.
+These titles must be distinct from any other section titles.
+</p>
+<p>You may add a section Entitled &ldquo;Endorsements&rdquo;, provided it contains
+nothing but endorsements of your Modified Version by various
+parties&mdash;for example, statements of peer review or that the text has
+been approved by an organization as the authoritative definition of a
+standard.
+</p>
+<p>You may add a passage of up to five words as a Front-Cover Text, and a
+passage of up to 25 words as a Back-Cover Text, to the end of the list
+of Cover Texts in the Modified Version.  Only one passage of
+Front-Cover Text and one of Back-Cover Text may be added by (or
+through arrangements made by) any one entity.  If the Document already
+includes a cover text for the same cover, previously added by you or
+by arrangement made by the same entity you are acting on behalf of,
+you may not add another; but you may replace the old one, on explicit
+permission from the previous publisher that added the old one.
+</p>
+<p>The author(s) and publisher(s) of the Document do not by this License
+give permission to use their names for publicity for or to assert or
+imply endorsement of any Modified Version.
+</p>
+</li><li> COMBINING DOCUMENTS
+
+<p>You may combine the Document with other documents released under this
+License, under the terms defined in section 4 above for modified
+versions, provided that you include in the combination all of the
+Invariant Sections of all of the original documents, unmodified, and
+list them all as Invariant Sections of your combined work in its
+license notice, and that you preserve all their Warranty Disclaimers.
+</p>
+<p>The combined work need only contain one copy of this License, and
+multiple identical Invariant Sections may be replaced with a single
+copy.  If there are multiple Invariant Sections with the same name but
+different contents, make the title of each such section unique by
+adding at the end of it, in parentheses, the name of the original
+author or publisher of that section if known, or else a unique number.
+Make the same adjustment to the section titles in the list of
+Invariant Sections in the license notice of the combined work.
+</p>
+<p>In the combination, you must combine any sections Entitled &ldquo;History&rdquo;
+in the various original documents, forming one section Entitled
+&ldquo;History&rdquo;; likewise combine any sections Entitled &ldquo;Acknowledgements&rdquo;,
+and any sections Entitled &ldquo;Dedications&rdquo;.  You must delete all
+sections Entitled &ldquo;Endorsements.&rdquo;
+</p>
+</li><li> COLLECTIONS OF DOCUMENTS
+
+<p>You may make a collection consisting of the Document and other documents
+released under this License, and replace the individual copies of this
+License in the various documents with a single copy that is included in
+the collection, provided that you follow the rules of this License for
+verbatim copying of each of the documents in all other respects.
+</p>
+<p>You may extract a single document from such a collection, and distribute
+it individually under this License, provided you insert a copy of this
+License into the extracted document, and follow this License in all
+other respects regarding verbatim copying of that document.
+</p>
+</li><li> AGGREGATION WITH INDEPENDENT WORKS
+
+<p>A compilation of the Document or its derivatives with other separate
+and independent documents or works, in or on a volume of a storage or
+distribution medium, is called an &ldquo;aggregate&rdquo; if the copyright
+resulting from the compilation is not used to limit the legal rights
+of the compilation&rsquo;s users beyond what the individual works permit.
+When the Document is included in an aggregate, this License does not
+apply to the other works in the aggregate which are not themselves
+derivative works of the Document.
+</p>
+<p>If the Cover Text requirement of section 3 is applicable to these
+copies of the Document, then if the Document is less than one half of
+the entire aggregate, the Document&rsquo;s Cover Texts may be placed on
+covers that bracket the Document within the aggregate, or the
+electronic equivalent of covers if the Document is in electronic form.
+Otherwise they must appear on printed covers that bracket the whole
+aggregate.
+</p>
+</li><li> TRANSLATION
+
+<p>Translation is considered a kind of modification, so you may
+distribute translations of the Document under the terms of section 4.
+Replacing Invariant Sections with translations requires special
+permission from their copyright holders, but you may include
+translations of some or all Invariant Sections in addition to the
+original versions of these Invariant Sections.  You may include a
+translation of this License, and all the license notices in the
+Document, and any Warranty Disclaimers, provided that you also include
+the original English version of this License and the original versions
+of those notices and disclaimers.  In case of a disagreement between
+the translation and the original version of this License or a notice
+or disclaimer, the original version will prevail.
+</p>
+<p>If a section in the Document is Entitled &ldquo;Acknowledgements&rdquo;,
+&ldquo;Dedications&rdquo;, or &ldquo;History&rdquo;, the requirement (section 4) to Preserve
+its Title (section 1) will typically require changing the actual
+title.
+</p>
+</li><li> TERMINATION
+
+<p>You may not copy, modify, sublicense, or distribute the Document
+except as expressly provided under this License.  Any attempt
+otherwise to copy, modify, sublicense, or distribute it is void, and
+will automatically terminate your rights under this License.
+</p>
+<p>However, if you cease all violation of this License, then your license
+from a particular copyright holder is reinstated (a) provisionally,
+unless and until the copyright holder explicitly and finally
+terminates your license, and (b) permanently, if the copyright holder
+fails to notify you of the violation by some reasonable means prior to
+60 days after the cessation.
+</p>
+<p>Moreover, your license from a particular copyright holder is
+reinstated permanently if the copyright holder notifies you of the
+violation by some reasonable means, this is the first time you have
+received notice of violation of this License (for any work) from that
+copyright holder, and you cure the violation prior to 30 days after
+your receipt of the notice.
+</p>
+<p>Termination of your rights under this section does not terminate the
+licenses of parties who have received copies or rights from you under
+this License.  If your rights have been terminated and not permanently
+reinstated, receipt of a copy of some or all of the same material does
+not give you any rights to use it.
+</p>
+</li><li> FUTURE REVISIONS OF THIS LICENSE
+
+<p>The Free Software Foundation may publish new, revised versions
+of the GNU Free Documentation License from time to time.  Such new
+versions will be similar in spirit to the present version, but may
+differ in detail to address new problems or concerns.  See
+<a href="https://www.gnu.org/licenses/">https://www.gnu.org/licenses/</a>.
+</p>
+<p>Each version of the License is given a distinguishing version number.
+If the Document specifies that a particular numbered version of this
+License &ldquo;or any later version&rdquo; applies to it, you have the option of
+following the terms and conditions either of that specified version or
+of any later version that has been published (not as a draft) by the
+Free Software Foundation.  If the Document does not specify a version
+number of this License, you may choose any version ever published (not
+as a draft) by the Free Software Foundation.  If the Document
+specifies that a proxy can decide which future versions of this
+License can be used, that proxy&rsquo;s public statement of acceptance of a
+version permanently authorizes you to choose that version for the
+Document.
+</p>
+</li><li> RELICENSING
+
+<p>&ldquo;Massive Multiauthor Collaboration Site&rdquo; (or &ldquo;MMC Site&rdquo;) means any
+World Wide Web server that publishes copyrightable works and also
+provides prominent facilities for anybody to edit those works.  A
+public wiki that anybody can edit is an example of such a server.  A
+&ldquo;Massive Multiauthor Collaboration&rdquo; (or &ldquo;MMC&rdquo;) contained in the
+site means any set of copyrightable works thus published on the MMC
+site.
+</p>
+<p>&ldquo;CC-BY-SA&rdquo; means the Creative Commons Attribution-Share Alike 3.0
+license published by Creative Commons Corporation, a not-for-profit
+corporation with a principal place of business in San Francisco,
+California, as well as future copyleft versions of that license
+published by that same organization.
+</p>
+<p>&ldquo;Incorporate&rdquo; means to publish or republish a Document, in whole or
+in part, as part of another Document.
+</p>
+<p>An MMC is &ldquo;eligible for relicensing&rdquo; if it is licensed under this
+License, and if all works that were first published under this License
+somewhere other than this MMC, and subsequently incorporated in whole
+or in part into the MMC, (1) had no cover texts or invariant sections,
+and (2) were thus incorporated prior to November 1, 2008.
+</p>
+<p>The operator of an MMC Site may republish an MMC contained in the site
+under CC-BY-SA on the same site at any time before August 1, 2009,
+provided the MMC is eligible for relicensing.
+</p>
+</li></ol>
+
+<span id="ADDENDUM_003a-How-to-use-this-License-for-your-documents"></span><h3 class="heading">ADDENDUM: How to use this License for your documents</h3>
+
+<p>To use this License in a document you have written, include a copy of
+the License in the document and put the following copyright and
+license notices just after the title page:
+</p>
+<div class="example">
+<pre class="example">  Copyright (C)  <var>year</var>  <var>your name</var>.
+  Permission is granted to copy, distribute and/or modify this document
+  under the terms of the GNU Free Documentation License, Version 1.3
+  or any later version published by the Free Software Foundation;
+  with no Invariant Sections, no Front-Cover Texts, and no Back-Cover
+  Texts.  A copy of the license is included in the section entitled ``GNU
+  Free Documentation License''.
+</pre></div>
+
+<p>If you have Invariant Sections, Front-Cover Texts and Back-Cover Texts,
+replace the &ldquo;with&hellip;Texts.&rdquo; line with this:
+</p>
+<div class="example">
+<pre class="example">    with the Invariant Sections being <var>list their titles</var>, with
+    the Front-Cover Texts being <var>list</var>, and with the Back-Cover Texts
+    being <var>list</var>.
+</pre></div>
+
+<p>If you have Invariant Sections without Cover Texts, or some other
+combination of the three, merge those two alternatives to suit the
+situation.
+</p>
+<p>If your document contains nontrivial examples of program code, we
+recommend releasing these examples in parallel under your choice of
+free software license, such as the GNU General Public License,
+to permit their use in free software.
+</p>
+
+<hr>
+
+
+
+</body>
+</html>
