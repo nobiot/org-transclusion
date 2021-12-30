@@ -20,6 +20,7 @@ jobs:
     - name: Run docs/make gh-html
       run: |
         cd docs
+        make gh-html
     - name: Deploy 🚀
       uses: JamesIves/github-pages-deploy-action@4.1.7
       with:
