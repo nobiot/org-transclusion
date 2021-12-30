@@ -1,40 +1,58 @@
+* Version 1.1.1
+
+  - Fix ::
+
+    - Fix rare but destructive issue where buffer text content could be deleted
+      by removing a transclusion.  This could happen by killing a second Emacs
+      instance (batch or online) or buffer, while the first Emacs keeps
+      transclusions added
+
+  - Other:
+
+    - User Manual now refers to v1.1.x
+
 * Version 1.1.0
 
-- Change ::
-  - add:inhibit-read-only: fix:Org export errors with read-only
-    With this, noweb expansion works now (limitation removed)
+  - Change ::
 
-- Fix ::
-  - fix:#105 org-element--cache issue for Org v9.6
-    Remove use of silent-modificaiton & inhibit-modification-hook
-  - fix:add-all not to stop with error in one trasclusion
-  - fix:Remove extra space/line added to Org elements transcluded
+    - add:inhibit-read-only: fix:Org export errors with read-only
+      With this, noweb expansion works now (limitation removed)
 
-- Other ::
-  - README, Info doc user manual, online user manual
+  - Fix ::
 
+    - fix:#105 org-element--cache issue for Org v9.6
+      Remove use of silent-modificaiton & inhibit-modification-hook
+    - fix:add-all not to stop with error in one trasclusion
+    - fix:Remove extra space/line added to Org elements transcluded
+
+  - Other ::
+    - README, Info doc user manual, online user manual
+  
 * Version 1.0.1
 
-- Add .elpaignore
-- Bump up version only to enable ELPA; no functional changes
+  - Add .elpaignore
+  - Bump up version only to enable ELPA; no functional changes
 
 * Version 1.0.0
 
-- Initial version available on ELPA (https://elpa.gnu.org/)
+  - Initial version available on ELPA (https://elpa.gnu.org/)
 
-- Feature ::
-  - : =:end= property and a search term to dynamically define a range of lines to transclude for text and
-    source code block
+  - Feature ::
 
-- Change ::
-  - Now user option =org-transclusion-include-first-section='s default value
-    is changed to =t=. This seems to be more intuitive for more users
+    - =:end= property and a search term to dynamically define a range of lines to transclude for text and
+      source code block
 
-- Fix ::
-  - =org-transclusion-before-kill= now checks if the buffer to be killed
-    contains any transclusion AND it is visting a file before saving. This
-    fixes some issues related to temp buffers, etc.    
-  - fix: search options for src-lines extension for =:lines=, =:src=, and =:end= properties
+  - Change ::
+
+    - Now user option =org-transclusion-include-first-section='s default value
+      is changed to =t=. This seems to be more intuitive for more users
+
+  - Fix ::
+
+    - =org-transclusion-before-kill= now checks if the buffer to be killed
+      contains any transclusion AND it is visting a file before saving. This
+      fixes some issues related to temp buffers, etc.    
+    - fix: search options for src-lines extension for =:lines=, =:src=, and =:end= properties
 
 * Changelog before Version 1.0.0
 
