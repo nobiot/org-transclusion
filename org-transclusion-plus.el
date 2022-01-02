@@ -1,7 +1,8 @@
 ;;; org-transclusion-src-lines.el --- Extension -*- lexical-binding: t; -*-
 
 ;;; Commentary:
-
+;; (add-to-list 'org-transclusion-extensions 'org-transclusion-plus)
+;;
 ;;; Code:
 
 (require 'org-element)
@@ -63,26 +64,7 @@ that created by plus ."
 
 
 (defun org-transclusion-plus-content (link plist)
-  "Return a list of payload for a range of lines from LINK and PLIST.
-
-You can specify a range of lines to transclude by adding the :line
-property to a transclusion keyword like this:
-
-    #+transclude: [[file:path/to/file.ext]] :lines 1-10
-
-This is taken from Org Export (function
-`org-export--inclusion-absolute-lines' in ox.el) with one
-exception.  Instead of :lines 1-10 to exclude line 10, it has
-been adjusted to include line 10.  This should be more intuitive
-when it comes to including lines of code.
-
-In order to transclude a single line, have the the same number in
-both places (e.g. 10-10, meaning line 10 only).
-
-One of the numbers can be omitted.  When the first number is
-omitted (e.g. -10), it means from the beginning of the file to
-line 10. Likewise, when the second number is omitted (e.g. 10-),
-it means from line 10 to the end of file."
+  "Return a temp file processed with plus eval."
   (let* ((path (org-element-property :path link))
          (r-file (if (file-name-absolute-p path) path (expand-file-name path)))
          (work-file-name (file-name-nondirectory r-file))
@@ -143,19 +125,5 @@ abnormal hook
      )))
 
 
-(defun org-transclusion-plus-get-content ()
-
-  )
-
-
-(defun org-transclusion-expand-all ()
-  "Expand all in transclusion buffer."
-
-  ;; get absolute path
-  ;; (expand-file-name "relative/path" (file-name-directory load-file-name))
-  )
-
 (provide 'org-transclusion-plus)
 ;;; org-transclusion-plus.el ends here
-
-;; (add-to-list 'org-transclusion-extensions 'org-transclusion-plus)
