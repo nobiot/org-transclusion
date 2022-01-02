@@ -1,0 +1,56 @@
+#+TITLE: Test Plus
+
+
+
+
+# Test REGEXP select and :lines together
+#+transclude: [[file:test-2.0.org]] :plus (keep-lines "link") :lines 3-10 :src org
+
+#+transclude: [[file:test-2.0.org]] :plus (insert "test for plus\n") :lines 1-10 :src org
+
+# Test plus with code define in doc
+#+transclude: [[file:test-2.0.org]] :plus test-1  :src org
+
+# Test transclude self with
+#+transclude: [[file:test-plus.org]] :plus (flush-lines "|.*| xs") :lines 30- :src org
+
+* Test code
+
+#+NAME: test-1
+#+begin_src emacs-lisp
+(goto-line 5 )
+(kill-line 3)
+
+(goto-line 12 )
+(kill-line 3)
+
+;; Do anything .....
+#+end_src
+
+* Test table
+| Operator | Type(A)              | Type(B)              | Function                                          |
+|----------+----------------------+----------------------+---------------------------------------------------|
+| A + B    | numeric              | numeric              | op:numeric-add(A, B)                              |
+| A + B    | xs:date              | xs:yearMonthDuration | op:add-yearMonthDuration-to-date(A, B)            |
+| A + B    | xs:yearMonthDuration | xs:date              | op:add-yearMonthDuration-to-date(B, A)            |
+| A + B    | xs:date              | xs:dayTimeDuration   | op:add-dayTimeDuration-to-date(A, B)              |
+| A + B    | xs:dayTimeDuration   | xs:date              | op:add-dayTimeDuration-to-date(B, A)              |
+| A + B    | xs:time              | xs:dayTimeDuration   | op:add-dayTimeDuration-to-time(A, B)              |
+| A + B    | xs:dayTimeDuration   | xs:time              | op:add-dayTimeDuration-to-time(B, A)              |
+| A + B    | xs:dateTime          | xs:yearMonthDuration | op:add-yearMonthDuration-to-dateTime(A, B)        |
+| A + B    | xs:yearMonthDuration | xs:dateTime          | op:add-yearMonthDuration-to-dateTime(B, A)        |
+| A + B    | xs:dateTime          | xs:dayTimeDuration   | op:add-dayTimeDuration-to-dateTime(A, B)          |
+| A + B    | xs:dayTimeDuration   | xs:dateTime          | op:add-dayTimeDuration-to-dateTime(B, A)          |
+| A + B    | xs:yearMonthDuration | xs:yearMonthDuration | op:add-yearMonthDurations(A, B)                   |
+| A + B    | xs:dayTimeDuration   | xs:dayTimeDuration   | op:add-dayTimeDurations(A, B)                     |
+| A - B    | numeric              | numeric              | op:numeric-subtract(A, B)                         |
+| A - B    | xs:date              | xs:date              | op:subtract-dates(A, B)                           |
+| A - B    | xs:date              | xs:yearMonthDuration | op:subtract-yearMonthDuration-from-date(A, B)     |
+| A - B    | xs:date              | xs:dayTimeDuration   | op:subtract-dayTimeDuration-from-date(A, B)       |
+| A - B    | xs:time              | xs:time              | op:subtract-times(A, B)                           |
+| A - B    | xs:time              | xs:dayTimeDuration   | op:subtract-dayTimeDuration-from-time(A, B)       |
+| A - B    | xs:dateTime          | xs:dateTime          | op:subtract-dateTimes(A, B)                       |
+| A - B    | xs:dateTime          | xs:yearMonthDuration | op:subtract-yearMonthDuration-from-dateTime(A, B) |
+| A - B    | xs:dateTime          | xs:dayTimeDuration   | op:subtract-dayTimeDuration-from-dateTime(A, B)   |
+| A - B    | xs:yearMonthDuration | xs:yearMonthDuration | op:subtract-yearMonthDurations(A, B)              |
+| A - B    | xs:dayTimeDuration   | xs:dayTimeDuration   | op:subtract-dayTimeDurations(A, B)                |
