@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 30 December 2021
+;; Last modified: 04 January 2022
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -831,7 +831,9 @@ It needs to be set in
 Returns t if successful.  It checks if the element at point is a
 keyword.  If not, returns nil."
   (let* ((elm (org-element-at-point))
-         (beg (org-element-property :begin elm))
+         ;; Ignore and keep affiliated keywords before #+transclusion
+         ;; Fix issue #115
+         (beg (org-element-property :post-affiliated elm))
          (end (org-element-property :end elm))
          (post-blank (org-element-property :post-blank elm)))
     (when (string= "keyword" (org-element-type elm))
