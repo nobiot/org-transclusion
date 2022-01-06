@@ -977,7 +977,8 @@ based on the following arguments:
          (end-mkr)
          (ov-src (text-clone-make-overlay sbeg send sbuf)) ;; source-buffer overlay
          (tc-pair ov-src)
-         (content content))
+         (content content)
+         (at-end-of-buffer (eq (point-at-eol) (point-max))))
     (when (org-transclusion-type-is-org type)
         (with-temp-buffer
           ;; This temp buffer needs to be in Org Mode
@@ -999,13 +1000,14 @@ based on the following arguments:
                      (org-map-entries (lambda ()
                                         (dotimes (_ diff)
                                           (org-do-promote))))))))
-          (setq content (if org-transclusion-boundary
-                            (concat (buffer-string) "\n")
-                          (buffer-string))))))
+            (setq content (if (or at-end-of-buffer (not org-transclusion-boundary))
+                              (buffer-string)
+                            (concat (buffer-string) "\n"))))))
     (insert
      (run-hook-with-args-until-success
       'org-transclusion-content-format-functions type content))
-    (setq end (if org-transclusion-boundary
+    (setq end (if (or at-end-of-buffer (not org-transclusion-boundary))
+                  (point)
                 (+ (point) 1)))
     (setq end-mkr (set-marker (make-marker) end))
     (add-text-properties beg end
