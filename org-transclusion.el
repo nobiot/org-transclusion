@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 04 January 2022
+;; Last modified: 06 January 2022
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -1160,10 +1160,10 @@ etc.)."
         ;; each element in the normalized content. This adds an extra empty
         ;; line, which we would like to remove; hence content and src-end gets
         ;; -1 here.
-        (list :src-content (substring (org-element-interpret-data obj) 0 -1)
+        (list :src-content (org-element-interpret-data obj)
               :src-buf (current-buffer)
               :src-beg (point-min)
-              :src-end (1- (point-max)))))))
+              :src-end (point-max))))))
 
 (defun org-transclusion-content-filter-org-exclude-elements (data)
   "Exclude specific elements from DATA.
