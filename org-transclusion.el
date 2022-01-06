@@ -254,6 +254,9 @@ specific keybindings; namely:
 
 (defvar org-transclusion-yank-remember-user-excluded-props '())
 
+(defvar org-transclusion-latex-preview-on-toggle nil
+  "Call org-latex-preview after transclusion-toggle.")
+
 (define-fringe-bitmap 'org-transclusion-fringe-bitmap
   [#b11000000
    #b11000000
@@ -561,6 +564,29 @@ the rest of the buffer unchanged."
       (goto-char marker)
       (move-marker marker nil) ; point nowhere for GC
       list)))
+
+(defun org-transclusion-toggle ()
+  "Toggle transclusion in the current line."
+  (interactive)
+  (condition-case nil
+      (org-transclusion-add)
+    (error (condition-case nil
+               (org-transclusion-remove)
+             (error (progn (org-transclusion-prefix-insert)
+                           (org-transclusion-add))))))
+  (if org-transclusion-latex-preview-on-toggle
+      (org-latex-preview '(16))))
+
+(defun org-transclusion-toggle-all ()
+  "Toggle all transclusions in the current buffer."
+  (interactive)
+  (condition-case nil
+      (progn
+        (org-transclusion-remove)
+        (org-transclusion-remove-all))
+    (error (org-transclusion-add-all)))
+  (if org-transclusion-latex-preview-on-toggle
+      (org-latex-preview '(16))))
 
 (defun org-transclusion-prefix-insert ()
   "Insert '#+transclude: ' to the beginning of line."
