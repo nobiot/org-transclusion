@@ -562,6 +562,12 @@ the rest of the buffer unchanged."
       (move-marker marker nil) ; point nowhere for GC
       list)))
 
+(defun org-transclusion-prefix-insert ()
+  "Insert '#+transclude: ' to the beginning of line."
+  (interactive)
+  (org-beginning-of-line)
+  (insert "#+transclude: "))
+
 (defun org-transclusion-refresh ()
   "Refresh the transcluded text at point."
   (interactive)
