@@ -257,6 +257,9 @@ specific keybindings; namely:
 (defvar org-transclusion-latex-preview-on-toggle nil
   "Call org-latex-preview after transclusion-toggle.")
 
+(defvar org-transclusion-boundary nil
+  "Create a line of whitespace when adding transclusion.")
+
 (define-fringe-bitmap 'org-transclusion-fringe-bitmap
   [#b11000000
    #b11000000
@@ -980,6 +983,8 @@ based on the following arguments:
           ;; This temp buffer needs to be in Org Mode
           ;; Otherwise, subtree won't be recognized as a Org subtree
           (delay-mode-hooks (org-mode))
+          (if org-transclusion-boundary
+              (setq content (concat content "\n")))
           (insert content)
           (org-with-point-at 1
             (let* ((to-level (plist-get keyword-values :level))
@@ -994,11 +999,14 @@ based on the following arguments:
                      (org-map-entries (lambda ()
                                         (dotimes (_ diff)
                                           (org-do-promote))))))))
-            (setq content (buffer-string)))))
+          (setq content (if org-transclusion-boundary
+                            (concat (buffer-string) "\n")
+                          (buffer-string))))))
     (insert
      (run-hook-with-args-until-success
       'org-transclusion-content-format-functions type content))
-    (setq end (point))
+    (setq end (if org-transclusion-boundary
+                (+ (point) 1)))
     (setq end-mkr (set-marker (make-marker) end))
     (add-text-properties beg end
                          `(local-map ,org-transclusion-map
