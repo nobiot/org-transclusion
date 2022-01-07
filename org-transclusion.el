@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 06 January 2022
+;; Last modified: 07 January 2022
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -63,7 +63,7 @@ Intended for :set property for `customize'."
   (when (featurep 'org-transclusion)
     (org-transclusion-load-extensions-maybe 'force)))
 
- (defcustom org-transclusion-extensions '(org-transclusion-src-lines)
+ (defcustom org-transclusion-extensions '(org-transclusion-src-lines org-transclusion-font-lock)
   "Extensions to be loaded with org-transclusion.el."
   :set #'org-transclusion-set-extensions
   :type
