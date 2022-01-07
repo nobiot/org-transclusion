@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 06 January 2022
+;; Last modified: 07 January 2022
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -428,7 +428,7 @@ does not support all the elements.
                    "No content found with \"%s\".  Check the link at point %d, line %d"
                    (org-element-property :raw-link link) (point) (org-current-line))
                   nil))
-        (let ((beg (point))
+        (let ((beg (line-beginning-position))
               (end))
           (org-transclusion-with-inhibit-read-only
             (when (save-excursion
