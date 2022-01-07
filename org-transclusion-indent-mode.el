@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 22 August 2021
-;; Last modified: 4 December 2021
+;; Last modified: 07 January 2022
 
 ;;; Commentary:
 ;;  This file is part of Org-transclusion
@@ -29,14 +29,18 @@
 (declare-function org-transclusion-within-transclusion-p
                   "org-transclusion")
 
+(add-hook 'org-transclusion-after-add-functions
+          #'org-translusion-indent-add-properties)
+
 (defun org-translusion-indent-add-properties (beg end)
   "BEG END."
-  (advice-add #'org-indent-set-line-properties
-              :override
-              #'org-transclusion-indent-set-line-properties-ad)
-  (org-indent-add-properties beg end)
-  (advice-remove #'org-indent-set-line-properties
-                 #'org-transclusion-indent-set-line-properties-ad))
+  (when org-indent-mode
+    (advice-add #'org-indent-set-line-properties
+                :override
+                #'org-transclusion-indent-set-line-properties-ad)
+    (org-indent-add-properties beg end)
+    (advice-remove #'org-indent-set-line-properties
+                   #'org-transclusion-indent-set-line-properties-ad)))
 
 (defun org-transclusion-indent-set-line-properties-ad (level indentation &optional heading)
   "Set prefix properties on current line an move to next one.

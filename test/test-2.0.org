@@ -18,6 +18,10 @@ t/nil will be dropped after remove-at-point
 
 (setq inhibit-read-only nil)
 
+** test
+
+#+transclude: [[file:bertrand-russell.org::*Bertrand Russell - Wikipedia]] :level 1 
+
 ** Test =org-adapt-indentation=
 
 #+begin_example

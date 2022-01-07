@@ -43,9 +43,6 @@
 (require 'org-transclusion-font-lock)
 (require 'text-property-search)
 (require 'seq)
-(declare-function org-translusion-indent-add-properties
-                  "org-transclusion-indent-mode")
-(defvar org-indent-mode)
 
 ;;;; Customization
 
@@ -103,6 +100,17 @@ See `display-buffer' for example options."
   "Mode-line indicator for minor-mode variable `org-transclusion-mode'."
   :type '(choice (const :tag "No lighter" "") string)
   :safe 'stringp)
+
+(defcustom org-transclusion-after-add-functions nil
+  "Functions to be called after a transclusion content has been added.
+The hook runs after the content and the read-only text property
+have been added so it is not supposed to manipulate the content
+but to add further text properties.  For example, it is used by
+the `org-transclusion-indent-mode' extension to support
+`org-indent-mode'.  The functions are called with arguments beg
+and end, pointing to the beginning and end of the transcluded
+content."
+  :type '(repeat function))
 
 ;;;; Faces
 
@@ -442,9 +450,7 @@ does not support all the elements.
               ;; `org-transclusion-keyword-remove' checks element at point is a
               ;; keyword or not
               (org-transclusion-keyword-remove)))
-          (when (and (featurep 'org-indent) org-indent-mode
-                     (memq 'org-transclusion-indent-mode org-transclusion-extensions))
-            (org-translusion-indent-add-properties beg end)))
+          (run-hook-with-args 'org-transclusion-after-add-functions beg end))
         t))))
 
 ;;;###autoload
@@ -521,11 +527,7 @@ When success, return the beginning point of the keyword re-inserted."
             ;; inevitably have the same position (location "between" lines)
             (when mkr-at-beg (move-marker mkr-at-beg beg))
             ;; Go back to the beginning of the inserted keyword line
-            (goto-char beg)
-            (when (and (featurep 'org-indent) org-indent-mode
-                       (memq 'org-transclusion-indent-mode
-                             org-transclusion-extensions))
-              (org-translusion-indent-add-properties beg (line-end-position))))
+            (goto-char beg))
           beg))
     (message "Nothing done. No transclusion exists here.") nil))
 
