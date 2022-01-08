@@ -8,4 +8,7 @@
   ;; time stamp with English
   (system-time-locale . "C"))
   (fill-column . 80)
-  (indent-tabs-mode . nil))
+  (indent-tabs-mode . nil)
+  (coding . utf-8)
+  (require-final-newline: t)
+  (sentence-end-double-space: t))
