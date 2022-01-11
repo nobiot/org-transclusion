@@ -1,6 +1,6 @@
 #+title: Org-transclusion User Manual
 #+author: Noboru Ota <me@nobiot.com>
-#+macro: version 1.1.x
+#+macro: version 1.2.x
 #+macro: modified 11 January 2022
 
 #+language: en
@@ -504,7 +504,7 @@ You can customize settings in the =org-transclusion= group.
   The functions are called with arguments beg and end, pointing to the
   beginning and end of the transcluded content.
 
-The hook also can be used to activate =org-latex-preview=:
+The hook also can be used to activate =org-latex-preview= for transclusions:
 
 #+begin_src elisp
   (add-hook 'org-transclusion-after-add-functions
