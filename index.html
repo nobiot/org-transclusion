@@ -62,7 +62,7 @@ Next: <a href="#Example-Use-Cases-_0026-Main-Features" accesskey="n" rel="next">
 
 <p>This manual is for Org-transclusion version 1.1.x.
 </p>
-<p>Last updated: 07 January 2022.
+<p>Last updated: 11 January 2022.
 </p>
 <p>Org-transclusion lets you insert a copy of text content via a file link or ID link within an Org file. It lets you have the same content present in different buffers at the same time without copy-and-pasting it. Edit the source of the content, and you can refresh the transcluded copies to the up-to-date state. Org-transclusion keeps your files clear of the transcluded copies, leaving only the links to the original content.<span id="whatis"></span></p>
 
@@ -334,7 +334,7 @@ e               org-transclusion-live-sync-start
 g               org-transclusion-refresh
 o               org-transclusion-open-source
 
-    †‧Also inherits ‘org-mode-map’ as of development version 1.1.1.0.20220106.203639
+    † Also inherits ‘org-mode-map’ as of development version 1.1.1.0.20220106.203639
       and planned to be part of 1.2.0
 
 </pre></div>
@@ -603,7 +603,7 @@ C-y                   org-transclusion-live-sync-paste
 
 C-c C-c               org-transclusion-live-sync-exit
 
-   †‧Also inherits ‘org-mode-map’
+   † Also inherits ‘org-mode-map’
 </pre></div>
 
 <hr>
@@ -778,6 +778,8 @@ Next: <a href="#Known-Limitations" accesskey="n" rel="next">Known Limitations</a
 <span id="index-org_002dtransclusion_002dadd_002dall_002don_002dactivate-1"></span>
 <span id="index-org_002dtransclusion_002dmode_002dlighter"></span>
 <span id="index-org_002dtransclusion_002dopen_002dsource_002ddisplay_002daction_002dlist"></span>
+<span id="index-org_002dtransclusion_002dafter_002dadd_002dfunctions"></span>
+<span id="index-Hooks-_002d-org_002dtransclusion_002dafter_002dadd_002dfunctions"></span>
 
 <p>You can customize settings in the &lsquo;<samp>org-transclusion</samp>&rsquo; group.
 </p>
@@ -815,8 +817,25 @@ values are accepted.
 <dt>&lsquo;<samp>org-transclusion-mode-lighter</samp>&rsquo;</dt>
 <dd><p>Define the lighter for Org-transclusion
 minor mode. The default is &ldquo; OT&rdquo;.
+</p>
+</dd>
+<dt>&lsquo;<samp>org-transclusion-after-add-functions</samp>&rsquo;</dt>
+<dd><p>Functions to be called after a
+transclusion content has been added. The hook runs after the content and the
+read-only text property have been added so it is not supposed to manipulate
+the content but to add further text properties.  For example, it is used by
+the &lsquo;org-transclusion-indent-mode&rsquo; extension to support &lsquo;org-indent-mode&rsquo;. 
+The functions are called with arguments beg and end, pointing to the
+beginning and end of the transcluded content.
 </p></dd>
 </dl>
+
+<p>The hook also can be used to activate &lsquo;<samp>org-latex-preview</samp>&rsquo;:
+</p>
+<div class="lisp">
+<pre class="lisp">(add-hook 'org-transclusion-after-add-functions
+          #'(lambda (_beg _end) (org-latex-preview '(16))))
+</pre></div>
 
 <table class="menu" border="0" cellspacing="0">
 <tr><td align="left" valign="top">&bull; <a href="#Customizable-filter-to-exclude-certain-Org-elements" accesskey="1">Customizable filter to exclude certain Org elements</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
@@ -957,7 +976,7 @@ e               org-transclusion-live-sync-start
 g               org-transclusion-refresh
 o               org-transclusion-open-source
 
-    †‧Also inherits ‘org-mode-map’ as of development version 1.1.1.0.20220106.203639
+    † Also inherits ‘org-mode-map’ as of development version 1.1.1.0.20220106.203639
       and planned to be part of 1.2.0
 </pre></div>
 
@@ -974,7 +993,7 @@ C-y                   org-transclusion-live-sync-paste
 
 C-c C-c               org-transclusion-live-sync-exit
 
-   †‧Also inherits ‘org-mode-map’
+   † Also inherits ‘org-mode-map’
 </pre></div>
 
 <hr>
@@ -1100,6 +1119,8 @@ Next: <a href="#Index-_002d-Commands" accesskey="n" rel="next">Index - Commands<
  &nbsp; 
 <a class="summary-letter" href="#Index-_002d-Features_cp_letter-F"><b>F</b></a>
  &nbsp; 
+<a class="summary-letter" href="#Index-_002d-Features_cp_letter-H"><b>H</b></a>
+ &nbsp; 
 <a class="summary-letter" href="#Index-_002d-Features_cp_letter-L"><b>L</b></a>
  &nbsp; 
 <a class="summary-letter" href="#Index-_002d-Features_cp_letter-O"><b>O</b></a>
@@ -1123,6 +1144,9 @@ Next: <a href="#Index-_002d-Commands" accesskey="n" rel="next">Index - Commands<
 <tr><td colspan="4"> <hr></td></tr>
 <tr><th id="Index-_002d-Features_cp_letter-F">F</th><td></td><td></td></tr>
 <tr><td></td><td valign="top"><a href="#index-Filters">Filters</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Filter-Org-elements-per-transclusion">Filter Org elements per transclusion</a></td></tr>
+<tr><td colspan="4"> <hr></td></tr>
+<tr><th id="Index-_002d-Features_cp_letter-H">H</th><td></td><td></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Hooks-_002d-org_002dtransclusion_002dafter_002dadd_002dfunctions">Hooks - org-transclusion-after-add-functions</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Customizing">Customizing</a></td></tr>
 <tr><td colspan="4"> <hr></td></tr>
 <tr><th id="Index-_002d-Features_cp_letter-L">L</th><td></td><td></td></tr>
 <tr><td></td><td valign="top"><a href="#index-Live_002dsync-edit">Live-sync edit</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Live_002dsync-edit">Live-sync edit</a></td></tr>
@@ -1151,6 +1175,8 @@ Next: <a href="#Index-_002d-Commands" accesskey="n" rel="next">Index - Commands<
 <a class="summary-letter" href="#Index-_002d-Features_cp_letter-E"><b>E</b></a>
  &nbsp; 
 <a class="summary-letter" href="#Index-_002d-Features_cp_letter-F"><b>F</b></a>
+ &nbsp; 
+<a class="summary-letter" href="#Index-_002d-Features_cp_letter-H"><b>H</b></a>
  &nbsp; 
 <a class="summary-letter" href="#Index-_002d-Features_cp_letter-L"><b>L</b></a>
  &nbsp; 
@@ -1214,6 +1240,7 @@ Next: <a href="#GNU-Free-Documentation-License" accesskey="n" rel="next">GNU Fre
 <tr><td></td><td valign="top"><a href="#index-org_002dtransclusion"><code>org-transclusion</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Faces-_0026-fringe-bitmap">Faces &amp; fringe bitmap</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dadd_002dall_002don_002dactivate"><code>org-transclusion-add-all-on-activate</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Org_002dtransclusion-mode-activate-and-deactivate">Org-transclusion mode activate and deactivate</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dadd_002dall_002don_002dactivate-1"><code>org-transclusion-add-all-on-activate</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Customizing">Customizing</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dafter_002dadd_002dfunctions"><code>org-transclusion-after-add-functions</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Customizing">Customizing</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dedit"><code>org-transclusion-edit</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Faces-_0026-fringe-bitmap">Faces &amp; fringe bitmap</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dexclude_002delements"><code>org-transclusion-exclude-elements</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Filter-Org-elements-per-transclusion">Filter Org elements per transclusion</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dexclude_002delements-1"><code>org-transclusion-exclude-elements</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Customizable-filter-to-exclude-certain-Org-elements">Customizable filter to exclude certain Org elements</a></td></tr>
