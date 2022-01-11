@@ -504,7 +504,7 @@ You can customize settings in the =org-transclusion= group.
   The functions are called with arguments beg and end, pointing to the
   beginning and end of the transcluded content.
 
-The hook also can be used to activate =org-latex-preview= for transclusions:
+The hook can be also used to activate =org-latex-preview= for transclusions:
 
 #+begin_src elisp
   (add-hook 'org-transclusion-after-add-functions
