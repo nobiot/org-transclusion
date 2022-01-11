@@ -1,7 +1,7 @@
 #+title: Org-transclusion User Manual
 #+author: Noboru Ota <me@nobiot.com>
 #+macro: version 1.1.x
-#+macro: modified 07 January 2022
+#+macro: modified 11 January 2022
 
 #+language: en
 #+export_file_name: org-transclusion.texi
@@ -116,7 +116,7 @@ e               org-transclusion-live-sync-start
 g               org-transclusion-refresh
 o               org-transclusion-open-source
 
-    †‧Also inherits ‘org-mode-map’ as of development version 1.1.1.0.20220106.203639
+    † Also inherits ‘org-mode-map’ as of development version 1.1.1.0.20220106.203639
       and planned to be part of 1.2.0
 
 #+end_example
@@ -325,7 +325,7 @@ In the live-sync edit region, the normal =yank= command (=C-y=) is replaced with
 
  C-c C-c               org-transclusion-live-sync-exit
 
-    †‧Also inherits ‘org-mode-map’
+    † Also inherits ‘org-mode-map’
 #+end_example
 
 ** Transclude source file into src-block
@@ -468,6 +468,8 @@ Currently, the following extensions are available.
 #+vindex: org-transclusion-add-all-on-activate
 #+vindex: org-transclusion-mode-lighter
 #+vindex: org-transclusion-open-source-display-action-list
+#+vindex: org-transclusion-after-add-functions
+#+cindex: Hooks - org-transclusion-after-add-functions
 
 You can customize settings in the =org-transclusion= group.
 
@@ -493,6 +495,21 @@ You can customize settings in the =org-transclusion= group.
 
 - =org-transclusion-mode-lighter= :: Define the lighter for Org-transclusion
   minor mode. The default is " OT".
+
+- =org-transclusion-after-add-functions= :: Functions to be called after a
+  transclusion content has been added. The hook runs after the content and the
+  read-only text property have been added so it is not supposed to manipulate
+  the content but to add further text properties.  For example, it is used by
+  the `org-transclusion-indent-mode' extension to support `org-indent-mode'. 
+  The functions are called with arguments beg and end, pointing to the
+  beginning and end of the transcluded content.
+
+The hook also can be used to activate =org-latex-preview=:
+
+#+begin_src elisp
+  (add-hook 'org-transclusion-after-add-functions
+            #'(lambda (_beg _end) (org-latex-preview '(16))))
+#+end_src
 
 ** Customizable filter to exclude certain Org elements
 :PROPERTIES:

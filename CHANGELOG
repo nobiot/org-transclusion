@@ -1,0 +1,55 @@
+* Changelog before Version 1.0.0
+
+** 0.2.2
+- New Features ::
+  - #+transclude font-lock and new face =org-transclusion-keyword=
+  - Selective extensions with =org-transclusion-extensions=
+  - (optional extension) Support for org-indent
+- Fix ::
+  - fix: #93 open-source error "Live sync cannot start here"
+
+** 0.2.1
+- New Features ::
+  - Transclude a source file into a =src= block
+  - Transclude a range of lines for text and source files
+  - Main relevant commits:
+    + 6e0e4bf * | feat: :src, :lines, :rest props (WIP)
+
+** 0.2.0
+- Breaking changes ::
+   Refer to the updated README on new features and changed command names
+  - Change names of commands
+  - Remove t/nil to #+transclude: syntax
+  - Add :disable-auto
+  - Main relevant commits:
+    + 2ba90f0 * break: change command and function names
+    + 6cdd836 * | intrnl: v0.2.0 (breaking change)
+    + 765d8ee * add :disable-auto
+
+- New features and improvements ::
+  Refer to the updated README on new features and changed command names
+  - 7e5c839 * feat: exclude-elements
+  - 765d8ee * add :disable-auto
+  - afd6d80 * add: :only-contents
+  - cbb1c25 * add: apply :level to buffer with first section ::
+    Fix #47 The first section itself does not get influenced by :level property.  The first headline, when present, is treated as the first headline, thus :exclude-element "headline" affects its sub-headlines; this means that the content of the first headline is transcluded even when with "headline" in the list of excluded elements.
+
+** 0.1.2
+- e08df47 * add: live-sync for non-Org text file ::
+  So far Non-Org text files could be transcluded but live-sync was not available. This version enables live-sync for them. Only for the whole file at the moment (ability to specify parts of a text file is considered)
+
+- a576b34 * add: text-clone library (rename) ::
+  Live-sync features are now factored out into =text-clone= as a standalone library (available with =text-clone.el= also included in this repo). Refactored so that  =org-transclusion= uses (and requires)  =text-clone=.
+
+** 0.1.1
+- 49f03b1 * feat: current-indentation ::
+  Org-transclusion now keeps the original indentation of the keyword. When a transclusion text region is removed, its keyword will be indented as it was
+
+- d55fc39 * chg: save-buffer hooks ::
+  Instead of blindly deactivate and activate all transclusions with t flag, this variable is meant to provide mechanism to deactivate/activate only the transclusions currently in effect to copy a text content.
+
+- 64fd182 * add: remove live-sync overlays when deleted ::
+  Closes issue [[https://github.com/nobiot/org-transclusion/issues/8][#8]]  Adding a mechanism to remove both of the live-sync overlays (transclusion and source) when transclusion is completely deleted. This solves the problem of a source overlay to be orphaned in such cases.
+
+** 0.1.0
+As described in this version.
