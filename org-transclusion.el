@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 11 January 2022
+;; Last modified: 13 January 2022
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -1158,10 +1158,6 @@ etc.)."
           (setq obj (org-element-map obj org-element-all-elements
                       #'org-transclusion-content-filter-org-only-contents
                       nil nil '(section) nil)))
-        ;; For Org content, an extra +1 point seems to be added to the end of
-        ;; each element in the normalized content. This adds an extra empty
-        ;; line, which we would like to remove; hence content and src-end gets
-        ;; -1 here.
         (list :src-content (org-element-interpret-data obj)
               :src-buf (current-buffer)
               :src-beg (point-min)
