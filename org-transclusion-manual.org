@@ -1,7 +1,7 @@
 #+title: Org-transclusion User Manual
 #+author: Noboru Ota <me@nobiot.com>
 #+macro: version 1.2.x
-#+macro: modified 11 January 2022
+#+macro: modified 19 January 2022
 
 #+language: en
 #+export_file_name: org-transclusion.texi
@@ -623,9 +623,6 @@ Note this section is still incomplete, not exhaustive for "known" limitations.
 
 - Org refile does not work "properly" on the transcluded headlines ::
   Refer to issue [[https://github.com/nobiot/org-transclusion/issues/20][#20]]. I don't intend to support this -- refile the source, not the transcluded copy.
-
-- Org-transclusion does not support expansion of noweb references when a transcluded source block code has them ::
-  Refer to issue [[https://github.com/nobiot/org-transclusion/issues/86][#86]]. You will get "Text read-only" error when export tries to expand the noweb references into the source code. †[[https://orgmode.org/manual/Noweb-Reference-Syntax.html][noweb reference]]
 
 * Credits
 ** Original idea by John Kitchin
