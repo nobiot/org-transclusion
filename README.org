@@ -95,7 +95,7 @@ GNU ELPA should be already set up in your Emacs by default. If you wish to add G
 
 #+BEGIN_SRC elisp
   (add-to-list 'package-archives
-               '("gnu-devel" . "https://elpa.gnu.org/devel/") t)
+               '("gnu-devel" . "https://elpa.gnu.org/devel/") :append)
 #+END_SRC
 
 Refresh the archive with ~M-x package-refresh-contents RET~ and you can do ~M-x package-install RET org-transclusion~ to install it. Alternatively, you can use ~package-list-packages~. 
