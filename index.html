@@ -235,13 +235,14 @@ Next: <a href="#Getting-Started" accesskey="n" rel="next">Getting Started</a>, P
 </li><li> <a href="https://elpa.gnu.org/devel/org-transclusion.html">GNU-devel ELPA</a> (unreleased development branch; equivalent to MELPA)
 </li></ul>
 
-<p>GNU ELPA should be already set up in your Emacs by default. If you wish to add GNU-devel ELPA, simply add its URL to &lsquo;<samp>package-archives</samp>&rsquo; like this:
+<p>GNU ELPA should be already set up in your Emacs by default. If you wish to add GNU-devel ELPA, simply add its URL to <code>package-archives</code> like this:
 </p>
 <div class="lisp">
-<pre class="lisp">(add-to-list 'package-archives '(&quot;gnu-devel&quot; . &quot;https://elpa.gnu.org/devel/&quot;) t)
+<pre class="lisp">(add-to-list 'package-archives
+             '(&quot;gnu-devel&quot; . &quot;https://elpa.gnu.org/devel/&quot;) t)
 </pre></div>
 
-<p>Refresh the archive with &lsquo;<samp>M-x package-refresh-contents RET</samp>&rsquo; and you can do &lsquo;<samp>M-x package-install RET org-transclusion</samp>&rsquo; to install it. Alternatively, you can use &lsquo;<samp>package-list-packages</samp>&rsquo;. 
+<p>Refresh the archive with <code>M-x package-refresh-contents RET</code> and you can do <code>M-x package-install RET org-transclusion</code> to install it. Alternatively, you can use <code>package-list-packages</code>. 
 </p>
 <p>After installation, you can start using Org-transclusion with no additional configuration. Below are some example keybindings that can be put into your Emacs configuration.
 </p>
