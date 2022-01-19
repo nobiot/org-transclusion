@@ -20,17 +20,17 @@ Below are images and videos demonstrating some of the key features of
 Org-transclusion.
 
 #+attr_html: :max-width 80%
-[[https://github.com/nobiot/org-transclusion/blob/main/resources/2021-09-10-transclusion.gif?raw=true]]
+#+html: <img src= "https://github.com/nobiot/org-transclusion/blob/main/resources/2021-09-10-transclusion.gif?raw=true">
 
 *Figure 1*. Animation to show creation of a transclusion from an ID link
 
 #+attr_html: :max-width 80%
-[[https://github.com/nobiot/org-transclusion/blob/main/resources/2021-05-01-org-transclusion-0.1.0-live-sync.gif?raw=true]]
+#+html: <img src="https://github.com/nobiot/org-transclusion/blob/main/resources/2021-05-01-org-transclusion-0.1.0-live-sync.gif?raw=true">
 
 *Figure 2*. Animation to show live sync from transclusion to source
 
 #+attr_html: :max-width 80%
-[[https://github.com/nobiot/org-transclusion/blob/main/resources/demo9-title.png?raw=true]]
+#+html: <img src="https://github.com/nobiot/org-transclusion/blob/main/resources/demo9-title.png?raw=true">
 
 *Figure 3*. [[https://youtu.be/ueaPiA622wA][Video demo on v0.2.1 on YouTube]] demonstrating new features to transclude a source file into a src-block and function to specify a range of text/source line
   
@@ -91,13 +91,14 @@ This package is available on:
 - [[https://elpa.gnu.org/packages/org-transclusion.html][GNU ELPA]] (releases only; equivalent to MELPA-Stable)
 - [[https://elpa.gnu.org/devel/org-transclusion.html][GNU-devel ELPA]] (unreleased development branch; equivalent to MELPA)
 
-GNU ELPA should be already set up in your Emacs by default. If you wish to add GNU-devel ELPA, simply add its URL to =package-archives= like this:
+GNU ELPA should be already set up in your Emacs by default. If you wish to add GNU-devel ELPA, simply add its URL to ~package-archives~ like this:
 
 #+BEGIN_SRC elisp
-  (add-to-list 'package-archives '("gnu-devel" . "https://elpa.gnu.org/devel/") t)
+  (add-to-list 'package-archives
+               '("gnu-devel" . "https://elpa.gnu.org/devel/") t)
 #+END_SRC
 
-Refresh the archive with =M-x package-refresh-contents RET= and you can do =M-x package-install RET org-transclusion= to install it. Alternatively, you can use =package-list-packages=. 
+Refresh the archive with ~M-x package-refresh-contents RET~ and you can do ~M-x package-install RET org-transclusion~ to install it. Alternatively, you can use ~package-list-packages~. 
 
 After installation, you can start using Org-transclusion with no additional configuration. Below are some example keybindings that can be put into your Emacs configuration.
 
@@ -109,20 +110,20 @@ After installation, you can start using Org-transclusion with no additional conf
 For Doom users, you would need to do something like this below to install the package and configure the keybindings. 
 
 #+BEGIN_SRC elisp
-;; ~/.doom.d/package.el
-(package! org-transclusion)
+  ;; ~/.doom.d/package.el
+  (package! org-transclusion)
 #+END_SRC
 
 #+BEGIN_SRC elisp
-;; ~/.doom.d/config.el
-(use-package! org-transclusion
-  :after org
-  :init
-  (map!
-   :map global-map "<f12>" #'org-transclusion-add
-   :leader
-   :prefix "n"
-   :desc "Org Transclusion Mode" "t" #'org-transclusion-mode))
+  ;; ~/.doom.d/config.el
+  (use-package! org-transclusion
+    :after org
+    :init
+    (map!
+     :map global-map "<f12>" #'org-transclusion-add
+     :leader
+     :prefix "n"
+     :desc "Org Transclusion Mode" "t" #'org-transclusion-mode))
 #+END_SRC
 
 * Contributing
