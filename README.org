@@ -1,7 +1,7 @@
-#+title:  Org-transclusion README
-#+author: Noboru Ota 
+#+title:  README – Org-transclusion
+#+author: Noboru Ota
 #+email:  me@nobiot.com
-#+options: toc:nil
+#+options: toc:t cretor:nil author:nil broken-links:t
 
 #+html: <a href="https://www.gnu.org/software/emacs/"><img alt="GNU Emacs" src="https://img.shields.io/static/v1?logo=gnuemacs&logoColor=fafafa&label=Made%20for&message=GNU%20Emacs&color=7F5AB6&style=flat"/></a>
 #+html: <a href="http://elpa.gnu.org/packages/org-transclusion.html"><img alt="GNU ELPA" src="https://elpa.gnu.org/packages/org-transclusion.svg"/></a>
@@ -10,11 +10,13 @@
 
 Org-transclusion lets you insert a copy of text content via a file link or ID link within an Org file. It lets you have the same content present in different buffers at the same time without copy-and-pasting it. Edit the source of the content, and you can refresh the transcluded copies to the up-to-date state. Org-transclusion keeps your files clear of the transcluded copies, leaving only the links to the original content.<<whatis>>
 
-A complete [[https://nobiot.github.io/org-transclusion/][user manual]] is available online or Emacs in-system as an Info document (=C-h i= and find the =Org-transclusion= node).
+A complete [[https://nobiot.github.io/org-transclusion/][user manual]] is available online or Emacs in-system as an Info document (~C-h i~ and find the =Org-transclusion= node).
 
 For installation and minimum configuration, refer to [[#installation][Installation]] below or the corresponding section in the user manual.
 
 [[https://nobiot.github.io/org-transclusion/#Getting-Started][Getting Started]] in the user manual will get you started in 5 minutes.
+
+* Screen Shots and Videos :noexport:
 
 Below are images and videos demonstrating some of the key features of
 Org-transclusion.
@@ -33,9 +35,9 @@ Org-transclusion.
 #+html: <img src="https://github.com/nobiot/org-transclusion/blob/main/resources/demo9-title.png?raw=true">
 
 *Figure 3*. [[https://youtu.be/ueaPiA622wA][Video demo on v0.2.1 on YouTube]] demonstrating new features to transclude a source file into a src-block and function to specify a range of text/source line
-  
+
 - Older videos
-      
+
   + [[https://youtu.be/idlFzWeygwA][Video demo on v0.2.0 on YouTube]] featuring minor breaking changes and new transclusion filters
 
   + [[https://youtu.be/idlFzWeygwA][Video demo on v0.1.1 on YouTube]] featuring basic syntax and live-sync edit
@@ -45,14 +47,14 @@ Org-transclusion.
 :CUSTOM_ID: use-cases
 :END:
 
-Here is a summary of some real use cases that users have shared with the author, including his own.
+Here are some real use cases that users have shared with the author, including his own.
 
 - Book writing ::
-  
-  You have a collection of notes. You can quickly transclude paragraphs and sections from your notes and put together a draft. As transclusions are links, it's easy to re-organize them into different sequences to see which way works the best. 
+
+  You have a collection of notes. You can quickly transclude paragraphs and sections from your notes and put together a draft. As transclusions are links, it's easy to re-organize them into different sequences to see which way works the best.
 
 - Academic writing ::
-  
+
   You have a collection of quotes and notes from your research and literature review. Transclude relevant elements of quotes and notes into different papers. You can keep your collection as the central repository of your research.
 
 - Technical writing ::
@@ -98,7 +100,7 @@ GNU ELPA should be already set up in your Emacs by default. If you wish to add G
                '("gnu-devel" . "https://elpa.gnu.org/devel/") :append)
 #+END_SRC
 
-Refresh the archive with ~M-x package-refresh-contents RET~ and you can do ~M-x package-install RET org-transclusion~ to install it. Alternatively, you can use ~package-list-packages~. 
+Refresh the archive with ~M-x package-refresh-contents RET~ and you can do ~M-x package-install RET org-transclusion~ to install it. Alternatively, you can use ~package-list-packages~.
 
 After installation, you can start using Org-transclusion with no additional configuration. Below are some example keybindings that can be put into your Emacs configuration.
 
@@ -107,7 +109,7 @@ After installation, you can start using Org-transclusion with no additional conf
   (define-key global-map (kbd "C-n t") #'org-transclusion-mode)
 #+END_SRC
 
-For Doom users, you would need to do something like this below to install the package and configure the keybindings. 
+For Doom users, you would need to do something like this below to install the package and configure the keybindings.
 
 #+BEGIN_SRC elisp
   ;; ~/.doom.d/package.el
@@ -128,7 +130,7 @@ For Doom users, you would need to do something like this below to install the pa
 
 * Contributing
 
-- Get involved in a discussion in [[https://org-roam.discourse.group/t/prototype-transclusion-block-reference-with-emacs-org-mode/830][Org-roam forum]] (the package is originally aimed for its users, me included)
+- Get involved in a discussion in [[https://org-roam.discourse.group/t/prototype-transclusion-block-reference-with-emacs-org-mode/830][Org-roam forum]] (the package is originally aimed for its users, the author included)
 
 - Create issues, discussion, and/or pull requests. All welcome.
 
