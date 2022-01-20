@@ -62,7 +62,7 @@ Next: <a href="#Example-Use-Cases-_0026-Main-Features" accesskey="n" rel="next">
 
 <p>This manual is for Org-transclusion version 1.2.x.
 </p>
-<p>Last updated: 19 January 2022.
+<p>Last updated: 20 January 2022.
 </p>
 <p>Org-transclusion lets you insert a copy of text content via a file link or ID link within an Org file. It lets you have the same content present in different buffers at the same time without copy-and-pasting it. Edit the source of the content, and you can refresh the transcluded copies to the up-to-date state. Org-transclusion keeps your files clear of the transcluded copies, leaving only the links to the original content.<span id="whatis"></span></p>
 
@@ -290,11 +290,11 @@ Next: <a href="#Usage" accesskey="n" rel="next">Usage</a>, Previous: <a href="#I
 <p>To transclude content via a link, use one of the following commands:
 </p>
 <ul>
-<li> &lsquo;<samp>org-transclusion-add</samp>&rsquo;
+<li> <code>org-transclusion-add</code>
 
-</li><li> &lsquo;<samp>org-transclusion-add-all</samp>&rsquo;
+</li><li> <code>org-transclusion-add-all</code>
 
-</li><li> &lsquo;<samp>org-transclusion-make-from-link</samp>&rsquo;
+</li><li> <code>org-transclusion-make-from-link</code>
 </li></ul>
 
 <p>For example, if you have an ID link in your Org file like this:
@@ -309,9 +309,9 @@ Next: <a href="#Usage" accesskey="n" rel="next">Usage</a>, Previous: <a href="#I
 <pre class="example">#+transclude: [[id:20210501T171427.051019][Bertrand Russell]]
 </pre></div>
 
-<p>Put your cursor somewhere on this keyword line and type &lsquo;<samp>M-x org-transclusion-add RET</samp>&rsquo;, and you will see the text content that the ID points to replace the whole line. If you have multiple links with a transclude keyword, you can type &lsquo;<samp>M-x org-transclusion-add-all RET</samp>&rsquo; to add all transclusions in the current buffer.
+<p>Put your cursor somewhere on this keyword line and type <code>M-x org-transclusion-add RET</code>, and you will see the text content that the ID points to replace the whole line. If you have multiple links with a transclude keyword, you can type <code>M-x org-transclusion-add-all RET</code> to add all transclusions in the current buffer.
 </p>
-<p>Alternatively, you can also put cursor somewhere on the link and type  &lsquo;<samp>M-x org-transclusion-make-from-link RET</samp>&rsquo;. That will insert another line with &lsquo;<samp>#+transclusion:</samp>&rsquo; keyword added in front of a copy of the original link in the next empty line.
+<p>Alternatively, you can also put cursor somewhere on the link and type  <code>M-x org-transclusion-make-from-link RET</code>. That will insert another line with <code>#+transclusion:</code> keyword added in front of a copy of the original link in the next empty line.
 </p>
 <p>The transcluded paragraphs will be visually marked with a vertical line &ldquo;| &rdquo; in the fringe (on graphical display) or in the beginning of line (on a text-only terminal) by default. The source (original) of the transcluded paragraphs will be also visually marked with an overlay. The appearance of these visual elements can be customized (refer to section <a href="#Faces-_0026-fringe-bitmap">Faces &amp; fringe bitmap</a>).
 </p>
@@ -319,7 +319,7 @@ Next: <a href="#Usage" accesskey="n" rel="next">Usage</a>, Previous: <a href="#I
 </p>
 <p>You can call a number of useful commands with a single letter (by default). For example, you can press &lsquo;<samp>o</samp>&rsquo; to open the source buffer of the transclusion at point, or &lsquo;<samp>O</samp>&rsquo; (capital &ldquo;o&rdquo;) to open and move to it. Press &lsquo;<samp>g</samp>&rsquo; to refresh the transclusion. Press &lsquo;<samp>e</samp>&rsquo; to start live-sync edit. For more detail, inspect the documentation of each command. Press &lsquo;<samp>d</samp>&rsquo; to remove the transcluded content, putting the original &lsquo;<samp>#+transclude: [[id:id-of-the-content]]</samp>&rsquo;.
 </p>
-<p>This single-letter-context-menu is defined in &lsquo;<samp>org-transclusion-map</samp>&rsquo;. The default keybindings are shown below. Adapt them to your liking, especially if you use Vim keybindings with Evil Mode, etc.
+<p>This single-letter-context-menu is defined in <code>org-transclusion-map</code>. The default keybindings are shown below. Adapt them to your liking, especially if you use Vim keybindings with Evil Mode, etc.
 </p>
 <div class="example">
 <pre class="example">key             binding
@@ -383,23 +383,23 @@ Next: <a href="#Org-links-supported" accesskey="n" rel="next">Org links supporte
 <span id="index-Property-_002d-_003adisable_002dauto"></span>
 <span id="index-org_002dtransclusion_002dadd_002dall_002don_002dactivate"></span>
 
-<p>Org-transclusion is a local minor mode; however, you do not need to explicitly call &lsquo;<samp>org-transclusion-mode</samp>&rsquo;. The minor mode is intended to be just a convenient wrapper to let you easily toggle between &lsquo;<samp>activate</samp>&rsquo; and &lsquo;<samp>deactivate</samp>&rsquo;.
+<p>Org-transclusion is a local minor mode; however, you do not need to explicitly call <code>org-transclusion-mode</code>. The minor mode is intended to be just a convenient wrapper to let you easily toggle between &lsquo;<samp>activate</samp>&rsquo; and &lsquo;<samp>deactivate</samp>&rsquo;.
 </p>
-<p>As you saw in the <a href="#Getting-Started">Getting Started section</a> above, calling &lsquo;<samp>org-transclusion-add</samp>&rsquo; or &lsquo;<samp>org-transclusion-add-all</samp>&rsquo; is enough to add transclusions in your current buffer.
+<p>As you saw in the <a href="#Getting-Started">Getting Started section</a> above, calling <code>org-transclusion-add</code> or <code>org-transclusion-add-all</code> is enough to add transclusions in your current buffer.
 </p>
-<p>The minor mode is automatically turned on locally for your current buffer through one of these commands. All it does is to call &lsquo;<samp>org-transclusion-activate</samp>&rsquo;  to activate hooks and some other variables. Their main purpose is to keep files in the filesystem clear of the transcluded content.
+<p>The minor mode is automatically turned on locally for your current buffer through one of these commands. All it does is to call <code>org-transclusion-activate</code>  to activate hooks and some other variables. Their main purpose is to keep files in the filesystem clear of the transcluded content.
 </p>
-<p>Turn off the minor mode or use &lsquo;<samp>org-transclusion-deactivate</samp>&rsquo;; you will remove all the transclusions in the current buffer and clear the hooks and other setup variables.
+<p>Turn off the minor mode or use <code>org-transclusion-deactivate</code>; you will remove all the transclusions in the current buffer and clear the hooks and other setup variables.
 </p>
-<p>If you prefer, you can use &lsquo;<samp>org-transclusion-mode</samp>&rsquo; as your entry command for transclusion. When customizable variable &lsquo;<samp>org-transclusion-add-all-on-activate</samp>&rsquo; is non-nil (it is &lsquo;<samp>t</samp>&rsquo; by default), turning on the minor mode calls the &lsquo;<samp>org-transclusion-add-all</samp>&rsquo; command to attempt to add all transclusions automatically in the current buffer.
+<p>If you prefer, you can use <code>org-transclusion-mode</code> as your entry command for transclusion. When customizable variable <code>org-transclusion-add-all-on-activate</code> is non-nil (it is &lsquo;<samp>t</samp>&rsquo; by default), turning on the minor mode calls the <code>org-transclusion-add-all</code> command to attempt to add all transclusions automatically in the current buffer.
 </p>
-<p>You can control whether or not transclusions are to be added automatically per transclude keyword. By default, &lsquo;<samp>org-transclusion-add-all</samp>&rsquo; (it is also used by &lsquo;<samp>org-transclusion-mode</samp>&rsquo;) will work on every transclude keyword in the buffer. Add &lsquo;<samp>:disable-auto</samp>&rsquo; property to a keyword as shown in the example below; &lsquo;<samp>add-all</samp>&rsquo; skips transclude keywords with it.
+<p>You can control whether or not transclusions are to be added automatically per transclude keyword. By default, <code>org-transclusion-add-all</code> (it is also used by <code>org-transclusion-mode</code>) will work on every transclude keyword in the buffer. Add &lsquo;<samp>:disable-auto</samp>&rsquo; property to a keyword as shown in the example below; &lsquo;<samp>add-all</samp>&rsquo; skips transclude keywords with it.
 </p>
 <div class="example">
 <pre class="example">#+transclude: [[file:path/to/file.org]] :disable-auto
 </pre></div>
 
-<p>You can override the &lsquo;<samp>:disable-auto</samp>&rsquo; property by manually calling &lsquo;<samp>org-transclusion-add</samp>&rsquo; at point. There are various properties like &lsquo;<samp>:disable-auto</samp>&rsquo; to control each transclusion (refer to <a href="#Index-_002d-Features">Index - Features</a> for a list).
+<p>You can override the &lsquo;<samp>:disable-auto</samp>&rsquo; property by manually calling <code>org-transclusion-add</code> at point. There are various properties like &lsquo;<samp>:disable-auto</samp>&rsquo; to control each transclusion (refer to <a href="#Index-_002d-Features">Index - Features</a> for a list).
 </p>
 <hr>
 <span id="Org-links-supported"></span><div class="header">
@@ -470,16 +470,16 @@ Next: <a href="#Filter-Org-elements-per-transclusion" accesskey="n" rel="next">F
 <p>Other ways to control include the following.
 </p>
 <dl compact="compact">
-<dt>&lsquo;<samp>org-transclusion-make-from-link</samp>&rsquo;</dt>
-<dd><p>Make a transclusion keyword from a link at point. If you pass a positive number 1-9 with &lsquo;<samp>digit-argument</samp>&rsquo; (e.g. prefix &lsquo;<samp>M-x</samp>&rsquo; with &lsquo;<samp>C-2</samp>&rsquo; to pass &ldquo;2&rdquo;), this function automatically puts the &lsquo;<samp>:level</samp>&rsquo; property to the resultant transclusion keyword.
+<dt><code>org-transclusion-make-from-link</code></dt>
+<dd><p>Make a transclusion keyword from a link at point. If you pass a positive number 1-9 with &lsquo;<samp>digit-argument</samp>&rsquo; (e.g. prefix <code>M-x</code> with <code>C-2</code> to pass &ldquo;2&rdquo;), this function automatically puts the &lsquo;<samp>:level</samp>&rsquo; property to the resultant transclusion keyword.
 </p>
 </dd>
-<dt>&lsquo;<samp>org-transclusion-promote-subtree</samp>&rsquo;</dt>
-<dd><p>Promote transcluded subtree at point. Mapped to &ldquo;P&rdquo; (capital &ldquo;p&rdquo;) by default in &lsquo;<samp>org-transclusion-map</samp>&rsquo;
+<dt><code>org-transclusion-promote-subtree</code></dt>
+<dd><p>Promote transcluded subtree at point. Mapped to &ldquo;P&rdquo; (capital &ldquo;p&rdquo;) by default in <code>org-transclusion-map</code>
 </p>
 </dd>
-<dt>&lsquo;<samp>org-transclusion-demote-subtree</samp>&rsquo;</dt>
-<dd><p>Demote transcluded subtree at point. Mapped to &ldquo;D&rdquo; (capital &ldquo;D&rdquo;) by default in &lsquo;<samp>org-transclusion-map</samp>&rsquo;
+<dt><code>org-transclusion-demote-subtree</code></dt>
+<dd><p>Demote transcluded subtree at point. Mapped to &ldquo;D&rdquo; (capital &ldquo;D&rdquo;) by default in <code>org-transclusion-map</code>
 </p></dd>
 </dl>
 
@@ -529,7 +529,7 @@ Next: <a href="#Live_002dsync-edit" accesskey="n" rel="next">Live-sync edit</a>,
 
 <dl compact="compact">
 <dt>&lsquo;<samp>:exclude-elements</samp>&rsquo;</dt>
-<dd><p>This property lets you <strong>add</strong> elements to exclude per transclusion on top of the variable &lsquo;<samp>org-transclusion-exclude-elements</samp>&rsquo; defines. You cannot <strong>remove</strong> the ones defined by it; thus, it is intended that you use the customizable variable as your global default and fine-tune it by the property per transclusion.
+<dd><p>This property lets you <strong>add</strong> elements to exclude per transclusion on top of the variable <code>org-transclusion-exclude-elements</code> defines. You cannot <strong>remove</strong> the ones defined by it; thus, it is intended that you use the customizable variable as your global default and fine-tune it by the property per transclusion.
 </p>
 <p>Add &lsquo;<samp>:exclude-elements</samp>&rsquo; with a list of elements (each one as defined by &lsquo;<samp>org-element-all-elements</samp>&rsquo;) separated by a space inside double quotation marks like this example:
 </p></dd>
@@ -579,15 +579,15 @@ Next: <a href="#Transclude-source-file-into-src_002dblock" accesskey="n" rel="ne
 <span id="index-org_002dtransclusion_002dlive_002dsync_002dpaste"></span>
 <span id="index-org_002dtransclusion_002dlive_002dsync_002dmap"></span>
 
-<p><strong>Experimental.</strong> You can start live-sync edit by pressing &lsquo;<samp>e</samp>&rsquo; (by default) on a text element you want to edit. This will call &lsquo;<samp>org-transclusion-live-sync-start</samp>&rsquo; and put a colored overlay on top of the region being live-synced and brings up another buffer that visits the source file of the transclusion. The source buffer will also have a corresponding overlay to the region being edited and live-synced.
+<p><strong>Experimental.</strong> You can start live-sync edit by pressing &lsquo;<samp>e</samp>&rsquo; (by default) on a text element you want to edit. This will call <code>org-transclusion-live-sync-start</code> and put a colored overlay on top of the region being live-synced and brings up another buffer that visits the source file of the transclusion. The source buffer will also have a corresponding overlay to the region being edited and live-synced.
 </p>
 <p>If you have other windows open, they will be temporarily hidden &ndash; Org-transclusion will remembers your current window layout and attempts to recover it when you exit live-sync edit.
 </p>
 <p>In the live-sync edit region, you can freely type to edit the transclusion or source regions; they will sync simultaneously.
 </p>
-<p>Once done with editing, press &lsquo;<samp>C-c C-c</samp>&rsquo; to exit live-sync edit. The key is bound to &lsquo;<samp>org-transclusion-live-sync-exit</samp>&rsquo;. It will turn off the live sync edit but keep the transclusion on.
+<p>Once done with editing, press &lsquo;<samp>C-c C-c</samp>&rsquo; to exit live-sync edit. The key is bound to <code>org-transclusion-live-sync-exit</code>. It will turn off the live sync edit but keep the transclusion on.
 </p>
-<p>In the live-sync edit region, the normal &lsquo;<samp>yank</samp>&rsquo; command (&lsquo;<samp>C-y</samp>&rsquo;) is replaced with a special command &lsquo;<samp>org-transclusion-live-sync-paste</samp>&rsquo;. This command lets the pasted text inherit the text-properties of the transcluded region correctly; the normal yank does not have this feature and thus causes some inconvenience in live-sync edit. If you use vim keybindings (e.g. &lsquo;<samp>evil-mode</samp>&rsquo;), it is advised that you review the default keybindings. You can customize the local keybindings for the live-sync region by &lsquo;<samp>org-transclusion-live-sync-map</samp>&rsquo;.
+<p>In the live-sync edit region, the normal <code>yank</code> command (<code>C-y</code>) is replaced with a special command <code>org-transclusion-live-sync-paste</code>. This command lets the pasted text inherit the text-properties of the transcluded region correctly; the normal yank does not have this feature and thus causes some inconvenience in live-sync edit. If you use vim keybindings (e.g. <code>evil-mode</code>), it is advised that you review the default keybindings. You can customize the local keybindings for the live-sync region by <code>org-transclusion-live-sync-map</code>.
 </p>
 <p><strong>Note</strong>: During live-sync edit, file&rsquo;s content gets saved to the file system as is &ndash; i.e. the transcluded text will be saved instead of the &lsquo;<samp>#+transclude:</samp>&rsquo; keyword. If you kill buffer or quit Emacs, other hooks will still remove the transclusion to keep the file clear of the transcluded copy, leaving only the keyword in the file system.
 </p>
@@ -738,11 +738,11 @@ Previous: <a href="#Transclude-range-of-lines-for-text-and-source-files" accessk
 <span id="index-Extension-_002d-org_002dtransclusion_002dsrc_002dlines"></span>
 <span id="index-Extension-_002d-org_002dtransclusion_002dfont_002dlock"></span>
 
-<p>Org-transclusion provides a simple extension framework, where you can use &lsquo;<samp>customize</samp>&rsquo; to selectively add new features. 
+<p>Org-transclusion provides a simple extension framework, where you can use <code>customize</code> to selectively add new features. 
 </p>
-<p>If you use &lsquo;<samp>customize</samp>&rsquo;, the features are loaded automatically. Note that it does not &ldquo;unload&rdquo; the feature until you relaunch Emacs.
+<p>If you use <code>customize</code>, the features are loaded automatically. Note that it does not &ldquo;unload&rdquo; the feature until you relaunch Emacs.
 </p>
-<p>If you do not use &lsquo;<samp>customize</samp>&rsquo; (e.g. Doom), you may need to explicitly require an extension. For example, to activate &lsquo;<samp>org-transclusion-indent-mode</samp>&rsquo;, you might need to add something like this in your configuration file.
+<p>If you do not use <code>customize</code> (e.g. Doom), you may need to explicitly require an extension. For example, to activate <code>org-transclusion-indent-mode</code>, you might need to add something like this in your configuration file.
 </p>
 <div class="lisp">
 <pre class="lisp">;; Ensure that load-path to org-transclusion is already added
@@ -755,16 +755,16 @@ Previous: <a href="#Transclude-range-of-lines-for-text-and-source-files" accessk
 <p>Currently, the following extensions are available.
 </p>
 <dl compact="compact">
-<dt>(off by default) &lsquo;<samp>org-transclusion-indent-mode</samp>&rsquo;</dt>
+<dt>(off by default) <code>org-transclusion-indent-mode</code></dt>
 <dd><p>Support org-indent-mode.
 </p>
 </dd>
-<dt>(on by default) &lsquo;<samp>org-transclusion-src-lines</samp>&rsquo;</dt>
+<dt>(on by default) <code>org-transclusion-src-lines</code></dt>
 <dd><p>Add features for &lsquo;<samp>:src</samp>&rsquo; and &lsquo;<samp>:lines</samp>&rsquo; properties to &lsquo;<samp>#+transclude</samp>&rsquo;. It is meant for non-Org files such as program source and text files
 </p>
 </dd>
-<dt>(on by default) &lsquo;<samp>org-transclusion-font-lock</samp>&rsquo;</dt>
-<dd><p>Add font-lock for &lsquo;<samp>#+transclude</samp>&rsquo;. Org mode&rsquo;s standard syntax treats the combination of a &lsquo;<samp>#+transclude:</samp>&rsquo; keyword and a link used by Org-transclusion as a keyword. This means it applies the &lsquo;<samp>org-meta-line</samp>&rsquo; face and the link part cannot be toggled as a normal link. This extension adds &lsquo;<samp>org-transclusion-keyword</samp>&rsquo; face to the keyword part and lets the link part to be treated as a normal link for &lsquo;<samp>org-toggle-link-display</samp>&rsquo;.
+<dt>(on by default) <code>org-transclusion-font-lock</code></dt>
+<dd><p>Add font-lock for &lsquo;<samp>#+transclude</samp>&rsquo;. Org mode&rsquo;s standard syntax treats the combination of a &lsquo;<samp>#+transclude:</samp>&rsquo; keyword and a link used by Org-transclusion as a keyword. This means it applies the <code>org-meta-line</code> face and the link part cannot be toggled as a normal link. This extension adds <code>org-transclusion-keyword</code> face to the keyword part and lets the link part to be treated as a normal link for <code>org-toggle-link-display</code>.
 </p></dd>
 </dl>
 
@@ -782,45 +782,45 @@ Next: <a href="#Known-Limitations" accesskey="n" rel="next">Known Limitations</a
 <span id="index-org_002dtransclusion_002dafter_002dadd_002dfunctions"></span>
 <span id="index-Hooks-_002d-org_002dtransclusion_002dafter_002dadd_002dfunctions"></span>
 
-<p>You can customize settings in the &lsquo;<samp>org-transclusion</samp>&rsquo; group.
+<p>You can customize settings in the customization group &lsquo;org-transclusion&rsquo;.
 </p>
 <dl compact="compact">
-<dt>&lsquo;<samp>org-transclusion-extensions</samp>&rsquo;</dt>
+<dt><code>org-transclusion-extensions</code></dt>
 <dd><p>Defines extensions to be loaded with
-org-transclusion.el. If you use &lsquo;<samp>customize</samp>&rsquo;, the extensions are loaded by it.
-If you don&rsquo;t, you likely need to explicitly use &lsquo;<samp>require</samp>&rsquo; to load them. See <a href="#Extensions">sub-section</a>
+org-transclusion.el. If you use <code>customize</code>, the extensions are loaded by it.
+If you don&rsquo;t, you likely need to explicitly use <code>require</code> to load them. See <a href="#Extensions">sub-section</a>
 </p>
 </dd>
-<dt>&lsquo;<samp>org-transclusion-add-all-on-activate</samp>&rsquo;</dt>
+<dt><code>org-transclusion-add-all-on-activate</code></dt>
 <dd><p>Defines whether or not all the
 active transclusions (with &lsquo;<samp>t</samp>&rsquo;) get automatically transcluded on minor mode
-activation (&lsquo;<samp>org-transclusion-mode</samp>&rsquo;). This does not affect the manual
-activation when you directly call &lsquo;<samp>org-transclusion-activate</samp>&rsquo;
+activation (<code>org-transclusion-mode</code>). This does not affect the manual
+activation when you directly call <code>org-transclusion-activate</code>
 </p>
 </dd>
-<dt>&lsquo;<samp>org-transclusion-exclude-elements</samp>&rsquo;</dt>
+<dt><code>org-transclusion-exclude-elements</code></dt>
 <dd><p>See <a href="#Customizable-filter-to-exclude-certain-Org-elements">sub-section</a>
 </p>
 </dd>
-<dt>&lsquo;<samp>org-transclusion-include-first-section</samp>&rsquo;</dt>
+<dt><code>org-transclusion-include-first-section</code></dt>
 <dd><p>See <a href="#Include-the-section-before-the-first-headline-_0028Org-file-only_0029">sub-section</a>
 </p>
 </dd>
-<dt>&lsquo;<samp>org-transclusion-open-source-display-action-list</samp>&rsquo;</dt>
+<dt><code>org-transclusion-open-source-display-action-list</code></dt>
 <dd><p>You can customize the
-way the &lsquo;<samp>org-transclusion-open-source</samp>&rsquo; function displays the source buffer for
+way the <code>org-transclusion-open-source</code> function displays the source buffer for
 the transclusion. You specify the &ldquo;action&rdquo; in the way defined by the built-in
-&lsquo;<samp>display-buffer</samp>&rsquo; function. Refer to its in-system documentation (with &lsquo;<samp>C-h f</samp>&rsquo;)
-for the accepted values. &lsquo;<samp>M-x customize</samp>&rsquo; can also guide you on what types of
+<code>display-buffer</code> function. Refer to its in-system documentation (with <code>C-h f</code>)
+for the accepted values. <code>M-x customize</code> can also guide you on what types of
 values are accepted.
 </p>
 </dd>
-<dt>&lsquo;<samp>org-transclusion-mode-lighter</samp>&rsquo;</dt>
+<dt><code>org-transclusion-mode-lighter</code></dt>
 <dd><p>Define the lighter for Org-transclusion
 minor mode. The default is &ldquo; OT&rdquo;.
 </p>
 </dd>
-<dt>&lsquo;<samp>org-transclusion-after-add-functions</samp>&rsquo;</dt>
+<dt><code>org-transclusion-after-add-functions</code></dt>
 <dd><p>Functions to be called after a
 transclusion content has been added. The hook runs after the content and the
 read-only text property have been added so it is not supposed to manipulate
@@ -831,7 +831,7 @@ beginning and end of the transcluded content.
 </p></dd>
 </dl>
 
-<p>The hook can be also used to activate &lsquo;<samp>org-latex-preview</samp>&rsquo; for transclusions:
+<p>The hook can be also used to activate <code>org-latex-preview</code> for transclusions:
 </p>
 <div class="lisp">
 <pre class="lisp">(add-hook 'org-transclusion-after-add-functions
@@ -858,11 +858,11 @@ Next: <a href="#Include-the-section-before-the-first-headline-_0028Org-file-only
 
 <span id="index-org_002dtransclusion_002dexclude_002delements-1"></span>
 
-<p>Set customizable variable &lsquo;<samp>org-transclusion-exclude-elements</samp>&rsquo; to define which elements to be <strong>excluded</strong> in the transclusion.
+<p>Set customizable variable <code>org-transclusion-exclude-elements</code> to define which elements to be <strong>excluded</strong> in the transclusion.
 </p>
 <p>The filter works for all supported types of links within an Org file when transcluding an entire Org file, and parts of it (headlines, custom ID, etc.). There is no filter for non-Org files.
 </p>
-<p>It is a list of symbols, and the default is &lsquo;<samp>(property-drawer)</samp>&rsquo;. The accepted values are the ones defined by &lsquo;<samp>org-element-all-elements</samp>&rsquo; (Org&rsquo;s standard set of elements; refer to its documentation for an exhaustive list).
+<p>It is a list of symbols, and the default is &lsquo;<samp>(property-drawer)</samp>&rsquo;. The accepted values are the ones defined by <code>org-element-all-elements</code> (Org&rsquo;s standard set of elements; refer to its documentation for an exhaustive list).
 </p>
 <p>You can also fine-tune the exclusion filter per transclusion. Refer to the sub-section on <a href="#Filter-Org-elements-per-transclusion">filtering Org elements per transclusion</a>.
 </p>
@@ -875,7 +875,7 @@ Next: <a href="#Faces-_0026-fringe-bitmap" accesskey="n" rel="next">Faces &amp; 
 
 <span id="index-org_002dtransclusion_002dinclude_002dfirst_002dsection-1"></span>
 
-<p>You can include the first section (section before the first headline) of an Org file. It is toggled via customizable variable &lsquo;<samp>org-transclusion-include-first-section</samp>&rsquo;. Its default value is &lsquo;<samp>t</samp>&rsquo;. Set it to &lsquo;<samp>t</samp>&rsquo; (or non-nil) to transclude the first section. It also works when the first section is followed by headlines.
+<p>You can include the first section (section before the first headline) of an Org file. It is toggled via customizable variable <code>org-transclusion-include-first-section</code>. Its default value is &lsquo;<samp>t</samp>&rsquo;. Set it to &lsquo;<samp>t</samp>&rsquo; (or non-nil) to transclude the first section. It also works when the first section is followed by headlines.
 </p>
 <hr>
 <span id="Faces-_0026-fringe-bitmap"></span><div class="header">
@@ -910,8 +910,8 @@ Next: <a href="#Faces-for-the-fringes-next-to-transcluded-region-and-source-regi
 <p>This feature is provided as an <a href="#Extensions">extension</a> (default on). 
 </p>
 <dl compact="compact">
-<dt>&lsquo;<samp>org-transclusion-keyword</samp>&rsquo;</dt>
-<dd><p>You can set your own face to the &lsquo;<samp>#+transclude</samp>&rsquo; keyword with using the &lsquo;<samp>org-transclusion-keyword</samp>&rsquo; face.
+<dt><code>org-transclusion-keyword</code></dt>
+<dd><p>You can set your own face to the &lsquo;<samp>#+transclude</samp>&rsquo; keyword with using the <code>org-transclusion-keyword</code> face.
 </p></dd>
 </dl>
 
@@ -925,11 +925,11 @@ Previous: <a href="#Face-for-the-_0023_002btransclude-keyword" accesskey="p" rel
 <p>If the fringes that indicate transcluding and source regions are not visible in your system (e.g. Doom), try adding background and/or foreground colors to these custom faces.
 </p>
 <ul>
-<li> &lsquo;<samp>org-transclusion-source-fringe</samp>&rsquo;
-</li><li> &lsquo;<samp>org-transclusion-fringe</samp>&rsquo;
+<li> <code>org-transclusion-source-fringe</code>
+</li><li> <code>org-transclusion-fringe</code>
 </li></ul>
 
-<p>To customize a face, it&rsquo;s probably the easiest to use &lsquo;<samp>M-x customize-face</samp>&rsquo;. If you want to use Elisp for some reason (e.g. on Doom), something like this below should set faces. Experiment with the colors of your choice. By default, the faces above have no values.
+<p>To customize a face, it&rsquo;s probably the easiest to use <code>M-x customize-face</code>. If you want to use Elisp for some reason (e.g. on Doom), something like this below should set faces. Experiment with the colors of your choice. By default, the faces above have no values.
 </p>
 <div class="lisp">
 <pre class="lisp">(set-face-attribute
@@ -938,15 +938,15 @@ Previous: <a href="#Face-for-the-_0023_002btransclude-keyword" accesskey="p" rel
  :background &quot;green&quot;)
 </pre></div>
 
-<p>For colors, where &ldquo;green&rdquo; is,  you can also use something like &ldquo;#62c86a&rdquo; (Emacs calls it &ldquo;RGB triple&rdquo;; you can refer to in-system manual Emacs &gt; Colors). You might also like to refer to a list of currently defined faces in your Emacs by &lsquo;<samp>list-faces-display</samp>&rsquo;.
+<p>For colors, where &ldquo;green&rdquo; is,  you can also use something like &ldquo;#62c86a&rdquo; (Emacs calls it &ldquo;RGB triple&rdquo;; you can refer to in-system manual Emacs &gt; Colors). You might also like to refer to a list of currently defined faces in your Emacs by <code>list-faces-display</code>.
 </p>
 <p>Other faces:
 </p><ul>
-<li> &lsquo;<samp>org-transclusion-source</samp>&rsquo;
-</li><li> &lsquo;<samp>org-transclusion-source-edit</samp>&rsquo;
-</li><li> &lsquo;<samp>org-transclusion</samp>&rsquo;
-</li><li> &lsquo;<samp>org-transclusion-edit</samp>&rsquo;
-</li><li> &lsquo;<samp>org-transclusion-fringe-bitmap</samp>&rsquo;
+<li> <code>org-transclusion-source</code>
+</li><li> <code>org-transclusion-source-edit</code>
+</li><li> <code>org-transclusion</code>
+</li><li> <code>org-transclusion-edit</code>
+</li><li> <code>org-transclusion-fringe-bitmap</code>
 It is used for the fringe that indicates the transcluded region. It works only in on a graphical display (not on a text-only terminal).
 </li></ul>
 
@@ -961,7 +961,7 @@ Previous: <a href="#Faces-_0026-fringe-bitmap" accesskey="p" rel="prev">Faces &a
 <span id="index-org_002dtransclusion_002dlive_002dsync_002dmap-1"></span>
 
 <ul>
-<li> &lsquo;<samp>org-transclusion-map</samp>&rsquo;
+<li> <code>org-transclusion-map</code>
 </li></ul>
 <div class="example">
 <pre class="example">key             binding
@@ -983,7 +983,7 @@ o               org-transclusion-open-source
 
 
 <ul>
-<li> &lsquo;<samp>org-transclusion-live-sync-map</samp>&rsquo;
+<li> <code>org-transclusion-live-sync-map</code>
 </li></ul>
 <div class="example">
 <pre class="example">key                   binding
@@ -1009,25 +1009,25 @@ Next: <a href="#Credits" accesskey="n" rel="next">Credits</a>, Previous: <a href
 <ul>
 <li> Org link&rsquo;s search-options &lsquo;<samp>::/regex/</samp>&rsquo; and &lsquo;<samp>::number</samp>&rsquo; do not work as intended.
 
-</li><li> &lsquo;<samp>org-transclusion-live-sync-start</samp>&rsquo; does not support all Org elements
+</li><li> <code>org-transclusion-live-sync-start</code> does not support all Org elements
 For transclusions of Org elements or buffers, live-sync works only on the following elements:
 &lsquo;<samp>center-block</samp>&rsquo;, &lsquo;<samp>drawer</samp>&rsquo;, &lsquo;<samp>dynamic-block</samp>&rsquo;, &lsquo;<samp>latex-environment</samp>&rsquo;, &lsquo;<samp>paragraph</samp>&rsquo;, &lsquo;<samp>plain-list</samp>&rsquo;, &lsquo;<samp>quote-block</samp>&rsquo;, &lsquo;<samp>special-block</samp>&rsquo;, &lsquo;<samp>table</samp>&rsquo;, and &lsquo;<samp>verse-block</samp>&rsquo;.
 
 <p>It is known that live-sync does not work for the other elements; namely:
 &lsquo;<samp>comment-block</samp>&rsquo;, &lsquo;<samp>export-block</samp>&rsquo;, &lsquo;<samp>example-block</samp>&rsquo;, &lsquo;<samp>fixed-width</samp>&rsquo;, &lsquo;<samp>keyword</samp>&rsquo;, &lsquo;<samp>src-block</samp>&rsquo;, and &lsquo;<samp>property-drawer</samp>&rsquo;.
 </p>
-<p>More technical reason for this limitation is documented in the docstring of function &lsquo;<samp>org-transclusion-live-sync-enclosing-element</samp>&rsquo;.
+<p>More technical reason for this limitation is documented in the docstring of function <code>org-transclusion-live-sync-enclosing-element</code>.
 </p>
 <p>Work is in progress to lift this limitation but I&rsquo;m still experimenting different ideas.
 </p>
-</li><li> &lsquo;<samp>org-indent-mode</samp>&rsquo; may not work well with Org-transclusion
-A new extension has been added to support &lsquo;<samp>org-indent-mode</samp>&rsquo;
+</li><li> <code>org-indent-mode</code> may not work well with Org-transclusion
+A new extension has been added to support <code>org-indent-mode</code>
 Refer to <a href="#Extensions">this section</a>.
 
 </li><li> Doom&rsquo;s customization may interfere with Org-transclusion
 Refer to issue <a href="https://github.com/nobiot/org-transclusion/issues/52">#52</a>. The symptom is that in Doom you get an error message that includes this: &ldquo;progn: ‘recenter’ing a window that does not display current-buffer.&rdquo; Adding this in your configuration has been reported to fix the issue:
 
-<p>&lsquo;<samp>(advice-remove 'org-link-search '+org--recenter-after-follow-link-a)</samp>&rsquo;
+<p><code>(advice-remove 'org-link-search '+org--recenter-after-follow-link-a)</code>
 </p>
 <p>It is probably rather drastic a measure. I will appreciate it if you find a less drastic way that works. Thank you.
 </p>
