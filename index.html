@@ -62,7 +62,7 @@ Next: <a href="#Example-Use-Cases-_0026-Main-Features" accesskey="n" rel="next">
 
 <p>This manual is for Org-transclusion version 1.2.x.
 </p>
-<p>Last updated: 20 January 2022.
+<p>Last updated: 23 January 2022.
 </p>
 <p>Org-transclusion lets you insert a copy of text content via a file link or ID link within an Org file. It lets you have the same content present in different buffers at the same time without copy-and-pasting it. Edit the source of the content, and you can refresh the transcluded copies to the up-to-date state. Org-transclusion keeps your files clear of the transcluded copies, leaving only the links to the original content.<span id="whatis"></span></p>
 
@@ -756,7 +756,7 @@ Previous: <a href="#Transclude-range-of-lines-for-text-and-source-files" accessk
 </p>
 <dl compact="compact">
 <dt>(off by default) <code>org-transclusion-indent-mode</code></dt>
-<dd><p>Support org-indent-mode.
+<dd><p>Support org-indent-mode. Known limitation: when transcluded, the source will temporarily lose the indentation. When the transclusion is removed, the source will regain the indentation.
 </p>
 </dd>
 <dt>(on by default) <code>org-transclusion-src-lines</code></dt>
