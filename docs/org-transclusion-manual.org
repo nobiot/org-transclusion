@@ -1,7 +1,7 @@
 #+title: Org-transclusion User Manual
 #+author: Noboru Ota <me@nobiot.com>
 #+macro: version 1.2.x
-#+macro: modified 20 January 2022
+#+macro: modified 23 January 2022
 
 #+language: en
 #+export_file_name: org-transclusion.texi
@@ -454,7 +454,7 @@ Currently, the following extensions are available.
  
 - (off by default) ~org-transclusion-indent-mode~ ::
 
-  Support org-indent-mode.
+  Support org-indent-mode. Known limitation: when transcluded, the source will temporarily lose the indentation. When the transclusion is removed, the source will regain the indentation.
 
 - (on by default) ~org-transclusion-src-lines~ ::
   Add features for =:src= and =:lines= properties to =#+transclude=. It is meant for non-Org files such as program source and text files
