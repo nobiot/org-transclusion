@@ -1,4 +1,10 @@
+* Current
+
+  - Fix: #131. For non-Org files, now the transcluded text respects the indent
+         level of the #+transclude keyword.  This does not affect Org files.
+
 * Version 1.2.0
+
   - Feature ::
 
     - add: org-transclusion-after-add-hook

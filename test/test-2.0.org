@@ -1,20 +1,20 @@
 * Regression
 ** make from link
 This is a link to a [[id:20210501T171427.051019][Bertrand Russell]] wikipedia excerpt
-#+transclude: [[id:fac76146-492c-4541-9540-91707b945f2c][Bertrand Russell]] 
+#+transclude: [[id:20210501T171427.051019][Bertrand Russell]] 
 
 ** test empty file
 #+transclude: [[file:empty.txt::2][empty text file]]
 
 ** test text
-#+transclude: [[file:test.txt][text file]]
+#+transclude: [[file:test.txt][text file]] 
 
 ** test t/nil
 t/nil will be dropped after remove-at-point
 
 
-#+transclude: [[file:test.txt][text file]]
-#+transclude: t [[id:20210501T171427.051019][Bertrand Russell]]
+#+transclude: [[file:test.txt][text file]] 
+#+transclude: t [[id:20210501T171427.051019][Bertrand Russell]] 
 
 (setq inhibit-read-only nil)
 
@@ -29,32 +29,31 @@ t/nil will be dropped after remove-at-point
 (setq org-adapt-indentation t)
 #+end_example
 
-#+transclude: [[id:20210501T171427.051019][Bertrand Russell]]
+#+transclude: [[id:20210501T171427.051019][Bertrand Russell]] 
 
 ** Paragraph
 
-
-#+transclude: [[file:./paragraph.org::para1]]
+#+transclude: [[file:./paragraph.org::para1]] 
 
 #+transclude: [[file:./paragraph.org::para2]] 
 
 ** Table
-#+transclude: [[file:paragraph.org::table][Link to a table]]
+#+transclude: [[file:paragraph.org::table][Link to a table]] 
 
 #+begin_example
 (variable-pitch-mode -1)
 #+end_example
 
-#+transclude: [[file:paragraph.org::table-with-link][Link to a table with a link]]
+#+transclude: [[file:paragraph.org::table-with-link][Link to a table with a link]] 
 
 ** Quote
-#+transclude: [[file:paragraph.org::quote][Link to a quote]]
+#+transclude: [[file:paragraph.org::quote][Link to a quote]] 
 
 ** #Custom ID
-#+transclude: [[file:testpara.org::#custom-id-1][Custom ID]] :level 2
+#+transclude: [[file:testpara.org::#custom-id-1][Custom ID]] :level 2 
 
 ** *Hadline
-#+transclude: [[file:bertrand-russell.org::*Bertrand Russell - Wikipedia]] :level 2 :disable-auto
+#+transclude: [[file:bertrand-russell.org::*Bertrand Russell - Wikipedia]] :level 2 :disable-auto 
 
 ** Filter
 
@@ -69,7 +68,7 @@ t/nil will be dropped after remove-at-point
 #+end_example
 
 [[file:./test-no-first-section.org]]
-#+ transclude: [[file:./test-no-first-section.org]]
+#+transclude: [[file:./test-no-first-section.org]] 
 
 * Live-Sync
 ** center-block dynamic-block example-block export-block special-block verse-block
@@ -154,4 +153,16 @@ t/nil will be dropped after remove-at-point
 
 * Open Source
 #+transclude: [[file:open.org]]
+
+* Issue #131 - Level one
+
+1. First item
+
+   Text associated with the first item.
+   
+   #+transclude: [[file:paragraph.txt][link]] 
+
+2. Second item
+
+* Level two
 

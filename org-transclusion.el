@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 13 January 2022
+;; Last modified: 29 January 2022
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -966,7 +966,8 @@ based on the following arguments:
             (setq content (buffer-string)))))
     (insert
      (run-hook-with-args-until-success
-      'org-transclusion-content-format-functions type content))
+      'org-transclusion-content-format-functions
+      type content (plist-get keyword-values :current-indentation)))
     (setq end (point))
     (setq end-mkr (set-marker (make-marker) end))
     (add-text-properties beg end
@@ -1015,7 +1016,7 @@ This function sssumes the buffer is an Org buffer."
         (push (org-element-property :level h) list)))
     (when list (seq-min list))))
 
-(defun org-transclusion-content-format-org (type content)
+(defun org-transclusion-content-format-org (type content _indent)
   "Format text CONTENT from source before transcluding.
 Return content modified (or unmodified, if not applicable).
 
@@ -1040,14 +1041,17 @@ content."
       ;; Return the temp-buffer's string
       (buffer-string)))))
 
-(defun org-transclusion-content-format (_type content)
+(defun org-transclusion-content-format (_type content indent)
   "Format text CONTENT from source before transcluding.
 Return content modified (or unmodified, if not applicable).
 
-This is the default one.  It only returns the content as is."
+This is the default one.  It only returns the content as is.
+
+INDENT is the number of current indentation of the #+transclude."
   (with-temp-buffer
     (insert content)
     ;; Return the temp-buffer's string
+    (set-left-margin (point-min)(point-max) indent)
     (buffer-string)))
 
 (defun org-transclusion-content-org-marker (marker plist)
