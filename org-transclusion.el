@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 29 January 2022
+;; Last modified: 27 May 2022
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -1162,10 +1162,24 @@ etc.)."
           (setq obj (org-element-map obj org-element-all-elements
                       #'org-transclusion-content-filter-org-only-contents
                       nil nil '(section) nil)))
+        ;; Convert relative filename in links to absolute (abbreviated)
+        (org-element-map obj 'link #'org-transclusion-content-absolute-links)
+
         (list :src-content (org-element-interpret-data obj)
               :src-buf (current-buffer)
               :src-beg (point-min)
               :src-end (point-max))))))
+
+(defun org-transclusion-content-absolute-links (link)
+  "."
+  (when (string-equal "file" (org-element-property :type link))
+    (let ((raw-link (org-element-property :raw-link link)))
+      (unless (file-name-absolute-p raw-link)
+        (org-element-put-property
+         link :path
+         (expand-file-name
+          raw-link
+          (file-name-directory (buffer-file-name (current-buffer)))))))))
 
 (defun org-transclusion-content-filter-org-exclude-elements (data)
   "Exclude specific elements from DATA.
