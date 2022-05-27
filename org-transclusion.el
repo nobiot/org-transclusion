@@ -1160,7 +1160,7 @@ property controls the filter applied to the transclusion."
           (setq obj (org-element-map obj org-element-all-elements
                       #'org-transclusion-content-filter-org-only-contents
                       nil nil '(section) nil)))
-        
+
         ;; Expand file names in all the links
         (when expand-links
           (org-element-map obj 'link #'org-transclusion-content-filter-expand-links))
