@@ -1,7 +1,7 @@
 #+title: Org-transclusion User Manual
 #+author: Noboru Ota <me@nobiot.com>
 #+macro: version 1.2.x
-#+macro: modified 23 January 2022
+#+macro: modified 27 May 2022
 
 #+language: en
 #+export_file_name: org-transclusion.texi
@@ -271,6 +271,37 @@ In addition to the global user options above, you can fine-tune the default excl
 #+end_example
 
 You can combine =:only-contents= and =:exclude-elements= to control how you transclude a subtree. With these properties, you can really have great control over what to include and exclude. It might be a little overwhelming at a time but the changes via properties are easy to change -- simply press =d= to remove the transclusion, change the properties, and transclude again to see a new result.
+
+- =:expand-links= ::
+  This property lets you expand the file names in links to absolute file names. 
+
+You can use the property in the following way.
+
+#+begin_example
+#+transclude: [[file:path/to/file.org]] :expand-links
+#+end_example
+
+As an exanmple if you have the content of this source file like this:
+
+#+begin_example
+Content of path/to/file.org
+
+* Heading
+
+[[file:test2.org]]
+#+end_example
+
+For this source file, you will get the following transclusion with the link expanded [fn:1]
+
+#+begin_example
+Content of path/to/file.org
+
+* Heading
+
+[[file:/home/user/org/test2.org]]
+#+end_example
+
+[fn:1] "Expanding" in Emacs means converting a relative file name to an absolute one. Info node `(elisp) File-Name-Expansion'
 
 *** Notes on excluding the headline element
 

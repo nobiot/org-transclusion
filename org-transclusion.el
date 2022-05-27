@@ -205,6 +205,7 @@ that consists of the following properties:
     org-transclusion-keyword-value-disable-auto
     org-transclusion-keyword-value-only-contents
     org-transclusion-keyword-value-exclude-elements
+    org-transclusion-keyword-value-expand-links
     org-transclusion-keyword-current-indentation)
   "Define a list of functions used to parse a #+transclude keyword.
 These functions take a single argument, the whole keyword value
@@ -827,6 +828,15 @@ It needs to be set in
 `org-transclusion-keyword-value-functions'."
   (list :current-indentation (current-indentation)))
 
+(defun org-transclusion-keyword-value-expand-links (string)
+  "It is a utility function used converting a keyword STRING to plist.
+It is meant to be used by `org-transclusion-get-string-to-plist'.
+It needs to be set in
+`org-transclusion-keyword-value-functions'."
+  (when (string-match ":expand-links" string)
+    (list :expand-links
+          (org-strip-quotes (match-string 0 string)))))
+
 (defun org-transclusion-keyword-remove ()
   "Remove the keyword element at point.
 Returns t if successful.  It checks if the element at point is a
@@ -849,6 +859,7 @@ keyword.  If not, returns nil."
         (disable-auto (plist-get plist :disable-auto))
         (only-contents (plist-get plist :only-contents))
         (exclude-elements (plist-get plist :exclude-elements))
+        (expand-links (plist-get plist :expand-links))
         (custom-properties-string nil))
     (setq custom-properties-string
           (dolist (fn org-transclusion-keyword-plist-to-string-functions
@@ -863,6 +874,7 @@ keyword.  If not, returns nil."
             (when only-contents (format " :only-contents"))
             (when exclude-elements (format " :exclude-elements \"%s\""
                                            exclude-elements))
+            (when expand-links (format " :expand-links"))
             custom-properties-string
             "\n")))
 
@@ -1062,17 +1074,14 @@ work to
   (if (and marker (marker-buffer marker)
            (buffer-live-p (marker-buffer marker)))
       (progn
-        (let ((only-contents (plist-get plist :only-contents))
-              (exclude-elements
-               (org-transclusion-keyword-plist-to-exclude-elements plist)))
-          (with-current-buffer (marker-buffer marker)
-            (org-with-wide-buffer
-             (goto-char marker)
-             (if (org-before-first-heading-p)
-                 (org-transclusion-content-org-buffer-or-element
-                  nil only-contents exclude-elements)
+        (with-current-buffer (marker-buffer marker)
+          (org-with-wide-buffer
+           (goto-char marker)
+           (if (org-before-first-heading-p)
                (org-transclusion-content-org-buffer-or-element
-                'only-element only-contents exclude-elements))))))
+                nil plist)
+             (org-transclusion-content-org-buffer-or-element
+              'only-element plist)))))
     (message "Nothing done. Cannot find marker for the ID.")))
 
 (defun org-transclusion-content-org-link (link plist)
@@ -1085,23 +1094,18 @@ work to
     ;; search-option is present.
     (let* ((path (org-element-property :path link))
            (search-option (org-element-property :search-option link))
-           (buf (find-file-noselect path))
-           (only-contents (plist-get plist :only-contents))
-           (exclude-elements
-            (org-transclusion-keyword-plist-to-exclude-elements plist)))
+           (buf (find-file-noselect path)))
       (with-current-buffer buf
         (org-with-wide-buffer
          (if search-option
              (progn
                (org-link-search search-option)
                (org-transclusion-content-org-buffer-or-element
-                'only-element only-contents exclude-elements))
+                'only-element plist))
            (org-transclusion-content-org-buffer-or-element
-            nil only-contents exclude-elements)))))))
+            nil plist)))))))
 
-(defun org-transclusion-content-org-buffer-or-element (&optional only-element
-                                                                 only-contents
-                                                                 exclude-elements)
+(defun org-transclusion-content-org-buffer-or-element (only-element plist)
   "Return a list of playload for transclusion.
 Tis function assumes the point is at the beginning of the org
 element to transclude.
@@ -1116,19 +1120,9 @@ When ONLY-ELEMENT is non-nil, this function looks at only the element
 at point; if nil, the whole buffer.
 
 This function applies multiple filters on the Org elements before
-construting the payload based on relevant user options and
-optional arguments as below:
-
-EXCLUDE-ELEMENTS adds elements to be excluded onto user option
-`org-transclusion-exclude-elements'.  The user option applies
-globally, the optional arguments can be applied for each
-transcluion.
-
-First section
-
-ONLY-CONTENTS applies filter to remove headline titles of the
-subtree, extracting only sections (including paragraphs, tables,
-etc.)."
+construting the payload based on PLIST. It is the
+\"keyword-plist\" for the transclusion being worked on; each
+property controls the filter applied to the transclusion."
   (let* ((el (org-element-context))
          (type (when el (org-element-type el))))
     (if (or (not el)(not type))
@@ -1140,6 +1134,10 @@ etc.)."
         (setq el (org-element-property :parent el)))
       (let ((beg (org-element-property :begin el))
             (end (org-element-property :end el))
+            (only-contents (plist-get plist :only-contents))
+            (exclude-elements
+             (org-transclusion-keyword-plist-to-exclude-elements plist))
+            (expand-links (plist-get plist :expand-links))
             obj)
         (when only-element
           (narrow-to-region beg end))
@@ -1162,16 +1160,23 @@ etc.)."
           (setq obj (org-element-map obj org-element-all-elements
                       #'org-transclusion-content-filter-org-only-contents
                       nil nil '(section) nil)))
-        ;; Convert relative filename in links to absolute (abbreviated)
-        (org-element-map obj 'link #'org-transclusion-content-absolute-links)
+        
+        ;; Expand file names in all the links
+        (when expand-links
+          (org-element-map obj 'link #'org-transclusion-content-filter-expand-links))
 
         (list :src-content (org-element-interpret-data obj)
               :src-buf (current-buffer)
               :src-beg (point-min)
               :src-end (point-max))))))
 
-(defun org-transclusion-content-absolute-links (link)
-  "."
+(defun org-transclusion-content-filter-expand-links (link)
+  "Convert LINK to an absolute filename.
+LINK is assumed to be an Org element. This function does nothing
+to LINK if the link is already absolute.
+
+The current buffer is assumed to be the source buffer for the
+transclusion."
   (when (string-equal "file" (org-element-property :type link))
     (let ((raw-link (org-element-property :raw-link link)))
       (unless (file-name-absolute-p raw-link)
