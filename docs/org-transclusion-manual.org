@@ -277,21 +277,21 @@ You can combine =:only-contents= and =:exclude-elements= to control how you tran
 
 You can use the property in the following way.
 
-#+begin_example
+#+begin_src org
 #+transclude: [[file:path/to/file.org]] :expand-links
-#+end_example
+#+end_src
 
 As an exanmple if you have the content of this source file like this:
 
-#+begin_example
-This is a sample file link to [[[[file:test2.org]]][Test 2 file]].
-#+end_example
+#+begin_src org
+This is a sample file link to [[file:test2.org]].
+#+end_src
 
 For this source file, you will get the following transclusion with the link expanded [fn:1]
 
-#+begin_example
-This is a sample file link to [[[file:/home/user/org/test2.org]]][[file:test2.or][[Test 2 file]]]].
-#+end_example
+#+begin_src org
+This is a sample file link to [[file:/home/user/org/test2.org]].
+#+end_src
 
 [fn:1] "Expanding" in Emacs means converting a relative file name to an absolute one. Info node `(elisp) File-Name-Expansion'
 
