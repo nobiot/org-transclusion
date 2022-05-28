@@ -62,7 +62,7 @@ Next: <a href="#Example-Use-Cases-_0026-Main-Features" accesskey="n" rel="next">
 
 <p>This manual is for Org-transclusion version 1.2.x.
 </p>
-<p>Last updated: 23 January 2022.
+<p>Last updated: 28 May 2022.
 </p>
 <p>Org-transclusion lets you insert a copy of text content via a file link or ID link within an Org file. It lets you have the same content present in different buffers at the same time without copy-and-pasting it. Edit the source of the content, and you can refresh the transcluded copies to the up-to-date state. Org-transclusion keeps your files clear of the transcluded copies, leaving only the links to the original content.<span id="whatis"></span></p>
 
@@ -541,6 +541,30 @@ Next: <a href="#Live_002dsync-edit" accesskey="n" rel="next">Live-sync edit</a>,
 
 <p>You can combine &lsquo;<samp>:only-contents</samp>&rsquo; and &lsquo;<samp>:exclude-elements</samp>&rsquo; to control how you transclude a subtree. With these properties, you can really have great control over what to include and exclude. It might be a little overwhelming at a time but the changes via properties are easy to change &ndash; simply press &lsquo;<samp>d</samp>&rsquo; to remove the transclusion, change the properties, and transclude again to see a new result.
 </p>
+<dl compact="compact">
+<dt>&lsquo;<samp>:expand-links</samp>&rsquo;</dt>
+<dd><p>This property lets you expand the file names in links to absolute file names. 
+</p></dd>
+</dl>
+
+<p>You can use the property in the following way.
+</p>
+<div class="example">
+<pre class="example">#+transclude: [[file:path/to/file.org]] :expand-links
+</pre></div>
+
+<p>As an exanmple if you have the content of this source file like this:
+</p>
+<div class="example">
+<pre class="example">This is a sample file link to [[[[file:test2.org]]][Test 2 file]].
+</pre></div>
+
+<p>For this source file, you will get the following transclusion with the link expanded <a id="DOCF1" href="#FOOT1"><sup>1</sup></a>
+</p>
+<div class="example">
+<pre class="example">This is a sample file link to [[[file:/home/user/org/test2.org]]][[file:test2.or][[Test 2 file]]]].
+</pre></div>
+
 <table class="menu" border="0" cellspacing="0">
 <tr><td align="left" valign="top">&bull; <a href="#Notes-on-excluding-the-headline-element" accesskey="1">Notes on excluding the headline element</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
 </td></tr>
@@ -1739,6 +1763,16 @@ free software license, such as the GNU General Public License,
 to permit their use in free software.
 </p>
 
+<hr>
+<span id="SEC_Foot"></span>
+<div class="header">
+<p>
+ &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<h4 class="footnotes-heading">Footnotes</h4>
+
+<h5><a id="FOOT1" href="#DOCF1">(1)</a></h3>
+<p>&ldquo;Expanding&rdquo; in Emacs means converting a relative file name to an absolute one. Info node &lsquo;(elisp) File-Name-Expansion&rsquo;</p>
 <hr>
 
 
