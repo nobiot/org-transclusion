@@ -111,7 +111,7 @@ t/nil will be dropped after remove-at-point
 #+transclude: [[file:bertrand-russell.org::*Bertrand Russell - Wikipedia]] :level 2 :disable-auto :only-contents
 
 * Exclude elements
-#+transclude: [[id:20210501T171427.051019][Bertrand Russell]] :only-contents :exclude-elements "keyword drawer headline"
+#+transclude: [[id:2022-05-30T203553]] :only-contents :exclude-elements "keyword drawer headline" 
 
 #+transclude: [[file:./test-no-first-section.org]] :exclude-elements "drawer keyword property-drawer"
 

@@ -1,7 +1,7 @@
 #+title: Org-transclusion User Manual
 #+author: Noboru Ota <me@nobiot.com>
-#+macro: version 1.2.x
-#+macro: modified 28 May 2022
+#+macro: version 1.3.x
+#+macro: modified 12 June 2022
 
 #+language: en
 #+export_file_name: org-transclusion.texi
@@ -277,21 +277,21 @@ You can combine =:only-contents= and =:exclude-elements= to control how you tran
 
 You can use the property in the following way.
 
-#+begin_src org
+#+begin_example
 #+transclude: [[file:path/to/file.org]] :expand-links
-#+end_src
+#+end_example
 
 As an exanmple if you have the content of this source file like this:
 
-#+begin_src org
+#+begin_example
 This is a sample file link to [[file:test2.org]].
-#+end_src
+#+end_example
 
 For this source file, you will get the following transclusion with the link expanded [fn:1]
 
-#+begin_src org
+#+begin_example
 This is a sample file link to [[file:/home/user/org/test2.org]].
-#+end_src
+#+end_example
 
 [fn:1] "Expanding" in Emacs means converting a relative file name to an absolute one. Info node `(elisp) File-Name-Expansion'
 
