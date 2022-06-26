@@ -73,11 +73,11 @@ Return nil if PLIST does not contain \":src\" or \":lines\" properties."
             (org-transclusion-content-src-lines link plist)))
    ;; :lines needs to be the last condition to check because :src INCLUDE :lines
    ((or (plist-get plist :lines)
-        (plist-get plist :end))
+        (plist-get plist :end)
         ;; Link contains a search-option ::<string>
         ;; and NOT for an Org file
-;;	(and (org-element-property :search-option link)
-;;             (not (org-transclusion-org-file-p (org-element-property :path link)))))
+	(and (org-element-property :search-option link)
+            (not (org-transclusion-org-file-p (org-element-property :path link)))))
     (append '(:tc-type "lines")
             (org-transclusion-content-range-of-lines link plist)))))
 
