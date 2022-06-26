@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 24 May 2021
-;; Last modified: 28 December 2021
+;; Last modified: 26 June 2022
 
 ;;; Commentary:
 ;;  This is an extension to `org-transclusion'.  When active, it adds features
@@ -73,11 +73,11 @@ Return nil if PLIST does not contain \":src\" or \":lines\" properties."
             (org-transclusion-content-src-lines link plist)))
    ;; :lines needs to be the last condition to check because :src INCLUDE :lines
    ((or (plist-get plist :lines)
-	(plist-get plist :end)
+	(plist-get plist :end))
         ;; Link contains a search-option ::<string>
         ;; and NOT for an Org file
-	(and (org-element-property :search-option link)
-             (not (org-transclusion-org-file-p (org-element-property :path link)))))
+;;	(and (org-element-property :search-option link)
+;;             (not (org-transclusion-org-file-p (org-element-property :path link)))))
     (append '(:tc-type "lines")
             (org-transclusion-content-range-of-lines link plist)))))
 
@@ -104,21 +104,28 @@ line 10. Likewise, when the second number is omitted (e.g. 10-),
 it means from line 10 to the end of file."
   (let* ((path (org-element-property :path link))
          (search-option (org-element-property :search-option link))
-         (buf (find-file-noselect path))
+         (type (org-element-property :type link))
+         (entry-pos) (buf)
          (lines (plist-get plist :lines))
 	 (end-search-op (plist-get plist :end)))
+    (if (not (string= type "id")) (setq buf (find-file-noselect path))
+      (let ((filename-pos (org-id-find path)))
+        (setq buf (find-file-noselect (car filename-pos)))
+        (setq entry-pos (cdr filename-pos))))
     (when buf
       (with-current-buffer buf
         (org-with-wide-buffer
-         (let* ((start-pos (or (when search-option
-                                 (save-excursion
-                                   (ignore-errors
-				     ;; FIXME `org-link-search' does not return
-				     ;; postion when ::/regex/ and ;;number are
-				     ;; used
-                                     (if (org-link-search search-option)
-					 (line-beginning-position)))))
-                               (point-min)))
+         (let* ((start-pos (cond
+                            (entry-pos)
+                            ((when search-option
+                               (save-excursion
+                                 (ignore-errors
+				   ;; FIXME `org-link-search' does not
+				   ;; return postion when eithher
+				   ;; ::/regex/ or ::number is used
+                                   (if (org-link-search search-option)
+				       (line-beginning-position))))))
+                             ((point-min))))
 		(end-pos (when end-search-op
                            (save-excursion
                              (ignore-errors

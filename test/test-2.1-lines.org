@@ -6,6 +6,8 @@ Including lines of source code
 
 [[file:./paragraph.org::/Lorem/]]
 
+#+transclude: [[id:2022-06-26T141859]] :lines 5-10
+
 #+name: source code 1
 #+transclude: [[file:../org-transclusion-src-lines.el]] :lines 1-10 :src elisp
 #+transclude: [[file:test-src.el]] :lines 1-
