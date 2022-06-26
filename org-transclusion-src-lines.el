@@ -129,9 +129,9 @@ it means from line 10 to the end of file."
                 (end-pos (when end-search-op
                            (save-excursion
                              (ignore-errors
-                               ;; FIXME `org-link-search' does not return
-                               ;; postion when ::/regex/ and ;;number are
-                               ;; used
+                               ;; FIXME `org-link-search' does not
+                               ;; return postion when either ::/regex/
+                               ;; or ::number is used
                                (when (org-link-search end-search-op)
                                  (line-beginning-position))))))
                 (range (when lines (split-string lines "-")))
