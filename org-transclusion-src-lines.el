@@ -73,7 +73,7 @@ Return nil if PLIST does not contain \":src\" or \":lines\" properties."
             (org-transclusion-content-src-lines link plist)))
    ;; :lines needs to be the last condition to check because :src INCLUDE :lines
    ((or (plist-get plist :lines)
-	(plist-get plist :end))
+        (plist-get plist :end))
         ;; Link contains a search-option ::<string>
         ;; and NOT for an Org file
 ;;	(and (org-element-property :search-option link)
@@ -107,7 +107,7 @@ it means from line 10 to the end of file."
          (type (org-element-property :type link))
          (entry-pos) (buf)
          (lines (plist-get plist :lines))
-	 (end-search-op (plist-get plist :end)))
+         (end-search-op (plist-get plist :end)))
     (if (not (string= type "id")) (setq buf (find-file-noselect path))
       (let ((filename-pos (org-id-find path)))
         (setq buf (find-file-noselect (car filename-pos)))
@@ -120,43 +120,43 @@ it means from line 10 to the end of file."
                             ((when search-option
                                (save-excursion
                                  (ignore-errors
-				   ;; FIXME `org-link-search' does not
-				   ;; return postion when eithher
-				   ;; ::/regex/ or ::number is used
+                                   ;; FIXME `org-link-search' does not
+                                   ;; return postion when eithher
+                                   ;; ::/regex/ or ::number is used
                                    (if (org-link-search search-option)
-				       (line-beginning-position))))))
+                                       (line-beginning-position))))))
                              ((point-min))))
-		(end-pos (when end-search-op
+                (end-pos (when end-search-op
                            (save-excursion
                              (ignore-errors
-			       ;; FIXME `org-link-search' does not return
-			       ;; postion when ::/regex/ and ;;number are
-			       ;; used
+                               ;; FIXME `org-link-search' does not return
+                               ;; postion when ::/regex/ and ;;number are
+                               ;; used
                                (when (org-link-search end-search-op)
                                  (line-beginning-position))))))
-		(range (when lines (split-string lines "-")))
-		(lbeg (if range (string-to-number (car range))
-			0))
-		(lend (if range (string-to-number (cadr range))
-			0))
-		;; This means beginning part of the range
-		;; can be mixed with search-option
-		;;; only positive number works
-		(beg  (progn (goto-char (or start-pos (point-min)))
-			     (when (> lbeg 0)(forward-line (1- lbeg)))
-			     (point)))
-		;;; This `cond' means :end prop has priority over the end
-		;;; position of the range. They don't mix.
-		(end (cond
-		      ((when (and end-pos (> end-pos beg))
-			 end-pos))
-		      ((if (zerop lend) (point-max)
-			 (goto-char start-pos)
-			 (forward-line (1- lend))
-			 (end-of-line);; include the line
-			 ;; Ensure to include the \n into the end point
-			 (1+ (point))))))
-		(content (buffer-substring-no-properties beg end)))
+                (range (when lines (split-string lines "-")))
+                (lbeg (if range (string-to-number (car range))
+                        0))
+                (lend (if range (string-to-number (cadr range))
+                        0))
+                ;; This means beginning part of the range
+                ;; can be mixed with search-option
+                ;;; only positive number works
+                (beg  (progn (goto-char (or start-pos (point-min)))
+                             (when (> lbeg 0)(forward-line (1- lbeg)))
+                             (point)))
+                ;;; This `cond' means :end prop has priority over the end
+                ;;; position of the range. They don't mix.
+                (end (cond
+                      ((when (and end-pos (> end-pos beg))
+                         end-pos))
+                      ((if (zerop lend) (point-max)
+                         (goto-char start-pos)
+                         (forward-line (1- lend))
+                         (end-of-line);; include the line
+                         ;; Ensure to include the \n into the end point
+                         (1+ (point))))))
+                (content (buffer-substring-no-properties beg end)))
            (list :src-content content
                  :src-buf (current-buffer)
                  :src-beg beg
