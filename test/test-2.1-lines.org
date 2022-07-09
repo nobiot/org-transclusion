@@ -1,5 +1,7 @@
 Including lines of source code
 
+#+transclude: [[file:./main.jl::id-1234]]  :src julia :end "id-1234 finish"
+
 [[file:../org-transclusion-source-line.el]]
 
 [[file:./paragraph.org::10]]
