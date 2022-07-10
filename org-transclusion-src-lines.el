@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 24 May 2021
-;; Last modified: 26 June 2022
+;; Last modified: 10 July 2022
 
 ;;; Commentary:
 ;;  This is an extension to `org-transclusion'.  When active, it adds features
@@ -110,7 +110,7 @@ it means from line 10 to the end of file."
          (end-search-op (plist-get plist :end)))
     (if (not (string= type "id")) (setq buf (find-file-noselect path))
       (let ((filename-pos (org-id-find path)))
-        (setq buf (find-file-noselect (car filename-pos)))
+        (setq buf (find-file-noselect nil 'RAWFILE (car filename-pos)))
         (setq entry-pos (cdr filename-pos))))
     (when buf
       (with-current-buffer buf
