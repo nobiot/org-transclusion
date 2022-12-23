@@ -32,6 +32,8 @@
 (declare-function org-transclusion-org-file-p
                   "org-transclusion")
 
+(declare-function org-transclusion-keyword-value-thing-at-point
+                  "org-transclusion")
 ;;;; Setting up the extension
 
 ;; Add a new transclusion type
@@ -46,6 +48,8 @@
           #'org-transclusion-keyword-value-rest)
 (add-hook 'org-transclusion-keyword-value-functions
           #'org-transclusion-keyword-value-end)
+(add-hook 'org-transclusion-keyword-value-functions
+          #'org-transclusion-keyword-value-thing-at-point)
 ;; plist back to string
 (add-hook 'org-transclusion-keyword-plist-to-string-functions
           #'org-transclusion-keyword-plist-to-string-src-lines)
@@ -62,6 +66,22 @@
 
 ;;; Functions
 
+(defun bounds-of-n-things-at-point (thing count)
+  "Return the bounds of COUNT THING (s) -at-point."
+  (save-excursion
+    (let ((bounds (bounds-of-thing-at-point thing)))
+      (when bounds
+        (push-mark (car bounds) t t)
+        (goto-char (cdr bounds))
+        (while (and (> count 1) bounds)
+          (setq bounds (bounds-of-thing-at-point thing))
+          (when bounds
+            (if (> count 1)
+                (forward-thing thing)
+              (goto-char (cdr bounds)))
+            (setq count (1- count))))
+        (car (region-bounds))))))
+
 (defun org-transclusion-add-src-lines (link plist)
   "Return a list for non-Org text and source file.
 Determine add function based on LINK and PLIST.
@@ -76,8 +96,8 @@ Return nil if PLIST does not contain \":src\" or \":lines\" properties."
         (plist-get plist :end)
         ;; Link contains a search-option ::<string>
         ;; and NOT for an Org file
-	(and (org-element-property :search-option link)
-            (not (org-transclusion-org-file-p (org-element-property :path link)))))
+        (and (org-element-property :search-option link)
+             (not (org-transclusion-org-file-p (org-element-property :path link)))))
     (append '(:tc-type "lines")
             (org-transclusion-content-range-of-lines link plist)))))
 
@@ -107,7 +127,8 @@ it means from line 10 to the end of file."
          (type (org-element-property :type link))
          (entry-pos) (buf)
          (lines (plist-get plist :lines))
-         (end-search-op (plist-get plist :end)))
+         (end-search-op (plist-get plist :end))
+         (thing-at-point (make-symbol (plist-get plist :thing-at-point))))
     (if (not (string= type "id")) (setq buf (find-file-noselect path))
       (let ((filename-pos (org-id-find path)))
         (setq buf (find-file-noselect (car filename-pos)))
@@ -125,15 +146,23 @@ it means from line 10 to the end of file."
                                    ;; ::/regex/ or ::number is used
                                    (if (org-link-search search-option)
                                        (line-beginning-position))))))
-                             ((point-min))))
+                            ((point-min))))
+                (bounds (when thing-at-point
+                          (let ((count (if end-search-op
+                                           (string-to-number end-search-op) 1)))
+                            (save-excursion
+                              (goto-char start-pos)
+                              (bounds-of-n-things-at-point thing-at-point count)))))
+                (start-pos (if thing-at-point (car bounds) start-pos))
                 (end-pos (when end-search-op
-                           (save-excursion
-                             (ignore-errors
-                               ;; FIXME `org-link-search' does not
-                               ;; return postion when either ::/regex/
-                               ;; or ::number is used
-                               (when (org-link-search end-search-op)
-                                 (line-beginning-position))))))
+                           (cond ((when thing-at-point (+ 1 (cdr bounds))))
+                                 ((save-excursion
+                                    (ignore-errors
+                                      ;; FIXME `org-link-search' does not
+                                      ;; return postion when either ::/regex/
+                                      ;; or ::number is used
+                                      (when (org-link-search end-search-op)
+                                        (line-beginning-position))))))))
                 (range (when lines (split-string lines "-")))
                 (lbeg (if range (string-to-number (car range))
                         0))
@@ -230,12 +259,14 @@ abnormal hook
   (let ((lines (plist-get plist :lines))
         (src (plist-get plist :src))
         (rest (plist-get plist :rest))
-        (end (plist-get plist :end)))
+        (end (plist-get plist :end))
+        (thing-at-point (plist-get plist :thing-at-point)))
     (concat
      (when lines (format ":lines %s" lines))
      (when src (format " :src %s" src))
      (when rest (format " :rest \"%s\"" rest))
-     (when end (format " :end \"%s\"" end)))))
+     (when end (format " :end \"%s\"" end))
+     (when thing-at-point (format " :thing-at-point %s" thing-at-point)))))
 
 (defun org-transclusion-src-lines-p (type)
   "Return non-nil when TYPE is \"src\" or \"lines\".

@@ -201,6 +201,7 @@ that consists of the following properties:
 
 (defvar org-transclusion-keyword-value-functions
   '(org-transclusion-keyword-value-link
+    org-transclusion-keyword-value-thing-at-point
     org-transclusion-keyword-value-level
     org-transclusion-keyword-value-disable-auto
     org-transclusion-keyword-value-only-contents
@@ -783,6 +784,15 @@ It is meant to be used by
     ;; link mandatory
     (user-error "Error.  Link in #+transclude is mandatory at %d" (point))
     nil))
+
+(defun org-transclusion-keyword-value-thing-at-point (string)
+  "It is a utility function used converting a keyword STRING to plist.
+It is meant to be used by `org-transclusion-get-string-to-plist'.
+It needs to be set in `org-transclusion-get-keyword-values-hook'.
+Double qutations are optional :thing-at-point \"sexp\".  The regex should
+match any valid elisp symbol (but please don't quote it)."
+  (when (string-match ":thing-at-point \\([[:alnum:][:punct:]]+\\)" string)
+    (list :thing-at-point (org-strip-quotes (match-string 1 string)))))
 
 (defun org-transclusion-keyword-value-disable-auto (string)
   "It is a utility function used converting a keyword STRING to plist.
