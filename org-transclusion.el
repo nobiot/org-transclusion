@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 03 February 2023
+;; Last modified: 04 February 2023
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -231,6 +231,7 @@ regexp from the string.")
     (define-key map (kbd "e") #'org-transclusion-live-sync-start)
     (define-key map (kbd "g") #'org-transclusion-refresh)
     (define-key map (kbd "d") #'org-transclusion-remove)
+    (define-key map (kbd "C-d") #'org-transclusion-detach)
     (define-key map (kbd "P") #'org-transclusion-promote-subtree)
     (define-key map (kbd "D") #'org-transclusion-demote-subtree)
     (define-key map (kbd "o") #'org-transclusion-open-source)
@@ -381,7 +382,7 @@ triggers transclusion by calling `org-transclusion-add' even when
             (org-transclusion-add)))))))
 
 ;;;###autoload
-(defun org-transclusion-add ()
+(defun org-transclusion-add (&optional copy)
   "Transclude text content for the #+transclude at point.
 When minor-mode `org-transclusion-mode' is inactive in the
 current buffer, this function toggles it on.
@@ -412,7 +413,7 @@ TODO: that for transclusions of Org elements/buffer, live-sync
 does not support all the elements.
 
 \\{org-transclusion-map}"
-  (interactive)
+  (interactive "P")
   (when (org-transclusion-check-add)
     ;; Turn on the minor mode to load extensions before staring to add.
     (unless org-transclusion-mode
@@ -444,7 +445,7 @@ does not support all the elements.
                     (end-of-line) (insert-char ?\n)
                     (org-transclusion-content-insert
                      keyword-plist tc-type src-content
-                     src-buf src-beg src-end)
+                     src-buf src-beg src-end copy)
                     (unless (eobp) (delete-char 1))
                     (setq end (point))
                     t)
@@ -532,6 +533,13 @@ When success, return the beginning point of the keyword re-inserted."
           beg))
     (message "Nothing done. No transclusion exists here.") nil))
 
+(defun org-transclusion-detach ()
+  "Make the transcluded region normal text contentent."
+  (interactive)
+  ;; Make sure the translusion is removed first so that undo can be used
+  ;; to go back to the #+transclusion before detach.
+  (org-transclusion-refresh 'detach))
+
 (defun org-transclusion-remove-all (&optional narrowed)
   "Remove all transcluded text regions in the current buffer.
 Return the list of points for the transclusion keywords
@@ -564,13 +572,13 @@ the rest of the buffer unchanged."
       (move-marker marker nil) ; point nowhere for GC
       list)))
 
-(defun org-transclusion-refresh ()
+(defun org-transclusion-refresh (&optional detach)
   "Refresh the transcluded text at point."
-  (interactive)
+  (interactive "P")
   (when (org-transclusion-within-transclusion-p)
     (let ((pos (point)))
       (org-transclusion-remove)
-      (org-transclusion-add)
+      (org-transclusion-add detach)
       (goto-char pos))
     t))
 
@@ -926,7 +934,7 @@ Return nil if not found."
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for inserting content
 
-(defun org-transclusion-content-insert (keyword-values type content sbuf sbeg send)
+(defun org-transclusion-content-insert (keyword-values type content sbuf sbeg send copy)
   "Insert CONTENT at point and put source overlay in SBUF.
 Return t when successful.
 
@@ -982,37 +990,38 @@ based on the following arguments:
       type content (plist-get keyword-values :current-indentation)))
     (setq end (point))
     (setq end-mkr (set-marker (make-marker) end))
-    (add-text-properties beg end
-                         `(local-map ,org-transclusion-map
-                                     read-only t
-                                     front-sticky t
-                                     ;; rear-nonticky seems better for
-                                     ;; src-lines to add "#+result" after C-c
-                                     ;; C-c
-                                     rear-nonsticky t
-                                     org-transclusion-type ,type
-                                     org-transclusion-beg-mkr
-                                     ,beg-mkr
-                                     org-transclusion-end-mkr
-                                     ,end-mkr
-                                     org-transclusion-pair
-                                     ,tc-pair
-                                     org-transclusion-orig-keyword
-                                     ,keyword-values
-                                     ;; TODO Fringe is not supported for terminal
-                                     line-prefix
-                                     ,(org-transclusion-propertize-transclusion)
-                                     wrap-prefix
-                                     ,(org-transclusion-propertize-transclusion)))
-    ;; Put to the source overlay
-    (overlay-put ov-src 'org-transclusion-by beg-mkr)
-    (overlay-put ov-src 'evaporate t)
-    (overlay-put ov-src 'line-prefix (org-transclusion-propertize-source))
-    (overlay-put ov-src 'wrap-prefix (org-transclusion-propertize-source))
-    (overlay-put ov-src 'priority -50)
-    ;; TODO this should not be necessary, but it is at the moment
-    ;; live-sync-enclosing-element fails without tc-pair on source overlay
-    (overlay-put ov-src 'org-transclusion-pair tc-pair)
+    (unless copy
+      (add-text-properties beg end
+                           `(local-map ,org-transclusion-map
+                                       read-only t
+                                       front-sticky t
+                                       ;; rear-nonticky seems better for
+                                       ;; src-lines to add "#+result" after C-c
+                                       ;; C-c
+                                       rear-nonsticky t
+                                       org-transclusion-type ,type
+                                       org-transclusion-beg-mkr
+                                       ,beg-mkr
+                                       org-transclusion-end-mkr
+                                       ,end-mkr
+                                       org-transclusion-pair
+                                       ,tc-pair
+                                       org-transclusion-orig-keyword
+                                       ,keyword-values
+                                       ;; TODO Fringe is not supported for terminal
+                                       line-prefix
+                                       ,(org-transclusion-propertize-transclusion)
+                                       wrap-prefix
+                                       ,(org-transclusion-propertize-transclusion)))
+      ;; Put to the source overlay
+      (overlay-put ov-src 'org-transclusion-by beg-mkr)
+      (overlay-put ov-src 'evaporate t)
+      (overlay-put ov-src 'line-prefix (org-transclusion-propertize-source))
+      (overlay-put ov-src 'wrap-prefix (org-transclusion-propertize-source))
+      (overlay-put ov-src 'priority -50)
+      ;; TODO this should not be necessary, but it is at the moment
+      ;; live-sync-enclosing-element fails without tc-pair on source overlay
+      (overlay-put ov-src 'org-transclusion-pair tc-pair))
     t))
 
 (defun org-transclusion-content-highest-org-headline ()
