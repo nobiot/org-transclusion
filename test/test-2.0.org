@@ -2,7 +2,6 @@
 ** make from link
 This is a link to a [[id:20210501T171427.051019][Bertrand Russell]] wikipedia excerpt
 #+transclude: [[id:20210501T171427.051019][Bertrand Russell]] 
-
 ** test empty file
 #+transclude: [[file:empty.txt::2][empty text file]]
 
@@ -165,4 +164,9 @@ t/nil will be dropped after remove-at-point
 2. Second item
 
 * Level two
+* Test headlines only
+
+#+transclude: [[id:2022-06-26T141859]] :exclude-elements "paragraph" 
+
+#+transclude: [[id:2022-06-26T141859]] 
 
