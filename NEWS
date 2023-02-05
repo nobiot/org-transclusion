@@ -1,3 +1,40 @@
+* 1.3.2
+
+  - Fix ::
+
+    - fix: Delete superfluous trailing space on remove
+
+      Before the fix, function 'org-transclusion-keyword-plist-to-string'
+      would add a superfluous trailing space when converting #+transclude
+      keyword's properties back to the string.  This does not cause any harm
+      in normal circumstances.
+
+      The issue would occur with a rare combination of the case where:
+
+      - You have a buffer with a large number of transclusions activated,
+        around 50 or more
+
+      - You set a 'whitespace-cleanup' in 'before-save' hook
+
+      - You have 'auto-save-visited-mode' or similar that automatically saves
+        a buffer
+
+      If you had combination, and then saved the buffer with the
+      transclusions, you might get an error mid-way of the save operation. You
+      would not lose any data in the buffer, but the buffer would not
+      re-activate all the transclusions that had been active before
+      buffer-save.
+
+      This was because of the superfluous trailing spaces and automatic
+      removal of them, which caused the mismatch of the point of each
+      transclusion that Org-transclusion remembered during the save operation.
+
+* Version 1.3.1
+
+  - Fix ::
+
+    -  Nix requires -pkg.el. It was in ‘.elpaignore’. No functional change.
+
 * Version 1.3.0
 
   - Feature ::
@@ -6,7 +43,7 @@
       use :expand-links per transclusion
 
   - Fix ::
-  
+
     - fix: #131. For non-Org files, now the transcluded text respects the indent
          level of the #+transclude keyword.  This does not affect Org files.
 
@@ -53,7 +90,7 @@
 
   - Other ::
     - README, Info doc user manual, online user manual
-  
+
 * Version 1.0.1
 
   - Add .elpaignore
@@ -77,8 +114,7 @@
 
     - =org-transclusion-before-kill= now checks if the buffer to be killed
       contains any transclusion AND it is visting a file before saving. This
-      fixes some issues related to temp buffers, etc.    
+      fixes some issues related to temp buffers, etc.
     - fix: search options for src-lines extension for =:lines=, =:src=, and =:end= properties
 
 † Changes before Version 1.0.0 are in CHANGELOG file.
-
