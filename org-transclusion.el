@@ -17,12 +17,12 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 04 February 2023
+;; Last modified: 05 February 2023
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
 
-;; Version: 1.3.0
+;; Version: 1.3.2
 ;; Package-Requires: ((emacs "27.1") (org "9.4"))
 
 ;; This file is not part of GNU Emacs.
@@ -872,9 +872,10 @@ keyword.  If not, returns nil."
     (setq custom-properties-string
           (dolist (fn org-transclusion-keyword-plist-to-string-functions
                       custom-properties-string)
-            (when-let ((str (funcall fn plist)))
-              (setq custom-properties-string
-                    (concat custom-properties-string " " str )))))
+            (let ((str (funcall fn plist)))
+              (when (and str (not (string-empty-p str)))
+                (setq custom-properties-string
+                      (concat custom-properties-string " " str ))))))
     (concat "#+transclude: "
             link
             (when level (format " :level %d" level))
