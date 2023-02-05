@@ -185,6 +185,8 @@ a text content.
 This is for live-sync.  Analogous to
 `org-edit-src-code'.")
 
+(defvar-local org-transclusion-payload-cache nil)
+
 (defvar org-transclusion-add-functions
   '(org-transclusion-add-org-id
     org-transclusion-add-org-file
@@ -381,6 +383,12 @@ triggers transclusion by calling `org-transclusion-add' even when
           (when (or (equal arg '(4)) org-transclusion-mode)
             (org-transclusion-add)))))))
 
+(defun org-transclusion-payload-cache-get-maybe (key)
+  (unless org-transclusion-payload-cache
+    (setq org-transclusion-payload-cache
+          (make-hash-table :test 'equal :size 30)))
+  (gethash key org-transclusion-payload-cache))
+
 ;;;###autoload
 (defun org-transclusion-add (&optional copy)
   "Transclude text content for the #+transclude at point.
@@ -422,8 +430,20 @@ does not support all the elements.
     (let* ((keyword-plist (org-transclusion-keyword-string-to-plist))
            (link (org-transclusion-wrap-path-to-link
                   (plist-get keyword-plist :link)))
-           (payload (run-hook-with-args-until-success
-                     'org-transclusion-add-functions link keyword-plist))
+           (keyword-normalized (org-transclusion-keyword-plist-to-string
+                                keyword-plist))
+           (payload (or (org-transclusion-payload-cache-get-maybe
+                         keyword-normalized)
+                        ;; If cache is not available get payload and add
+                        ;; to cache
+                        (let ((payload
+                               (run-hook-with-args-until-success
+                                'org-transclusion-add-functions
+                                link keyword-plist)))
+                          (puthash keyword-normalized
+                                   payload
+                                   org-transclusion-payload-cache)
+                          payload)))
            (tc-type (plist-get payload :tc-type))
            (src-buf (plist-get payload :src-buf))
            (src-beg (plist-get payload :src-beg))
