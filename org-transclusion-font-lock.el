@@ -1,6 +1,6 @@
 ;;; org-transclusion-font-lock.el --- font-lock for Org-transclusion -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021  Free Software Foundation, Inc.
+;; Copyright (C) 2021-2023  Free Software Foundation, Inc.
 
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 22 August 2021
-;; Last modified: 4 December 2021
+;; Last modified: 08 February 2023
 
 ;;; Commentary:
 ;;  This file is part of Org-transclusion
@@ -55,7 +55,7 @@ This function does the following:
 Argument LIMIT is to limit scope of `re-search-forward'; it's the
 same with `org-fontify-meta-lines-and-blocks'."
   (let ((case-fold-search t)
-        (regexp "\\(^[ 	]*#\\+TRANSCLUDE:\\)\\(.*]]\\)?\\(.*$\\)")
+        (regexp "\\(^[  ]*#\\+TRANSCLUDE:\\)\\(.*]]\\)?\\(.*$\\)")
         (beg)(end)(keyword-end)(prop-beg)(prop-end))
     (when (re-search-forward regexp limit t)
       (setq beg (match-beginning 0))

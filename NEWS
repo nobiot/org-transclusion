@@ -1,3 +1,32 @@
+* Current development version
+  - feat: add org-transclusion-detach
+
+    - New command 'org-transclusion-detach' can be used on the transclusion
+      at point. It turns it into a normal, edtitable text content.
+
+      You can undo this operation.
+
+      In addition, you can press 'C-d' directly on the transclusion at point
+      to detach it.  This is because the command is bound to 'C-d' by
+      default in 'org-transclusion-map'.
+
+    - 'org-transclusion-refresh' now accepts universal argument such as
+      'C-u M-x org-transclusion-refresh' and detaches the transclusion at
+      point.
+
+      You can undo this operation.
+
+    - 'org-transclusion-add' now accepts universal argument such as 'C-u M-x
+      org-transclusion-add' and copies the source content rather than
+      transclude it.
+
+      You can undo this operation.
+
+    - Limitation: Undo detach does not add the overlay back on the
+      source. This should not break any feature. You can safely refresh the
+      transclusion and recover the source overlay. You can also safely open
+      or moved to the source.
+
 * 1.3.2
 
   - fix: Delete superfluous trailing space on remove
