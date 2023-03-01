@@ -152,11 +152,11 @@ it means from line 10 to the end of file."
                                            (string-to-number end-search-op) 1)))
                             (save-excursion
                               (goto-char start-pos)
+                              (back-to-indentation)
                               (bounds-of-n-things-at-point thing-at-point count)))))
-                (start-pos (if thing-at-point (car bounds) start-pos))
-                (end-pos (when end-search-op
-                           (cond ((when thing-at-point (+ 1 (cdr bounds))))
-                                 ((save-excursion
+                (end-pos (cond ((when thing-at-point (cdr bounds)))
+                               ((when end-search-op
+                                  (save-excursion
                                     (ignore-errors
                                       ;; FIXME `org-link-search' does not
                                       ;; return postion when either ::/regex/
@@ -177,7 +177,8 @@ it means from line 10 to the end of file."
                 ;;; This `cond' means :end prop has priority over the end
                 ;;; position of the range. They don't mix.
                 (end (cond
-                      ((when (and end-pos (> end-pos beg))
+                      ((when thing-at-point end-pos)
+                       (when (and end-pos (> end-pos beg))
                          end-pos))
                       ((if (zerop lend) (point-max)
                          (goto-char start-pos)
@@ -204,12 +205,15 @@ for the range works."
     (when src-lang
       (setq payload
             (plist-put payload :src-content
-                       (concat
-                        (format "#+begin_src %s" src-lang)
-                        (when rest (format " %s" rest))
-                        "\n"
-                        (plist-get payload :src-content)
-                        "#+end_src\n"))))
+                       (let* ((src-content (plist-get payload :src-content))
+                              (needs-newline (not (string-suffix-p "\n" src-content))))
+                         (concat
+                          (format "#+begin_src %s" src-lang)
+                          (when rest (format " %s" rest))
+                          "\n"
+                          src-content
+                          (if needs-newline "\n" "")
+                          "#+end_src\n")))))
     ;; Return the payload either modified or unmodified
     payload))
 
