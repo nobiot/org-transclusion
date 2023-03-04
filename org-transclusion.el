@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 05 February 2023
+;; Last modified: 04 March 2023
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -355,13 +355,23 @@ If you pass a positive number 1-9 with `digit-argument', this
 function automatically puts the :level property to the resultant
 transclusion keyword.
 
-If you pass a `universal-argument', this function automatically
-triggers transclusion by calling `org-transclusion-add' even when
-`org-transclusion-mode' is inactive in the current buffer."
+If `org-transclusion-mode' is active in the current buffer, the
+newly created transclusion automatically gets added. If the mode
+is inactive, the keyword gets simply inserted to the current
+buffer.
+
+If you pass a `universal-argument', this function reverses this:
+if the mode is active, the keyword gets inserted; if the mode is
+inactive, the transclusion gets added."
+
   (interactive "P")
   (let* ((context (org-element-lineage
                    (org-element-context)'(link) t))
-         (type (org-element-property :type context)))
+         (type (org-element-property :type context))
+         (auto-transclude-p (if (not arg) org-transclusion-mode
+                              ;; if `universal-argument' is passed,
+                              ;; reverse nil/t when
+                              (if org-transclusion-mode nil t))))
     (when (or (string= type "file")
               (string= type "id"))
       (let* ((contents-beg (org-element-property :contents-begin context))
@@ -378,8 +388,7 @@ triggers transclusion by calling `org-transclusion-add' even when
                      (<= arg 9))
             (end-of-line)
             (insert (format " :level %d" arg)))
-          (when (or (equal arg '(4)) org-transclusion-mode)
-            (org-transclusion-add)))))))
+          (when auto-transclude-p (org-transclusion-add)))))))
 
 ;;;###autoload
 (defun org-transclusion-add (&optional copy)
