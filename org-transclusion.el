@@ -363,7 +363,7 @@ transclusion keyword."
   (let* ((context (org-element-lineage
                    (org-element-context)'(link) t))
          (type (org-element-property :type context))
-         (auto-transclude-p (if (not (equal arg '(4))) org-transclusion-mode
+         (auto-transclude-p (if (or (not arg) (numberp arg)) org-transclusion-mode
                               ;; if `universal-argument' is passed,
                               ;; reverse nil/t when
                               (if org-transclusion-mode nil t))))
