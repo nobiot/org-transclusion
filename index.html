@@ -67,7 +67,7 @@ Next: <a href="#Example-Use-Cases-_0026-Main-Features" accesskey="n" rel="next">
 
 <p>This manual is for Org-transclusion version 1.3.x.
 </p>
-<p>Last updated: 12 June 2022.
+<p>Last updated: 04 March 2023.
 </p>
 <p>Org-transclusion lets you insert a copy of text content via a file link or ID link within an Org file. It lets you have the same content present in different buffers at the same time without copy-and-pasting it. Edit the source of the content, and you can refresh the transcluded copies to the up-to-date state. Org-transclusion keeps your files clear of the transcluded copies, leaving only the links to the original content.<span id="whatis"></span></p>
 
@@ -263,6 +263,7 @@ D               org-transclusion-demote-subtree
 O               org-transclusion-move-to-source
 P               org-transclusion-promote-subtree
 d               org-transclusion-remove
+C-d             org-transclusion-detach
 e               org-transclusion-live-sync-start
 g               org-transclusion-refresh
 o               org-transclusion-open-source
@@ -289,10 +290,11 @@ Next: <a href="#Customizing" accesskey="n" rel="next">Customizing</a>, Previous:
 <li><a href="#Org-links-supported" accesskey="2">Org links supported</a></li>
 <li><a href="#Control-levels-of-headlines-per-transclusion" accesskey="3">Control levels of headlines per transclusion</a></li>
 <li><a href="#Filter-Org-elements-per-transclusion" accesskey="4">Filter Org elements per transclusion</a></li>
-<li><a href="#Live_002dsync-edit" accesskey="5">Live-sync edit</a></li>
-<li><a href="#Transclude-source-file-into-src_002dblock" accesskey="6">Transclude source file into src-block</a></li>
-<li><a href="#Transclude-range-of-lines-for-text-and-source-files" accesskey="7">Transclude range of lines for text and source files</a></li>
-<li><a href="#Extensions" accesskey="8">Extensions</a></li>
+<li><a href="#Detach-transclusion-and-copy-source-buffer" accesskey="5">Detach transclusion and copy source buffer</a></li>
+<li><a href="#Live_002dsync-edit" accesskey="6">Live-sync edit</a></li>
+<li><a href="#Transclude-source-file-into-src_002dblock" accesskey="7">Transclude source file into src-block</a></li>
+<li><a href="#Transclude-range-of-lines-for-text-and-source-files" accesskey="8">Transclude range of lines for text and source files</a></li>
+<li><a href="#Extensions" accesskey="9">Extensions</a></li>
 </ul>
 <hr>
 <div class="section" id="Org_002dtransclusion-mode-activate-and-deactivate">
@@ -410,7 +412,7 @@ Next: <a href="#Filter-Org-elements-per-transclusion" accesskey="n" rel="next">F
 </p>
 </dd>
 <dt><span><code>org-transclusion-demote-subtree</code></span></dt>
-<dd><p>Demote transcluded subtree at point. Mapped to &ldquo;D&rdquo; (capital &ldquo;D&rdquo;) by default in <code>org-transclusion-map</code>
+<dd><p>Demote transcluded subtree at point. Mapped to &ldquo;D&rdquo; (capital &ldquo;d&rdquo;) by default in <code>org-transclusion-map</code>
 </p></dd>
 </dl>
 
@@ -419,7 +421,7 @@ Next: <a href="#Filter-Org-elements-per-transclusion" accesskey="n" rel="next">F
 <div class="section" id="Filter-Org-elements-per-transclusion">
 <div class="header">
 <p>
-Next: <a href="#Live_002dsync-edit" accesskey="n" rel="next">Live-sync edit</a>, Previous: <a href="#Control-levels-of-headlines-per-transclusion" accesskey="p" rel="prev">Control levels of headlines per transclusion</a>, Up: <a href="#Usage" accesskey="u" rel="up">Usage</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+Next: <a href="#Detach-transclusion-and-copy-source-buffer" accesskey="n" rel="next">Detach transclusion and copy source buffer</a>, Previous: <a href="#Control-levels-of-headlines-per-transclusion" accesskey="p" rel="prev">Control levels of headlines per transclusion</a>, Up: <a href="#Usage" accesskey="u" rel="up">Usage</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
 </div>
 <span id="Filter-Org-elements-per-transclusion-1"></span><h3 class="section">4.4 Filter Org elements per transclusion</h3>
 
@@ -476,7 +478,7 @@ Next: <a href="#Live_002dsync-edit" accesskey="n" rel="next">Live-sync edit</a>,
 </p>
 <dl compact="compact">
 <dt><span>&lsquo;<samp>:expand-links</samp>&rsquo;</span></dt>
-<dd><p>This property lets you expand the file names in links to absolute file names. 
+<dd><p>This property lets you expand the file names in links to absolute file names.
 </p></dd>
 </dl>
 
@@ -526,12 +528,49 @@ Up: <a href="#Filter-Org-elements-per-transclusion" accesskey="u" rel="up">Filte
 <hr>
 </div>
 </div>
+<div class="section" id="Detach-transclusion-and-copy-source-buffer">
+<div class="header">
+<p>
+Next: <a href="#Live_002dsync-edit" accesskey="n" rel="next">Live-sync edit</a>, Previous: <a href="#Filter-Org-elements-per-transclusion" accesskey="p" rel="prev">Filter Org elements per transclusion</a>, Up: <a href="#Usage" accesskey="u" rel="up">Usage</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Detach-transclusion-and-copy-source-buffer-1"></span><h3 class="section">4.5 Detach transclusion and copy source buffer</h3>
+
+<span id="index-Detach-transclusion"></span>
+<span id="index-org_002dtransclusion_002ddetach"></span>
+
+<p>Detach is added to the current development version and is planned to be part of release version 1.4.0, and thus available only in GNU-devel ELPA. If you are using GNU ELPA, it will be available with the release of 1.4.0.
+</p>
+<ul>
+<li> New command <code>org-transclusion-detach</code> can be used on the transclusion
+at point. It turns it into a normal, edtitable text content.
+
+<p>You can undo this operation.
+</p>
+<p>In addition, you can press <code>C-d</code> directly on the transclusion at point
+to detach it.  This is because the command is bound to <code>C-d</code> by
+default in &rsquo;org-transclusion-map&rsquo;.
+</p>
+</li><li> <code>org-transclusion-refresh</code> now accepts universal argument such as
+<code>C-u M-x org-transclusion-refresh</code> and detaches the transclusion at
+point.
+
+<p>You can undo this operation.
+</p>
+</li><li> <code>org-transclusion-add</code> now accepts universal argument such as &rsquo;C-u M-x
+org-transclusion-add&rsquo; and copies the source content rather than
+transclude it.
+
+<p>You can undo this operation.
+</p></li></ul>
+
+<hr>
+</div>
 <div class="section" id="Live_002dsync-edit">
 <div class="header">
 <p>
-Next: <a href="#Transclude-source-file-into-src_002dblock" accesskey="n" rel="next">Transclude source file into src-block</a>, Previous: <a href="#Filter-Org-elements-per-transclusion" accesskey="p" rel="prev">Filter Org elements per transclusion</a>, Up: <a href="#Usage" accesskey="u" rel="up">Usage</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+Next: <a href="#Transclude-source-file-into-src_002dblock" accesskey="n" rel="next">Transclude source file into src-block</a>, Previous: <a href="#Detach-transclusion-and-copy-source-buffer" accesskey="p" rel="prev">Detach transclusion and copy source buffer</a>, Up: <a href="#Usage" accesskey="u" rel="up">Usage</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
 </div>
-<span id="Live_002dsync-edit-1"></span><h3 class="section">4.5 Live-sync edit</h3>
+<span id="Live_002dsync-edit-1"></span><h3 class="section">4.6 Live-sync edit</h3>
 
 <span id="index-Live_002dsync-edit"></span>
 <span id="index-org_002dtransclusion_002dlive_002dsync_002dstart"></span>
@@ -574,13 +613,13 @@ C-c C-c               org-transclusion-live-sync-exit
 <p>
 Next: <a href="#Transclude-range-of-lines-for-text-and-source-files" accesskey="n" rel="next">Transclude range of lines for text and source files</a>, Previous: <a href="#Live_002dsync-edit" accesskey="p" rel="prev">Live-sync edit</a>, Up: <a href="#Usage" accesskey="u" rel="up">Usage</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
 </div>
-<span id="Transclude-source-file-into-src_002dblock-1"></span><h3 class="section">4.6 Transclude source file into src-block</h3>
+<span id="Transclude-source-file-into-src_002dblock-1"></span><h3 class="section">4.7 Transclude source file into src-block</h3>
 
 <span id="index-Transclude-into-Org_0027s-src_002dblock"></span>
 <span id="index-Property-_002d-_003asrc"></span>
 <span id="index-Property-_002d-_003arest"></span>
 
-<p>This feature is provided as an <a href="#Extensions">extension</a> (default on). 
+<p>This feature is provided as an <a href="#Extensions">extension</a> (default on).
 </p>
 <p>You can transclude a source file into an Org&rsquo;s src block. Use the &lsquo;<samp>:src</samp>&rsquo; property and specify the language you would like to use like this:
 </p>
@@ -614,11 +653,11 @@ Next: <a href="#Transclude-range-of-lines-for-text-and-source-files" accesskey="
 <p>
 Next: <a href="#Extensions" accesskey="n" rel="next">Extensions</a>, Previous: <a href="#Transclude-source-file-into-src_002dblock" accesskey="p" rel="prev">Transclude source file into src-block</a>, Up: <a href="#Usage" accesskey="u" rel="up">Usage</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
 </div>
-<span id="Transclude-range-of-lines-for-text-and-source-files-1"></span><h3 class="section">4.7 Transclude range of lines for text and source files</h3>
+<span id="Transclude-range-of-lines-for-text-and-source-files-1"></span><h3 class="section">4.8 Transclude range of lines for text and source files</h3>
 
 <span id="index-Transclude-range-of-lines"></span>
 
-<p>This feature is provided as an <a href="#Extensions">extension</a> (default on). 
+<p>This feature is provided as an <a href="#Extensions">extension</a> (default on).
 </p>
 <p>When you transclude text files other than Org files, you can use following properties to specify a range of lines to transclude.
 </p>
@@ -633,7 +672,7 @@ Next: <a href="#Extensions" accesskey="n" rel="next">Extensions</a>, Previous: <
 <p>
 Next: <a href="#end-property-to-specify-a-search-term-to-dynamically-look-for-the-end-of-a-range" accesskey="n" rel="next">&lsquo;<samp>:end</samp>&rsquo; property to specify a search term to dynamically look for the end of a range</a>, Up: <a href="#Transclude-range-of-lines-for-text-and-source-files" accesskey="u" rel="up">Transclude range of lines for text and source files</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
 </div>
-<span id="g_t_003alines-property-to-specify-a-range-of-lines"></span><h4 class="subsection">4.7.1 &lsquo;<samp>:lines</samp>&rsquo; property to specify a range of lines</h4>
+<span id="g_t_003alines-property-to-specify-a-range-of-lines"></span><h4 class="subsection">4.8.1 &lsquo;<samp>:lines</samp>&rsquo; property to specify a range of lines</h4>
 
 <span id="index-Property-_002d-_003alines"></span>
 
@@ -675,7 +714,7 @@ Next: <a href="#end-property-to-specify-a-search-term-to-dynamically-look-for-th
 <p>
 Previous: <a href="#lines-property-to-specify-a-range-of-lines" accesskey="p" rel="prev">&lsquo;<samp>:lines</samp>&rsquo; property to specify a range of lines</a>, Up: <a href="#Transclude-range-of-lines-for-text-and-source-files" accesskey="u" rel="up">Transclude range of lines for text and source files</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
 </div>
-<span id="g_t_003aend-property-to-specify-a-search-term-to-dynamically-look-for-the-end-of-a-range"></span><h4 class="subsection">4.7.2 &lsquo;<samp>:end</samp>&rsquo; property to specify a search term to dynamically look for the end of a range</h4>
+<span id="g_t_003aend-property-to-specify-a-search-term-to-dynamically-look-for-the-end-of-a-range"></span><h4 class="subsection">4.8.2 &lsquo;<samp>:end</samp>&rsquo; property to specify a search term to dynamically look for the end of a range</h4>
 
 <span id="index-Property-_002d-_003aend"></span>
 
@@ -698,7 +737,7 @@ Previous: <a href="#lines-property-to-specify-a-range-of-lines" accesskey="p" re
 <p>
 Previous: <a href="#Transclude-range-of-lines-for-text-and-source-files" accesskey="p" rel="prev">Transclude range of lines for text and source files</a>, Up: <a href="#Usage" accesskey="u" rel="up">Usage</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
 </div>
-<span id="Extensions-1"></span><h3 class="section">4.8 Extensions</h3>
+<span id="Extensions-1"></span><h3 class="section">4.9 Extensions</h3>
 
 <span id="index-Extensions"></span>
 <span id="index-org_002dtransclusion_002dextensions"></span>
@@ -706,7 +745,7 @@ Previous: <a href="#Transclude-range-of-lines-for-text-and-source-files" accessk
 <span id="index-Extension-_002d-org_002dtransclusion_002dsrc_002dlines"></span>
 <span id="index-Extension-_002d-org_002dtransclusion_002dfont_002dlock"></span>
 
-<p>Org-transclusion provides a simple extension framework, where you can use <code>customize</code> to selectively add new features. 
+<p>Org-transclusion provides a simple extension framework, where you can use <code>customize</code> to selectively add new features.
 </p>
 <p>If you use <code>customize</code>, the features are loaded automatically. Note that it does not &ldquo;unload&rdquo; the feature until you relaunch Emacs.
 </p>
@@ -796,7 +835,7 @@ minor mode. The default is &ldquo; OT&rdquo;.
 transclusion content has been added. The hook runs after the content and the
 read-only text property have been added so it is not supposed to manipulate
 the content but to add further text properties.  For example, it is used by
-the &lsquo;org-transclusion-indent-mode&rsquo; extension to support &lsquo;org-indent-mode&rsquo;. 
+the &lsquo;org-transclusion-indent-mode&rsquo; extension to support &lsquo;org-indent-mode&rsquo;.
 The functions are called with arguments beg and end, pointing to the
 beginning and end of the transcluded content.
 </p></dd>
@@ -878,7 +917,7 @@ Next: <a href="#Faces-for-the-fringes-next-to-transcluded-region-and-source-regi
 </div>
 <span id="Face-for-the-_0023_002btransclude-keyword-1"></span><h4 class="subsection">5.3.1 Face for the &lsquo;<samp>#+transclude</samp>&rsquo; keyword</h4>
 
-<p>This feature is provided as an <a href="#Extensions">extension</a> (default on). 
+<p>This feature is provided as an <a href="#Extensions">extension</a> (default on).
 </p>
 <dl compact="compact">
 <dt><span><code>org-transclusion-keyword</code></span></dt>
@@ -949,6 +988,7 @@ D               org-transclusion-demote-subtree
 O               org-transclusion-move-to-source
 P               org-transclusion-promote-subtree
 d               org-transclusion-remove
+C-d             org-transclusion-detach
 e               org-transclusion-live-sync-start
 g               org-transclusion-refresh
 o               org-transclusion-open-source
@@ -1000,8 +1040,7 @@ For transclusions of Org elements or buffers, live-sync works only on the follow
 <p>Work is in progress to lift this limitation but I&rsquo;m still experimenting different ideas.
 </p>
 </li><li> <code>org-indent-mode</code> may not work well with Org-transclusion
-A new extension has been added to support <code>org-indent-mode</code>
-Refer to <a href="#Extensions">this section</a>.
+A new extension has been added to support <code>org-indent-mode</code> Refer to <a href="#Extensions">this section</a>.
 
 </li><li> Doom&rsquo;s customization may interfere with Org-transclusion
 Refer to issue <a href="https://github.com/nobiot/org-transclusion/issues/52">#52</a>. The symptom is that in Doom you get an error message that includes this: &ldquo;progn: ‘recenter’ing a window that does not display current-buffer.&rdquo; Adding this in your configuration has been reported to fix the issue:
@@ -1012,6 +1051,9 @@ Refer to issue <a href="https://github.com/nobiot/org-transclusion/issues/52">#5
 </p>
 </li><li> Org refile does not work &ldquo;properly&rdquo; on the transcluded headlines
 Refer to issue <a href="https://github.com/nobiot/org-transclusion/issues/20">#20</a>. I don&rsquo;t intend to support this &ndash; refile the source, not the transcluded copy.
+
+</li><li> Undo detach does not add the overlay back on the source
+This should not break any feature. You can safely refresh the transclusion and recover the source overlay. You can also safely open or moved to the source while the source overlay is not present.
 </li></ul>
 
 <hr>
@@ -1100,6 +1142,8 @@ Next: <a href="#Index-_002d-Commands" accesskey="n" rel="next">Index - Commands<
 
 <table><tr><th valign="top">Jump to: &nbsp; </th><td><a class="summary-letter" href="#Index-_002d-Features_cp_letter-A"><b>A</b></a>
  &nbsp; 
+<a class="summary-letter" href="#Index-_002d-Features_cp_letter-D"><b>D</b></a>
+ &nbsp; 
 <a class="summary-letter" href="#Index-_002d-Features_cp_letter-E"><b>E</b></a>
  &nbsp; 
 <a class="summary-letter" href="#Index-_002d-Features_cp_letter-F"><b>F</b></a>
@@ -1120,6 +1164,9 @@ Next: <a href="#Index-_002d-Commands" accesskey="n" rel="next">Index - Commands<
 <tr><td colspan="4"> <hr></td></tr>
 <tr><th id="Index-_002d-Features_cp_letter-A">A</th><td></td><td></td></tr>
 <tr><td></td><td valign="top"><a href="#index-Activate-_002f-Deactivate">Activate / Deactivate</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Org_002dtransclusion-mode-activate-and-deactivate">Org-transclusion mode activate and deactivate</a></td></tr>
+<tr><td colspan="4"> <hr></td></tr>
+<tr><th id="Index-_002d-Features_cp_letter-D">D</th><td></td><td></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Detach-transclusion">Detach transclusion</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Detach-transclusion-and-copy-source-buffer">Detach transclusion and copy source buffer</a></td></tr>
 <tr><td colspan="4"> <hr></td></tr>
 <tr><th id="Index-_002d-Features_cp_letter-E">E</th><td></td><td></td></tr>
 <tr><td></td><td valign="top"><a href="#index-Extension-_002d-org_002dtransclusion_002dfont_002dlock">Extension - org-transclusion-font-lock</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Extensions">Extensions</a></td></tr>
@@ -1156,6 +1203,8 @@ Next: <a href="#Index-_002d-Commands" accesskey="n" rel="next">Index - Commands<
 <tr><td colspan="4"> <hr></td></tr>
 </table>
 <table><tr><th valign="top">Jump to: &nbsp; </th><td><a class="summary-letter" href="#Index-_002d-Features_cp_letter-A"><b>A</b></a>
+ &nbsp; 
+<a class="summary-letter" href="#Index-_002d-Features_cp_letter-D"><b>D</b></a>
  &nbsp; 
 <a class="summary-letter" href="#Index-_002d-Features_cp_letter-E"><b>E</b></a>
  &nbsp; 
@@ -1194,6 +1243,7 @@ Next: <a href="#Index-_002d-User-Options" accesskey="n" rel="next">Index - User 
 <tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dadd_002dall"><code>org-transclusion-add-all</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Getting-Started">Getting Started</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002ddeactivate"><code>org-transclusion-deactivate</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Org_002dtransclusion-mode-activate-and-deactivate">Org-transclusion mode activate and deactivate</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002ddemote_002dsubtree"><code>org-transclusion-demote-subtree</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Control-levels-of-headlines-per-transclusion">Control levels of headlines per transclusion</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002ddetach"><code>org-transclusion-detach</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Detach-transclusion-and-copy-source-buffer">Detach transclusion and copy source buffer</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dlive_002dsync_002dexit"><code>org-transclusion-live-sync-exit</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Live_002dsync-edit">Live-sync edit</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dlive_002dsync_002dpaste"><code>org-transclusion-live-sync-paste</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Live_002dsync-edit">Live-sync edit</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-org_002dtransclusion_002dlive_002dsync_002dstart"><code>org-transclusion-live-sync-start</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Live_002dsync-edit">Live-sync edit</a></td></tr>
