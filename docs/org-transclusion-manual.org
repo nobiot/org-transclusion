@@ -1,7 +1,7 @@
 #+title: Org-transclusion User Manual
 #+author: Noboru Ota <me@nobiot.com>
 #+macro: version 1.3.x
-#+macro: modified 12 June 2022
+#+macro: modified 04 March 2023
 
 #+language: en
 #+export_file_name: org-transclusion.texi
@@ -21,7 +21,7 @@ This manual is for Org-transclusion version {{{version}}}.
 
 Last updated: {{{modified}}}.
 
-#+transclude: [[../README.org::whatis]] 
+#+transclude: [[../README.org::whatis]]
 
 #+texinfo: @insertcopying
 
@@ -46,11 +46,11 @@ modify this GNU manual.”
 
 * Example Use Cases & Main Features
 
-#+transclude: [[../README.org::#use-cases]] :only-contents 
+#+transclude: [[../README.org::#use-cases]] :only-contents
 
 * Installation
 
-#+transclude: [[../README.org::*Installation]] :only-contents 
+#+transclude: [[../README.org::*Installation]] :only-contents
 
 * Getting Started
 :PROPERTIES:
@@ -112,6 +112,7 @@ D               org-transclusion-demote-subtree
 O               org-transclusion-move-to-source
 P               org-transclusion-promote-subtree
 d               org-transclusion-remove
+C-d             org-transclusion-detach
 e               org-transclusion-live-sync-start
 g               org-transclusion-refresh
 o               org-transclusion-open-source
@@ -222,7 +223,7 @@ Other ways to control include the following.
   Promote transcluded subtree at point. Mapped to "P" (capital "p") by default in ~org-transclusion-map~
 
 - ~org-transclusion-demote-subtree~ ::
-  Demote transcluded subtree at point. Mapped to "D" (capital "D") by default in ~org-transclusion-map~
+  Demote transcluded subtree at point. Mapped to "D" (capital "d") by default in ~org-transclusion-map~
 
 ** Filter Org elements per transclusion
 :PROPERTIES:
@@ -239,13 +240,13 @@ You can control what elements to include in many different ways with using vario
 The following two customizable variables are applicable to all transclusions globally. You can think of them as the global default.
 
 - =org-transclusion-exclude-elements= ::
-  
+
   This customizable variable globally defines the exclusion filter for elements. It is a list of symbols; the acceptable values can be seen by inspecting =org-element-all-elements=. The default is to exclude =property-drawer=.
 
   Refer also to the [[#customizable-filter-to-exclude-certain-org-elements][sub-section on this user option]].
 
 - =org-transclusion-include-first-section= ::
-  
+
   This customizing variable globally defines whether or not to include the first section of the source Org file. The first section is the part before the first headline -- that's the section that typically contains =#+title=, =#+author=, and so on. Many people also write notes in it without adding any headlines. Note that this user option's default is now =t= (changed from =nil= as users seem to spend time to "correct" this issue). Turn it to =t= if you wish to transclude the content from the first section of your Org files. If you wish to exclude the "meta data" defined by =#+title= and others, exclude =keyword= as described in this section -- these meta data are defined with using the =keyword= element of Org Mode.
 
   Refer also to the [[#include-the-section-before-the-first-headline-org-file-only][sub-section on this user option]].
@@ -273,7 +274,7 @@ In addition to the global user options above, you can fine-tune the default excl
 You can combine =:only-contents= and =:exclude-elements= to control how you transclude a subtree. With these properties, you can really have great control over what to include and exclude. It might be a little overwhelming at a time but the changes via properties are easy to change -- simply press =d= to remove the transclusion, change the properties, and transclude again to see a new result.
 
 - =:expand-links= ::
-  This property lets you expand the file names in links to absolute file names. 
+  This property lets you expand the file names in links to absolute file names.
 
 You can use the property in the following way.
 
@@ -309,6 +310,37 @@ If you are transcluding only one subtree, this should be intuitive. If you trans
   * Headline 3
     Content of Headline
 #+end_example
+
+** Detach transclusion and copy source buffer
+:PROPERTIES:
+:CUSTOM_ID: detach
+:END:
+
+#+cindex: Detach transclusion
+#+findex: org-transclusion-detach
+
+Detach is added to the current development version and is planned to be part of release version 1.4.0, and thus available only in GNU-devel ELPA. If you are using GNU ELPA, it will be available with the release of 1.4.0.
+
+    - New command ~org-transclusion-detach~ can be used on the transclusion
+      at point. It turns it into a normal, edtitable text content.
+
+      You can undo this operation.
+
+      In addition, you can press ~C-d~ directly on the transclusion at point
+      to detach it.  This is because the command is bound to ~C-d~ by
+      default in 'org-transclusion-map'.
+
+    - ~org-transclusion-refresh~ now accepts universal argument such as
+      ~C-u M-x org-transclusion-refresh~ and detaches the transclusion at
+      point.
+
+      You can undo this operation.
+
+    - ~org-transclusion-add~ now accepts universal argument such as 'C-u M-x
+      org-transclusion-add' and copies the source content rather than
+      transclude it.
+
+      You can undo this operation.
 
 ** Live-sync edit
 :PROPERTIES:
@@ -360,7 +392,7 @@ In the live-sync edit region, the normal ~yank~ command (~C-y~) is replaced with
 #+cindex: Property - :src
 #+cindex: Property - :rest
 
-This feature is provided as an [[#extensions][extension]] (default on). 
+This feature is provided as an [[#extensions][extension]] (default on).
 
 You can transclude a source file into an Org's src block. Use the =:src= property and specify the language you would like to use like this:
 
@@ -394,7 +426,7 @@ The source block will have the additional properties:
 
 #+cindex: Transclude range of lines
 
-This feature is provided as an [[#extensions][extension]] (default on). 
+This feature is provided as an [[#extensions][extension]] (default on).
 
 When you transclude text files other than Org files, you can use following properties to specify a range of lines to transclude.
 
@@ -459,7 +491,7 @@ Example 3:
 #+cindex: Extension - org-transclusion-src-lines
 #+cindex: Extension - org-transclusion-font-lock
 
-Org-transclusion provides a simple extension framework, where you can use ~customize~ to selectively add new features. 
+Org-transclusion provides a simple extension framework, where you can use ~customize~ to selectively add new features.
 
 If you use ~customize~, the features are loaded automatically. Note that it does not "unload" the feature until you relaunch Emacs.
 
@@ -474,7 +506,7 @@ If you do not use ~customize~ (e.g. Doom), you may need to explicitly require an
  #+END_SRC
 
 Currently, the following extensions are available.
- 
+
 - (off by default) ~org-transclusion-indent-mode~ ::
 
   Support org-indent-mode. Known limitation: when transcluded, the source will temporarily lose the indentation. When the transclusion is removed, the source will regain the indentation.
@@ -523,7 +555,7 @@ You can customize settings in the customization group `org-transclusion'.
   transclusion content has been added. The hook runs after the content and the
   read-only text property have been added so it is not supposed to manipulate
   the content but to add further text properties.  For example, it is used by
-  the `org-transclusion-indent-mode' extension to support `org-indent-mode'. 
+  the `org-transclusion-indent-mode' extension to support `org-indent-mode'.
   The functions are called with arguments beg and end, pointing to the
   beginning and end of the transcluded content.
 
@@ -574,7 +606,7 @@ You can include the first section (section before the first headline) of an Org 
 
 *** Face for the =#+transclude= keyword
 
-This feature is provided as an [[#extensions][extension]] (default on). 
+This feature is provided as an [[#extensions][extension]] (default on).
 
 - ~org-transclusion-keyword~ ::
 
@@ -611,10 +643,10 @@ Other faces:
 #+vindex: org-transclusion-live-sync-map
 
 - ~org-transclusion-map~
-#+transclude: [[./org-transclusion-manual.org::org-transclusion-map]] 
+#+transclude: [[./org-transclusion-manual.org::org-transclusion-map]]
 
 - ~org-transclusion-live-sync-map~
-#+transclude: [[./org-transclusion-manual.org::org-transclusion-live-sync-map]] 
+#+transclude: [[./org-transclusion-manual.org::org-transclusion-live-sync-map]]
 
 * Known Limitations
 
@@ -634,8 +666,7 @@ Note this section is still incomplete, not exhaustive for "known" limitations.
   Work is in progress to lift this limitation but I'm still experimenting different ideas.
 
 - ~org-indent-mode~ may not work well with Org-transclusion ::
-  A new extension has been added to support ~org-indent-mode~
-  Refer to [[#extensions][this section]].
+  A new extension has been added to support ~org-indent-mode~ Refer to [[#extensions][this section]].
 
 - Doom's customization may interfere with Org-transclusion ::
   Refer to issue [[https://github.com/nobiot/org-transclusion/issues/52][#52]]. The symptom is that in Doom you get an error message that includes this: "progn: ‘recenter’ing a window that does not display current-buffer." Adding this in your configuration has been reported to fix the issue:
@@ -646,6 +677,9 @@ Note this section is still incomplete, not exhaustive for "known" limitations.
 
 - Org refile does not work "properly" on the transcluded headlines ::
   Refer to issue [[https://github.com/nobiot/org-transclusion/issues/20][#20]]. I don't intend to support this -- refile the source, not the transcluded copy.
+
+- Undo detach does not add the overlay back on the source ::
+  This should not break any feature. You can safely refresh the transclusion and recover the source overlay. You can also safely open or moved to the source while the source overlay is not present.
 
 * Credits
 ** Original idea by John Kitchin
@@ -679,7 +713,7 @@ It seems like this could work well for headlines, and named tables, src blocks, 
 
 * Contributing
 
-#+transclude: [[../README.org::*Contributing]] :only-contents 
+#+transclude: [[../README.org::*Contributing]] :only-contents
 
 * Index - Features
 :PROPERTIES:

@@ -11,14 +11,14 @@ Including lines of source code
 #+transclude: [[id:2022-06-26T141859]]
 #+transclude: [[file:./paragraph.org]] :lines 1-5
 #+transclude: [[id:2022-06-26T141859]] :lines 0-5
-#+transclude: [[id:2022-06-26T141859]] :end "Heading 1"
+#+transclude: [[id:2022-06-26T141859]]  :end "Heading 1"
 
 #+name: source code 1
 #+transclude: [[file:../org-transclusion-src-lines.el]] :lines 1-10 :src elisp
 #+transclude: [[file:test-src.el]] :lines 1-
 #+transclude: [[file:test-src.el]] :lines 2-4 :src elisp
 
-#+transclude: [[file:python-2.py]]  :src python
+#+transclude: [[file:python-2.py]]  :src python :rest "-n"
 
 #+transclude: [[file:python-1.py]]  :src python :rest ":results file"
 
