@@ -347,22 +347,17 @@ automatically transcludes the text content; when it is inactive,
 it simply adds the \"#+transclude\" keyword before the link and
 inserts the whole line.
 
+If you pass a `universal-argument', this function reverses this:
+if the mode is active, the keyword gets inserted; if the mode is
+inactive, the transclusion gets added.
+
 You can pass a prefix argument (ARG) with using
 `digit-argument' (e.g. C-1 or C-2; or \\[universal-argument] 3,
 so on) or `universal-argument' (\\[universal-argument]).
 
 If you pass a positive number 1-9 with `digit-argument', this
 function automatically puts the :level property to the resultant
-transclusion keyword.
-
-If `org-transclusion-mode' is active in the current buffer, the
-newly created transclusion automatically gets added. If the mode
-is inactive, the keyword gets simply inserted to the current
-buffer.
-
-If you pass a `universal-argument', this function reverses this:
-if the mode is active, the keyword gets inserted; if the mode is
-inactive, the transclusion gets added."
+transclusion keyword."
 
   (interactive "P")
   (let* ((context (org-element-lineage
