@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 04 March 2023
+;; Last modified: 05 March 2023
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -1192,12 +1192,12 @@ to LINK if the link is already absolute.
 The current buffer is assumed to be the source buffer for the
 transclusion."
   (when (string-equal "file" (org-element-property :type link))
-    (let ((raw-link (org-element-property :raw-link link)))
-      (unless (file-name-absolute-p raw-link)
+    (let ((path (org-element-property :path link)))
+      (unless (file-name-absolute-p path)
         (org-element-put-property
          link :path
          (expand-file-name
-          raw-link
+          path
           (file-name-directory (buffer-file-name (current-buffer)))))))))
 
 (defun org-transclusion-content-filter-org-exclude-elements (data)
