@@ -1,6 +1,6 @@
 ;;; org-transclusion.el --- Transclude text content via links -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021-2022  Free Software Foundation, Inc.
+;; Copyright (C) 2021-2023  Free Software Foundation, Inc.
 
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the
@@ -17,12 +17,12 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 9 November 2022
+;; Last modified: 05 March 2023
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
 
-;; Version: 1.3.1
+;; Version: 1.3.2
 ;; Package-Requires: ((emacs "27.1") (org "9.4"))
 
 ;; This file is not part of GNU Emacs.
@@ -232,6 +232,7 @@ regexp from the string.")
     (define-key map (kbd "e") #'org-transclusion-live-sync-start)
     (define-key map (kbd "g") #'org-transclusion-refresh)
     (define-key map (kbd "d") #'org-transclusion-remove)
+    (define-key map (kbd "C-d") #'org-transclusion-detach)
     (define-key map (kbd "P") #'org-transclusion-promote-subtree)
     (define-key map (kbd "D") #'org-transclusion-demote-subtree)
     (define-key map (kbd "o") #'org-transclusion-open-source)
@@ -347,21 +348,26 @@ automatically transcludes the text content; when it is inactive,
 it simply adds the \"#+transclude\" keyword before the link and
 inserts the whole line.
 
+If you pass a `universal-argument', this function reverses this:
+if the mode is active, the keyword gets inserted; if the mode is
+inactive, the transclusion gets added.
+
 You can pass a prefix argument (ARG) with using
 `digit-argument' (e.g. C-1 or C-2; or \\[universal-argument] 3,
 so on) or `universal-argument' (\\[universal-argument]).
 
 If you pass a positive number 1-9 with `digit-argument', this
 function automatically puts the :level property to the resultant
-transclusion keyword.
+transclusion keyword."
 
-If you pass a `universal-argument', this function automatically
-triggers transclusion by calling `org-transclusion-add' even when
-`org-transclusion-mode' is inactive in the current buffer."
   (interactive "P")
   (let* ((context (org-element-lineage
                    (org-element-context)'(link) t))
-         (type (org-element-property :type context)))
+         (type (org-element-property :type context))
+         (auto-transclude-p (if (or (not arg) (numberp arg)) org-transclusion-mode
+                              ;; if `universal-argument' is passed,
+                              ;; reverse nil/t when
+                              (if org-transclusion-mode nil t))))
     (when (or (string= type "file")
               (string= type "id"))
       (let* ((contents-beg (org-element-property :contents-begin context))
@@ -378,11 +384,10 @@ triggers transclusion by calling `org-transclusion-add' even when
                      (<= arg 9))
             (end-of-line)
             (insert (format " :level %d" arg)))
-          (when (or (equal arg '(4)) org-transclusion-mode)
-            (org-transclusion-add)))))))
+          (when auto-transclude-p (org-transclusion-add)))))))
 
 ;;;###autoload
-(defun org-transclusion-add ()
+(defun org-transclusion-add (&optional copy)
   "Transclude text content for the #+transclude at point.
 When minor-mode `org-transclusion-mode' is inactive in the
 current buffer, this function toggles it on.
@@ -413,7 +418,7 @@ TODO: that for transclusions of Org elements/buffer, live-sync
 does not support all the elements.
 
 \\{org-transclusion-map}"
-  (interactive)
+  (interactive "P")
   (when (org-transclusion-check-add)
     ;; Turn on the minor mode to load extensions before staring to add.
     (unless org-transclusion-mode
@@ -445,7 +450,7 @@ does not support all the elements.
                     (end-of-line) (insert-char ?\n)
                     (org-transclusion-content-insert
                      keyword-plist tc-type src-content
-                     src-buf src-beg src-end)
+                     src-buf src-beg src-end copy)
                     (unless (eobp) (delete-char 1))
                     (setq end (point))
                     t)
@@ -533,6 +538,13 @@ When success, return the beginning point of the keyword re-inserted."
           beg))
     (message "Nothing done. No transclusion exists here.") nil))
 
+(defun org-transclusion-detach ()
+  "Make the transcluded region normal text contentent."
+  (interactive)
+  ;; Make sure the translusion is removed first so that undo can be used
+  ;; to go back to the #+transclusion before detach.
+  (org-transclusion-refresh 'detach))
+
 (defun org-transclusion-remove-all (&optional narrowed)
   "Remove all transcluded text regions in the current buffer.
 Return the list of points for the transclusion keywords
@@ -565,13 +577,13 @@ the rest of the buffer unchanged."
       (move-marker marker nil) ; point nowhere for GC
       list)))
 
-(defun org-transclusion-refresh ()
+(defun org-transclusion-refresh (&optional detach)
   "Refresh the transcluded text at point."
-  (interactive)
+  (interactive "P")
   (when (org-transclusion-within-transclusion-p)
     (let ((pos (point)))
       (org-transclusion-remove)
-      (org-transclusion-add)
+      (org-transclusion-add detach)
       (goto-char pos))
     t))
 
@@ -874,9 +886,10 @@ keyword.  If not, returns nil."
     (setq custom-properties-string
           (dolist (fn org-transclusion-keyword-plist-to-string-functions
                       custom-properties-string)
-            (when-let ((str (funcall fn plist)))
-              (setq custom-properties-string
-                    (concat custom-properties-string " " str )))))
+            (let ((str (funcall fn plist)))
+              (when (and str (not (string-empty-p str)))
+                (setq custom-properties-string
+                      (concat custom-properties-string " " str ))))))
     (concat "#+transclude: "
             link
             (when level (format " :level %d" level))
@@ -936,7 +949,7 @@ Return nil if not found."
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for inserting content
 
-(defun org-transclusion-content-insert (keyword-values type content sbuf sbeg send)
+(defun org-transclusion-content-insert (keyword-values type content sbuf sbeg send copy)
   "Insert CONTENT at point and put source overlay in SBUF.
 Return t when successful.
 
@@ -992,37 +1005,38 @@ based on the following arguments:
       type content (plist-get keyword-values :current-indentation)))
     (setq end (point))
     (setq end-mkr (set-marker (make-marker) end))
-    (add-text-properties beg end
-                         `(local-map ,org-transclusion-map
-                                     read-only t
-                                     front-sticky t
-                                     ;; rear-nonticky seems better for
-                                     ;; src-lines to add "#+result" after C-c
-                                     ;; C-c
-                                     rear-nonsticky t
-                                     org-transclusion-type ,type
-                                     org-transclusion-beg-mkr
-                                     ,beg-mkr
-                                     org-transclusion-end-mkr
-                                     ,end-mkr
-                                     org-transclusion-pair
-                                     ,tc-pair
-                                     org-transclusion-orig-keyword
-                                     ,keyword-values
-                                     ;; TODO Fringe is not supported for terminal
-                                     line-prefix
-                                     ,(org-transclusion-propertize-transclusion)
-                                     wrap-prefix
-                                     ,(org-transclusion-propertize-transclusion)))
-    ;; Put to the source overlay
-    (overlay-put ov-src 'org-transclusion-by beg-mkr)
-    (overlay-put ov-src 'evaporate t)
-    (overlay-put ov-src 'line-prefix (org-transclusion-propertize-source))
-    (overlay-put ov-src 'wrap-prefix (org-transclusion-propertize-source))
-    (overlay-put ov-src 'priority -50)
-    ;; TODO this should not be necessary, but it is at the moment
-    ;; live-sync-enclosing-element fails without tc-pair on source overlay
-    (overlay-put ov-src 'org-transclusion-pair tc-pair)
+    (unless copy
+      (add-text-properties beg end
+                           `(local-map ,org-transclusion-map
+                                       read-only t
+                                       front-sticky t
+                                       ;; rear-nonticky seems better for
+                                       ;; src-lines to add "#+result" after C-c
+                                       ;; C-c
+                                       rear-nonsticky t
+                                       org-transclusion-type ,type
+                                       org-transclusion-beg-mkr
+                                       ,beg-mkr
+                                       org-transclusion-end-mkr
+                                       ,end-mkr
+                                       org-transclusion-pair
+                                       ,tc-pair
+                                       org-transclusion-orig-keyword
+                                       ,keyword-values
+                                       ;; TODO Fringe is not supported for terminal
+                                       line-prefix
+                                       ,(org-transclusion-propertize-transclusion)
+                                       wrap-prefix
+                                       ,(org-transclusion-propertize-transclusion)))
+      ;; Put to the source overlay
+      (overlay-put ov-src 'org-transclusion-by beg-mkr)
+      (overlay-put ov-src 'evaporate t)
+      (overlay-put ov-src 'line-prefix (org-transclusion-propertize-source))
+      (overlay-put ov-src 'wrap-prefix (org-transclusion-propertize-source))
+      (overlay-put ov-src 'priority -50)
+      ;; TODO this should not be necessary, but it is at the moment
+      ;; live-sync-enclosing-element fails without tc-pair on source overlay
+      (overlay-put ov-src 'org-transclusion-pair tc-pair))
     t))
 
 (defun org-transclusion-content-highest-org-headline ()
@@ -1188,12 +1202,12 @@ to LINK if the link is already absolute.
 The current buffer is assumed to be the source buffer for the
 transclusion."
   (when (string-equal "file" (org-element-property :type link))
-    (let ((raw-link (org-element-property :raw-link link)))
-      (unless (file-name-absolute-p raw-link)
+    (let ((path (org-element-property :path link)))
+      (unless (file-name-absolute-p path)
         (org-element-put-property
          link :path
          (expand-file-name
-          raw-link
+          path
           (file-name-directory (buffer-file-name (current-buffer)))))))))
 
 (defun org-transclusion-content-filter-org-exclude-elements (data)

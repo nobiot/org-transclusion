@@ -1,6 +1,6 @@
 ;;; org-transclusion-src-lines.el --- Extension -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021  Free Software Foundation, Inc.
+;; Copyright (C) 2021-2023  Free Software Foundation, Inc.
 
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 24 May 2021
-;; Last modified: 05 September 2022
+;; Last modified: 08 February 2023
 
 ;;; Commentary:
 ;;  This is an extension to `org-transclusion'.  When active, it adds features
@@ -97,7 +97,7 @@ Return nil if PLIST does not contain \":src\" or \":lines\" properties."
         ;; Link contains a search-option ::<string>
         ;; and NOT for an Org file
         (and (org-element-property :search-option link)
-             (not (org-transclusion-org-file-p (org-element-property :path link)))))
+            (not (org-transclusion-org-file-p (org-element-property :path link)))))
     (append '(:tc-type "lines")
             (org-transclusion-content-range-of-lines link plist)))))
 
