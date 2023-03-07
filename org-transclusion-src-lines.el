@@ -66,7 +66,7 @@
 
 ;;; Functions
 
-(defun bounds-of-n-things-at-point (thing count)
+(defun org-transclusion--bounds-of-n-things-at-point (thing count)
   "Return the bounds of COUNT THING (s) -at-point."
   (save-excursion
     (let ((bounds (bounds-of-thing-at-point thing)))
@@ -153,7 +153,7 @@ it means from line 10 to the end of file."
                             (save-excursion
                               (goto-char start-pos)
                               (back-to-indentation)
-                              (bounds-of-n-things-at-point thing-at-point count)))))
+                              (org-transclusion--bounds-of-n-things-at-point thing-at-point count)))))
                 (end-pos (cond ((when thing-at-point (cdr bounds)))
                                ((when end-search-op
                                   (save-excursion
