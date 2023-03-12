@@ -1647,7 +1647,7 @@ This function is for non-Org text files."
                            (save-mark-and-excursion
                              (org-babel-mark-block)
                              (text-clone-make-overlay (region-beginning)
-                                                      (1- (region-end)))))
+                                                      (region-end))))
                        (text-clone-make-overlay tc-ov-end-mkr
                                                 tc-ov-end-mkr))))
     (cons src-ov tc-ov)))
