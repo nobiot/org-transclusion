@@ -1661,8 +1661,12 @@ This function is for non-Org text files."
                          (with-current-buffer (marker-buffer tc-ov-beg-mkr)
                            (save-mark-and-excursion
                              (org-babel-mark-block)
-                             (text-clone-make-overlay (region-beginning)
-                                                      (region-end))))
+                             (let* ((src-ov-length (- (overlay-end src-ov) (overlay-start src-ov)))
+                                    (region-length (- (region-end) (region-beginning)))
+                                    (overlay-has-extra-newline (= 1 (- region-length src-ov-length)))
+                                    (newline-offset (if overlay-has-extra-newline 1 0)))
+                               (text-clone-make-overlay (region-beginning)
+                                                        (- (region-end) newline-offset)))))
                        (text-clone-make-overlay tc-ov-end-mkr
                                                 tc-ov-end-mkr))))
     (cons src-ov tc-ov)))
