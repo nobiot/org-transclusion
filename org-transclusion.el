@@ -1667,7 +1667,7 @@ This function is for non-Org text files."
                                     (newline-offset (if overlay-has-extra-newline 1 0)))
                                (text-clone-make-overlay (region-beginning)
                                                         (- (region-end) newline-offset)))))
-                       (text-clone-make-overlay tc-ov-end-mkr
+                       (text-clone-make-overlay tc-ov-beg-mkr
                                                 tc-ov-end-mkr))))
     (cons src-ov tc-ov)))
 
