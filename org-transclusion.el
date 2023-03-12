@@ -680,7 +680,10 @@ a couple of org-transclusion specific keybindings; namely:
             (user-error
              (concat
               "No live-sync can be started.  "
-              "Lengths of transclusion and source are not identical"))
+              "Lengths of transclusion and source are not identical"
+              (format " - tc: [%s] src: [%s]"
+                      (- (overlay-end tc-ov) (overlay-start tc-ov))
+                      (- (overlay-end src-ov) (overlay-start src-ov)))))
             nil) ; return nil
         (org-transclusion-live-sync-modify-overlays
          (text-clone-set-overlays src-ov tc-ov))
@@ -1637,9 +1640,16 @@ This function is for non-Org text files."
                        (overlay-start tc-pair)
                        (overlay-end tc-pair)
                        (overlay-buffer tc-pair)))
-              (tc-ov (text-clone-make-overlay
-                      (get-text-property (point) 'org-transclusion-beg-mkr)
-                      (get-text-property (point) 'org-transclusion-end-mkr))))
+              (tc-ov-beg-mkr (get-text-property (point) 'org-transclusion-beg-mkr))
+              (tc-ov-end-mkr (get-text-property (point) 'org-transclusion-end-mkr))
+              (tc-ov (if (org-in-src-block-p)
+                         (with-current-buffer (marker-buffer tc-ov-beg-mkr)
+                           (save-mark-and-excursion
+                             (org-babel-mark-block)
+                             (text-clone-make-overlay (region-beginning)
+                                                      (1- (region-end)))))
+                       (text-clone-make-overlay tc-ov-end-mkr
+                                                tc-ov-end-mkr))))
     (cons src-ov tc-ov)))
 
 ;;-----------------------------------------------------------------------------
@@ -1658,16 +1668,16 @@ ensure the settings revert to the user's setting prior to
   ;; Ensure this happens only once until deactivation
   (unless (memq 'org-transclusion-type yank-excluded-properties)
     (let ((excluded-props))
-    ;; Return t if 'wrap-prefix is already in `yank-excluded-properties'
-    ;; if not push to elm the list
-    ;; wrap-prefix, etc.
-    (dolist (sym org-transclusion-yank-excluded-properties)
-      (if (memq sym yank-excluded-properties)
-        (push sym org-transclusion-yank-remember-user-excluded-props)
-        ;; Avoid duplicate
-        (push sym excluded-props)))
-    (setq yank-excluded-properties
-          (append yank-excluded-properties excluded-props)))))
+      ;; Return t if 'wrap-prefix is already in `yank-excluded-properties'
+      ;; if not push to elm the list
+      ;; wrap-prefix, etc.
+      (dolist (sym org-transclusion-yank-excluded-properties)
+        (if (memq sym yank-excluded-properties)
+            (push sym org-transclusion-yank-remember-user-excluded-props)
+          ;; Avoid duplicate
+          (push sym excluded-props)))
+      (setq yank-excluded-properties
+            (append yank-excluded-properties excluded-props)))))
 
 (defun org-transclusion-yank-excluded-properties-remove ()
   "Remove transclusion-specific text props from `yank-excluded-properties'.

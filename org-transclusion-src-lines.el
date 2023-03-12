@@ -259,8 +259,8 @@ This function uses TYPE to identify relevant files; it's meant
 for non-Org text files including program source files."
   (when (org-transclusion-src-lines-p type)
     ;; Let's not allow live-sync when source is transcluded into a source block.
-    (when (string= "src" type)
-      (user-error "No live sync for src-code block"))
+    ;; (when (string= "src" type)
+    ;;   (user-error "No live sync for src-code block"))
     (org-transclusion-live-sync-buffers-others-default nil)))
 
 (provide 'org-transclusion-src-lines)
