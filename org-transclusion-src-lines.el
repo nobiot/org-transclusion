@@ -296,9 +296,7 @@ for non-Org text files including program source files."
         (src-ov . tc-ov) (org-transclusion-live-sync-buffers-others-default nil)
       (save-mark-and-excursion
           (org-babel-mark-block)
-          (let* ((tc-ov-beg-mkr (get-text-property (point) 'org-transclusion-beg-mkr))
-                 (tc-ov-end-mkr (get-text-property (point) 'org-transclusion-end-mkr))
-                 (src-ov-length (- (overlay-end src-ov) (overlay-start src-ov)))
+          (let* ((src-ov-length (- (overlay-end src-ov) (overlay-start src-ov)))
                  (region-length (- (region-end) (region-beginning)))
                  (overlay-has-extra-newline (= 1 (- region-length src-ov-length)))
                  (newline-offset (if overlay-has-extra-newline 1 0)))
