@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 05 March 2023
+;; Last modified: 28 March 2023
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -1640,20 +1640,9 @@ This function is for non-Org text files."
                        (overlay-start tc-pair)
                        (overlay-end tc-pair)
                        (overlay-buffer tc-pair)))
-              (tc-ov-beg-mkr (get-text-property (point) 'org-transclusion-beg-mkr))
-              (tc-ov-end-mkr (get-text-property (point) 'org-transclusion-end-mkr))
-              (tc-ov (if (org-in-src-block-p)
-                         (with-current-buffer (marker-buffer tc-ov-beg-mkr)
-                           (save-mark-and-excursion
-                             (org-babel-mark-block)
-                             (let* ((src-ov-length (- (overlay-end src-ov) (overlay-start src-ov)))
-                                    (region-length (- (region-end) (region-beginning)))
-                                    (overlay-has-extra-newline (= 1 (- region-length src-ov-length)))
-                                    (newline-offset (if overlay-has-extra-newline 1 0)))
-                               (text-clone-make-overlay (region-beginning)
-                                                        (- (region-end) newline-offset)))))
-                       (text-clone-make-overlay tc-ov-beg-mkr
-                                                tc-ov-end-mkr))))
+              (tc-ov (text-clone-make-overlay
+                      (get-text-property (point) 'org-transclusion-beg-mkr)
+                      (get-text-property (point) 'org-transclusion-end-mkr))))
     (cons src-ov tc-ov)))
 
 ;;-----------------------------------------------------------------------------
@@ -1672,16 +1661,16 @@ ensure the settings revert to the user's setting prior to
   ;; Ensure this happens only once until deactivation
   (unless (memq 'org-transclusion-type yank-excluded-properties)
     (let ((excluded-props))
-      ;; Return t if 'wrap-prefix is already in `yank-excluded-properties'
-      ;; if not push to elm the list
-      ;; wrap-prefix, etc.
-      (dolist (sym org-transclusion-yank-excluded-properties)
-        (if (memq sym yank-excluded-properties)
-            (push sym org-transclusion-yank-remember-user-excluded-props)
-          ;; Avoid duplicate
-          (push sym excluded-props)))
-      (setq yank-excluded-properties
-            (append yank-excluded-properties excluded-props)))))
+    ;; Return t if 'wrap-prefix is already in `yank-excluded-properties'
+    ;; if not push to elm the list
+    ;; wrap-prefix, etc.
+    (dolist (sym org-transclusion-yank-excluded-properties)
+      (if (memq sym yank-excluded-properties)
+        (push sym org-transclusion-yank-remember-user-excluded-props)
+        ;; Avoid duplicate
+        (push sym excluded-props)))
+    (setq yank-excluded-properties
+          (append yank-excluded-properties excluded-props)))))
 
 (defun org-transclusion-yank-excluded-properties-remove ()
   "Remove transclusion-specific text props from `yank-excluded-properties'.

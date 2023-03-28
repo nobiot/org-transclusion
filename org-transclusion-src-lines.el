@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 24 May 2021
-;; Last modified: 08 February 2023
+;; Last modified: 28 March 2023
 
 ;;; Commentary:
 ;;  This is an extension to `org-transclusion'.  When active, it adds features
@@ -258,10 +258,20 @@ The cons cell to be returned is in this format:
 This function uses TYPE to identify relevant files; it's meant
 for non-Org text files including program source files."
   (when (org-transclusion-src-lines-p type)
-    ;; Let's not allow live-sync when source is transcluded into a source block.
-    ;; (when (string= "src" type)
-    ;;   (user-error "No live sync for src-code block"))
-    (org-transclusion-live-sync-buffers-others-default nil)))
+    (cl-destructuring-bind
+        (src-ov . tc-ov) (org-transclusion-live-sync-buffers-others-default nil)
+      (save-mark-and-excursion
+          (org-babel-mark-block)
+          (let* ((tc-ov-beg-mkr (get-text-property (point) 'org-transclusion-beg-mkr))
+                 (tc-ov-end-mkr (get-text-property (point) 'org-transclusion-end-mkr))
+                 (src-ov-length (- (overlay-end src-ov) (overlay-start src-ov)))
+                 (region-length (- (region-end) (region-beginning)))
+                 (overlay-has-extra-newline (= 1 (- region-length src-ov-length)))
+                 (newline-offset (if overlay-has-extra-newline 1 0)))
+            (move-overlay tc-ov
+                          (region-beginning)
+                          (- (region-end) newline-offset))))
+        (cons src-ov tc-ov))))
 
 (provide 'org-transclusion-src-lines)
 ;;; org-transclusion-src-lines.el ends here
