@@ -420,7 +420,8 @@ The source block will have the additional properties:
 #+end_example
 
 With since 2023-03-28 update, you can also use live-sync the source code
-transcluded into src-block.
+transcluded into src-block. It is planned to be added to the next stable
+release.
 
 ** Transclude range of lines for text and source files
 :PROPERTIES:
