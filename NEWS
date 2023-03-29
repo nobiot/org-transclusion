@@ -1,4 +1,14 @@
 * Current development version
+  - feat: add org-block-live-sync
+
+  - Command 'org-transclusion-live-sync-start' now can start live sync
+    when
+
+    1) transcluding a source code text file
+    2) into org src block with the ':src' property in #+transclude
+
+    Example: #+transclude: [[python-1.py]]  :src python
+
   - feat: add org-transclusion-detach
 
     - New command 'org-transclusion-detach' can be used on the transclusion
