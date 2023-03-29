@@ -1,7 +1,7 @@
 #+title: Org-transclusion User Manual
 #+author: Noboru Ota <me@nobiot.com>
 #+macro: version 1.3.x
-#+macro: modified 04 March 2023
+#+macro: modified 29 March 2023
 
 #+language: en
 #+export_file_name: org-transclusion.texi
@@ -418,6 +418,9 @@ The source block will have the additional properties:
 #+begin_example
 ,#+begin_src python :session :results value
 #+end_example
+
+With since 2023-03-28 update, you can also use live-sync the source code
+transcluded into src-block.
 
 ** Transclude range of lines for text and source files
 :PROPERTIES:

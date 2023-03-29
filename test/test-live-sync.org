@@ -1,0 +1,12 @@
+#+transclude: [[file:test-src.org::code]]
+
+#+transclude: [[python-1.py]]  :src python
+
+#+RESULTS:
+[[./pyfig2.png]]
+
+
+#+transclude: [[python-2.py]]  :src python
+
+#+RESULTS:
+: 6

@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 05 March 2023
+;; Last modified: 28 March 2023
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -680,7 +680,10 @@ a couple of org-transclusion specific keybindings; namely:
             (user-error
              (concat
               "No live-sync can be started.  "
-              "Lengths of transclusion and source are not identical"))
+              "Lengths of transclusion and source are not identical"
+              (format " - tc: [%s] src: [%s]"
+                      (- (overlay-end tc-ov) (overlay-start tc-ov))
+                      (- (overlay-end src-ov) (overlay-start src-ov)))))
             nil) ; return nil
         (org-transclusion-live-sync-modify-overlays
          (text-clone-set-overlays src-ov tc-ov))
