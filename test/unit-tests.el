@@ -2,6 +2,7 @@
 ;; org-transclusion unit tests
 ;; To run the tests you can use: M-x ert RET t RET
 ;; You can read more about ert here: https://www.gnu.org/software/emacs/manual/html_node/ert/index.html
+(require 'org-transclusion)
 
 (ert-deftest org-transclusion-org-file-p-test ()
   "Tests org-transclusion-org-file-p against string inputs."
