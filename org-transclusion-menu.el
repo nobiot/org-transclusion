@@ -61,11 +61,17 @@ values will not be accepted."
   (interactive)
   (org-transclusion-menu-keyword-update-at-point
    (lambda (plist)
-     (let ((level (read-number
-                   "Set org-transclusion content headline level \(1-9\): ")))
-       (if (or (< level 0) (> level 9))
-           (user-error (format "Level %d must be 1-9 \(inclusive\)" level))
-         (plist-put plist :level level))))))
+     (let ((level))
+       (while
+           (progn
+             (setq level
+                   (read-number
+                    "Set org-transclusion content headline level \(1-9\): "))
+             (unless (and (> level 0) (< level 10))
+               (message (format "Level %d must be 1-9 \(inclusive\)" level))
+               (sit-for 1)
+               t)))
+       (plist-put plist :level level)))))
 
 (defun org-transclusion-menu-only-contents ()
   (interactive)
