@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 22 April 2023
+;; Last modified: 23 April 2023
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -40,10 +40,13 @@
 (require 'org-element)
 (require 'org-id)
 (require 'text-clone)
+;; TODO font-lock should be part of the extension
 (require 'org-transclusion-font-lock)
 (require 'text-property-search)
 (require 'seq)
 
+;; TODO Consider menut to be part of the extension
+;;(require 'org-transclusion-menu)
 ;;;; Customization
 
 (defgroup org-transclusion nil
@@ -783,7 +786,7 @@ off (removed)."
         ;; #+transclude: keyword exists.
         ;; Further checking the value
         (when-let ((str (org-element-property :value (org-element-at-point))))
-          (dolist (fn org-transclusion-keyword-value-functions) plist
+          (dolist (fn org-transclusion-keyword-value-functions)
                   (setq plist (append plist (funcall fn str)))))
         plist))))
 
