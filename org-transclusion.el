@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 28 March 2023
+;; Last modified: 23 April 2023
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -40,10 +40,13 @@
 (require 'org-element)
 (require 'org-id)
 (require 'text-clone)
+;; TODO font-lock should be part of the extension
 (require 'org-transclusion-font-lock)
 (require 'text-property-search)
 (require 'seq)
 
+;; TODO Consider menut to be part of the extension
+;;(require 'org-transclusion-menu)
 ;;;; Customization
 
 (defgroup org-transclusion nil
@@ -779,12 +782,11 @@ off (removed)."
   (save-excursion
     (beginning-of-line)
     (let ((plist))
-      (when (string= "TRANSCLUDE"
-                     (org-element-property :key (org-element-at-point)))
+      (when (org-transclusion-transclusion-keyword-p)
         ;; #+transclude: keyword exists.
         ;; Further checking the value
         (when-let ((str (org-element-property :value (org-element-at-point))))
-          (dolist (fn org-transclusion-keyword-value-functions) plist
+          (dolist (fn org-transclusion-keyword-value-functions)
                   (setq plist (append plist (funcall fn str)))))
         plist))))
 
@@ -1335,10 +1337,8 @@ Case 1. Element at point is NOT #+transclude:
 Case 2. #+transclude inside another transclusion"
   (cond
    ;; Case 1. Element at point is NOT #+transclude:
-   ((let ((elm (org-element-at-point)))
-      (not (and (string= "keyword" (org-element-type elm))
-                (string= "TRANSCLUDE" (org-element-property :key elm)))))
-    (user-error (format "Not at a transclude keyword or transclusion in a block at point %d, line %d"
+   ((not (org-transclusion-transclusion-keyword-p))
+    (user-error (format "Not at a transclude keyword at point %d, line %d"
                         (point) (org-current-line))))
    ;; Case 2. #+transclude inside another transclusion
    ((org-transclusion-within-transclusion-p)
@@ -1346,6 +1346,12 @@ Case 2. #+transclude inside another transclusion"
                         (point) (org-current-line))))
    (t
     t)))
+
+(defun org-transclusion-transclusion-keyword-p ()
+  "Return t if the current point is on the \"#+transclusion\" line."
+  (when (string= "TRANSCLUDE"
+                 (org-element-property :key (org-element-at-point)))
+    t))
 
 (defun org-transclusion-within-transclusion-p ()
   "Return t if the current point is within a tranclusion region."
