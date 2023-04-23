@@ -47,10 +47,10 @@ context-menu for `org-transcluson'."
 
 ;;   n/a org-transclusion-keyword-value-link
 ;;   x    org-transclusion-keyword-value-level
-;;        org-transclusion-keyword-value-disable-auto
+;;   x    org-transclusion-keyword-value-disable-auto
 ;;   x    org-transclusion-keyword-value-only-contents
-;;        org-transclusion-keyword-value-exclude-elements
-;;        org-transclusion-keyword-value-expand-links
+;;   x    org-transclusion-keyword-value-exclude-elements
+;;   x    org-transclusion-keyword-value-expand-links
 ;;   n/a  org-transclusion-keyword-current-indentation)
 ;;   TODO org-transclusion-src commands
 
@@ -73,11 +73,34 @@ values will not be accepted."
                t)))
        (plist-put plist :level level)))))
 
+(defun org-transclusion-menu-disable-auto ()
+  (interactive)
+  (org-transclusion-menu-keyword-update-at-point
+   (lambda (plist)
+     (plist-put plist :disable-auto t))))
+
 (defun org-transclusion-menu-only-contents ()
   (interactive)
   (org-transclusion-menu-keyword-update-at-point
    (lambda (plist)
      (plist-put plist :only-contents t))))
+
+(defun org-transclusion-menu-exclude-elements ()
+  (interactive)
+  (org-transclusion-menu-keyword-update-at-point
+   (lambda (plist)
+     (let ((elements
+            (completing-read-multiple "Org-elements to exclude: "
+                                      org-element-all-elements)))
+       (if (not elements) (user-error "No element selected")
+         (plist-put plist :exclude-elements
+                    (mapconcat 'identity elements "\s")))))))
+
+(defun org-transclusion-menu-expand-links ()
+  (interactive)
+  (org-transclusion-menu-keyword-update-at-point
+   (lambda (plist)
+     (plist-put plist :expand-links t))))
 
 ;;;; Functions
 
