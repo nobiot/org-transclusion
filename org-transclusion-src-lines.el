@@ -206,14 +206,12 @@ for the range works."
     (when src-lang
       (setq payload
             (plist-put payload :src-content
-                       (let* ((src-content (plist-get payload :src-content))
-                              (needs-newline (not (string-suffix-p "\n" src-content))))
+                       (let ((src-content (plist-get payload :src-content)))
                          (concat
                           (format "#+begin_src %s" src-lang)
                           (when rest (format " %s" rest))
                           "\n"
                           src-content
-                          (if needs-newline "\n" "")
                           "#+end_src\n")))))
     ;; Return the payload either modified or unmodified
     payload))
