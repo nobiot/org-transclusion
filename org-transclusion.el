@@ -950,8 +950,9 @@ Return nil if not found."
 ;;;; Functions for inserting content
 
 (defun org-transclusion--ensure-newline (str)
-  (when (not (string-suffix-p "\n" str))
-    (concat str "\n")))
+  (if (not (string-suffix-p "\n" str))
+      (concat str "\n")
+    str))
 
 (defun org-transclusion-content-insert (keyword-values type content sbuf sbeg send copy)
   "Insert CONTENT at point and put source overlay in SBUF.
