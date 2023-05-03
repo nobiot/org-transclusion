@@ -949,6 +949,10 @@ Return nil if not found."
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for inserting content
 
+(defun org-transclusion--ensure-newline (str)
+  (when (not (string-suffix-p "\n" str))
+    (concat str "\n")))
+
 (defun org-transclusion-content-insert (keyword-values type content sbuf sbeg send copy)
   "Insert CONTENT at point and put source overlay in SBUF.
 Return t when successful.
@@ -978,20 +982,17 @@ based on the following arguments:
          (end-mkr)
          (ov-src (text-clone-make-overlay sbeg send sbuf)) ;; source-buffer overlay
          (tc-pair ov-src)
-         (ensure-newline (lambda (str)
-                           (when (not (string-suffix-p "\n" str)))
-                           (concat str "\n")))
-         (content (funcall ensure-newline content)))
+         (content (org-transclusion--ensure-newline content)))
     (when (org-transclusion-type-is-org type)
-        (with-temp-buffer
-          ;; This temp buffer needs to be in Org Mode
-          ;; Otherwise, subtree won't be recognized as a Org subtree
-          (delay-mode-hooks (org-mode))
-          (insert content)
-          (org-with-point-at 1
-            (let* ((to-level (plist-get keyword-values :level))
-                   (level (org-transclusion-content-highest-org-headline))
-                   (diff (when (and level to-level) (- level to-level))))
+      (with-temp-buffer
+        ;; This temp buffer needs to be in Org Mode
+        ;; Otherwise, subtree won't be recognized as a Org subtree
+        (delay-mode-hooks (org-mode))
+        (insert content)
+        (org-with-point-at 1
+          (let* ((to-level (plist-get keyword-values :level))
+                 (level (org-transclusion-content-highest-org-headline))
+                 (diff (when (and level to-level) (- level to-level))))
             (when diff
               (cond ((< diff 0) ; demote
                      (org-map-entries (lambda ()
@@ -1001,7 +1002,7 @@ based on the following arguments:
                      (org-map-entries (lambda ()
                                         (dotimes (_ diff)
                                           (org-do-promote))))))))
-            (setq content (buffer-string)))))
+          (setq content (buffer-string)))))
     (insert
      (run-hook-with-args-until-success
       'org-transclusion-content-format-functions
