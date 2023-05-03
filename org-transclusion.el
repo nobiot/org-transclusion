@@ -978,7 +978,10 @@ based on the following arguments:
          (end-mkr)
          (ov-src (text-clone-make-overlay sbeg send sbuf)) ;; source-buffer overlay
          (tc-pair ov-src)
-         (content content))
+         (ensure-newline (lambda (str)
+                           (when (not (string-suffix-p "\n" str)))
+                           (concat str "\n")))
+         (content (funcall ensure-newline content)))
     (when (org-transclusion-type-is-org type)
         (with-temp-buffer
           ;; This temp buffer needs to be in Org Mode
