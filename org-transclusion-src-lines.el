@@ -211,7 +211,7 @@ for the range works."
                           (format "#+begin_src %s" src-lang)
                           (when rest (format " %s" rest))
                           "\n"
-                          src-content
+                          (org-transclusion--ensure-newline src-content)
                           "#+end_src\n")))))
     ;; Return the payload either modified or unmodified
     payload))
