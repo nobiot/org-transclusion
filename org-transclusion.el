@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 28 March 2023
+;; Last modified: 06 May 2023
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -201,7 +201,6 @@ that consists of the following properties:
 
 (defvar org-transclusion-keyword-value-functions
   '(org-transclusion-keyword-value-link
-    org-transclusion-keyword-value-thing-at-point
     org-transclusion-keyword-value-level
     org-transclusion-keyword-value-disable-auto
     org-transclusion-keyword-value-only-contents
@@ -800,15 +799,6 @@ It is meant to be used by
     (user-error "Error.  Link in #+transclude is mandatory at %d" (point))
     nil))
 
-(defun org-transclusion-keyword-value-thing-at-point (string)
-  "It is a utility function used converting a keyword STRING to plist.
-It is meant to be used by `org-transclusion-get-string-to-plist'.
-It needs to be set in `org-transclusion-get-keyword-values-hook'.
-Double qutations are optional :thing-at-point \"sexp\".  The regex should
-match any valid elisp symbol (but please don't quote it)."
-  (when (string-match ":thing-at-point \\([[:alnum:][:punct:]]+\\)" string)
-    (list :thing-at-point (org-strip-quotes (match-string 1 string)))))
-
 (defun org-transclusion-keyword-value-disable-auto (string)
   "It is a utility function used converting a keyword STRING to plist.
 It is meant to be used by `org-transclusion-get-string-to-plist'.
@@ -952,11 +942,6 @@ Return nil if not found."
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for inserting content
 
-(defun org-transclusion--ensure-newline (str)
-  (if (not (string-suffix-p "\n" str))
-      (concat str "\n")
-    str))
-
 (defun org-transclusion-content-insert (keyword-values type content sbuf sbeg send copy)
   "Insert CONTENT at point and put source overlay in SBUF.
 Return t when successful.
@@ -986,7 +971,7 @@ based on the following arguments:
          (end-mkr)
          (ov-src (text-clone-make-overlay sbeg send sbuf)) ;; source-buffer overlay
          (tc-pair ov-src)
-         (content (org-transclusion--ensure-newline content)))
+         (content content))
     (when (org-transclusion-type-is-org type)
       (with-temp-buffer
         ;; This temp buffer needs to be in Org Mode
@@ -994,19 +979,19 @@ based on the following arguments:
         (delay-mode-hooks (org-mode))
         (insert content)
         (org-with-point-at 1
-          (let* ((to-level (plist-get keyword-values :level))
-                 (level (org-transclusion-content-highest-org-headline))
-                 (diff (when (and level to-level) (- level to-level))))
-            (when diff
-              (cond ((< diff 0) ; demote
-                     (org-map-entries (lambda ()
-                                        (dotimes (_ (abs diff))
-                                          (org-do-demote)))))
-                    ((> diff 0) ; promote
-                     (org-map-entries (lambda ()
-                                        (dotimes (_ diff)
-                                          (org-do-promote))))))))
-          (setq content (buffer-string)))))
+                           (let* ((to-level (plist-get keyword-values :level))
+                                  (level (org-transclusion-content-highest-org-headline))
+                                  (diff (when (and level to-level) (- level to-level))))
+                             (when diff
+                               (cond ((< diff 0) ; demote
+                                      (org-map-entries (lambda ()
+                                                         (dotimes (_ (abs diff))
+                                                           (org-do-demote)))))
+                                     ((> diff 0) ; promote
+                                      (org-map-entries (lambda ()
+                                                         (dotimes (_ diff)
+                                                           (org-do-promote))))))))
+                           (setq content (buffer-string)))))
     (insert
      (run-hook-with-args-until-success
       'org-transclusion-content-format-functions
