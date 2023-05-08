@@ -233,7 +233,7 @@ Other ways to control include the following.
 #+cindex: Filters
 #+vindex: org-transclusion-exclude-elements
 #+vindex: org-transclusion-include-first-section
-#+cindex: Property - :only-content
+#+cindex: Property - :only-contents
 
 You can control what elements to include in many different ways with using various filters. The filters work in two layers: customizable variable and properties per transclude keyword.
 
@@ -721,7 +721,7 @@ Note this section is still incomplete, not exhaustive for "known" limitations.
 - Undo detach does not add the overlay back on the source ::
   This should not break any feature. You can safely refresh the transclusion and recover the source overlay. You can also safely open or moved to the source while the source overlay is not present.
 
-- For =:thing-at-point, you cannot use :thing-at-point to specify the precise beginning of the thing within a line -- it is always the beginning of the line.
+- For =:thing-at-point=, you cannot use it to specify the precise beginning of the thing within a line -- it is always the beginning of the line.
 
 * Credits
 ** Original idea by John Kitchin
