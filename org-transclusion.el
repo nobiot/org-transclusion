@@ -40,7 +40,6 @@
 (require 'org-element)
 (require 'org-id)
 (require 'text-clone)
-(require 'org-transclusion-font-lock)
 (require 'text-property-search)
 (require 'seq)
 
@@ -1748,6 +1747,9 @@ FORCE will let this function ignore
       (condition-case nil (require ext)
         (error (message "Problems while trying to load feature `%s'" ext))))
     (setq org-transclusion-extensions-loaded t)))
+
+;; Load extensions upon loading this file
+(org-transclusion-load-extensions-maybe)
 
 (provide 'org-transclusion)
 ;;; org-transclusion.el ends here
