@@ -198,7 +198,7 @@ it means from line 10 to the end of file."
 (defun org-transclusion-content-format-src (type content plist)
   "Format text CONTENT from source before transcluding.
 Return content modified (or unmodified, if not applicable)."
-  (when (string= type "src")
+  (when (plist-member plist :src)
     (let ((content (org-transclusion-ensure-newline content))
           (src-lang (plist-get plist :src))
           (rest (plist-get plist :rest)))
