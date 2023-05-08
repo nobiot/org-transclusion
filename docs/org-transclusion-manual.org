@@ -509,7 +509,7 @@ Example 4:
 #+transclude: [[./things-at-point-dir/story.txt::Once upon a time][story]]  :thing-at-point sentence
 #+end_example
 
-You can combine =:thing-at=point= with =:src= property so that the transcluded text is wrapped in Org's source block. Example 5 shows a way to do so. "id:123456789" is assumed to be present as comment in the source file.
+You can combine =:thing-at=point= with =:src= property so that the transcluded text is wrapped in Org's source block. Example 5 shows a way to do so. id​:​1234567890 is assumed to be present as comment in the source file.
 
 Example 5:
 #+begin_example
