@@ -32,6 +32,8 @@
 (declare-function org-transclusion-org-file-p
                   "org-transclusion")
 
+(declare-function org-transclusion-keyword-value-thing-at-point
+                  "org-transclusion")
 ;;;; Setting up the extension
 
 ;; Add a new transclusion type
@@ -46,6 +48,8 @@
           #'org-transclusion-keyword-value-rest)
 (add-hook 'org-transclusion-keyword-value-functions
           #'org-transclusion-keyword-value-end)
+(add-hook 'org-transclusion-keyword-value-functions
+          #'org-transclusion-keyword-value-thing-at-point)
 ;; plist back to string
 (add-hook 'org-transclusion-keyword-plist-to-string-functions
           #'org-transclusion-keyword-plist-to-string-src-lines)
@@ -61,6 +65,22 @@
           #'org-transclusion-live-sync-buffers-src-lines)
 
 ;;; Functions
+
+(defun org-transclusion--bounds-of-n-things-at-point (thing count)
+  "Return the bounds of COUNT THING (s) -at-point."
+  (save-excursion
+    (let ((bounds (bounds-of-thing-at-point thing)))
+      (when bounds
+        (push-mark (car bounds) t t)
+        (goto-char (cdr bounds))
+        (while (and (> count 1) bounds)
+          (setq bounds (bounds-of-thing-at-point thing))
+          (when bounds
+            (if (> count 1)
+                (forward-thing thing)
+              (goto-char (cdr bounds)))
+            (setq count (1- count))))
+        (car (region-bounds))))))
 
 (defun org-transclusion-add-src-lines (link plist)
   "Return a list for non-Org text and source file.
@@ -107,7 +127,9 @@ it means from line 10 to the end of file."
          (type (org-element-property :type link))
          (entry-pos) (buf)
          (lines (plist-get plist :lines))
-         (end-search-op (plist-get plist :end)))
+         (end-search-op (plist-get plist :end))
+         (thing-at-point (plist-get plist :thing-at-point))
+         (thing-at-point (when thing-at-point (make-symbol thing-at-point))))
     (if (not (string= type "id")) (setq buf (find-file-noselect path))
       (let ((filename-pos (org-id-find path)))
         (setq buf (find-file-noselect (car filename-pos)))
@@ -125,15 +147,23 @@ it means from line 10 to the end of file."
                                    ;; ::/regex/ or ::number is used
                                    (if (org-link-search search-option)
                                        (line-beginning-position))))))
-                             ((point-min))))
-                (end-pos (when end-search-op
-                           (save-excursion
-                             (ignore-errors
-                               ;; FIXME `org-link-search' does not
-                               ;; return postion when either ::/regex/
-                               ;; or ::number is used
-                               (when (org-link-search end-search-op)
-                                 (line-beginning-position))))))
+                            ((point-min))))
+                (bounds (when thing-at-point
+                          (let ((count (if end-search-op
+                                           (string-to-number end-search-op) 1)))
+                            (save-excursion
+                              (goto-char start-pos)
+                              (back-to-indentation)
+                              (org-transclusion--bounds-of-n-things-at-point thing-at-point count)))))
+                (end-pos (cond ((when thing-at-point (cdr bounds)))
+                               ((when end-search-op
+                                  (save-excursion
+                                    (ignore-errors
+                                      ;; FIXME `org-link-search' does not
+                                      ;; return postion when either ::/regex/
+                                      ;; or ::number is used
+                                      (when (org-link-search end-search-op)
+                                        (line-beginning-position))))))))
                 (range (when lines (split-string lines "-")))
                 (lbeg (if range (string-to-number (car range))
                         0))
@@ -148,7 +178,8 @@ it means from line 10 to the end of file."
                 ;;; This `cond' means :end prop has priority over the end
                 ;;; position of the range. They don't mix.
                 (end (cond
-                      ((when (and end-pos (> end-pos beg))
+                      ((when thing-at-point end-pos)
+                       (when (and end-pos (> end-pos beg))
                          end-pos))
                       ((if (zerop lend) (point-max)
                          (goto-char start-pos)
@@ -175,12 +206,13 @@ for the range works."
     (when src-lang
       (setq payload
             (plist-put payload :src-content
-                       (concat
-                        (format "#+begin_src %s" src-lang)
-                        (when rest (format " %s" rest))
-                        "\n"
-                        (plist-get payload :src-content)
-                        "#+end_src\n"))))
+                       (let ((src-content (plist-get payload :src-content)))
+                         (concat
+                          (format "#+begin_src %s" src-lang)
+                          (when rest (format " %s" rest))
+                          "\n"
+                          (org-transclusion--ensure-newline src-content)
+                          "#+end_src\n")))))
     ;; Return the payload either modified or unmodified
     payload))
 
@@ -230,12 +262,14 @@ abnormal hook
   (let ((lines (plist-get plist :lines))
         (src (plist-get plist :src))
         (rest (plist-get plist :rest))
-        (end (plist-get plist :end)))
+        (end (plist-get plist :end))
+        (thing-at-point (plist-get plist :thing-at-point)))
     (concat
      (when lines (format ":lines %s" lines))
      (when src (format " :src %s" src))
      (when rest (format " :rest \"%s\"" rest))
-     (when end (format " :end \"%s\"" end)))))
+     (when end (format " :end \"%s\"" end))
+     (when thing-at-point (format " :thing-at-point %s" thing-at-point)))))
 
 (defun org-transclusion-src-lines-p (type)
   "Return non-nil when TYPE is \"src\" or \"lines\".
