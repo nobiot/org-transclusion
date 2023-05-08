@@ -67,7 +67,7 @@ Next: <a href="#Example-Use-Cases-_0026-Main-Features" accesskey="n" rel="next">
 
 <p>This manual is for Org-transclusion version 1.3.x.
 </p>
-<p>Last updated: 29 March 2023.
+<p>Last updated: 08 May 2023.
 </p>
 <p>Org-transclusion lets you insert a copy of text content via a file link or ID link within an Org file. It lets you have the same content present in different buffers at the same time without copy-and-pasting it. Edit the source of the content, and you can refresh the transcluded copies to the up-to-date state. Org-transclusion keeps your files clear of the transcluded copies, leaving only the links to the original content.<span id="whatis"></span></p>
 
@@ -669,6 +669,7 @@ Next: <a href="#Extensions" accesskey="n" rel="next">Extensions</a>, Previous: <
 <ul class="section-toc">
 <li><a href="#lines-property-to-specify-a-range-of-lines" accesskey="1">&lsquo;<samp>:lines</samp>&rsquo; property to specify a range of lines</a></li>
 <li><a href="#end-property-to-specify-a-search-term-to-dynamically-look-for-the-end-of-a-range" accesskey="2">&lsquo;<samp>:end</samp>&rsquo; property to specify a search term to dynamically look for the end of a range</a></li>
+<li><a href="#thing_002dat_002dpoint-property-to-specify-a-_0060_0060thing_0027_0027-to-transclude-from-the-source" accesskey="3">&lsquo;<samp>:thing-at-point</samp>&rsquo; property to specify a &ldquo;thing&rdquo; to transclude from the source.</a></li>
 </ul>
 <hr>
 <div class="subsection" id="lines-property-to-specify-a-range-of-lines">
@@ -716,7 +717,7 @@ Next: <a href="#end-property-to-specify-a-search-term-to-dynamically-look-for-th
 <div class="subsection" id="end-property-to-specify-a-search-term-to-dynamically-look-for-the-end-of-a-range">
 <div class="header">
 <p>
-Previous: <a href="#lines-property-to-specify-a-range-of-lines" accesskey="p" rel="prev">&lsquo;<samp>:lines</samp>&rsquo; property to specify a range of lines</a>, Up: <a href="#Transclude-range-of-lines-for-text-and-source-files" accesskey="u" rel="up">Transclude range of lines for text and source files</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+Next: <a href="#thing_002dat_002dpoint-property-to-specify-a-_0060_0060thing_0027_0027-to-transclude-from-the-source" accesskey="n" rel="next">&lsquo;<samp>:thing-at-point</samp>&rsquo; property to specify a &ldquo;thing&rdquo; to transclude from the source.</a>, Previous: <a href="#lines-property-to-specify-a-range-of-lines" accesskey="p" rel="prev">&lsquo;<samp>:lines</samp>&rsquo; property to specify a range of lines</a>, Up: <a href="#Transclude-range-of-lines-for-text-and-source-files" accesskey="u" rel="up">Transclude range of lines for text and source files</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
 </div>
 <span id="g_t_003aend-property-to-specify-a-search-term-to-dynamically-look-for-the-end-of-a-range"></span><h4 class="subsection">4.8.2 &lsquo;<samp>:end</samp>&rsquo; property to specify a search term to dynamically look for the end of a range</h4>
 
@@ -731,6 +732,51 @@ Previous: <a href="#lines-property-to-specify-a-range-of-lines" accesskey="p" re
 <p>Example 3:
 </p><div class="example">
 <pre class="example">#+transclude: [[file:../../test/python-1.py::id-1234]] :lines 2- :src python :end &quot;id-1234 end here&quot;
+</pre></div>
+
+<hr>
+</div>
+<div class="subsection" id="thing_002dat_002dpoint-property-to-specify-a-_0060_0060thing_0027_0027-to-transclude-from-the-source">
+<div class="header">
+<p>
+Previous: <a href="#end-property-to-specify-a-search-term-to-dynamically-look-for-the-end-of-a-range" accesskey="p" rel="prev">&lsquo;<samp>:end</samp>&rsquo; property to specify a search term to dynamically look for the end of a range</a>, Up: <a href="#Transclude-range-of-lines-for-text-and-source-files" accesskey="u" rel="up">Transclude range of lines for text and source files</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="g_t_003athing_002dat_002dpoint-property-to-specify-a-_0060_0060thing_0027_0027-to-transclude-from-the-source_002e"></span><h4 class="subsection">4.8.3 &lsquo;<samp>:thing-at-point</samp>&rsquo; property to specify a &ldquo;thing&rdquo; to transclude from the source.</h4>
+
+<span id="index-Property-_002d-_003athing_002dat_002dpoint"></span>
+
+<p>You can add &lsquo;<samp>:thing-at-point</samp>&rsquo; property to transclude a certain &ldquo;thing&rdquo; at point to be transcluded. The following text elements have been tested to work:
+</p>
+<ul>
+<li> sentence
+</li><li> paragraph
+</li><li> defun
+</li><li> sexp
+</li></ul>
+
+<blockquote>
+<p><b>Note:</b> As it stands now, you cannot use :thing-at-point to specify the precise beginning of the thing within a line &ndash; it is always the beginning of the line.
+</p>
+</blockquote>
+
+<p>See Example 4. When you have a text file for prose, you can use paragraph or sentence as a &ldquo;thing&rdquo; to transclude. In this example, the beginning of the source of transclude is specified by the search option with &ldquo;::Once upon a time&rdquo;.  The two colons &ldquo;::&rdquo; immediately following the file name denote the search option, which is a built-in Org syntax. Then the paragraph or sentence beginning &ldquo;Once upon a time&rdquo; is transcluded. When the source file contains multiple occurrences of &ldquo;Once upon a time&rdquo;, the first one is taken.
+</p>
+<p>Example 4:
+</p><div class="example">
+<pre class="example">#+transclude: [[./things-at-point-dir/story.txt::Once upon a time][story]]  :thing-at-point paragraph
+
+#+transclude: [[./things-at-point-dir/story.txt::Once upon a time][story]]  :thing-at-point sentence
+</pre></div>
+
+<p>You can combine &lsquo;<samp>:thing-at=point</samp>&rsquo; with &lsquo;<samp>:src</samp>&rsquo; property so that the transcluded text is wrapped in Org&rsquo;s source block. Example 5 shows a way to do so. id​:​1234567890 is assumed to be present as comment in the source file.
+</p>
+<p>Example 5:
+</p><div class="example">
+<pre class="example">#+transclude: [[./things-at-point-dir/baz.el::id:1234567890][barz-baz-fuzz]]  :src elisp
+
+#+transclude: [[./things-at-point-dir/baz.el::foo][barz-baz-fuzz]]  :src elisp :thing-at-point sexp
+
+#+transclude: [[./things-at-point-dir/baz.el::id:1234567890][barz-baz-fuzz]]  :src elisp :thing-at-point defun
 </pre></div>
 
 <hr>
@@ -1058,6 +1104,8 @@ Refer to issue <a href="https://github.com/nobiot/org-transclusion/issues/20">#2
 
 </li><li> Undo detach does not add the overlay back on the source
 This should not break any feature. You can safely refresh the transclusion and recover the source overlay. You can also safely open or moved to the source while the source overlay is not present.
+
+</li><li> For =:thing-at-point, you cannot use :thing-at-point to specify the precise beginning of the thing within a line &ndash; it is always the beginning of the line.
 </li></ul>
 
 <hr>
@@ -1200,6 +1248,7 @@ Next: <a href="#Index-_002d-Commands" accesskey="n" rel="next">Index - Commands<
 <tr><td></td><td valign="top"><a href="#index-Property-_002d-_003aonly_002dcontents">Property - :only-contents</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Org-links-supported">Org links supported</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-Property-_002d-_003arest">Property - :rest</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Transclude-source-file-into-src_002dblock">Transclude source file into src-block</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-Property-_002d-_003asrc">Property - :src</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Transclude-source-file-into-src_002dblock">Transclude source file into src-block</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Property-_002d-_003athing_002dat_002dpoint">Property - :thing-at-point</a>:</td><td>&nbsp;</td><td valign="top"><a href="#thing_002dat_002dpoint-property-to-specify-a-_0060_0060thing_0027_0027-to-transclude-from-the-source">&lsquo;<samp>thing-at-point</samp>&rsquo; property to specify a ``thing'' to transclude from the source</a></td></tr>
 <tr><td colspan="4"> <hr></td></tr>
 <tr><th id="Index-_002d-Features_cp_letter-T">T</th><td></td><td></td></tr>
 <tr><td></td><td valign="top"><a href="#index-Transclude-into-Org_0027s-src_002dblock">Transclude into Org&rsquo;s src-block</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Transclude-source-file-into-src_002dblock">Transclude source file into src-block</a></td></tr>
