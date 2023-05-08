@@ -1,0 +1,27 @@
+    What are the allowed (intended?) or tested "things"?
+
+I've briefly tested these:
+
+    word
+    symbol
+    line (redundant, since we already have :lines)
+
+forward-thing is the function used for selecting multiple things. Some gotchas from some of the less common things could stem from this not handing them as expected.
+
+I expect these will be more common:
+
+    sentence
+    paragraph
+    defun
+    sexp
+    list
+
+#+transclude: [[./things-at-point-dir/story.txt::Once upon a time][story]]  :thing-at-point paragraph
+
+#+transclude: [[./things-at-point-dir/story.txt::Once upon a time][story]]  :thing-at-point sentence
+
+#+transclude: [[./things-at-point-dir/baz.el::id:1234567890][barz-baz-fuzz]]  :src elisp
+
+#+transclude: [[./things-at-point-dir/baz.el::foo][barz-baz-fuzz]]  :src elisp :thing-at-point sexp
+
+#+transclude: [[./things-at-point-dir/baz.el::id:1234567890][barz-baz-fuzz]]  :src elisp :thing-at-point defun

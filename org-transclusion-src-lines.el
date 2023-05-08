@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 24 May 2021
-;; Last modified: 28 March 2023
+;; Last modified: 08 May 2023
 
 ;;; Commentary:
 ;;  This is an extension to `org-transclusion'.  When active, it adds features
@@ -32,8 +32,6 @@
 (declare-function org-transclusion-org-file-p
                   "org-transclusion")
 
-(declare-function org-transclusion-keyword-value-thing-at-point
-                  "org-transclusion")
 ;;;; Setting up the extension
 
 ;; Add a new transclusion type
@@ -55,7 +53,8 @@
           #'org-transclusion-keyword-plist-to-string-src-lines)
 
 ;; Transclusion content formating
-;; Not needed. Default works for text files.
+(add-hook 'org-transclusion-content-format-functions
+          #'org-transclusion-content-format-src-lines)
 
 ;; Open source buffer
 (add-hook 'org-transclusion-open-source-marker-functions
@@ -211,7 +210,7 @@ for the range works."
                           (format "#+begin_src %s" src-lang)
                           (when rest (format " %s" rest))
                           "\n"
-                          (org-transclusion--ensure-newline src-content)
+                          (org-transclusion-ensure-newline src-content)
                           "#+end_src\n")))))
     ;; Return the payload either modified or unmodified
     payload))
@@ -304,6 +303,32 @@ for non-Org text files including program source files."
                           (region-beginning)
                           (- (region-end) newline-offset))))
         (cons src-ov tc-ov))))
+
+;;; Thing-at-point
+(defun org-transclusion-keyword-value-thing-at-point (string)
+  "It is a utility function used converting a keyword STRING to plist.
+It is meant to be used by `org-transclusion-get-string-to-plist'.
+It needs to be set in `org-transclusion-get-keyword-values-hook'.
+Double qutations are optional :thing-at-point \"sexp\".  The regex should
+match any valid elisp symbol (but please don't quote it)."
+  (when (string-match ":thing-at-point \\([[:alnum:][:punct:]]+\\)" string)
+    (list :thing-at-point (org-strip-quotes (match-string 1 string)))))
+
+(defun org-transclusion-content-format-src-lines (type content indent)
+  "Format text CONTENT from source before transcluding.
+Return content modified (or unmodified, if not applicable).
+
+This is the default one.  It only returns the content as is.
+
+INDENT is the number of current indentation of the #+transclude."
+  (when (org-transclusion-src-lines-p type)
+    (let ((content (org-transclusion-ensure-newline content)))
+      (org-transclusion-content-format type content indent))))
+
+(defun org-transclusion-ensure-newline (str)
+  (if (not (string-suffix-p "\n" str))
+      (concat str "\n")
+    str))
 
 (provide 'org-transclusion-src-lines)
 ;;; org-transclusion-src-lines.el ends here

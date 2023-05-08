@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 28 March 2023
+;; Last modified: 08 May 2023
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -201,7 +201,6 @@ that consists of the following properties:
 
 (defvar org-transclusion-keyword-value-functions
   '(org-transclusion-keyword-value-link
-    org-transclusion-keyword-value-thing-at-point
     org-transclusion-keyword-value-level
     org-transclusion-keyword-value-disable-auto
     org-transclusion-keyword-value-only-contents
@@ -800,15 +799,6 @@ It is meant to be used by
     (user-error "Error.  Link in #+transclude is mandatory at %d" (point))
     nil))
 
-(defun org-transclusion-keyword-value-thing-at-point (string)
-  "It is a utility function used converting a keyword STRING to plist.
-It is meant to be used by `org-transclusion-get-string-to-plist'.
-It needs to be set in `org-transclusion-get-keyword-values-hook'.
-Double qutations are optional :thing-at-point \"sexp\".  The regex should
-match any valid elisp symbol (but please don't quote it)."
-  (when (string-match ":thing-at-point \\([[:alnum:][:punct:]]+\\)" string)
-    (list :thing-at-point (org-strip-quotes (match-string 1 string)))))
-
 (defun org-transclusion-keyword-value-disable-auto (string)
   "It is a utility function used converting a keyword STRING to plist.
 It is meant to be used by `org-transclusion-get-string-to-plist'.
@@ -1068,22 +1058,22 @@ This function is the default for org-transclusion-type (TYPE)
 \"org-*\". Currently it only re-aligns table with links in the
 content."
   (when (org-transclusion-type-is-org type)
-  (with-temp-buffer
-    (let ((org-inhibit-startup t))
-      (delay-mode-hooks (org-mode))
-      (insert content)
-      ;; Fix table alignment
-      (let ((point (point-min)))
-        (while point
-          (goto-char (1+ point))
-          (when (org-at-table-p)
-            (org-table-align)
-            (goto-char (org-table-end)))
-          (setq point (search-forward "|" (point-max) t))))
-      ;; Fix indentation when `org-adapt-indentation' is non-nil
-      (org-indent-region (point-min) (point-max))
-      ;; Return the temp-buffer's string
-      (buffer-string)))))
+    (with-temp-buffer
+      (let ((org-inhibit-startup t))
+        (delay-mode-hooks (org-mode))
+        (insert content)
+        ;; Fix table alignment
+        (let ((point (point-min)))
+          (while point
+            (goto-char (1+ point))
+            (when (org-at-table-p)
+              (org-table-align)
+              (goto-char (org-table-end)))
+            (setq point (search-forward "|" (point-max) t))))
+        ;; Fix indentation when `org-adapt-indentation' is non-nil
+        (org-indent-region (point-min) (point-max))
+        ;; Return the temp-buffer's string
+        (buffer-string)))))
 
 (defun org-transclusion-content-format (_type content indent)
   "Format text CONTENT from source before transcluding.
