@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 06 May 2023
+;; Last modified: 08 May 2023
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -979,19 +979,19 @@ based on the following arguments:
         (delay-mode-hooks (org-mode))
         (insert content)
         (org-with-point-at 1
-                           (let* ((to-level (plist-get keyword-values :level))
-                                  (level (org-transclusion-content-highest-org-headline))
-                                  (diff (when (and level to-level) (- level to-level))))
-                             (when diff
-                               (cond ((< diff 0) ; demote
-                                      (org-map-entries (lambda ()
-                                                         (dotimes (_ (abs diff))
-                                                           (org-do-demote)))))
-                                     ((> diff 0) ; promote
-                                      (org-map-entries (lambda ()
-                                                         (dotimes (_ diff)
-                                                           (org-do-promote))))))))
-                           (setq content (buffer-string)))))
+          (let* ((to-level (plist-get keyword-values :level))
+                 (level (org-transclusion-content-highest-org-headline))
+                 (diff (when (and level to-level) (- level to-level))))
+            (when diff
+              (cond ((< diff 0) ; demote
+                     (org-map-entries (lambda ()
+                                        (dotimes (_ (abs diff))
+                                          (org-do-demote)))))
+                    ((> diff 0) ; promote
+                     (org-map-entries (lambda ()
+                                        (dotimes (_ diff)
+                                          (org-do-promote))))))))
+          (setq content (buffer-string)))))
     (insert
      (run-hook-with-args-until-success
       'org-transclusion-content-format-functions
@@ -1053,22 +1053,22 @@ This function is the default for org-transclusion-type (TYPE)
 \"org-*\". Currently it only re-aligns table with links in the
 content."
   (when (org-transclusion-type-is-org type)
-  (with-temp-buffer
-    (let ((org-inhibit-startup t))
-      (delay-mode-hooks (org-mode))
-      (insert content)
-      ;; Fix table alignment
-      (let ((point (point-min)))
-        (while point
-          (goto-char (1+ point))
-          (when (org-at-table-p)
-            (org-table-align)
-            (goto-char (org-table-end)))
-          (setq point (search-forward "|" (point-max) t))))
-      ;; Fix indentation when `org-adapt-indentation' is non-nil
-      (org-indent-region (point-min) (point-max))
-      ;; Return the temp-buffer's string
-      (buffer-string)))))
+    (with-temp-buffer
+      (let ((org-inhibit-startup t))
+        (delay-mode-hooks (org-mode))
+        (insert content)
+        ;; Fix table alignment
+        (let ((point (point-min)))
+          (while point
+            (goto-char (1+ point))
+            (when (org-at-table-p)
+              (org-table-align)
+              (goto-char (org-table-end)))
+            (setq point (search-forward "|" (point-max) t))))
+        ;; Fix indentation when `org-adapt-indentation' is non-nil
+        (org-indent-region (point-min) (point-max))
+        ;; Return the temp-buffer's string
+        (buffer-string)))))
 
 (defun org-transclusion-content-format (_type content indent)
   "Format text CONTENT from source before transcluding.
