@@ -995,7 +995,7 @@ based on the following arguments:
     (insert
      (run-hook-with-args-until-success
       'org-transclusion-content-format-functions
-      type content (plist-get keyword-values :current-indentation)))
+      type content keyword-values))
     (setq end (point))
     (setq end-mkr (set-marker (make-marker) end))
     (unless copy
@@ -1045,7 +1045,7 @@ This function sssumes the buffer is an Org buffer."
         (push (org-element-property :level h) list)))
     (when list (seq-min list))))
 
-(defun org-transclusion-content-format-org (type content _indent)
+(defun org-transclusion-content-format-org (type content _plist)
   "Format text CONTENT from source before transcluding.
 Return content modified (or unmodified, if not applicable).
 
@@ -1070,18 +1070,19 @@ content."
         ;; Return the temp-buffer's string
         (buffer-string)))))
 
-(defun org-transclusion-content-format (_type content indent)
+(defun org-transclusion-content-format (_type content plist)
   "Format text CONTENT from source before transcluding.
 Return content modified (or unmodified, if not applicable).
 
 This is the default one.  It only returns the content as is.
 
 INDENT is the number of current indentation of the #+transclude."
-  (with-temp-buffer
-    (insert content)
-    ;; Return the temp-buffer's string
-    (set-left-margin (point-min)(point-max) indent)
-    (buffer-string)))
+  (let ((indent (plist-get plist :current-indentation)))
+    (with-temp-buffer
+      (insert content)
+      ;; Return the temp-buffer's string
+      (set-left-margin (point-min)(point-max) indent)
+      (buffer-string))))
 
 (defun org-transclusion-content-org-marker (marker plist)
   "Return a list of payload from MARKER and PLIST.

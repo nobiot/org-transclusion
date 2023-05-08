@@ -54,8 +54,9 @@
 
 ;; Transclusion content formating
 (add-hook 'org-transclusion-content-format-functions
-          #'org-transclusion-content-format-src-lines)
-
+          #'org-transclusion-content-format-lines)
+(add-hook 'org-transclusion-content-format-functions
+          #'org-transclusion-content-format-src)
 ;; Open source buffer
 (add-hook 'org-transclusion-open-source-marker-functions
           #'org-transclusion-open-source-marker-src-lines)
@@ -86,19 +87,21 @@
 Determine add function based on LINK and PLIST.
 
 Return nil if PLIST does not contain \":src\" or \":lines\" properties."
-  (cond
-   ((plist-get plist :src)
-    (append '(:tc-type "src")
-            (org-transclusion-content-src-lines link plist)))
-   ;; :lines needs to be the last condition to check because :src INCLUDE :lines
-   ((or (plist-get plist :lines)
-        (plist-get plist :end)
-        ;; Link contains a search-option ::<string>
-        ;; and NOT for an Org file
-        (and (org-element-property :search-option link)
-            (not (org-transclusion-org-file-p (org-element-property :path link)))))
-    (append '(:tc-type "lines")
-            (org-transclusion-content-range-of-lines link plist)))))
+  (let ((type
+         (cond
+          ((plist-get plist :src)
+           (setq type "src"))
+          ;; :lines needs to be the last condition to check because :src INCLUDE :lines
+          ((or (plist-get plist :lines)
+               (plist-get plist :end)
+               ;; Link contains a search-option ::<string>
+               ;; and NOT for an Org file
+               (and (org-element-property :search-option link)
+                    (not (org-transclusion-org-file-p (org-element-property :path link)))))
+           (setq type "lines")))))
+    (when type
+      (append (list :tc-type type)
+              (org-transclusion-content-range-of-lines link plist)))))
 
 (defun org-transclusion-content-range-of-lines (link plist)
   "Return a list of payload for a range of lines from LINK and PLIST.
@@ -192,28 +195,24 @@ it means from line 10 to the end of file."
                  :src-beg beg
                  :src-end end)))))))
 
-(defun org-transclusion-content-src-lines (link plist)
-  "Return a list of payload from LINK and PLIST in a src-block.
-This function is also able to transclude only a certain range of
-lines with using :lines n-m property.  Refer to
-`org-transclusion-content-range-of-lines' for how the notation
-for the range works."
-  (let* ((payload (org-transclusion-content-range-of-lines link plist))
-         (src-lang (plist-get plist :src))
-         (rest (plist-get plist :rest)))
-    ;; Modify :src-content if applicable
-    (when src-lang
-      (setq payload
-            (plist-put payload :src-content
-                       (let ((src-content (plist-get payload :src-content)))
-                         (concat
-                          (format "#+begin_src %s" src-lang)
-                          (when rest (format " %s" rest))
-                          "\n"
-                          (org-transclusion-ensure-newline src-content)
-                          "#+end_src\n")))))
-    ;; Return the payload either modified or unmodified
-    payload))
+(defun org-transclusion-content-format-src (type content plist)
+  "Format text CONTENT from source before transcluding.
+Return content modified (or unmodified, if not applicable)."
+  (when (string= type "src")
+    (let ((content (org-transclusion-ensure-newline content))
+          (src-lang (plist-get plist :src))
+          (rest (plist-get plist :rest)))
+      ;; Modify :src-content if applicable
+      (when src-lang
+        (setq content
+              (concat
+               (format "#+begin_src %s" src-lang)
+               (when rest (format " %s" rest))
+               "\n"
+               content
+               "#+end_src\n")))
+      ;; Return the content either modified or unmodified
+      content)))
 
 (defun org-transclusion-keyword-value-lines (string)
   "It is a utility function used converting a keyword STRING to plist.
@@ -314,16 +313,16 @@ match any valid elisp symbol (but please don't quote it)."
   (when (string-match ":thing-at-point \\([[:alnum:][:punct:]]+\\)" string)
     (list :thing-at-point (org-strip-quotes (match-string 1 string)))))
 
-(defun org-transclusion-content-format-src-lines (type content indent)
+(defun org-transclusion-content-format-lines (type content plist)
   "Format text CONTENT from source before transcluding.
 Return content modified (or unmodified, if not applicable).
 
 This is the default one.  It only returns the content as is.
 
 INDENT is the number of current indentation of the #+transclude."
-  (when (org-transclusion-src-lines-p type)
+  (when (string= type "lines")
     (let ((content (org-transclusion-ensure-newline content)))
-      (org-transclusion-content-format type content indent))))
+      (org-transclusion-content-format type content plist))))
 
 (defun org-transclusion-ensure-newline (str)
   (if (not (string-suffix-p "\n" str))
