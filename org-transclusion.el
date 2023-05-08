@@ -942,11 +942,6 @@ Return nil if not found."
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for inserting content
 
-(defun org-transclusion--ensure-newline (str)
-  (if (not (string-suffix-p "\n" str))
-      (concat str "\n")
-    str))
-
 (defun org-transclusion-content-insert (keyword-values type content sbuf sbeg send copy)
   "Insert CONTENT at point and put source overlay in SBUF.
 Return t when successful.
@@ -976,7 +971,7 @@ based on the following arguments:
          (end-mkr)
          (ov-src (text-clone-make-overlay sbeg send sbuf)) ;; source-buffer overlay
          (tc-pair ov-src)
-         (content (org-transclusion--ensure-newline content)))
+         (content content))
     (when (org-transclusion-type-is-org type)
       (with-temp-buffer
         ;; This temp buffer needs to be in Org Mode
