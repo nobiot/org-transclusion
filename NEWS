@@ -1,4 +1,8 @@
 * Current development version
+
+  - feat: add :things-at-point property for transcluding source and
+    other non-org text files
+
   - feat: add org-block-live-sync
 
   - Command 'org-transclusion-live-sync-start' now can start live sync

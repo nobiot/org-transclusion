@@ -1,7 +1,7 @@
 #+title: Org-transclusion User Manual
 #+author: Noboru Ota <me@nobiot.com>
 #+macro: version 1.3.x
-#+macro: modified 29 March 2023
+#+macro: modified 08 May 2023
 
 #+language: en
 #+export_file_name: org-transclusion.texi
@@ -484,6 +484,42 @@ Example 3:
 #+transclude: [[file:../../test/python-1.py::id-1234]] :lines 2- :src python :end "id-1234 end here"
 #+end_example
 
+*** =:thing-at-point= property to specify a "thing" to transclude from the source.
+
+#+cindex: Property - :thing-at-point
+
+You can add =:thing-at-point= property to transclude a certain "thing" at point to be transcluded. The following text elements have been tested to work:
+
+- sentence
+- paragraph
+- defun
+- sexp
+
+#+ATTR_TEXINFO: :tag Note
+#+begin_quote
+As it stands now, you cannot use :thing-at-point to specify the precise beginning of the thing within a line -- it is always the beginning of the line.
+#+end_quote
+
+See Example 4. When you have a text file for prose, you can use paragraph or sentence as a "thing" to transclude. In this example, the beginning of the source of transclude is specified by the search option with "::Once upon a time".  The two colons "::" immediately following the file name denote the search option, which is a built-in Org syntax. Then the paragraph or sentence beginning "Once upon a time" is transcluded. When the source file contains multiple occurrences of "Once upon a time", the first one is taken.
+
+Example 4:
+#+begin_example
+#+transclude: [[./things-at-point-dir/story.txt::Once upon a time][story]]  :thing-at-point paragraph
+
+#+transclude: [[./things-at-point-dir/story.txt::Once upon a time][story]]  :thing-at-point sentence
+#+end_example
+
+You can combine =:thing-at=point= with =:src= property so that the transcluded text is wrapped in Org's source block. Example 5 shows a way to do so. "id:123456789" is assumed to be present as comment in the source file.
+
+Example 5:
+#+begin_example
+#+transclude: [[./things-at-point-dir/baz.el::id:1234567890][barz-baz-fuzz]]  :src elisp
+
+#+transclude: [[./things-at-point-dir/baz.el::foo][barz-baz-fuzz]]  :src elisp :thing-at-point sexp
+
+#+transclude: [[./things-at-point-dir/baz.el::id:1234567890][barz-baz-fuzz]]  :src elisp :thing-at-point defun
+#+end_example
+
 ** Extensions
 :PROPERTIES:
 :CUSTOM_ID: extensions
@@ -684,6 +720,8 @@ Note this section is still incomplete, not exhaustive for "known" limitations.
 
 - Undo detach does not add the overlay back on the source ::
   This should not break any feature. You can safely refresh the transclusion and recover the source overlay. You can also safely open or moved to the source while the source overlay is not present.
+
+- For =:thing-at-point, you cannot use :thing-at-point to specify the precise beginning of the thing within a line -- it is always the beginning of the line.
 
 * Credits
 ** Original idea by John Kitchin
