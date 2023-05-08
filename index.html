@@ -759,6 +759,11 @@ Previous: <a href="#end-property-to-specify-a-search-term-to-dynamically-look-fo
 </p>
 </blockquote>
 
+<blockquote>
+<p><b>Note:</b> The definition of sentence is controlled by various variables in Emacs. It is suggested to consult the documentation of function <code>sentence-end</code>. For those  who do not use double-space after a period (in the language this is relevant), it is probably more intuitive to turn off customizing  <code>sentence-end-double-space</code>. The default behavior is this: &ldquo;Non-nil means a single space does not end a sentence.&rdquo;
+</p>
+</blockquote>
+
 <p>See Example 4. When you have a text file for prose, you can use paragraph or sentence as a &ldquo;thing&rdquo; to transclude. In this example, the beginning of the source of transclude is specified by the search option with &ldquo;::Once upon a time&rdquo;.  The two colons &ldquo;::&rdquo; immediately following the file name denote the search option, which is a built-in Org syntax. Then the paragraph or sentence beginning &ldquo;Once upon a time&rdquo; is transcluded. When the source file contains multiple occurrences of &ldquo;Once upon a time&rdquo;, the first one is taken.
 </p>
 <p>Example 4:
