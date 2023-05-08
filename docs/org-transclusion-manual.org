@@ -500,6 +500,11 @@ You can add =:thing-at-point= property to transclude a certain "thing" at point 
 As it stands now, you cannot use :thing-at-point to specify the precise beginning of the thing within a line -- it is always the beginning of the line.
 #+end_quote
 
+#+ATTR_TEXINFO: :tag Note
+#+begin_quote
+The definition of sentence is controlled by various variables in Emacs. It is suggested to consult the documentation of function ~sentence-end~. For those  who do not use double-space after a period (in the language this is relevant), it is probably more intuitive to turn off customizing  ~sentence-end-double-space~. The default behavior is this: "Non-nil means a single space does not end a sentence."
+#+end_quote
+
 See Example 4. When you have a text file for prose, you can use paragraph or sentence as a "thing" to transclude. In this example, the beginning of the source of transclude is specified by the search option with "::Once upon a time".  The two colons "::" immediately following the file name denote the search option, which is a built-in Org syntax. Then the paragraph or sentence beginning "Once upon a time" is transcluded. When the source file contains multiple occurrences of "Once upon a time", the first one is taken.
 
 Example 4:

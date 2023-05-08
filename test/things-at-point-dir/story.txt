@@ -1,7 +1,5 @@
 This is a story
 
-Once upon a time. This paragraph should be transcluded. This is a story.
-And if I have a hard line break, I belive this line is still part of
-the paragraph as defined by ... thing-at-point I think.
+Once upon a time. This paragraph should be transcluded. This is a story. And if I have a hard line break, I belive this line is still part of the paragraph as defined by ... thing-at-point I think.
 
 This is a new paragraph and should not be included.
