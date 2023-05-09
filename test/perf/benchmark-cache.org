@@ -1,0 +1,109 @@
+#+title: Benchmark cache implementation
+* 200 transclusions
+** Add-all with 200 transclusions in one buffer
+
+#+begin_src elisp
+;;; 200 count
+  (benchmark-run 1
+             (with-temp-buffer
+               (insert-file "200.org")
+               (org-transclusion-add-all)))
+#+end_src
+
+#+RESULTS:
+
+After cache
+| t4 | 2.5424555260000004 | 6 | 0.789642330999996 |
+| t3 | 2.580554026 | 6 | 0.7853680290000042 |
+| t2 | 2.296396401 | 6 | 0.7637794889999938 |
+| t1 | 2.4899950609999997 | 6 | 0.7577777640000036 |
+
+Before cache: 2251c59 dev/detach
+| t4 | 23.836036228 | 8 | 0.8455339039999998 |
+| t3 | 22.973600754 | 7 | 0.7494366630000009 |
+| t2 | 20.247265409999997 | 7 | 0.7158286619999998 |
+| t1 | 18.335084877  | 7 | 0.7069284820000021 |
+
+** Add-all and save buffer with 200 transclusions in one buffer
+
+#+begin_src elisp
+  ;;; 200 count
+    (benchmark-run 1
+      (with-current-buffer (find-file-noselect "200.org")
+        (org-transclusion-remove-all)
+        (org-transclusion-add-all)
+        (set-buffer-modified-p t)
+        (save-buffer)))
+#+end_src
+
+#+RESULTS:
+
+After cache
+| t4 | 8.375145193 | 20 | 2.5043909500000012 |
+| t3 | 8.327513500999999 | 20 | 2.4683572 |
+| t2 | 8.307715561 | 20 | 2.4353182019999977 |
+| t1 | 8.262757036 | 20 | 2.4350398569999996 |
+
+No idea what happened between t2 and t3.
+
+Before cache: 2251c59 dev/detach
+| t4 | 9.33093551 | 23 | 2.648470562 |
+| t3 | 8.86402363 | 23 | 2.4991146010000023 |
+| t2 | 57.243434919  | 23 | 2.6082026150000033 |
+| t1 | 54.451551494 | 22 | 2.353870871999998 |
+* 30 transclusions -- more realistic
+#+begin_src elisp
+  ;;; 30 count
+    (benchmark-run 1
+      (with-current-buffer (find-file-noselect "30.org")
+        (org-transclusion-remove-all)
+        (org-transclusion-add-all)
+        (set-buffer-modified-p t)
+        (save-buffer)))
+#+end_src
+
+
+| 0.814258374 | 2 | 0.27854497799999933 |
+| 0.812842922 | 2 | 0.28085225299999905 |
+| 0.872994897 | 2 | 0.27931342300000495 |
+| 0.889210701 | 2 | 0.28159443499999526 |
+| 1.0797623779999999 | 3 | 0.4216789880000036 |
+
+* Test files
+
+In the following benchmark runs, the transcluding buffer and the source
+headline is as follows. The source headline is part of a larger Org
+file, whcih is a different file from the transcluding one.
+
+The 200 transclusion are just repeat of the same transclusion, thus the
+cache hashtable will be only 1 row. The add-all function will keep using
+this same cache item for 200 times.
+
+This is not realistic but probably valid to gauge the effectiveness of
+the cache -- the key is the transclusion keyword "[[id:2022-10-10T173507]]
+:level 2\n" as a normalized string. The same transclusion shares the
+same cache item.
+
+#+begin_src elisp
+;; 200.org
+# (progn
+  (forward-line 1)
+  (dotimes (i 200) (insert "#+transclude: [[id:2022-10-10T173507]] :level 2\n")))
+#+end_src
+
+#+begin_src org
+  # benchmark-cache.org
+  ,* On Denoting
+  :PROPERTIES:
+  :ID:       2022-10-10T173507
+  :link: https://en.wikipedia.org/wiki/On_Denoting
+  :end:
+
+   "On Denoting" is an essay by Bertrand Russell. It was published in the philosophy journal Mind in 1905. In it, Russell introduces and advocates his theory of denoting phrases, according to which definite descriptions and other "denoting phrases ... never have any meaning in themselves, but every proposition in whose verbal expression they occur has a meaning."[1] This theory later became the basis for Russell's descriptivism with regard to proper names, and his view that proper names are "disguised" or "abbreviated" definite descriptions.
+
+  ,** H2
+  In the 1920s, Frank P. Ramsey referred to the essay as "that paradigm of philosophy".[2][3] In the Stanford Encyclopedia of Philosophy entry Descriptions, Peter Ludlow singled the essay out as "the paradigm of philosophy", and called it a work of "tremendous insight"; provoking discussion and debate among philosophers of language and linguists for over a century.[4]
+
+  ,*** H3
+  This is content of H3
+#+end_src
