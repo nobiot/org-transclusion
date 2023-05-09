@@ -1,25 +1,85 @@
 * Regression
 ** make from link
 This is a link to a [[id:20210501T171427.051019][Bertrand Russell]] wikipedia excerpt
-#+transclude: [[id:20210501T171427.051019][Bertrand Russell]] 
+#+transclude: [[id:20210501T171427.051019][Bertrand Russell]]
 ** test empty file
 #+transclude: [[file:empty.txt::2][empty text file]]
 
 ** test text
-#+transclude: [[file:test.txt][text file]] 
+#+transclude: [[file:test.txt][text file]]
 
 ** test t/nil
 t/nil will be dropped after remove-at-point
 
 
-#+transclude: [[file:test.txt][text file]] 
-#+transclude: t [[id:20210501T171427.051019][Bertrand Russell]] 
+#+transclude: [[file:test.txt][text file]]
+#+transclude: t [[id:20210501T171427.051019][Bertrand Russell]]
 
 (setq inhibit-read-only nil)
 
 ** test
 
-#+transclude: [[file:bertrand-russell.org::*Bertrand Russell - Wikipedia]] :level 1 
+* Bertrand Russell - Wikipedia
+:ref:
+:link: https://en.wikipedia.org/wiki/Bertrand_Russell
+:END:
+
+*Bertrand Arthur William Russell, 3rd Earl Russell* OM FRS[65] (18 May 1872 – 2 February 1970) was a British polymath ande writer. He was born in Monmouthshire into one of the most prominent aristocratic families in the United Kingdom.
+
+#+transclude: [[file:bertrand-russell.org::*Bertrand Russell - Wikipedia]] :level 1
+
+#+begin_export nil
+As an academic, he worked in philosophy, mathematics, and logic. His work has had a considerable influence on mathematics, logic, set theory, linguistics, artificial intelligence, cognitive science, computer science (see type theory and type system) and various areas of analytic philosophy, especially logic, philosophy of mathematics, philosophy of language, epistemology and metaphysics.
+#+end_export
+
+#+begin_src elisp
+  If an integer $n$ is greater than 2, then the equation $a^n + b^n = c^n$
+  has no solutions in non-zero integers $a$, $b$, and $c$.
+  This is live-sync'ed
+#+end_src
+
+Russell was also a public intellectual, historian, social critic, political activist, and Nobel laureate.[66][67] Throughout his life, Russell considered himself a liberal, a socialist and a pacifist, although he later wrote he had "never been any of these things, in any profound sense".[68] This is live sync. As  you can see, the edit on the left (transclusion) is copied over to the right (source)
+
+Below is an example of a LaTex environment
+
+\begin{equation}
+x=\sqrt{b}
+\end{equation}
+
+: fixed width element
+: Second line
+
+
+\begin{align*}
+2x - 5y &= 8 \\
+3x + 9y &= -12
+\end{align*}
+
+** H2
+:ref:
+:data: data
+:END:
+
+#+begin_example
+  Russell is one of the early 20th century's most prominent logicians,[67] and one of the founders of analytic philosophy, along with his predecessor Gottlob Frege, his friend and colleague G. E. Moore and his student and protégé Ludwig Wittgenstein.
+#+end_example
+
+#+begin_verse
+Great clouds overhead
+Tiny black birds rise and fall
+Snow covers Emacs
+
+   ---AlexSchroeder
+   Verse can be live-synced
+#+end_verse
+
+#+begin: dynamic
+Russell with Moore led the British "revolt against idealism".[a] Together with his former teacher A. N. Whitehead, Russell wrote Principia Mathematica, a milestone in the development of classical logic, and a major attempt to reduce the whole of mathematics to logic (see Logicism). Russell's article On Denoting has been considered a "paradigm of philosophy".[70]
+#+end:
+
+*** H3
+This is content of H3
+
 
 ** Test =org-adapt-indentation=
 
@@ -28,31 +88,31 @@ t/nil will be dropped after remove-at-point
 (setq org-adapt-indentation t)
 #+end_example
 
-#+transclude: [[id:20210501T171427.051019][Bertrand Russell]] 
+#+transclude: [[id:20210501T171427.051019][Bertrand Russell]]
 
 ** Paragraph
 
-#+transclude: [[file:./paragraph.org::para1]] 
+#+transclude: [[file:./paragraph.org::para1]]
 
-#+transclude: [[file:./paragraph.org::para2]] 
+#+transclude: [[file:./paragraph.org::para2]]
 
 ** Table
-#+transclude: [[file:paragraph.org::table][Link to a table]] 
+#+transclude: [[file:paragraph.org::table][Link to a table]]
 
 #+begin_example
 (variable-pitch-mode -1)
 #+end_example
 
-#+transclude: [[file:paragraph.org::table-with-link][Link to a table with a link]] 
+#+transclude: [[file:paragraph.org::table-with-link][Link to a table with a link]]
 
 ** Quote
-#+transclude: [[file:paragraph.org::quote][Link to a quote]] 
+#+transclude: [[file:paragraph.org::quote][Link to a quote]]
 
 ** #Custom ID
-#+transclude: [[file:testpara.org::#custom-id-1][Custom ID]] :level 2 
+#+transclude: [[file:testpara.org::#custom-id-1][Custom ID]] :level 2
 
 ** *Hadline
-#+transclude: [[file:bertrand-russell.org::*Bertrand Russell - Wikipedia]] :level 2 :disable-auto 
+#+transclude: [[file:bertrand-russell.org::*Bertrand Russell - Wikipedia]] :level 2 :disable-auto
 
 ** Filter
 
@@ -67,12 +127,12 @@ t/nil will be dropped after remove-at-point
 #+end_example
 
 [[file:./test-no-first-section.org]]
-#+transclude: [[file:./test-no-first-section.org]] 
+#+transclude: [[file:./test-no-first-section.org]]
 
 * Live-Sync
 ** center-block dynamic-block example-block export-block special-block verse-block
 
-** drawer 
+** drawer
 #+begin_example
 (setq org-transclusion-exclude-elements '())
 (setq org-transclusion-exclude-elements '(property-drawer))
@@ -85,7 +145,7 @@ t/nil will be dropped after remove-at-point
 
 ** latex-environment
 
-** plain-list 
+** plain-list
 
 ** quote-block  table
 #+transclude: [[file:paragraph.org::table][Link to a table]]
@@ -110,7 +170,7 @@ t/nil will be dropped after remove-at-point
 #+transclude: [[file:bertrand-russell.org::*Bertrand Russell - Wikipedia]] :level 2 :disable-auto :only-contents
 
 * Exclude elements
-#+transclude: [[id:2022-05-30T203553]] :only-contents :exclude-elements "keyword drawer headline" 
+#+transclude: [[id:2022-05-30T203553]] :only-contents :exclude-elements "keyword drawer headline"
 
 #+transclude: [[file:./test-no-first-section.org]] :exclude-elements "drawer keyword property-drawer"
 
@@ -119,10 +179,10 @@ t/nil will be dropped after remove-at-point
 #+begin_src elisp
   (setq yank-excluded-properties
         '(:parent category field follow-link fontified font-lock-face help-echo intangible invisible keymap local-map mouse-face read-only yank-handler))
-  
+
     (setq yank-excluded-properties
         '(category field follow-link fontified font-lock-face help-echo intangible invisible keymap local-map mouse-face read-only yank-handler))
-  
+
   (setq org-transclusion-yank-remember-user-excluded-props '(:parent))
 #+end_src
 
@@ -158,15 +218,14 @@ t/nil will be dropped after remove-at-point
 1. First item
 
    Text associated with the first item.
-   
-   #+transclude: [[file:paragraph.txt][link]] 
+
+   #+transclude: [[file:paragraph.txt][link]]
 
 2. Second item
 
 * Level two
 * Test headlines only
 
-#+transclude: [[id:2022-06-26T141859]] :exclude-elements "paragraph" 
+#+transclude: [[id:2022-06-26T141859]] :exclude-elements "paragraph"
 
-#+transclude: [[id:2022-06-26T141859]] 
-
+#+transclude: [[id:2022-06-26T141859]]
