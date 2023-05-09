@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 08 May 2023
+;; Last modified: 09 May 2023
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -119,12 +119,9 @@ content."
     (t ))
   "Face for source region's fringe being transcluded in another buffer.")
  (defface org-transclusion-source
-  '((((class color) (min-colors 88) (background light))
-     :background "#ebf6fa" :extend t)
-    (((class color) (min-colors 88) (background dark))
-     :background "#041529" :extend t)
-    (t
-     :foreground "darkgray"))
+  '((((class color) (min-colors 88) (background light)))
+    (((class color) (min-colors 88) (background dark)))
+    (t ))
   "Face for source region being transcluded in another buffer.")
  (defface org-transclusion-source-edit
   '((((class color) (min-colors 88) (background light))
@@ -140,10 +137,8 @@ content."
     (t ))
   "Face for transcluded region's fringe in the transcluding buffer.")
  (defface org-transclusion
-  '((((class color) (min-colors 88) (background light))
-     :background "#ebf6fa" :extend t)
-    (((class color) (min-colors 88) (background dark))
-     :background "#041529" :extend t)
+  '((((class color) (min-colors 88) (background light)))
+    (((class color) (min-colors 88) (background dark)))
     (t ))
   "Face for transcluded region in the transcluding buffer.")
  (defface org-transclusion-edit
