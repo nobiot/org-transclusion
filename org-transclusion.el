@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 09 May 2023
+;; Last modified: 10 May 2023
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -528,7 +528,7 @@ When success, return the beginning point of the keyword re-inserted."
             (when mkr-at-beg (move-marker mkr-at-beg beg))
             ;; Go back to the beginning of the inserted keyword line
             (goto-char beg))
-          beg))
+          (move-marker (make-marker) beg)))
     (message "Nothing done. No transclusion exists here.") nil))
 
 (defun org-transclusion-detach ()
@@ -558,16 +558,16 @@ function to work only on the narrowed region you are in, leaving
 the rest of the buffer unchanged."
   (interactive "P")
   (save-restriction
-    (let ((marker (move-marker (make-marker) (point)))
-          match point list)
+    (let ((current-marker (move-marker (make-marker) (point)))
+          match removed-marker list)
       (unless narrowed (widen))
       (goto-char (point-min))
       (while (setq match (text-property-search-forward 'org-transclusion-type))
         (goto-char (prop-match-beginning match))
-        (setq point (org-transclusion-remove))
-        (when point (push point list)))
-      (goto-char marker)
-      (move-marker marker nil) ; point nowhere for GC
+        (setq removed-marker (org-transclusion-remove))
+        (when removed-marker (push removed-marker list)))
+      (goto-char current-marker)
+      (move-marker current-marker nil) ; point nowhere for GC
       list)))
 
 (defun org-transclusion-refresh (&optional detach)
@@ -735,18 +735,24 @@ set in `before-save-hook'.  It also move the point back to
       (progn
         ;; Assume the list is in descending order.
         ;; pop and do from the bottom of buffer
-        (dolist (p org-transclusion-remember-transclusions)
-          (save-excursion
-            (goto-char p)
-            (org-transclusion-add)))
-        ;; After save and adding all transclusions, the modified flag should be
-        ;; set to nil
-        (restore-buffer-modified-p nil)
-        (when org-transclusion-remember-point
-          (goto-char org-transclusion-remember-point))
+        (let ((do-length (length org-transclusion-remember-transclusions))
+              (do-count 0))
+          (dolist (p org-transclusion-remember-transclusions)
+            (save-excursion
+              (goto-char p)
+              (org-transclusion-add)
+              (move-marker p nil)
+              (setq do-count (1+ do-count))
+              (when (> do-count do-length)
+                (error "org-transclusion: Aborting. You may be in an infinite loop"))))
+          ;; After save and adding all transclusions, the modified flag should be
+          ;; set to nil
+          (restore-buffer-modified-p nil)
+          (when org-transclusion-remember-point
+            (goto-char org-transclusion-remember-point))))
     (progn
       (setq org-transclusion-remember-point nil)
-      (setq org-transclusion-remember-transclusions nil)))))
+      (setq org-transclusion-remember-transclusions nil))))
 
 (defun org-transclusion-before-kill ()
   "Remove transclusions before `kill-buffer' or `kill-emacs'.
