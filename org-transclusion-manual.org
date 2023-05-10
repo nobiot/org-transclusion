@@ -1,7 +1,7 @@
 #+title: Org-transclusion User Manual
 #+author: Noboru Ota <me@nobiot.com>
 #+macro: version 1.3.x
-#+macro: modified 08 May 2023
+#+macro: modified 10 May 2023
 
 #+language: en
 #+export_file_name: org-transclusion.texi
@@ -676,9 +676,14 @@ To customize a face, it's probably the easiest to use ~M-x customize-face~. If y
 For colors, where "green" is,  you can also use something like "#62c86a" (Emacs calls it "RGB triple"; you can refer to in-system manual Emacs > Colors). You might also like to refer to a list of currently defined faces in your Emacs by ~list-faces-display~.
 
 Other faces:
-- ~org-transclusion-source~
+
+The default for faces ~org-transclusion~ and ~org-transclusion-source~ is no color or any other specification (transparent). An intended use of these faces is when you use packages such as ~org-indent-mode~ or ~org-modern~, which might override the fringe ~org-transclusion~ places. To make the translusion and its source visible, you might like to put some background color to source and transclusion.
+
+- ~org-transclusion-source~ ::
+  The default is no color specification (transparent).
 - ~org-transclusion-source-edit~
-- ~org-transclusion~
+- ~org-transclusion~ ::
+  The default is no color specification (transparent).
 - ~org-transclusion-edit~
 - ~org-transclusion-fringe-bitmap~ ::
   It is used for the fringe that indicates the transcluded region. It works only in on a graphical display (not on a text-only terminal).
