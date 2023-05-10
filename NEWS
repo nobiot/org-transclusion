@@ -1,45 +1,49 @@
 * Current development version
 
+  - fix: add faces back org-transclusion and org-transclusion-source
+    #174
+
   - feat: add :things-at-point property for transcluding source and
     other non-org text files
 
   - feat: add org-block-live-sync
 
-  - Command 'org-transclusion-live-sync-start' now can start live sync
-    when
+    - Command 'org-transclusion-live-sync-start' now can start live sync
+      when
 
-    1) transcluding a source code text file
-    2) into org src block with the ':src' property in #+transclude
+      1) transcluding a source code text file
+      2) into org src block with the ':src' property in #+transclude
 
-    Example: #+transclude: [[python-1.py]]  :src python
+      Example: #+transclude: [[python-1.py]]  :src python
 
   - feat: add org-transclusion-detach
 
-    - New command 'org-transclusion-detach' can be used on the transclusion
-      at point. It turns it into a normal, edtitable text content.
+    - New command 'org-transclusion-detach' can be used on the
+      transclusion at point. It turns it into a normal, edtitable text
+      content.
 
       You can undo this operation.
 
-      In addition, you can press 'C-d' directly on the transclusion at point
-      to detach it.  This is because the command is bound to 'C-d' by
-      default in 'org-transclusion-map'.
+      In addition, you can press 'C-d' directly on the transclusion at
+      point to detach it. This is because the command is bound to 'C-d'
+      by default in 'org-transclusion-map'.
 
     - 'org-transclusion-refresh' now accepts universal argument such as
-      'C-u M-x org-transclusion-refresh' and detaches the transclusion at
-      point.
+      'C-u M-x org-transclusion-refresh' and detaches the transclusion
+      at point.
 
       You can undo this operation.
 
-    - 'org-transclusion-add' now accepts universal argument such as 'C-u M-x
-      org-transclusion-add' and copies the source content rather than
-      transclude it.
+    - 'org-transclusion-add' now accepts universal argument such as 'C-u
+      M-x org-transclusion-add' and copies the source content rather
+      than transclude it.
 
       You can undo this operation.
 
     - Limitation: Undo detach does not add the overlay back on the
-      source. This should not break any feature. You can safely refresh the
-      transclusion and recover the source overlay. You can also safely open
-      or moved to the source.
+      source. This should not break any feature. You can safely refresh
+      the transclusion and recover the source overlay. You can also
+      safely open or moved to the source.
 
 * 1.3.2
 
@@ -47,7 +51,7 @@
 
     Before the fix, function 'org-transclusion-keyword-plist-to-string'
     would add a superfluous trailing space when converting #+transclude
-    keyword's properties back to the string.  This does not cause any
+    keyword's properties back to the string. This does not cause any
     harm in normal circumstances.
 
     The issue would occur with a rare combination of the case where:
@@ -57,14 +61,14 @@
 
     + You set a 'whitespace-cleanup' in 'before-save' hook
 
-    + You have 'auto-save-visited-mode' or similar that automatically saves
-      a buffer
+    + You have 'auto-save-visited-mode' or similar that automatically
+      saves a buffer
 
     If you had combination, and then saved the buffer with the
-    transclusions, you might get an error mid-way of the save
-    operation. You would not lose any data in the buffer, but the buffer
-    would not re-activate all the transclusions that had been active
-    before buffer-save.
+    transclusions, you might get an error mid-way of the save operation.
+    You would not lose any data in the buffer, but the buffer would not
+    re-activate all the transclusions that had been active before
+    buffer-save.
 
     This was because of the superfluous trailing spaces and automatic
     removal of them, which caused the mismatch of the point of each
@@ -81,13 +85,14 @@
 
   - Feature ::
 
-    - add: #145 a new property and filter to expand links to absolute file names (Org only)
-      use :expand-links per transclusion
+    - add: #145 a new property and filter to expand links to absolute
+      file names (Org only) use :expand-links per transclusion
 
   - Fix ::
 
-    - fix: #131. For non-Org files, now the transcluded text respects the indent
-         level of the #+transclude keyword.  This does not affect Org files.
+    - fix: #131. For non-Org files, now the transcluded text respects
+      the indent level of the #+transclude keyword. This does not affect
+      Org files.
 
 * Version 1.2.0
 
@@ -97,20 +102,24 @@
 
   - Fix ::
 
-    - fix: org-transclusion-map now inherits org-mode-map (thanks to ag91 [1])
-    - fix: reverting 252ec675; shouldn't remove the extra space at the end of
-           transclusions from Org
+    - fix: org-transclusion-map now inherits org-mode-map (thanks to
+      ag91 [1])
+
+    - fix: reverting 252ec675; shouldn't remove the extra space at the
+           end of transclusions from Org
+
     - fix: #115 allow adding #+name, etc. before #+transclude keyword
-           (don't remove affiliated keywords when org-transclusoin-remove)
+           (don't remove affiliated keywords when
+           org-transclusoin-remove)
 
 * Version 1.1.1
 
   - Fix ::
 
-    - Fix rare but destructive issue where buffer text content could be deleted
-      by removing a transclusion.  This could happen by killing a second Emacs
-      instance (batch or online) or buffer, while the first Emacs keeps
-      transclusions added
+    - Fix rare but destructive issue where buffer text content could be
+      deleted by removing a transclusion. This could happen by killing a
+      second Emacs instance (batch or online) or buffer, while the first
+      Emacs keeps transclusions added
 
   - Other:
 
@@ -120,15 +129,15 @@
 
   - Change ::
 
-    - add:inhibit-read-only: fix:Org export errors with read-only
-      With this, noweb expansion works now (limitation removed)
+    - add:inhibit-read-only: fix:Org export errors with read-only With
+      this, noweb expansion works now (limitation removed)
 
   - Fix ::
 
-    - fix:#105 org-element--cache issue for Org v9.6
-      Remove use of silent-modificaiton & inhibit-modification-hook
-    - fix:add-all not to stop with error in one trasclusion
-    - fix:Remove extra space/line added to Org elements transcluded
+    - fix:#105 org-element--cache issue for Org v9.6 Remove use of
+      silent-modificaiton & inhibit-modification-hook - fix:add-all not
+      to stop with error in one trasclusion - fix:Remove extra
+      space/line added to Org elements transcluded
 
   - Other ::
     - README, Info doc user manual, online user manual
@@ -144,8 +153,8 @@
 
   - Feature ::
 
-    - =:end= property and a search term to dynamically define a range of lines to transclude for text and
-      source code block
+    - =:end= property and a search term to dynamically define a range of
+      lines to transclude for text and source code block
 
   - Change ::
 
@@ -154,9 +163,11 @@
 
   - Fix ::
 
-    - =org-transclusion-before-kill= now checks if the buffer to be killed
-      contains any transclusion AND it is visting a file before saving. This
-      fixes some issues related to temp buffers, etc.
-    - fix: search options for src-lines extension for =:lines=, =:src=, and =:end= properties
+    - =org-transclusion-before-kill= now checks if the buffer to be
+      killed contains any transclusion AND it is visting a file before
+      saving. This fixes some issues related to temp buffers, etc.
+
+    - fix: search options for src-lines extension for =:lines=, =:src=,
+      and =:end= properties
 
 † Changes before Version 1.0.0 are in CHANGELOG file.
