@@ -122,7 +122,8 @@ content."
   '((((class color) (min-colors 88) (background light)))
     (((class color) (min-colors 88) (background dark)))
     (t ))
-  "Face for source region being transcluded in another buffer.")
+  "Face for source region being transcluded in another buffer.
+The default is no color specification (transparent).")
  (defface org-transclusion-source-edit
   '((((class color) (min-colors 88) (background light))
      :background "#fff3da" :extend t)
@@ -140,7 +141,8 @@ content."
   '((((class color) (min-colors 88) (background light)))
     (((class color) (min-colors 88) (background dark)))
     (t ))
-  "Face for transcluded region in the transcluding buffer.")
+  "Face for transcluded region in the transcluding buffer.
+The default is no color specification (transparent).")
  (defface org-transclusion-edit
   '((((class color) (min-colors 88) (background light))
      :background "#ebf6fa" :extend t)
