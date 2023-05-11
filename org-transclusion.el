@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 10 May 2023
+;; Last modified: 11 May 2023
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -1023,12 +1023,18 @@ based on the following arguments:
                                        ,(org-transclusion-propertize-transclusion)
                                        wrap-prefix
                                        ,(org-transclusion-propertize-transclusion)))
+      ;; Put the transclusion overlay
+      (let ((ov-tc (text-clone-make-overlay beg end)))
+        (overlay-put ov-tc 'evaporate t)
+        (overlay-put ov-tc 'face 'org-transclusion)
+        (overlay-put ov-tc 'priority -60))
       ;; Put to the source overlay
       (overlay-put ov-src 'org-transclusion-by beg-mkr)
       (overlay-put ov-src 'evaporate t)
+      (overlay-put ov-src 'face 'org-transclusion-source)
       (overlay-put ov-src 'line-prefix (org-transclusion-propertize-source))
       (overlay-put ov-src 'wrap-prefix (org-transclusion-propertize-source))
-      (overlay-put ov-src 'priority -50)
+      (overlay-put ov-src 'priority -60)
       ;; TODO this should not be necessary, but it is at the moment
       ;; live-sync-enclosing-element fails without tc-pair on source overlay
       (overlay-put ov-src 'org-transclusion-pair tc-pair))
