@@ -314,6 +314,7 @@ match any valid elisp symbol (but please don't quote it)."
   (when (string-match ":thing-at-point \\([[:alnum:][:punct:]]+\\)" string)
     (list :thing-at-point (org-strip-quotes (match-string 1 string)))))
 
+(declare-function org-transclusion-content-format "org-transclusion")
 (defun org-transclusion-content-format-src-lines (type content indent)
   "Format text CONTENT from source before transcluding.
 Return content modified (or unmodified, if not applicable).
