@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 24 May 2021
-;; Last modified: 08 May 2023
+;; Last modified: 17 May 2023
 
 ;;; Commentary:
 ;;  This is an extension to `org-transclusion'.  When active, it adds features
@@ -28,9 +28,9 @@
 (require 'org-element)
 (declare-function text-clone-make-overlay "text-clone")
 (declare-function org-transclusion-live-sync-buffers-others-default
-                  "org-transclusion")
-(declare-function org-transclusion-org-file-p
-                  "org-transclusion")
+             "org-transclusion")
+(declare-function org-transclusion-org-file-p "org-transclusion")
+(declare-function org-transclusion-content-format "org-transclusion")
 
 ;;;; Setting up the extension
 
@@ -314,7 +314,6 @@ match any valid elisp symbol (but please don't quote it)."
   (when (string-match ":thing-at-point \\([[:alnum:][:punct:]]+\\)" string)
     (list :thing-at-point (org-strip-quotes (match-string 1 string)))))
 
-(declare-function org-transclusion-content-format "org-transclusion")
 (defun org-transclusion-content-format-src-lines (type content indent)
   "Format text CONTENT from source before transcluding.
 Return content modified (or unmodified, if not applicable).
