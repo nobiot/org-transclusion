@@ -96,9 +96,30 @@ Return nil if PLIST does not contain \":src\" or \":lines\" properties."
         ;; Link contains a search-option ::<string>
         ;; and NOT for an Org file
         (and (org-element-property :search-option link)
-            (not (org-transclusion-org-file-p (org-element-property :path link)))))
+             (not (org-transclusion-org-file-p (org-element-property :path link)))))
     (append '(:tc-type "lines")
             (org-transclusion-content-range-of-lines link plist)))))
+
+(defun org-transclusion--get-lines-num (lines max-num)
+  "Return a list of line numbers from :lines value"
+  (when lines
+    (flatten-list
+     (mapcar (lambda (str)
+               (let* ((line (split-string str "-"))
+                      (lbeg (if (string-match "^-[0-9]+" str)
+                                1
+                              (string-to-number (car line))))
+                      (lend (if (string-match "[0-9]+-$" str)
+                                max-num
+                              (let ((last-line-num (string-to-number (car (last line)))))
+                                (if (> last-line-num max-num)
+                                    max-num
+                                  last-line-num)))))
+                 (number-sequence lbeg lend
+                                  (if (> lbeg lend)
+                                      -1
+                                    1))))
+             (split-string lines "," t)))))
 
 (defun org-transclusion-content-range-of-lines (link plist)
   "Return a list of payload for a range of lines from LINK and PLIST.
@@ -106,7 +127,7 @@ Return nil if PLIST does not contain \":src\" or \":lines\" properties."
 You can specify a range of lines to transclude by adding the :line
 property to a transclusion keyword like this:
 
-    #+transclude: [[file:path/to/file.ext]] :lines 1-10
+    #+transclude: [[file:path/to/file.ext]] :lines -10,15,12,11,17-
 
 This is taken from Org Export (function
 `org-export--inclusion-absolute-lines' in ox.el) with one
@@ -114,13 +135,13 @@ exception.  Instead of :lines 1-10 to exclude line 10, it has
 been adjusted to include line 10.  This should be more intuitive
 when it comes to including lines of code.
 
-In order to transclude a single line, have the the same number in
-both places (e.g. 10-10, meaning line 10 only).
-
 One of the numbers can be omitted.  When the first number is
-omitted (e.g. -10), it means from the beginning of the file to
-line 10. Likewise, when the second number is omitted (e.g. 10-),
-it means from line 10 to the end of file."
+omitted (e.g. -10), it means from the beginning of the file or
+element to line 10. Likewise, when the second number is
+omitted (e.g. 10-), it means from line 10 to the end of file.
+
+Also, the transcluded lines will conform to the :lines order.
+"
   (let* ((path (org-element-property :path link))
          (search-option (org-element-property :search-option link))
          (type (org-element-property :type link))
@@ -129,10 +150,17 @@ it means from line 10 to the end of file."
          (end-search-op (plist-get plist :end))
          (thing-at-point (plist-get plist :thing-at-point))
          (thing-at-point (when thing-at-point (make-symbol thing-at-point))))
-    (if (not (string= type "id")) (setq buf (find-file-noselect path))
-      (let ((filename-pos (org-id-find path)))
-        (setq buf (find-file-noselect (car filename-pos)))
-        (setq entry-pos (cdr filename-pos))))
+    (pcase type
+      ("id"
+       (let ((filename-pos (org-id-find path)))
+         (setq buf (find-file-noselect (car filename-pos)))
+         (setq entry-pos (cdr filename-pos))))
+      ("file"
+       (setq buf (find-file-noselect path)))
+      ("fuzzy"
+       (setq buf (find-file-noselect (buffer-file-name)))
+       (setq search-option path))
+      (_ nil))
     (when buf
       (with-current-buffer buf
         (org-with-wide-buffer
@@ -154,43 +182,43 @@ it means from line 10 to the end of file."
                               (goto-char start-pos)
                               (back-to-indentation)
                               (org-transclusion--bounds-of-n-things-at-point thing-at-point count)))))
-                (end-pos (cond ((when thing-at-point (cdr bounds)))
-                               ((when end-search-op
-                                  (save-excursion
-                                    (ignore-errors
-                                      ;; FIXME `org-link-search' does not
-                                      ;; return postion when either ::/regex/
-                                      ;; or ::number is used
-                                      (when (org-link-search end-search-op)
-                                        (line-beginning-position))))))))
-                (range (when lines (split-string lines "-")))
-                (lbeg (if range (string-to-number (car range))
-                        0))
-                (lend (if range (string-to-number (cadr range))
-                        0))
-                ;; This means beginning part of the range
-                ;; can be mixed with search-option
-                ;;; only positive number works
-                (beg  (progn (goto-char (or start-pos (point-min)))
-                             (when (> lbeg 0)(forward-line (1- lbeg)))
-                             (point)))
-                ;;; This `cond' means :end prop has priority over the end
-                ;;; position of the range. They don't mix.
-                (end (cond
-                      ((when thing-at-point end-pos)
-                       (when (and end-pos (> end-pos beg))
-                         end-pos))
-                      ((if (zerop lend) (point-max)
-                         (goto-char start-pos)
-                         (forward-line (1- lend))
-                         (end-of-line);; include the line
-                         ;; Ensure to include the \n into the end point
-                         (1+ (point))))))
-                (content (buffer-substring-no-properties beg end)))
-           (list :src-content content
+                (end-pos (cond (thing-at-point (cdr bounds))
+                               (end-search-op (save-excursion
+                                                (ignore-errors
+                                                  ;; FIXME `org-link-search' does not
+                                                  ;; return postion when either ::/regex/
+                                                  ;; or ::number is used
+                                                  (when (org-link-search end-search-op)
+                                                    (line-beginning-position)))))
+                               (search-option (save-excursion
+                                                (ignore-errors
+                                                  (when (org-link-search search-option)
+                                                    (let* ((element (org-element-context))
+                                                           (type (org-element-type element)))
+                                                      (when (string= "target" type)
+                                                        (let ((parent (org-element-property :parent element)))
+                                                          (when (string= "paragraph" (org-element-type parent))
+                                                            (setq element parent)))
+                                                        (let ((parent (org-element-property :parent element)))
+                                                          (when (string= "item" (org-element-type parent))
+                                                            (setq element parent))))
+                                                      (org-element-property :end element))))))
+                               (t (point-max))))
+                (src-element-lines (count-lines start-pos end-pos))
+                (line-nums (org-transclusion--get-lines-num lines src-element-lines))
+                (lbeg (if line-nums (apply #'min line-nums)
+                        1))
+                (lend (if line-nums (apply #'max line-nums)
+                        src-element-lines))
+                (content (buffer-substring-no-properties start-pos end-pos))
+                (filtered-content
+                 (let ((lines (split-string content "\n")))
+                   (string-join (mapcar (lambda (slice) (nth (1- slice) lines)) line-nums)
+                                "\n"))))
+           (list :src-content filtered-content
                  :src-buf (current-buffer)
-                 :src-beg beg
-                 :src-end end)))))))
+                 :src-beg start-pos
+                 :src-end end-pos)))))))
 
 (defun org-transclusion-content-src-lines (link plist)
   "Return a list of payload from LINK and PLIST in a src-block.
@@ -220,7 +248,7 @@ for the range works."
 It is meant to be used by `org-transclusion-get-string-to-plist'.
 It needs to be set in `org-transclusion-get-keyword-values-hook'.
 Double qutations are optional \"1-10\"."
-  (when (string-match ":lines +\\(\"?[0-9]*-[0-9]*\"?\\)" string)
+  (when (string-match ":lines +\\(\"?[0-9]*[0-9-,]*[0-9]*\"?\\)" string)
     (list :lines (org-strip-quotes (match-string 1 string)))))
 
 (defun org-transclusion-keyword-value-src (string)
