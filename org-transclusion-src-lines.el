@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 24 May 2021
-;; Last modified: 17 May 2023
+;; Last modified: 23 May 2023
 
 ;;; Commentary:
 ;;  This is an extension to `org-transclusion'.  When active, it adds features
@@ -127,7 +127,7 @@ it means from line 10 to the end of file."
          (entry-pos) (buf)
          (lines (plist-get plist :lines))
          (end-search-op (plist-get plist :end))
-         (thing-at-point (plist-get plist :thing-at-point))
+         (thing-at-point (cadr (split-string (plist-get plist :thing-at-point))))
          (thing-at-point (when thing-at-point (make-symbol thing-at-point))))
     (if (not (string= type "id")) (setq buf (find-file-noselect path))
       (let ((filename-pos (org-id-find path)))
@@ -268,7 +268,7 @@ abnormal hook
      (when src (format " :src %s" src))
      (when rest (format " :rest \"%s\"" rest))
      (when end (format " :end \"%s\"" end))
-     (when thing-at-point (format " :thing-at-point %s" thing-at-point)))))
+     (when thing-at-point (format " %s" thing-at-point)))))
 
 (defun org-transclusion-src-lines-p (type)
   "Return non-nil when TYPE is \"src\" or \"lines\".
@@ -311,8 +311,8 @@ It is meant to be used by `org-transclusion-get-string-to-plist'.
 It needs to be set in `org-transclusion-get-keyword-values-hook'.
 Double qutations are optional :thing-at-point \"sexp\".  The regex should
 match any valid elisp symbol (but please don't quote it)."
-  (when (string-match ":thing-at-point \\([[:alnum:][:punct:]]+\\)" string)
-    (list :thing-at-point (org-strip-quotes (match-string 1 string)))))
+  (when (string-match "\\(:thing-at-point\\|:thingatpt\\) \\([[:alnum:][:punct:]]+\\)" string)
+    (list :thing-at-point (org-strip-quotes (match-string 0 string)))))
 
 (defun org-transclusion-content-format-src-lines (type content indent)
   "Format text CONTENT from source before transcluding.
