@@ -3,8 +3,9 @@
   - fix: add faces back org-transclusion and org-transclusion-source
     #174
 
-  - feat: add :things-at-point property for transcluding source and
-    other non-org text files
+  - feat: add :things-at-point (or :thingatpt) property for transcluding
+    source and other non-org text files. Both property names are synonym
+    with each other and work in the same way.
 
   - feat: add org-block-live-sync
 
