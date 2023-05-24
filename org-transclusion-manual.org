@@ -1,7 +1,7 @@
 #+title: Org-transclusion User Manual
 #+author: Noboru Ota <me@nobiot.com>
 #+macro: version 1.3.x
-#+macro: modified 10 May 2023
+#+macro: modified 24 May 2023
 
 #+language: en
 #+export_file_name: org-transclusion.texi
@@ -484,11 +484,12 @@ Example 3:
 #+transclude: [[file:../../test/python-1.py::id-1234]] :lines 2- :src python :end "id-1234 end here"
 #+end_example
 
-*** =:thing-at-point= property to specify a "thing" to transclude from the source.
+*** =:thing-at-point= or =:thingatpt= property to specify a "thing" to transclude from the source.
 
 #+cindex: Property - :thing-at-point
+#+cindex: Property - :thingatpt
 
-You can add =:thing-at-point= property to transclude a certain "thing" at point to be transcluded. The following text elements have been tested to work:
+You can add =:thing-at-point= or =:thingatpt= (they are synonyms with each other and both work) property to transclude a certain "thing" at point to be transcluded. The following text elements have been tested to work:
 
 - sentence
 - paragraph
@@ -497,7 +498,7 @@ You can add =:thing-at-point= property to transclude a certain "thing" at point 
 
 #+ATTR_TEXINFO: :tag Note
 #+begin_quote
-As it stands now, you cannot use :thing-at-point to specify the precise beginning of the thing within a line -- it is always the beginning of the line.
+As it stands now, you cannot use =:thing-at-point= or =:thingatpt= to specify the precise beginning of the thing within a line -- it is always the beginning of the line.
 #+end_quote
 
 #+ATTR_TEXINFO: :tag Note
@@ -511,10 +512,10 @@ Example 4:
 #+begin_example
 #+transclude: [[./things-at-point-dir/story.txt::Once upon a time][story]]  :thing-at-point paragraph
 
-#+transclude: [[./things-at-point-dir/story.txt::Once upon a time][story]]  :thing-at-point sentence
+#+transclude: [[./things-at-point-dir/story.txt::Once upon a time][story]]  :thingatpt sentence
 #+end_example
 
-You can combine =:thing-at=point= with =:src= property so that the transcluded text is wrapped in Org's source block. Example 5 shows a way to do so. id​:​1234567890 is assumed to be present as comment in the source file.
+You can combine =:thing-at=point= (or =:thingatpt=) with =:src= property so that the transcluded text is wrapped in Org's source block. Example 5 shows a way to do so. id​:​1234567890 is assumed to be present as comment in the source file.
 
 Example 5:
 #+begin_example
@@ -522,7 +523,7 @@ Example 5:
 
 #+transclude: [[./things-at-point-dir/baz.el::foo][barz-baz-fuzz]]  :src elisp :thing-at-point sexp
 
-#+transclude: [[./things-at-point-dir/baz.el::id:1234567890][barz-baz-fuzz]]  :src elisp :thing-at-point defun
+#+transclude: [[./things-at-point-dir/baz.el::id:1234567890][barz-baz-fuzz]]  :src elisp :thingatpt defun
 #+end_example
 
 ** Extensions
@@ -731,7 +732,7 @@ Note this section is still incomplete, not exhaustive for "known" limitations.
 - Undo detach does not add the overlay back on the source ::
   This should not break any feature. You can safely refresh the transclusion and recover the source overlay. You can also safely open or moved to the source while the source overlay is not present.
 
-- For =:thing-at-point=, you cannot use it to specify the precise beginning of the thing within a line -- it is always the beginning of the line.
+- For =:thing-at-point= or =:thingatpt=, you cannot use them to specify the precise beginning of the thing within a line -- it is always the beginning of the line.
 
 * Credits
 ** Original idea by John Kitchin
