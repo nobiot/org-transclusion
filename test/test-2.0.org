@@ -152,7 +152,7 @@ This is content of H3
 #+transclude: [[file:paragraph.org::quote][Link to a quote]]
 
 *  Only Contents
-#+transclude: [[id:20210501T171427.051019][Bertrand Russell]] :only-contents
+#+transclude: [[id:2022-05-30T203553][Bertrand Russell]] :only-contents
 
 * :only-contents and :exclude-element
 

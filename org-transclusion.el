@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 11 May 2023
+;; Last modified: 27 May 2023
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -1130,10 +1130,18 @@ work to
            (org-transclusion-content-org-buffer-or-element
             nil plist)))))))
 
+(defvar org-transclusion-content-filter-org-functions '())
+
+(add-hook 'org-transclusion-content-filter-org-functions
+          #'org-transclusion-content-filter-org-only-contents-function)
+
+(add-hook 'org-transclusion-content-filter-org-functions
+          #'org-transclusion-content-filter-org-expand-links-function)
+
 (defun org-transclusion-content-org-buffer-or-element (only-element plist)
   "Return a list of playload for transclusion.
 Tis function assumes the point is at the beginning of the org
-element to transclude.
+element to transclude.-
 
 The payload is a plist that consists of the following properties:
 - :src-content
@@ -1153,16 +1161,14 @@ property controls the filter applied to the transclusion."
     (if (or (not el)(not type))
         (message "Nothing done")
       ;; For dedicated target, we want to get the parent paragraph,
-      ;; rather than the target itself
+      ;; rather than the target itself-
       (when (and (string= "target" type)
                  (string= "paragraph" (org-element-type (org-element-property :parent el))))
         (setq el (org-element-property :parent el)))
       (let ((beg (org-element-property :begin el))
             (end (org-element-property :end el))
-            (only-contents (plist-get plist :only-contents))
             (exclude-elements
              (org-transclusion-keyword-plist-to-exclude-elements plist))
-            (expand-links (plist-get plist :expand-links))
             obj)
         (when only-element
           (narrow-to-region beg end))
@@ -1180,22 +1186,19 @@ property controls the filter applied to the transclusion."
           (setq obj (org-element-map obj org-element-all-elements
                       #'org-transclusion-content-filter-org-first-section
                       nil nil org-element-all-elements nil)))
-        ;; Only contents
-        (when only-contents
-          (setq obj (org-element-map obj org-element-all-elements
-                      #'org-transclusion-content-filter-org-only-contents
-                      nil nil '(section) nil)))
 
-        ;; Expand file names in all the links
-        (when expand-links
-          (org-element-map obj 'link #'org-transclusion-content-filter-expand-links))
+        (run-hook-with-args 'org-transclusion-content-filter-org-functions obj plist)
 
         (list :src-content (org-element-interpret-data obj)
               :src-buf (current-buffer)
               :src-beg (point-min)
               :src-end (point-max))))))
 
-(defun org-transclusion-content-filter-expand-links (link)
+(defun org-transclusion-content-filter-org-expand-links-function (obj plist)
+  (when-let ((expand-links (plist-get plist :expand-links)))
+    (org-element-map obj 'link #'org-transclusion-content-filter-org-expand-links)))
+
+(defun org-transclusion-content-filter-org-expand-links (link)
   "Convert LINK to an absolute filename.
 LINK is assumed to be an Org element. This function does nothing
 to LINK if the link is already absolute.
@@ -1229,6 +1232,12 @@ is non-nil."
            (not org-transclusion-include-first-section))
       nil
     data))
+
+(defun org-transclusion-content-filter-org-only-contents-function (obj plist)
+  (when-let ((only-contents (plist-get plist :only-contents)))
+    (org-element-map obj org-element-all-elements
+      #'org-transclusion-content-filter-org-only-contents
+      nil nil '(section) nil)))
 
 (defun org-transclusion-content-filter-org-only-contents (data)
   "Exclude headlines from DATA to include only contents."
