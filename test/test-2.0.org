@@ -103,7 +103,7 @@ This is content of H3
 (variable-pitch-mode -1)
 #+end_example
 
-#+transclude: [[file:paragraph.org::table-with-link][Link to a table with a link]]
+#+transclude: [[file:paragraph.org::table-with-link][Link to a table with a link]] :table-rows 1-2
 
 ** Quote
 #+transclude: [[file:paragraph.org::quote][Link to a quote]]
