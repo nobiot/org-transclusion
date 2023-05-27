@@ -138,7 +138,16 @@ This is content of H3
 #+end_example
 
 [[file:./test-no-first-section.org]]
+
+Temporarily set ~org-transclusion-include-first-section~ to nil
+#+begin_src emacs-lisp
+  (setq org-transclusion-include-first-section nil)
+  (setq org-transclusion-include-first-section t)
+#+end_src
+
 #+transclude: [[file:./test-no-first-section.org]]
+
+#+transclude: [[file:test-no-first-section-negative.org]]
 
 * Live-Sync
 ** center-block dynamic-block example-block export-block special-block verse-block
