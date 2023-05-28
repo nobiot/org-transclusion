@@ -57,11 +57,13 @@ Currently ALWAYS remove the 3rd row (hard coded)."
         (lambda (table)
           (org-element-map table 'table-row
             (lambda (row)
-              ;; Remove
+              ;; Currently always remove the third row (hard coded)
+              ;; This should be changed
               (setq counter (1+ counter))
               (if (eq counter 3) (org-element-extract-element
                                   row))))
-          table)))))
+          table)))
+    obj))
 
 (provide 'org-transclusion-org-table-rows)
 ;;; org-transclusion-org-table-rows.el ends here.
