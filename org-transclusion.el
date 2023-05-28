@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 27 May 2023
+;; Last modified: 28 May 2023
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -1196,12 +1196,16 @@ property controls the filter applied to the transclusion."
                 #'org-transclusion-content-filter-org-first-section
                 nil nil org-element-all-elements nil)))
   ;; Apply other filters
-  (run-hook-with-args 'org-transclusion-content-filter-org-functions obj plist)
+    (dolist (fn org-transclusion-content-filter-org-functions)
+      (let ((obj-returned (funcall fn obj plist)))
+        ;; If nil is returned, do not change the org-content (obj)
+        (when obj-returned (setq obj obj-returned))))
   obj)
 
 (defun org-transclusion-content-filter-org-expand-links-function (obj plist)
-  (when-let ((expand-links (plist-get plist :expand-links)))
-    (org-element-map obj 'link #'org-transclusion-content-filter-org-expand-links)))
+  (when (plist-get plist :expand-links)
+    (org-element-map obj 'link #'org-transclusion-content-filter-org-expand-links)
+    obj))
 
 (defun org-transclusion-content-filter-org-expand-links (link)
   "Convert LINK to an absolute filename.
@@ -1242,7 +1246,7 @@ is non-nil."
   (when-let ((only-contents (plist-get plist :only-contents)))
     (org-element-map obj org-element-all-elements
       #'org-transclusion-content-filter-org-only-contents
-      nil nil '(section) nil)))
+      nil nil 'section nil)))
 
 (defun org-transclusion-content-filter-org-only-contents (data)
   "Exclude headlines from DATA to include only contents."

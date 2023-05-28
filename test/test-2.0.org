@@ -19,76 +19,7 @@ t/nil will be dropped after remove-at-point
 
 ** test
 
-* Bertrand Russell - Wikipedia
-:ref:
-:link: https://en.wikipedia.org/wiki/Bertrand_Russell
-:END:
-
-*Bertrand Arthur William Russell, 3rd Earl Russell* OM FRS[65] (18 May 1872 – 2 February 1970) was a British polymath ande writer. He was born in Monmouthshire into one of the most prominent aristocratic families in the United Kingdom.
-
-#+transclude: [[file:bertrand-russell.org::*Bertrand Russell - Wikipedia]] :level 1
-
-#+begin_export nil
-As an academic, he worked in philosophy, mathematics, and logic. His work has had a considerable influence on mathematics, logic, set theory, linguistics, artificial intelligence, cognitive science, computer science (see type theory and type system) and various areas of analytic philosophy, especially logic, philosophy of mathematics, philosophy of language, epistemology and metaphysics.
-#+end_export
-
-#+begin_src elisp
-  If an integer $n$ is greater than 2, then the equation $a^n + b^n = c^n$
-  has no solutions in non-zero integers $a$, $b$, and $c$.
-  This is live-sync'ed
-#+end_src
-
-Russell was also a public intellectual, historian, social critic, political activist, and Nobel laureate.[66][67] Throughout his life, Russell considered himself a liberal, a socialist and a pacifist, although he later wrote he had "never been any of these things, in any profound sense".[68] This is live sync. As  you can see, the edit on the left (transclusion) is copied over to the right (source)
-
-Below is an example of a LaTex environment
-
-\begin{equation}
-x=\sqrt{b}
-\end{equation}
-
-: fixed width element
-: Second line
-
-
-\begin{align*}
-2x - 5y &= 8 \\
-3x + 9y &= -12
-\end{align*}
-
-** H2
-:ref:
-:data: data
-:END:
-
-#+begin_example
-  Russell is one of the early 20th century's most prominent logicians,[67] and one of the founders of analytic philosophy, along with his predecessor Gottlob Frege, his friend and colleague G. E. Moore and his student and protégé Ludwig Wittgenstein.
-#+end_example
-
-#+begin_verse
-Great clouds overhead
-Tiny black birds rise and fall
-Snow covers Emacs
-
-   ---AlexSchroeder
-   Verse can be live-synced
-#+end_verse
-
-#+begin: dynamic
-Russell with Moore led the British "revolt against idealism".[a] Together with his former teacher A. N. Whitehead, Russell wrote Principia Mathematica, a milestone in the development of classical logic, and a major attempt to reduce the whole of mathematics to logic (see Logicism). Russell's article On Denoting has been considered a "paradigm of philosophy".[70]
-#+end:
-
-*** H3
-This is content of H3
-
-
-** Test =org-adapt-indentation=
-
-#+begin_example
-(setq org-adapt-indentation nil)
-(setq org-adapt-indentation t)
-#+end_example
-
-#+transclude: [[id:20210501T171427.051019][Bertrand Russell]]
+#+transclude: [[id:2022-05-30T203553][Bertrand Russell]] :only-contents
 
 ** Paragraph
 
@@ -172,7 +103,7 @@ Temporarily set ~org-transclusion-include-first-section~ to nil
 #+transclude: [[file:bertrand-russell.org::*On Denoting]] :level 2 :only-contents :exclude-elements "headline drawer"
 
 ** test
-#+transclude: [[file:bertrand-russell.org::*On Denoting]] :level 2 :only-contents :exclude-elements "headline   drawer"
+#+transclude: [[file:bertrand-russell.org::*On Denoting]] :level 2 :only-contents :exclude-elements "headline drawer"
 
 * Disable-auto
 ** *Hadline
