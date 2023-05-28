@@ -27,6 +27,14 @@ t/nil will be dropped after remove-at-point
 
 #+transclude: [[file:./paragraph.org::para2]]
 
+** Table rows
+
+This transclude all the rows
+#+transclude: [[file:org-table-rows.org::barz]]
+
+Currently, this always removes the third row only no matter what value you add to :table-rows property
+#+transclude: [[file:org-table-rows.org::barz]] :table-rows 1-2
+
 ** Table
 #+transclude: [[file:paragraph.org::table][Link to a table]]
 
