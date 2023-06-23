@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 24 May 2021
-;; Last modified: 23 May 2023
+;; Last modified: 23 June 2023
 
 ;;; Commentary:
 ;;  This is an extension to `org-transclusion'.  When active, it adds features
@@ -127,8 +127,9 @@ it means from line 10 to the end of file."
          (entry-pos) (buf)
          (lines (plist-get plist :lines))
          (end-search-op (plist-get plist :end))
-         (thing-at-point (cadr (split-string (plist-get plist :thing-at-point))))
-         (thing-at-point (when thing-at-point (make-symbol thing-at-point))))
+         (thing-at-point (plist-get plist :thing-at-point))
+         (thing-at-point (when thing-at-point
+                           (make-symbol (cadr (split-string thing-at-point))))))
     (if (not (string= type "id")) (setq buf (find-file-noselect path))
       (let ((filename-pos (org-id-find path)))
         (setq buf (find-file-noselect (car filename-pos)))
