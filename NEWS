@@ -1,5 +1,7 @@
 * Current development version
 
+  - fix(src-lines): #192 error when :thing-at-point nil
+
   - fix: add faces back org-transclusion and org-transclusion-source
     #174
 
