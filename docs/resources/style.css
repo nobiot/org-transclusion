@@ -1,0 +1,175 @@
+/* This stylesheet is used by manuals and a few older resources. */
+
+@import url('reset.css');
+
+
+/***  PAGE LAYOUT  ***/
+
+html, body {
+   font-size: 1em;
+   text-align: left;
+   text-decoration: none;
+}
+html { background-color: #e7e7e7; }
+
+body {
+   max-width: 74.92em;
+   margin: 0 auto;
+   padding: .5em 1em 1em 1em;
+   background-color: white;
+   border: .1em solid #c0c0c0;
+}
+
+/*** BASIC ELEMENTS ***/
+
+/* Size and positioning */
+
+p, pre, li, dt, dd, table, code, address { line-height: 1.3em; }
+
+h1 { font-size: 2em; margin: 1em 0 }
+h2 { font-size: 1.50em; margin: 1.0em 0 0.87em 0; }
+h3 { font-size: 1.30em; margin: 1.0em 0 0.87em 0; }
+h4 { font-size: 1.13em; margin: 1.0em 0 0.88em 0; }
+h5 { font-size: 1.00em; margin: 1.0em 0 1.00em 0; }
+
+p, pre { margin: 1em 0; }
+pre { overflow: auto; padding-bottom: .3em; }
+
+ul, ol, blockquote { margin-left: 1.5%; margin-right: 1.5%; }
+hr { margin: 1em 0; }
+/* Lists of underlined links are difficult to read. The top margin
+   gives a little more spacing between entries. */
+ul li { margin: .5em 1em; }
+ol li { margin: 1em; }
+ol ul li { margin: .5em 1em; }
+ul li p, ul ul li { margin-top: .3em; margin-bottom: .3em; }
+ul ul, ol ul { margin-top: 0; margin-bottom: 0; }
+
+/* Separate description lists from preceding text */
+dl { margin: 1em 0 0 0; }
+/* separate the "term" from subsequent "description" */
+dt { margin: .5em 0; }
+/* separate the "description" from subsequent list item
+   when the final <dd> child is an anonymous box */
+dd { margin: .5em 3% 1em 3%; }
+/* separate anonymous box (used to be the first element in <dd>)
+   from subsequent <p> */
+dd p { margin: .5em 0; }
+
+table {
+   display: block; overflow: auto;
+   margin-top: 1.5em; margin-bottom: 1.5em;
+}
+th { padding: .3em .5em; text-align: center; }
+td { padding: .2em .5em; }
+
+address { margin-bottom: 1em; }
+caption { margin-bottom: .5em; text-align: center; }
+sup { vertical-align: super; }
+sub { vertical-align: sub; }
+
+/* Style */
+
+h1, h2, h3, h4, h5, h6, strong, dt, th { font-weight: bold; }
+
+/* The default color (black) is too dark for large text in
+   bold font. */
+h1, h2, h3, h4 { color: #333; }
+h5, h6, dt { color: #222; }
+
+a[href] { color: #005090; }
+a[href]:visited { color: #100070; }
+a[href]:active, a[href]:hover {
+   color: #100070;
+   text-decoration: none;
+}
+
+h1 a[href]:visited, h2 a[href]:visited, h3 a[href]:visited,
+ h4 a[href]:visited { color: #005090; }
+h1 a[href]:hover, h2 a[href]:hover, h3 a[href]:hover,
+ h4 a[href]:hover { color: #100070; }
+
+ol { list-style: decimal outside;}
+ul { list-style: square outside; }
+ul ul, ol ul { list-style: circle; }
+li { list-style: inherit; }
+
+hr { background-color: #ede6d5; }
+table { border: 0; }
+
+abbr,acronym {
+   border-bottom:1px dotted #000;
+   text-decoration: none;
+   cursor:help;
+}
+del { text-decoration: line-through; }
+em { font-style: italic; }
+small { font-size: .9em; }
+
+img { max-width: 100%}
+
+
+/*** SIMPLE CLASSES ***/
+
+.center, .c { text-align: center; }
+.nocenter{ text-align: left; }
+
+.underline { text-decoration: underline; }
+.nounderline { text-decoration: none; }
+
+.no-bullet { list-style: none; }
+.inline-list li { display: inline }
+
+.netscape4, .no-display { display: none; }
+
+
+/*** MANUAL PAGES ***/
+
+/* This makes the very long tables of contents in Gnulib and other
+   manuals easier to read. */
+.contents ul, .shortcontents ul { font-weight: bold; }
+.contents ul ul, .shortcontents ul ul { font-weight: normal; }
+.contents ul { list-style: none; }
+
+/* For colored navigation bars (Emacs manual): make the bar extend
+   across the whole width of the page and give it a decent height. */
+.header, .node { margin: 0 -1em; padding: 0 1em; }
+.header p, .node p { line-height: 2em; }
+
+/* For navigation links. We can't use inline-block display to avoid wrapping
+   because this makes the links appear much smaller than normal text on
+   phones with Chromium (RT #1872370). */
+.node a, .header a { /*display: inline-block;*/ line-height: 2em; }
+.node a:hover, .header a:hover { background: #f2efe4; }
+
+/* Inserts */
+table.cartouche td { padding: 1.5em; }
+
+div.display, div.lisp, div.smalldisplay,
+ div.smallexample, div.smalllisp { margin-left: 3%; }
+
+div.example { padding: .8em 1.2em .4em; }
+pre.example { padding: .8em 1.2em; }
+div.example, pre.example {
+   margin: 1em 0 1em 3% ;
+   -webkit-border-radius: .3em;
+   -moz-border-radius: .3em;
+   border-radius: .3em;
+   border: 1px solid #d4cbb6;
+   background-color: #f2efe4;
+}
+div.example > pre.example {
+   padding: 0 0 .4em;
+   margin: 0;
+   border: none;
+}
+
+pre.menu-comment { padding-top: 1.3em; margin: 0; }
+
+
+/*** FOR WIDE SCREENS ***/
+
+@media (min-width: 40em) {
+   body { padding: .5em 3em 1em 3em; }
+   div.header, div.node { margin: 0 -3em; padding: 0 3em; }
+}

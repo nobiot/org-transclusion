@@ -1,76 +1,24 @@
-/** Based on Org-roam's css
-    https://github.com/org-roam/org-roam/blob/master/doc/assets/page.css
- **/
-:root {
-  --border: #526980;
-  --code: #007;
-}
+/* Style-sheet to use for Emacs manuals  */
 
-body {
-    margin: 5ex auto;
-    max-width: 850px;
-    line-height: 1.5em;
-    font-family: sans-serif;
-    font-size: 18px;
-}
+/* Copyright (C) 2013-2022 Free Software Foundation, Inc.
 
-h1, h2, h3 {
-    font-weight: normal;
-}
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.  This file is offered as-is,
+without any warranty.
+*/
 
-.settitle {
-    display: none;
-}
+@import url('style.css');
 
-pre, code {
-    font-family: x, monospace;
-}
+/* makeinfo convert @deffn and similar functions to something inside
+   <blockquote>.  style.css uses italic for blockquote.  This looks poor
+   in the Emacs manuals, which make extensive use of @defun (etc).
+   In particular, references to function arguments appear as <var>
+   inside <blockquote>.  Since <var> is also italic, it makes it
+   impossible to distinguish variables.  We could change <var> to
+   e.g. bold-italic, or normal, or a different color, but that does
+   not look as good IMO.  So we just override blockquote to be non-italic.
+   */
+blockquote { font-style: normal; }
 
-pre {
-    padding: 1ex;
-    background: #eee;
-    border: solid 1px #ddd;
-    min-width: 0;
-    font-size: 80%;
-    overflow: auto;
-}
-
-code {
-    color: var(--code);
-}
-
-img {
-    max-width: 100%;
-}
-
-table {
-  border-collapse: collapse;
-  width: 100%;
-}
-
-pre.menu-comment {
-  background: none;
-  border: none;
-  font-family: sans-serif;
-  padding: 0;
-  margin: 0;
-  font-size: 100%;
-}
-
-thead {
-  border-bottom: 1px solid var(--border);
-}
-
-tfoot {
-  border-top: 1px solid var(--border);
-}
-
-blockquote {
-  margin-left: 1rem;
-  font-style: italic;
-  font-family: serif;
-  border-left: 3px solid;
-  border-left-color: currentcolor;
-  border-color: var(--text-color);
-  padding-left: 1em;
-}
+var { font-style: italic; }
