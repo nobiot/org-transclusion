@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 11 May 2023
+;; Last modified: 28 May 2023
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -914,7 +914,7 @@ inserted when more than one space is inserted between symbols."
 ;;-----------------------------------------------------------------------------
 ;;;; Add-at-point functions
 (defun org-transclusion-add-org-id (link plist)
-  "Return a list for Org-ID LINK object and PLIST.
+  "Return the payload list for Org-ID LINK object and PLIST.
 Return nil if not found."
   (when (string= "id" (org-element-property :type link))
     ;; when type is id, the value of path is the id
@@ -929,14 +929,14 @@ Return nil if not found."
         nil))))
 
 (defun org-transclusion-add-org-file (link plist)
-  "Return a list for Org file LINK object and PLIST.
+  "Return the payload list for Org file LINK object and PLIST.
 Return nil if not found."
   (when (org-transclusion-org-file-p (org-element-property :path link))
     (append '(:tc-type "org-link")
             (org-transclusion-content-org-link link plist))))
 
 (defun org-transclusion-add-other-file (link plist)
-  "Return a list for non-Org file LINK object and PLIST.
+  "Return the payload list for non-Org file LINK object and PLIST.
 Return nil if not found."
   (append '(:tc-type "others-default")
           (org-transclusion-content-others-default link plist)))
@@ -1092,10 +1092,10 @@ INDENT is the number of current indentation of the #+transclude."
     (buffer-string)))
 
 (defun org-transclusion-content-org-marker (marker plist)
-  "Return a list of payload from MARKER and PLIST.
-This function is intended to be used for Org-ID.  It delates the
+  "Return the payload list from MARKER and PLIST.
+This function is intended to be used for Org-ID.  It delegates the
 work to
-`org-transclusion-content-org-buffer-or-element'."
+`org-transclusion-content-org-filtered'."
   (if (and marker (marker-buffer marker)
            (buffer-live-p (marker-buffer marker)))
       (progn
@@ -1103,17 +1103,17 @@ work to
           (org-with-wide-buffer
            (goto-char marker)
            (if (org-before-first-heading-p)
-               (org-transclusion-content-org-buffer-or-element
+               (org-transclusion-content-org-filtered
                 nil plist)
-             (org-transclusion-content-org-buffer-or-element
+             (org-transclusion-content-org-filtered
               'only-element plist)))))
     (message "Nothing done. Cannot find marker for the ID.")))
 
 (defun org-transclusion-content-org-link (link plist)
-  "Return a list of payload from Org LINK object and PLIST.
-This function is intended to be used for Org-ID.  It delates the
+  "Return the payload list from Org LINK object and PLIST.
+This function is intended to be used for Org-ID.  It delegates the
 work to
-`org-transclusion-content-org-buffer-or-element'."
+`org-transclusion-content-org-filtered'."
   (save-excursion
     ;; First visit the buffer and go to the relevant elelement if
     ;; search-option is present.
@@ -1125,15 +1125,26 @@ work to
          (if search-option
              (progn
                (org-link-search search-option)
-               (org-transclusion-content-org-buffer-or-element
+               (org-transclusion-content-org-filtered
                 'only-element plist))
-           (org-transclusion-content-org-buffer-or-element
+           (org-transclusion-content-org-filtered
             nil plist)))))))
 
-(defun org-transclusion-content-org-buffer-or-element (only-element plist)
-  "Return a list of playload for transclusion.
-Tis function assumes the point is at the beginning of the org
-element to transclude.
+(defvar org-transclusion-content-filter-org-functions '())
+
+(add-hook 'org-transclusion-content-filter-org-functions
+          #'org-transclusion-content-filter-org-only-contents-function)
+
+(add-hook 'org-transclusion-content-filter-org-functions
+          #'org-transclusion-content-filter-org-expand-links-function)
+
+(make-obsolete 'org-transclusion-content-org-buffer-or-element
+               'org-transclusion-content-org-filtered "1.4.0")
+
+(defun org-transclusion-content-org-filtered (only-element plist)
+  "Return the playload list for transclusion.
+This function assumes the point is at the beginning of the org
+element to transclude.-
 
 The payload is a plist that consists of the following properties:
 - :src-content
@@ -1153,49 +1164,50 @@ property controls the filter applied to the transclusion."
     (if (or (not el)(not type))
         (message "Nothing done")
       ;; For dedicated target, we want to get the parent paragraph,
-      ;; rather than the target itself
+      ;; rather than the target itself-
       (when (and (string= "target" type)
                  (string= "paragraph" (org-element-type (org-element-property :parent el))))
         (setq el (org-element-property :parent el)))
       (let ((beg (org-element-property :begin el))
             (end (org-element-property :end el))
-            (only-contents (plist-get plist :only-contents))
-            (exclude-elements
-             (org-transclusion-keyword-plist-to-exclude-elements plist))
-            (expand-links (plist-get plist :expand-links))
             obj)
         (when only-element
           (narrow-to-region beg end))
         (setq obj (org-element-parse-buffer))
-        ;; Apply `org-transclusion-exclude-elements'
-        ;; Appending exclude-elements can duplicate symbols
-        ;; But that does not influence the output
-        (let ((org-transclusion-exclude-elements
-               (append exclude-elements org-transclusion-exclude-elements)))
-          (setq obj (org-element-map obj org-element-all-elements
-                      #'org-transclusion-content-filter-org-exclude-elements
-                      nil nil org-element-all-elements nil)))
-        ;; First section
-        (unless only-element ;only-element is nil when it is a first section
-          (setq obj (org-element-map obj org-element-all-elements
-                      #'org-transclusion-content-filter-org-first-section
-                      nil nil org-element-all-elements nil)))
-        ;; Only contents
-        (when only-contents
-          (setq obj (org-element-map obj org-element-all-elements
-                      #'org-transclusion-content-filter-org-only-contents
-                      nil nil '(section) nil)))
-
-        ;; Expand file names in all the links
-        (when expand-links
-          (org-element-map obj 'link #'org-transclusion-content-filter-expand-links))
-
+        (setq obj (org-transclusion-content-org-filter only-element obj plist))
         (list :src-content (org-element-interpret-data obj)
               :src-buf (current-buffer)
               :src-beg (point-min)
               :src-end (point-max))))))
 
-(defun org-transclusion-content-filter-expand-links (link)
+(defun org-transclusion-content-org-filter (only-element obj plist)
+  ;; Apply `org-transclusion-exclude-elements'
+  ;; Appending exclude-elements can duplicate symbols
+  ;; But that does not influence the output
+  (let ((org-transclusion-exclude-elements
+         (append (org-transclusion-keyword-plist-to-exclude-elements plist)
+                 org-transclusion-exclude-elements)))
+    (setq obj (org-element-map obj org-element-all-elements
+                #'org-transclusion-content-filter-org-exclude-elements
+                nil nil org-element-all-elements nil)))
+  ;; First section
+  (unless only-element ;only-element is nil when it is a first section
+    (setq obj (org-element-map obj org-element-all-elements
+                #'org-transclusion-content-filter-org-first-section
+                nil nil org-element-all-elements nil)))
+  ;; Apply other filters
+    (dolist (fn org-transclusion-content-filter-org-functions)
+      (let ((obj-returned (funcall fn obj plist)))
+        ;; If nil is returned, do not change the org-content (obj)
+        (when obj-returned (setq obj obj-returned))))
+  obj)
+
+(defun org-transclusion-content-filter-org-expand-links-function (obj plist)
+  (when (plist-get plist :expand-links)
+    (org-element-map obj 'link #'org-transclusion-content-filter-org-expand-links)
+    obj))
+
+(defun org-transclusion-content-filter-org-expand-links (link)
   "Convert LINK to an absolute filename.
 LINK is assumed to be an Org element. This function does nothing
 to LINK if the link is already absolute.
@@ -1229,6 +1241,12 @@ is non-nil."
            (not org-transclusion-include-first-section))
       nil
     data))
+
+(defun org-transclusion-content-filter-org-only-contents-function (obj plist)
+  (when-let ((only-contents (plist-get plist :only-contents)))
+    (org-element-map obj org-element-all-elements
+      #'org-transclusion-content-filter-org-only-contents
+      nil nil 'section nil)))
 
 (defun org-transclusion-content-filter-org-only-contents (data)
   "Exclude headlines from DATA to include only contents."
