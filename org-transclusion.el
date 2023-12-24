@@ -270,21 +270,6 @@ specific keybindings; namely:
    #b11000000]
   nil nil '(center t))
 
-;;;; Macro
-;;;; Definining macros before they are used in the rest of package
-;;;; Flycheck warns with "macro X defined too late"
-(defmacro org-transclusion-with-inhibit-read-only (&rest body)
-  "Run BODY with `'inhibit-read-only` t."
-  (declare (debug t) (indent 0))
-  (let ((modified (make-symbol "modified")))
-    `(let* ((,modified (buffer-modified-p))
-            (inhibit-read-only t))
-       (unwind-protect
-           (progn
-             ,@body)
-         (unless ,modified
-           (restore-buffer-modified-p nil))))))
-
 ;;;; Commands
 
 ;;;###autoload
@@ -440,7 +425,7 @@ does not support all the elements.
                   nil))
         (let ((beg (line-beginning-position))
               (end))
-          (org-transclusion-with-inhibit-read-only
+          (with-silent-modifications
             (when (save-excursion
                     (end-of-line) (insert-char ?\n)
                     (org-transclusion-content-insert
@@ -518,7 +503,7 @@ When success, return the beginning point of the keyword re-inserted."
           (when (org-transclusion-within-live-sync-p)
             (org-transclusion-live-sync-exit))
           (delete-overlay tc-pair-ov)
-          (org-transclusion-with-inhibit-read-only
+          (with-silent-modifications
             (save-excursion
               (delete-region beg end)
               (when (> indent 0) (indent-to indent))
