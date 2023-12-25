@@ -187,13 +187,26 @@ This is for live-sync.  Analogous to
     org-transclusion-add-other-file)
   "Define a list of functions to get a payload for transclusion.
 These function take two arguments: Org link and keyword plist,
-and return a playload.  The payload is defined as a property list
+and return a payload.  The payload is defined as a property list
 that consists of the following properties:
 
 - :tc-type
 - :src-buf
 - :src-beg
-- :src-end")
+- :src-end
+
+Otherwise, the payload may be a named or lambda callback
+function.  In that case, the callback function will be called
+with the following arguments:
+
+- \\+`link'
+- \\+`keyword-plist'
+- \\+`copy'
+
+In order for the transclusion to be inserted into the buffer, the
+callback function should generate a payload plist, then call
+`org-transclusion-add-callback', passing in the payload as well
+as the \\+`link', \\+`keyword-plist', and \\+`copy' arguments.")
 
 (defvar org-transclusion-keyword-value-functions
   '(org-transclusion-keyword-value-link
@@ -423,37 +436,54 @@ does not support all the elements.
            (link (org-transclusion-wrap-path-to-link
                   (plist-get keyword-plist :link)))
            (payload (run-hook-with-args-until-success
-                     'org-transclusion-add-functions link keyword-plist))
-           (tc-type (plist-get payload :tc-type))
-           (src-buf (plist-get payload :src-buf))
-           (src-beg (plist-get payload :src-beg))
-           (src-end (plist-get payload :src-end))
-           (src-content (plist-get payload :src-content)))
-      (if (or (string= src-content "")
-              (eq src-content nil))
-          ;; Keep going with program when no content `org-transclusion-add-all'
-          ;; should move to the next transclusion
-          (progn (message
-                  (format
-                   "No content found with \"%s\".  Check the link at point %d, line %d"
-                   (org-element-property :raw-link link) (point) (org-current-line))
-                  nil))
-        (let ((beg (line-beginning-position))
-              (end))
-          (org-transclusion-with-inhibit-read-only
-            (when (save-excursion
-                    (end-of-line) (insert-char ?\n)
-                    (org-transclusion-content-insert
-                     keyword-plist tc-type src-content
-                     src-buf src-beg src-end copy)
-                    (unless (eobp) (delete-char 1))
-                    (setq end (point))
-                    t)
-              ;; `org-transclusion-keyword-remove' checks element at point is a
-              ;; keyword or not
-              (org-transclusion-keyword-remove)))
-          (run-hook-with-args 'org-transclusion-after-add-functions beg end))
-        t))))
+                     'org-transclusion-add-functions link keyword-plist)))
+      (if (functionp payload)
+          ;; Allow for asynchronous transclusion
+          (funcall payload link keyword-plist copy)
+        (org-transclusion-add-callback payload link keyword-plist copy)))))
+
+(defun org-transclusion-add-callback (payload link keyword-plist copy)
+  "Insert transcluded content with error handling.
+
+PAYLOAD should be a plist according to the description in
+`org-transclusion-add-functions'.  LINK should be an org-element
+context object for the link.  KEYWORD-PLIST should contain the
+\"#+transclude:\" keywords for the transclusion at point.  With
+non-nil COPY, copy the transcluded content into the buffer.
+
+This function is intended to be called from within
+`org-transclusion-add' as well as callback functions returned by
+functions in `org-transclusion-add-functions'."
+  (let ((tc-type (plist-get payload :tc-type))
+        (src-buf (plist-get payload :src-buf))
+        (src-beg (plist-get payload :src-beg))
+        (src-end (plist-get payload :src-end))
+        (src-content (plist-get payload :src-content)))
+    (if (or (string= src-content "")
+            (eq src-content nil))
+        ;; Keep going with program when no content `org-transclusion-add-all'
+        ;; should move to the next transclusion
+        (progn (message
+                (format
+                 "No content found with \"%s\".  Check the link at point %d, line %d"
+                 (org-element-property :raw-link link) (point) (org-current-line))
+                nil))
+      (let ((beg (line-beginning-position))
+            (end))
+        (org-transclusion-with-inhibit-read-only
+          (when (save-excursion
+                  (end-of-line) (insert-char ?\n)
+                  (org-transclusion-content-insert
+                   keyword-plist tc-type src-content
+                   src-buf src-beg src-end copy)
+                  (unless (eobp) (delete-char 1))
+                  (setq end (point))
+                  t)
+            ;; `org-transclusion-keyword-remove' checks element at point is a
+            ;; keyword or not
+            (org-transclusion-keyword-remove)))
+        (run-hook-with-args 'org-transclusion-after-add-functions beg end))
+      t)))
 
 ;;;###autoload
 (defun org-transclusion-add-all (&optional narrowed)
