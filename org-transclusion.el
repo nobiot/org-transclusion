@@ -1127,13 +1127,12 @@ work to
               org-link-search-must-match-exact-headline)))
       (with-current-buffer buf
         (org-with-wide-buffer
-         (if search-option
-             (progn
-               (org-link-search search-option)
-               (org-transclusion-content-org-buffer-or-element
-                'only-element plist))
-           (org-transclusion-content-org-buffer-or-element
-            nil plist)))))))
+         (org-transclusion-content-org-buffer-or-element
+          (and search-option
+               (progn
+                 (org-link-search search-option)
+                 t))
+          plist))))))
 
 (defun org-transclusion-content-org-buffer-or-element (only-element plist)
   "Return a list of playload for transclusion.
