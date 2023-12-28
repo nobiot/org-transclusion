@@ -358,28 +358,25 @@ transclusion keyword."
   (interactive "P")
   (let* ((context (org-element-lineage
                    (org-element-context)'(link) t))
-         (type (org-element-property :type context))
          (auto-transclude-p (if (or (not arg) (numberp arg)) org-transclusion-mode
                               ;; if `universal-argument' is passed,
                               ;; reverse nil/t when
                               (if org-transclusion-mode nil t))))
-    (when (or (string= type "file")
-              (string= type "id"))
-      (let* ((contents-beg (org-element-property :contents-begin context))
-             (contents-end (org-element-property :contents-end context))
-             (contents (when contents-beg
-                         (buffer-substring-no-properties contents-beg contents-end)))
-             (link (org-element-link-interpreter context contents)))
-        (save-excursion
-          (org-transclusion-search-or-add-next-empty-line)
-          (insert (format "#+transclude: %s\n" link))
-          (forward-line -1)
-          (when (and (numberp arg)
-                     (> arg 0)
-                     (<= arg 9))
-            (end-of-line)
-            (insert (format " :level %d" arg)))
-          (when auto-transclude-p (org-transclusion-add)))))))
+    (let* ((contents-beg (org-element-property :contents-begin context))
+           (contents-end (org-element-property :contents-end context))
+           (contents (when contents-beg
+                       (buffer-substring-no-properties contents-beg contents-end)))
+           (link (org-element-link-interpreter context contents)))
+      (save-excursion
+        (org-transclusion-search-or-add-next-empty-line)
+        (insert (format "#+transclude: %s\n" link))
+        (forward-line -1)
+        (when (and (numberp arg)
+                   (> arg 0)
+                   (<= arg 9))
+          (end-of-line)
+          (insert (format " :level %d" arg)))
+        (when auto-transclude-p (org-transclusion-add))))))
 
 ;;;###autoload
 (defun org-transclusion-add (&optional copy)
