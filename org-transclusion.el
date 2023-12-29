@@ -1298,12 +1298,11 @@ changes, the logic in this function will need to reviewed."
   "Search the next empty line.
 Start with the next line.  If the current line is the bottom of
 the line, add a new empty line."
-  ;; beginning-of-line 2 moves to the next line if possible
-  (beginning-of-line 2)
-  (if (eobp)(insert "\n")
-    (while (not (looking-at-p "[ \t]*$"))
-      (beginning-of-line 2))
-    (if (eobp)(insert "\n"))))
+  (forward-line)
+  (while (not (looking-at-p "^[ \t]*$"))
+    (if (eobp)
+        (insert "\n")
+      (forward-line))))
 
 (defun org-transclusion-wrap-path-to-link (path)
   "Return Org link object for PATH string."
