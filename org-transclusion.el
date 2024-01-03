@@ -312,7 +312,9 @@ and variables."
   (add-hook 'after-save-hook #'org-transclusion-after-save-buffer nil t)
   (add-hook 'kill-buffer-hook #'org-transclusion-before-kill nil t)
   (add-hook 'kill-emacs-hook #'org-transclusion-before-kill nil t)
-  (add-hook 'org-export-before-processing-hook
+  (add-hook (if (version< org-version "9.6")
+                'org-export-before-processing-hook
+              'org-export-before-processing-functions)
             #'org-transclusion-inhibit-read-only nil t)
   (org-transclusion-yank-excluded-properties-set)
   (org-transclusion-load-extensions-maybe))
@@ -326,7 +328,9 @@ This function also removes all the transclusions in the current buffer."
   (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
   (remove-hook 'kill-buffer-hook #'org-transclusion-before-kill t)
   (remove-hook 'kill-emacs-hook #'org-transclusion-before-kill t)
-  (remove-hook 'org-export-before-processing-hook
+  (remove-hook (if (version< org-version "9.6")
+                   'org-export-before-processing-hook
+                 'org-export-before-processing-functions)
                #'org-transclusion-inhibit-read-only t)
   (org-transclusion-yank-excluded-properties-remove))
 
