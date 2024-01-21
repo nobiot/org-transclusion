@@ -274,7 +274,9 @@ specific keybindings; namely:
 ;;;; Definining macros before they are used in the rest of package
 ;;;; Flycheck warns with "macro X defined too late"
 (defmacro org-transclusion-with-inhibit-read-only (&rest body)
-  "Run BODY with `'inhibit-read-only` t."
+  "Run BODY with `'inhibit-read-only` t.
+This macro is used instead of `with-silent-modifications' because
+Org mode's caching relies upon modification hooks to function."
   (declare (debug t) (indent 0))
   (let ((modified (make-symbol "modified")))
     `(let* ((,modified (buffer-modified-p))
