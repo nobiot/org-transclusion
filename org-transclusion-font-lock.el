@@ -1,6 +1,6 @@
 ;;; org-transclusion-font-lock.el --- font-lock for Org-transclusion -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021-2023  Free Software Foundation, Inc.
+;; Copyright (C) 2021-2024  Free Software Foundation, Inc.
 
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 22 August 2021
-;; Last modified: 08 February 2023
+;; Last modified: 21 January 2024
 
 ;;; Commentary:
 ;;  This file is part of Org-transclusion
