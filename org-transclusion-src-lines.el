@@ -52,7 +52,7 @@
 (add-hook 'org-transclusion-keyword-plist-to-string-functions
           #'org-transclusion-keyword-plist-to-string-src-lines)
 
-;; Transclusion content formating
+;; Transclusion content formatting
 (add-hook 'org-transclusion-content-format-functions
           #'org-transclusion-content-format-src-lines)
 
@@ -143,7 +143,7 @@ it means from line 10 to the end of file."
                                (save-excursion
                                  (ignore-errors
                                    ;; FIXME `org-link-search' does not
-                                   ;; return postion when eithher
+                                   ;; return position when eithher
                                    ;; ::/regex/ or ::number is used
                                    (if (org-link-search search-option)
                                        (line-beginning-position))))))
@@ -160,7 +160,7 @@ it means from line 10 to the end of file."
                                   (save-excursion
                                     (ignore-errors
                                       ;; FIXME `org-link-search' does not
-                                      ;; return postion when either ::/regex/
+                                      ;; return position when either ::/regex/
                                       ;; or ::number is used
                                       (when (org-link-search end-search-op)
                                         (line-beginning-position))))))))

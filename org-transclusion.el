@@ -177,7 +177,7 @@ a text content.
 `org-transclusion-after-save-buffer' use this variable.")
 
 (defvar-local org-transclusion-remember-window-config nil
-  "Remember window config (the arrangment of windows) for the current buffer.
+  "Remember window config (the arrangement of windows) for the current buffer.
 This is for live-sync.  Analogous to
 `org-edit-src-code'.")
 
@@ -284,7 +284,7 @@ specific keybindings; namely:
   nil nil '(center t))
 
 ;;;; Macro
-;;;; Definining macros before they are used in the rest of package
+;;;; Defining macros before they are used in the rest of package
 ;;;; Flycheck warns with "macro X defined too late"
 (defmacro org-transclusion-with-inhibit-read-only (&rest body)
   "Run BODY with `'inhibit-read-only` t.
@@ -327,13 +327,15 @@ and variables."
   (add-hook 'after-save-hook #'org-transclusion-after-save-buffer nil t)
   (add-hook 'kill-buffer-hook #'org-transclusion-before-kill nil t)
   (add-hook 'kill-emacs-hook #'org-transclusion-before-kill nil t)
-  (add-hook 'org-export-before-processing-hook
+  (add-hook (if (version< org-version "9.6")
+                'org-export-before-processing-hook
+              'org-export-before-processing-functions)
             #'org-transclusion-inhibit-read-only nil t)
   (org-transclusion-yank-excluded-properties-set)
   (org-transclusion-load-extensions-maybe))
 
 (defun org-transclusion-deactivate ()
-  "Dectivate Org-transclusion hooks and other setups in the current buffer.
+  "Deactivate Org-transclusion hooks and other setups in the current buffer.
 This function also removes all the transclusions in the current buffer."
   (interactive)
   (org-transclusion-remove-all)
@@ -341,7 +343,9 @@ This function also removes all the transclusions in the current buffer."
   (remove-hook 'after-save-hook #'org-transclusion-after-save-buffer t)
   (remove-hook 'kill-buffer-hook #'org-transclusion-before-kill t)
   (remove-hook 'kill-emacs-hook #'org-transclusion-before-kill t)
-  (remove-hook 'org-export-before-processing-hook
+  (remove-hook (if (version< org-version "9.6")
+                   'org-export-before-processing-hook
+                 'org-export-before-processing-functions)
                #'org-transclusion-inhibit-read-only t)
   (org-transclusion-yank-excluded-properties-remove))
 
@@ -725,7 +729,7 @@ a couple of org-transclusion specific keybindings; namely:
 
 (defun org-transclusion-live-sync-exit ()
   "Exit live-sync at point.
-It attemps to re-arrange the windows for the current buffer to
+It attempts to re-arrange the windows for the current buffer to
 the state before live-sync started."
   (interactive)
   (if (not (org-transclusion-within-live-sync-p))
@@ -749,7 +753,7 @@ This is meant to be used within live-sync overlay as part of
 
 ;;;;---------------------------------------------------------------------------
 ;;;; Private Functions
-;;;; Functions for Activate / Deactiveate / save-buffer hooks
+;;;; Functions for Activate / Deactivate / save-buffer hooks
 
 (defun org-transclusion-before-save-buffer ()
   "Remove translusions in `before-save-hook'.
@@ -932,7 +936,7 @@ keyword.  If not, returns nil."
   "Return list of symbols from PLIST when applicable.
 If PLIST does not have :exclude-elements, return nil.
 
-This function also attemps to remove empty string that gets
+This function also attempts to remove empty string that gets
 inserted when more than one space is inserted between symbols."
   (let ((str (plist-get plist :exclude-elements)))
     (when str
@@ -1147,7 +1151,7 @@ This function is intended to be used for Org-ID.  It delates the
 work to
 `org-transclusion-content-org-buffer-or-element'."
   (save-excursion
-    ;; First visit the buffer and go to the relevant elelement if
+    ;; First visit the buffer and go to the relevant element if
     ;; search-option is present.
     (let* ((path (org-element-property :path link))
            (search-option (org-element-property :search-option link))
@@ -1438,7 +1442,7 @@ It is intended to be used for `org-transclusion-open-source' and
 This function relies on `org-transclusion-find-source-marker' to
 locate the position in the source buffer; thus, the same
 limitation applies.  It depends on which org elements whether or
-not this function can identify the beginnning of the element at
+not this function can identify the beginning of the element at
 point.  If it cannot, it will return the beginning of the
 transclusion, which can be far away from the element at point, if
 the transcluded region is large."
@@ -1582,7 +1586,7 @@ transclusion in this structure:
 
 (defun org-transclusion-live-sync-display-buffer (buffer)
   "Display the source buffer upon entering live-sync edit.
-It rembembers the current arrangement of windows (window
+It remembers the current arrangement of windows (window
 configuration), deletes the other windows, and displays
 BUFFER (intended to be the source buffer being edited in
 live-sync.)
