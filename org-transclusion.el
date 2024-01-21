@@ -1331,15 +1331,15 @@ changes, the logic in this function will need to reviewed."
     m))
 
 (defun org-transclusion-search-or-add-next-empty-line ()
-  "Search the next empty line.
-Start with the next line.  If the current line is the bottom of
-the line, add a new empty line."
-  ;; beginning-of-line 2 moves to the next line if possible
-  (beginning-of-line 2)
-  (if (eobp)(insert "\n")
-    (while (not (looking-at-p "[ \t]*$"))
-      (beginning-of-line 2))
-    (if (eobp)(insert "\n"))))
+  "Move point to the next empty line.
+If no empty line exists before the next org heading or the end of
+the buffer, stop there and add a newline."
+  (forward-line)
+  (while (not (looking-at-p "^[ \t]*$"))
+    (if (or (org-at-heading-p) (eobp))
+        (progn (insert "\n")
+               (backward-char))
+      (forward-line))))
 
 (defun org-transclusion-wrap-path-to-link (path)
   "Return Org link object for PATH string."
