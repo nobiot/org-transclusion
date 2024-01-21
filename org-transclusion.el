@@ -1121,16 +1121,20 @@ work to
     ;; search-option is present.
     (let* ((path (org-element-property :path link))
            (search-option (org-element-property :search-option link))
-           (buf (find-file-noselect path)))
+           (buf (find-file-noselect path))
+           (org-link-search-must-match-exact-headline
+            ;; Don't ever prompt to create a headline when transcluding
+            (if (eq 'query-to-create org-link-search-must-match-exact-headline)
+                t  ;; Less surprising default than nil - fuzzy search
+              org-link-search-must-match-exact-headline)))
       (with-current-buffer buf
         (org-with-wide-buffer
-         (if search-option
-             (progn
-               (org-link-search search-option)
-               (org-transclusion-content-org-buffer-or-element
-                'only-element plist))
-           (org-transclusion-content-org-buffer-or-element
-            nil plist)))))))
+         (org-transclusion-content-org-buffer-or-element
+          (and search-option
+               (progn
+                 (org-link-search search-option)
+                 t))
+          plist))))))
 
 (defun org-transclusion-content-org-buffer-or-element (only-element plist)
   "Return a list of playload for transclusion.
