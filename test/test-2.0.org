@@ -105,6 +105,8 @@ This is content of H3
 
 #+transclude: [[file:paragraph.org::table-with-link][Link to a table with a link]]
 
+#+transclude: [[file:paragraph.org::*Table][Link to the headline Table that includes tables]]
+
 ** Quote
 #+transclude: [[file:paragraph.org::quote][Link to a quote]]
 
