@@ -178,8 +178,8 @@ it means from line 10 to the end of file."
                 ;;; This `cond' means :end prop has priority over the end
                 ;;; position of the range. They don't mix.
                 (end (cond
-                      ((when thing-at-point end-pos)
-                       (when (and end-pos (> end-pos beg))
+                      ((when thing-at-point end-pos))
+                      ((when (and end-pos (> end-pos beg))
                          end-pos))
                       ((if (zerop lend) (point-max)
                          (goto-char start-pos)
