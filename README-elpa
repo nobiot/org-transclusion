@@ -1,11 +1,10 @@
-                      ___________________________
-
+                      ━━━━━━━━━━━━━━━━━━━━━━━━━━━
                        README – ORG-TRANSCLUSION
-                      ___________________________
+                      ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 
 Table of Contents
-_________________
+─────────────────
 
 1. Example Use Cases & Main Features
 2. Installation
@@ -47,7 +46,7 @@ or user manual: [online] or Info node `(org-transclusion)Customizing'.
 
 
 1 Example Use Cases & Main Features
-===================================
+═══════════════════════════════════
 
   Here are some real use cases that users have shared with the author,
   including his own.
@@ -78,83 +77,97 @@ or user manual: [online] or Info node `(org-transclusion)Customizing'.
 
   Main Features:
 
-  - Insert a copy of text content via a file link or ID link into an Org
+  • Insert a copy of text content via a file link or ID link into an Org
     file
 
-  - Work with any text file such as program source code, plain text,
+  • Work with any text file such as program source code, plain text,
     Markdown, or other Org files
 
-  - Keep the file system clear of the copies of text content --
+  • With version 1.4, a transclusion works with hyper:// links (see
+    [hyperdrive.el])
+  or <http://> links. Splitting the org-transclusion-add into two parts
+  enables functions in org-transclusion-add-functions to be
+  asynchronous. With this change, content can be transcluded over a
+  network, using <http://>, hyper://, or other protocols. For a
+  proof-of-concept integration with hyperdrive.el, see [this file].
+
+  • Keep the file system clear of the copies of text content –
     Org-transclusion tries hard to save only the links to the file
     system
 
-  - For Org files, use different headline levels from the source Org
+  • For Org files, use different headline levels from the source Org
     file
 
-  - For Org files, use filters to include only relevant elements
-    (e.g. filter out properties in the transclusions)
+  • For Org files, use filters to include only relevant elements (e.g.
+    filter out properties in the transclusions)
 
-  - For program source and plain text files, transclude a certain lines
+  • For program source and plain text files, transclude a certain lines
     or dynamically specify the from/to lines to keep the transclusion
     always up-to-date with the evolving source files
 
-  - For program source files, transclude parts or whole code directly
+  • For program source files, transclude parts or whole code directly
     into Org's source block to leverage the rich Org features including
     noweb style syntax
 
-  - Extend Org-transclusion with its extension framework
+  • Extend Org-transclusion with its extension framework
+
+
+[hyperdrive.el] <https://git.sr.ht/~ushin/hyperdrive.el>
+
+[this file]
+<https://git.sr.ht/~ushin/hyperdrive.el/tree/org-transclusion/item/hyperdrive-org-transclusion.el>
 
 
 2 Installation
-==============
+══════════════
 
   This package is available on:
 
-  - [GNU ELPA] (releases only; equivalent to MELPA-Stable)
-  - [GNU-devel ELPA] (unreleased development branch; equivalent to
+  • [GNU ELPA] (releases only; equivalent to MELPA-Stable)
+  • [GNU-devel ELPA] (unreleased development branch; equivalent to
     MELPA)
 
   GNU ELPA should be already set up in your Emacs by default. If you
   wish to add GNU-devel ELPA, simply add its URL to `package-archives'
   like this:
 
-  ,----
-  | (add-to-list 'package-archives
-  |              '("gnu-devel" . "https://elpa.gnu.org/devel/") :append)
-  `----
+  ┌────
+  │ (add-to-list 'package-archives
+  │              '("gnu-devel" . "https://elpa.gnu.org/devel/") :append)
+  └────
 
   Refresh the archive with `M-x package-refresh-contents RET' and you
-  can do `M-x package-install RET org-transclusion' to install
-  it. Alternatively, you can use `package-list-packages'.
+  can do `M-x package-install RET org-transclusion' to install it.
+  Alternatively, you can use `package-list-packages'.
 
   After installation, you can start using Org-transclusion with no
   additional configuration. Below are some example keybindings that can
   be put into your Emacs configuration.
 
-  ,----
-  | (define-key global-map (kbd "<f12>") #'org-transclusion-add)
-  | (define-key global-map (kbd "C-n t") #'org-transclusion-mode)
-  `----
+  ┌────
+  │ (define-key global-map (kbd "<f12>") #'org-transclusion-add)
+  │ (define-key global-map (kbd "C-n t") #'org-transclusion-mode)
+  └────
 
   For Doom users, you would need to do something like this below to
   install the package and configure the keybindings.
 
-  ,----
-  | ;; ~/.doom.d/package.el
-  | (package! org-transclusion)
-  `----
+  ┌────
+  │ ;; ~/.doom.d/package.el
+  │ (package! org-transclusion)
+  └────
 
-  ,----
-  | ;; ~/.doom.d/config.el
-  | (use-package! org-transclusion
-  |   :after org
-  |   :init
-  |   (map!
-  |    :map global-map "<f12>" #'org-transclusion-add
-  |    :leader
-  |    :prefix "n"
-  |    :desc "Org Transclusion Mode" "t" #'org-transclusion-mode))
-  `----
+  ┌────
+  │ ;; ~/.doom.d/config.el
+  │ (use-package! org-transclusion
+  │   :after org
+  │   :init
+  │   (map!
+  │    :map global-map "<f12>" #'org-transclusion-add
+  │    :leader
+  │    :prefix "n"
+  │    :desc "Org Transclusion Mode" "t" #'org-transclusion-mode))
+  └────
 
 
 [GNU ELPA] <https://elpa.gnu.org/packages/org-transclusion.html>
@@ -163,12 +176,12 @@ or user manual: [online] or Info node `(org-transclusion)Customizing'.
 
 
 3 Contributing
-==============
+══════════════
 
-  - Get involved in a discussion in [Org-roam forum] (the package is
+  • Get involved in a discussion in [Org-roam forum] (the package is
     originally aimed for its users, the author included)
 
-  - Create issues, discussion, and/or pull requests. All welcome.
+  • Create issues, discussion, and/or pull requests. All welcome.
 
   Org-transclusion is part of GNU ELPA and thus copyrighted by the [Free
   Software Foundation] (FSF). This means that anyone who is making a
@@ -188,7 +201,7 @@ or user manual: [online] or Info node `(org-transclusion)Customizing'.
 
 
 4 License
-=========
+═════════
 
   Org-transclusion is licensed under a GPLv3 license. For a full copy of
   the license, refer to [LICENSE].

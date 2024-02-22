@@ -1,7 +1,7 @@
 #+title: Org-transclusion User Manual
 #+author: Noboru Ota <me@nobiot.com>
 #+macro: version 1.3.x
-#+macro: modified 24 May 2023
+#+macro: modified 22 February 2024
 
 #+language: en
 #+export_file_name: org-transclusion.texi
@@ -194,6 +194,17 @@ tincidunt quam. <<paragraph-id>>
 It is generally assumed that the =paragraph-id= is placed after its content, but it is not an absolute requirement; it can be in the beginning (before the content) or in the middle of it.
 
 For the =:only-contents= property, refer to sub-section [[#filtering-org-elements-per-transclusion][Filtering Org elements per transclusion]].
+
+** Links with hyper://, http://, and other protocols
+:PROPERTIES:
+:CUSTOM_ID: other-protocols
+:END:
+#+cindex: Links with hyper://, http://, and other protocols
+
+With version 1.4, a transclusion works with hyper:// links (see [[https://git.sr.ht/~ushin/hyperdrive.el][hyperdrive.el]])
+or http:// links. Splitting the org-transclusion-add into two parts enables  functions in org-transclusion-add-functions to be asynchronous. With this change, content can be transcluded over a network, using http://, hyper://, or other protocols. For a proof-of-concept integration with hyperdrive.el, see [[https://git.sr.ht/~ushin/hyperdrive.el/tree/org-transclusion/item/hyperdrive-org-transclusion.el][this file]].
+
+[We expect more information and examples to be added for this section]
 
 ** Control levels of headlines per transclusion
 

@@ -73,6 +73,8 @@ Main Features:
 
 - Work with any text file such as program source code, plain text, Markdown, or other Org files
 
+- With version 1.4, a transclusion works with hyper:// links (see [[https://git.sr.ht/~ushin/hyperdrive.el][hyperdrive.el]]) or http:// links. Splitting the org-transclusion-add into two parts enables  functions in org-transclusion-add-functions to be asynchronous. With this change, content can be transcluded over a network, using http://, hyper://, or other protocols. For a proof-of-concept integration with hyperdrive.el, see [[https://git.sr.ht/~ushin/hyperdrive.el/tree/org-transclusion/item/hyperdrive-org-transclusion.el][this file]].
+
 - Keep the file system clear of the copies of text content -- Org-transclusion tries hard to save only the links to the file system
 
 - For Org files, use different headline levels from the source Org file

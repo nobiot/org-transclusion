@@ -1,15 +1,24 @@
 * Current development version
 
-  - fix(src-lines): #192 error when :thing-at-point nil
+  - Features ::
 
-  - fix: add faces back org-transclusion and org-transclusion-source
-    #174
+    Allows for a transclusion workflow with hyper:// links (see
+    hyperdrive.el) or http:// links. Splitting the org-transclusion-add
+    into two parts enables functions in org-transclusion-add-functions
+    to be asynchronous. With this change, content can be transcluded
+    over a network, using http://, hyper://, or other protocols.
 
-  - feat: add :things-at-point (or :thingatpt) property for transcluding
+    For a proof-of-concept integration with hyperdrive.el, see this file:
+    https://git.sr.ht/~ushin/hyperdrive.el/tree/org-transclusion/item/hyperdrive-org-transclusion.el.
+
+    - chg: #213 Allow making transclusion links from any protocol link
+    - refactor: #209 Split -add-callback from -add to enable async transclusion
+
+    add :things-at-point (or :thingatpt) property for transcluding
     source and other non-org text files. Both property names are synonym
     with each other and work in the same way.
 
-  - feat: add org-block-live-sync
+    add org-block-live-sync
 
     - Command 'org-transclusion-live-sync-start' now can start live sync
       when
@@ -19,7 +28,7 @@
 
       Example: #+transclude: [[python-1.py]]  :src python
 
-  - feat: add org-transclusion-detach
+    add org-transclusion-detach
 
     - New command 'org-transclusion-detach' can be used on the
       transclusion at point. It turns it into a normal, edtitable text
@@ -47,6 +56,21 @@
       source. This should not break any feature. You can safely refresh
       the transclusion and recover the source overlay. You can also
       safely open or moved to the source.
+
+  - Fixes
+
+    fix: #212 org-transclusion-make-from-link should not add
+         transclusion link in next org heading
+
+    fix: #211 Don't ever prompt to create a headline when transcluding
+
+    docs: #210 Update docstring for org-transclusion-with-inhibit-read-only
+
+    fix(src-lines): #219 Use end-pos in org-transclusion-content-range-of-lines
+
+    fix(src-lines): #192 error when :thing-at-point nil
+
+    fix: #174 add faces back org-transclusion and org-transclusion-source
 
 * 1.3.2
 
