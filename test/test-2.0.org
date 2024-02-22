@@ -1,7 +1,7 @@
 * Regression
 ** make from link
-This is a link to a [[id:20210501T171427.051019][Bertrand Russell]] wikipedia excerpt
-#+transclude: [[id:20210501T171427.051019][Bertrand Russell]]
+This is a link to a [[id:2022-05-30T203553][Bertrand Russell]] wikipedia excerpt
+#+transclude: [[id:2022-05-30T203553][Bertrand Russell]]
 ** test empty file
 #+transclude: [[file:empty.txt::2][empty text file]]
 
@@ -13,7 +13,7 @@ t/nil will be dropped after remove-at-point
 
 
 #+transclude: [[file:test.txt][text file]]
-#+transclude: t [[id:20210501T171427.051019][Bertrand Russell]]
+#+transclude: [[id:2022-05-30T203553][Bertrand Russell]]
 
 (setq inhibit-read-only nil)
 
@@ -88,7 +88,7 @@ This is content of H3
 (setq org-adapt-indentation t)
 #+end_example
 
-#+transclude: [[id:20210501T171427.051019][Bertrand Russell]]
+#+transclude: [[id:2022-05-30T203553][Bertrand Russell]]
 
 ** Paragraph
 
@@ -140,7 +140,7 @@ This is content of H3
 (setq org-transclusion-exclude-elements '(property-drawer))
 #+end_example
 
-#+transclude: [[id:20210501T171427.051019][Bertrand Russell]]
+#+transclude: [[id:2022-05-30T203553][Bertrand Russell]]
 
 ** fixed-width
 
@@ -154,7 +154,7 @@ This is content of H3
 #+transclude: [[file:paragraph.org::quote][Link to a quote]]
 
 *  Only Contents
-#+transclude: [[id:20210501T171427.051019][Bertrand Russell]] :only-contents
+#+transclude: [[id:2022-05-30T203553][Bertrand Russell]] :only-contents
 
 * :only-contents and :exclude-element
 

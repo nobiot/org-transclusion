@@ -1,0 +1,76 @@
+* Bertrand Russell - Wikipedia
+:PROPERTIES:
+:ID:       2022-05-30T203553
+:END:
+:ref:
+:link: https://en.wikipedia.org/wiki/Bertrand_Russell
+:end:
+
+*Bertrand Arthur William Russell, 3rd Earl Russell* OM FRS[65] (18 May 1872 – 2 February 1970) was a British polymath ande writer. He was born in Monmouthshire into one of the most prominent aristocratic families in the United Kingdom.
+
+#+transclude: [[file:bertrand-russell.org::*Bertrand Russell - Wikipedia]] :level 1
+
+#+begin_export
+As an academic, he worked in philosophy, mathematics, and logic. His work has had a considerable influence on mathematics, logic, set theory, linguistics, artificial intelligence, cognitive science, computer science (see type theory and type system) and various areas of analytic philosophy, especially logic, philosophy of mathematics, philosophy of language, epistemology and metaphysics.
+#+end_export
+
+#+begin_src elisp
+If an integer $n$ is greater than 2, then the equation $a^n + b^n = c^n$
+has no solutions in non-zero integers $a$, $b$, and $c$.
+This is live-sync'ed
+#+end_src
+
+Russell was also a public intellectual, historian, social critic, political activist, and Nobel laureate.[66][67] Throughout his life, Russell considered himself a liberal, a socialist and a pacifist, although he later wrote he had "never been any of these things, in any profound sense".[68] This is live sync. As  you can see, the edit on the left (transclusion) is copied over to the right (source)
+
+Below is an example of a LaTex environment
+
+\begin{equation}
+x=\sqrt{b}
+\end{equation}
+
+: fixed width element
+: Second line
+
+\begin{align*}
+2x - 5y &= 8 \\
+3x + 9y &= -12
+\end{align*}
+
+** H2
+:ref:
+:data: data
+:end:
+
+#+begin_example
+Russell is one of the early 20th century's most prominent logicians,[67] and one of the founders of analytic philosophy, along with his predecessor Gottlob Frege, his friend and colleague G. E. Moore and his student and protégé Ludwig Wittgenstein.
+#+end_example
+
+#+begin_verse
+ Great clouds overhead
+ Tiny black birds rise and fall
+ Snow covers Emacs
+
+    ---AlexSchroeder
+    Verse can be live-synced
+#+end_verse
+
+#+begin: dynamic
+Russell with Moore led the British "revolt against idealism".[a] Together with his former teacher A. N. Whitehead, Russell wrote Principia Mathematica, a milestone in the development of classical logic, and a major attempt to reduce the whole of mathematics to logic (see Logicism). Russell's article On Denoting has been considered a "paradigm of philosophy".[70]
+#+end:
+
+*** H3
+This is content of H3
+
+* On Denoting
+:PROPERTIES:
+:ID:       2022-10-10T173507
+:link: https://en.wikipedia.org/wiki/On_Denoting
+:end:
+
+ "On Denoting" is an essay by Bertrand Russell. It was published in the philosophy journal Mind in 1905. In it, Russell introduces and advocates his theory of denoting phrases, according to which definite descriptions and other "denoting phrases ... never have any meaning in themselves, but every proposition in whose verbal expression they occur has a meaning."[1] This theory later became the basis for Russell's descriptivism with regard to proper names, and his view that proper names are "disguised" or "abbreviated" definite descriptions.
+
+** H2
+In the 1920s, Frank P. Ramsey referred to the essay as "that paradigm of philosophy".[2][3] In the Stanford Encyclopedia of Philosophy entry Descriptions, Peter Ludlow singled the essay out as "the paradigm of philosophy", and called it a work of "tremendous insight"; provoking discussion and debate among philosophers of language and linguists for over a century.[4]
+
+*** H3
+This is content of H3
