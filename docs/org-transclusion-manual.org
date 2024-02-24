@@ -1,7 +1,7 @@
 #+title: Org-transclusion User Manual
 #+author: Noboru Ota <me@nobiot.com>
 #+macro: version 1.3.x
-#+macro: modified 22 February 2024
+#+macro: modified 05 April 2024
 
 #+language: en
 #+export_file_name: org-transclusion.texi
@@ -195,7 +195,7 @@ It is generally assumed that the =paragraph-id= is placed after its content, but
 
 For the =:only-contents= property, refer to sub-section [[#filtering-org-elements-per-transclusion][Filtering Org elements per transclusion]].
 
-** Links with hyper://, http://, and other protocols
+** Links with ~hyper://~, ~http://~, and other protocols
 :PROPERTIES:
 :CUSTOM_ID: other-protocols
 :END:
