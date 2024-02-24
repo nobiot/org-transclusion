@@ -195,14 +195,21 @@ It is generally assumed that the =paragraph-id= is placed after its content, but
 
 For the =:only-contents= property, refer to sub-section [[#filtering-org-elements-per-transclusion][Filtering Org elements per transclusion]].
 
-** Links with hyper://, http://, and other protocols
+** Links with ~hyper://~, ~http://~, and other protocols
 :PROPERTIES:
 :CUSTOM_ID: other-protocols
 :END:
 #+cindex: Links with hyper://, http://, and other protocols
 
-With version 1.4, a transclusion works with hyper:// links (see [[https://git.sr.ht/~ushin/hyperdrive.el][hyperdrive.el]])
-or http:// links. Splitting the org-transclusion-add into two parts enables  functions in org-transclusion-add-functions to be asynchronous. With this change, content can be transcluded over a network, using http://, hyper://, or other protocols. For a proof-of-concept integration with hyperdrive.el, see [[https://git.sr.ht/~ushin/hyperdrive.el/tree/org-transclusion/item/hyperdrive-org-transclusion.el][this file]].
+With version 1.4, a transclusion works with ~hyper://~ links (see
+[[https://git.sr.ht/~ushin/hyperdrive.el][hyperdrive.el]]) or ~http://~ links.  Splitting ~org-transclusion-add~ into
+two parts enables functions in ~org-transclusion-add-functions~ to be
+asynchronous.  With this change, content can be transcluded over a
+network, using ~http://~, ~hyper://~, or other protocols.  For a
+proof-of-concept integration with ~hyperdrive.el~, see [[https://git.sr.ht/~ushin/hyperdrive.el/tree/org-transclusion/item/hyperdrive-org-transclusion.el][this file]].
+Currently only ~org-transclusion-add~ is fully supported; features like
+live-syncing and opening source buffers are not implemented for
+asynchronous transclusions yet.
 
 [We expect more information and examples to be added for this section]
 

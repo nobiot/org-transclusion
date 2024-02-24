@@ -606,7 +606,9 @@ the rest of the buffer unchanged."
       list)))
 
 (defun org-transclusion-refresh (&optional detach)
-  "Refresh the transcluded text at point."
+  "Refresh the transcluded text at point.
+
+TODO: Support asynchronous transclusions (set point correctly)."
   (interactive "P")
   (when (org-transclusion-within-transclusion-p)
     (let ((pos (point)))
@@ -628,7 +630,10 @@ the rest of the buffer unchanged."
 (defun org-transclusion-open-source (&optional arg)
   "Open the source buffer of transclusion at point.
 When ARG is non-nil (e.g. \\[universal-argument]), the point will
-remain in the source buffer for further editing."
+remain in the source buffer for further editing.
+
+TODO: Support asynchronous transclusions when source buffer
+doesn't exist."
   (interactive "P")
   (unless (overlay-buffer (get-text-property (point) 'org-transclusion-pair))
     (org-transclusion-refresh))
@@ -684,7 +689,9 @@ a couple of org-transclusion specific keybindings; namely:
 - `org-transclusion-live-sync-paste'
 - `org-transclusion-live-sync-exit'
 
-\\{org-transclusion-live-sync-map}"
+\\{org-transclusion-live-sync-map}
+
+TODO: Support asynchronous transclusions."
   (interactive)
   (if (not (org-transclusion-within-transclusion-p))
       (progn (message (format "Nothing done. Not a translusion at %d" (point)))
