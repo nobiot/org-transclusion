@@ -23,7 +23,7 @@
 ;; Keywords: org-mode, transclusion, writing
 
 ;; Version: 1.3.2
-;; Package-Requires: ((emacs "27.1") (org "9.4"))
+;; Package-Requires: ((emacs "27.1") (org "9.4") (plz "0.7.2"))
 
 ;; This file is not part of GNU Emacs.
 
@@ -68,6 +68,7 @@ Intended for :set property for `customize'."
         (const :tag "font-lock: Add font-lock for Org-transclusion" org-transclusion-font-lock)
 
         (const :tag "indent-mode: Support org-indent-mode" org-transclusion-indent-mode)
+        (const :tag "http: Transclude content over HTTP" org-transclusion-http)
         (repeat :tag "Other packages" :inline t (symbol :tag "Package"))))
 
 (defcustom org-transclusion-add-all-on-activate t

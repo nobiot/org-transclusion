@@ -1,0 +1,17 @@
+# id="care" points to <h2>: Transclude <h2> and content after <h2> also.
+#+transclude: [[https://ushin.org/needs-list.html#care]]
+
+# Org file with heading CUSTOM_ID: "care": Transclude only that heading.
+#+transclude: [[https://ushin.org/needs-list.org#care]]
+
+# Nonexistent target in Org file: Transclude entire file.
+#+transclude: [[https://ushin.org/needs-list.org#nonexistent-target]]
+
+# Nonexistent target in HTML file: Transclude entire file as Org.
+#+transclude: [[https://ushin.org/needs-list.html#nonexistent-target]]
+
+# id="jabber" points to <section>:  Transclude only <section> content.
+#+transclude: [[https://jmp.chat/faq#jabber]]
+
+# id="autocapitalize" points to <dt>:  Transclude <dt> and subsequent <dd>.
+#+transclude: [[https://developer.mozilla.org/en-US/docs/Web/HTML/Element/textarea#autocapitalize]]
