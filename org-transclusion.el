@@ -23,7 +23,7 @@
 ;; Keywords: org-mode, transclusion, writing
 
 ;; Version: 1.3.2
-;; Package-Requires: ((emacs "27.1") (org "9.4"))
+;; Package-Requires: ((emacs "27.1") (org "9.4") (plz "0.7.2"))
 
 ;; This file is not part of GNU Emacs.
 
@@ -68,6 +68,7 @@ Intended for :set property for `customize'."
         (const :tag "font-lock: Add font-lock for Org-transclusion" org-transclusion-font-lock)
 
         (const :tag "indent-mode: Support org-indent-mode" org-transclusion-indent-mode)
+        (const :tag "http: Transclude content over HTTP" org-transclusion-http)
         (repeat :tag "Other packages" :inline t (symbol :tag "Package"))))
 
 (defcustom org-transclusion-add-all-on-activate t
@@ -964,15 +965,17 @@ Return nil if not found."
 (defun org-transclusion-add-org-file (link plist)
   "Return a list for Org file LINK object and PLIST.
 Return nil if not found."
-  (when (org-transclusion-org-file-p (org-element-property :path link))
-    (append '(:tc-type "org-link")
-            (org-transclusion-content-org-link link plist))))
+  (and (string= "file" (org-element-property :type link))
+       (org-transclusion-org-file-p (org-element-property :path link))
+       (append '(:tc-type "org-link")
+               (org-transclusion-content-org-link link plist))))
 
 (defun org-transclusion-add-other-file (link plist)
   "Return a list for non-Org file LINK object and PLIST.
 Return nil if not found."
-  (append '(:tc-type "others-default")
-          (org-transclusion-content-others-default link plist)))
+  (and (string= "file" (org-element-property :type link))
+       (append '(:tc-type "others-default")
+               (org-transclusion-content-others-default link plist))))
 
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for inserting content
