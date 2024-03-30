@@ -195,6 +195,7 @@ that consists of the following properties:
 - :src-buf
 - :src-beg
 - :src-end
+- :src-content
 
 Otherwise, the payload may be a named or lambda callback
 function.  In that case, the callback function will be called
