@@ -1,0 +1,2 @@
+[[file:source-html-no-ext]]
+#+transclude: [[file:source-html-no-ext]]

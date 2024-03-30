@@ -18,10 +18,14 @@
 
 ;;; Commentary:
 
-;; This file contains functionality related to converting HTML content to Org.  Features include:
-;;
-;; - Convert HTML to Org using Pandoc, a lá `org-web-tools'
-;;   + Convert only HTML headings matching link anchor
+;; This is an extension to `org-transclusion'.  When active, it enables
+;; transclusion of HTML files by converting HTML to Org with Pandoc.
+;; When a link anchor is specified only the HTML headings matching are
+;; transcluded.  Does not support live-sync.
+
+;; Requires Pandoc to be installed and in the $PATH.  Conversion of
+;; HTML to Org using Pandoc inspired by `org-web-tools'.
+
 
 ;;; Code:
 
@@ -30,13 +34,67 @@
 (require 'org)
 (require 'cl-lib)
 (require 'pcase)
+(require 'dom)
+
+;;;; Hook into org-transclusion
+
+(add-hook 'org-transclusion-add-functions #'org-transclusion-add-html-file)
 
 ;;;; Functions
+
+;;;;; Add HTML file
+
+(defun org-transclusion-add-html-file (link plist)
+  "Return a list for HTML file LINK object and PLIST.
+Return nil if not found."
+  (and (string= "file" (org-element-property :type link))
+       (or (string-suffix-p ".html" (org-element-property :path link))
+           (with-current-buffer (find-file-noselect
+                                 (org-element-property :path link) t)
+             (org-transclusion-html--html-p (current-buffer))))
+       (append '(:tc-type "html-org-file")
+               (org-transclusion-html-org-file-content link plist))))
+
+(defun org-transclusion-html-org-file-content (link _plist)
+  "Return payload list without :tc-type.
+:src-content value will be Org format converted from HTML at LINK."
+  (let* ((path (org-element-property :path link))
+         (html-buf (find-file-noselect path t))
+         (org-buf
+          (generate-new-buffer
+           (format " *org-transclusion-html-org %s*" (expand-file-name path))))
+         (src-content
+          (with-current-buffer org-buf
+            (insert-buffer-substring html-buf)
+            ;; TODO: It's not currently possible to link an HTML
+            ;; anchor inside of a 'file:' Org link, but if it ever
+            ;; becomes possible, we can use this:
+
+            ;; (let ((dom (with-current-buffer html-buf
+            ;;              (libxml-parse-html-region))))
+            ;;   (when (dom-by-id dom (format "\\`%s\\'" target))
+            ;;     ;; Page contains id element matching link target.
+            ;;     (erase-buffer)
+            ;;     (dom-print (org-transclusion-html--target-content dom target))))
+            (org-transclusion--insert-org-from-html-with-pandoc)
+            (buffer-string))))
+    (with-current-buffer html-buf
+      (org-with-wide-buffer
+       (list :src-buf (current-buffer)
+             :src-beg (point-min)
+             :src-end (point-max)
+             :src-content src-content)))))
+
+;;;;; Utilities
 
 (defun org-transclusion-html--target-content (dom target)
   "Return DOM element(s) that correspond to the TARGET.
 Since anchors may refer to headings but not the text following
-the heading, this function may not return the expected element."
+the heading, this function may not return the expected element.
+
+While is not possible to specify an HTML anchor in a file: Org
+link, this function is useful in other libraries for transcluding
+sections of HTML documents linked via http://, hyper://, etc.."
   ;; HTML link fragments (targets) point to a specific point in a document,
   ;; not a range of text.  This function attempts to guess what range of
   ;; text a target refers to based on what HTML element is targeted.
