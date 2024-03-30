@@ -152,7 +152,7 @@ Pandoc output."
           ;; entry.  Unless the current property drawer is malformed, which
           ;; shouldn't happen in Pandoc output, it should work.
           (re-search-forward org-property-drawer-re)
-          (setf (buffer-substring (match-beginning 0) (match-end 0)) ""))))))
+          (delete-region (match-beginning 0) (match-end 0)))))))
 
 ;;;; Footer
 
