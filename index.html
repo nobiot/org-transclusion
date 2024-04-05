@@ -388,8 +388,11 @@ Next: <a href="#Control-levels-of-headlines-per-transclusion" accesskey="n" rel=
 
 <span id="index-Links-with-hyper_003a_002f_002f_002c-http_003a_002f_002f_002c-and-other-protocols"></span>
 
-<p>With version 1.4, a transclusion works with hyper:// links (see <a href="https://git.sr.ht/~ushin/hyperdrive.el">hyperdrive.el</a>)
-or <a href="http://">http://</a> links. Splitting the org-transclusion-add into two parts enables  functions in org-transclusion-add-functions to be asynchronous. With this change, content can be transcluded over a network, using <a href="http://">http://</a>, hyper://, or other protocols. For a proof-of-concept integration with hyperdrive.el, see <a href="https://git.sr.ht/~ushin/hyperdrive.el/tree/org-transclusion/item/hyperdrive-org-transclusion.el">this file</a>.
+<p>As of version 1.4, it is possible to transclude content over the
+network via &lsquo;<samp>hyper://</samp>&rsquo; (see <a href="https://git.sr.ht/~ushin/hyperdrive.el">hyperdrive.el</a>) or &lsquo;<samp>http://</samp>&rsquo; (see
+<a href="https://git.sr.ht/~breatheoutbreathein/org-transclusion-http">org-transclusion-http</a>).  Under the hood, splitting the
+<code>org-transclusion-add</code> into two parts enables functions in
+<code>org-transclusion-add-functions</code> to be asynchronous.
 </p>
 <p>[We expect more information and examples to be added for this section]
 </p>
@@ -689,6 +692,7 @@ Next: <a href="#Extensions" accesskey="n" rel="next">Extensions</a>, Previous: <
 <li><a href="#lines-property-to-specify-a-range-of-lines" accesskey="1">&lsquo;<samp>:lines</samp>&rsquo; property to specify a range of lines</a></li>
 <li><a href="#end-property-to-specify-a-search-term-to-dynamically-look-for-the-end-of-a-range" accesskey="2">&lsquo;<samp>:end</samp>&rsquo; property to specify a search term to dynamically look for the end of a range</a></li>
 <li><a href="#thing_002dat_002dpoint-or-thingatpt-property-to-specify-a-_0060_0060thing_0027_0027-to-transclude-from-the-source" accesskey="3">&lsquo;<samp>:thing-at-point</samp>&rsquo; or &lsquo;<samp>:thingatpt</samp>&rsquo; property to specify a &ldquo;thing&rdquo; to transclude from the source.</a></li>
+<li><a href="#Transclude-HTML-content-with-Pandoc" accesskey="4">Transclude HTML content with Pandoc</a></li>
 </ul>
 <hr>
 <div class="subsection" id="lines-property-to-specify-a-range-of-lines">
@@ -758,7 +762,7 @@ Next: <a href="#thing_002dat_002dpoint-or-thingatpt-property-to-specify-a-_0060_
 <div class="subsection" id="thing_002dat_002dpoint-or-thingatpt-property-to-specify-a-_0060_0060thing_0027_0027-to-transclude-from-the-source">
 <div class="header">
 <p>
-Previous: <a href="#end-property-to-specify-a-search-term-to-dynamically-look-for-the-end-of-a-range" accesskey="p" rel="prev">&lsquo;<samp>:end</samp>&rsquo; property to specify a search term to dynamically look for the end of a range</a>, Up: <a href="#Transclude-range-of-lines-for-text-and-source-files" accesskey="u" rel="up">Transclude range of lines for text and source files</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+Next: <a href="#Transclude-HTML-content-with-Pandoc" accesskey="n" rel="next">Transclude HTML content with Pandoc</a>, Previous: <a href="#end-property-to-specify-a-search-term-to-dynamically-look-for-the-end-of-a-range" accesskey="p" rel="prev">&lsquo;<samp>:end</samp>&rsquo; property to specify a search term to dynamically look for the end of a range</a>, Up: <a href="#Transclude-range-of-lines-for-text-and-source-files" accesskey="u" rel="up">Transclude range of lines for text and source files</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
 </div>
 <span id="g_t_003athing_002dat_002dpoint-or-_003athingatpt-property-to-specify-a-_0060_0060thing_0027_0027-to-transclude-from-the-source_002e"></span><h4 class="subsection">4.9.3 &lsquo;<samp>:thing-at-point</samp>&rsquo; or &lsquo;<samp>:thingatpt</samp>&rsquo; property to specify a &ldquo;thing&rdquo; to transclude from the source.</h4>
 
@@ -806,6 +810,32 @@ Previous: <a href="#end-property-to-specify-a-search-term-to-dynamically-look-fo
 
 <hr>
 </div>
+<div class="subsection" id="Transclude-HTML-content-with-Pandoc">
+<div class="header">
+<p>
+Previous: <a href="#thing_002dat_002dpoint-or-thingatpt-property-to-specify-a-_0060_0060thing_0027_0027-to-transclude-from-the-source" accesskey="p" rel="prev">&lsquo;<samp>:thing-at-point</samp>&rsquo; or &lsquo;<samp>:thingatpt</samp>&rsquo; property to specify a &ldquo;thing&rdquo; to transclude from the source.</a>, Up: <a href="#Transclude-range-of-lines-for-text-and-source-files" accesskey="u" rel="up">Transclude range of lines for text and source files</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<span id="Transclude-HTML-content-with-Pandoc-1"></span><h4 class="subsection">4.9.4 Transclude HTML content with Pandoc</h4>
+
+<span id="index-Transclude-HTML-content-with-Pandoc"></span>
+
+<p>If you have Pandoc installed, you can transclude local HTML files
+as Org documents.
+</p>
+<p>This feature is provided as an <a href="#Extensions">extension</a> (default off).
+</p>
+<div class="example">
+<pre class="example">#+transclude: [[file:../test/source-html-no-ext]]
+</pre></div>
+
+<p>Since it&rsquo;s not currently possible to add anchor links to local &lsquo;<samp>file:</samp>&rsquo;
+Org links, HTML transclusions always render the entire document as
+Org.  However, packages which transclude HTML documents over a
+network, such as <a href="https://git.sr.ht/~ushin/hyperdrive.el">hyperdrive.el</a> and <a href="https://git.sr.ht/~breatheoutbreathein/org-transclusion-http">org-transclusion-http</a>, are able to
+render specific HTML elements by tag.
+</p>
+<hr>
+</div>
 </div>
 <div class="section" id="Extensions">
 <div class="header">
@@ -819,6 +849,7 @@ Previous: <a href="#Transclude-range-of-lines-for-text-and-source-files" accessk
 <span id="index-Extension-_002d-org_002dtransclusion_002dindent_002dmode"></span>
 <span id="index-Extension-_002d-org_002dtransclusion_002dsrc_002dlines"></span>
 <span id="index-Extension-_002d-org_002dtransclusion_002dfont_002dlock"></span>
+<span id="index-Extension-_002d-org_002dtransclusion_002dhtml"></span>
 
 <p>Org-transclusion provides a simple extension framework, where you can use <code>customize</code> to selectively add new features.
 </p>
@@ -847,6 +878,10 @@ Previous: <a href="#Transclude-range-of-lines-for-text-and-source-files" accessk
 </dd>
 <dt><span>(on by default) <code>org-transclusion-font-lock</code></span></dt>
 <dd><p>Add font-lock for &lsquo;<samp>#+transclude</samp>&rsquo;. Org mode&rsquo;s standard syntax treats the combination of a &lsquo;<samp>#+transclude:</samp>&rsquo; keyword and a link used by Org-transclusion as a keyword. This means it applies the <code>org-meta-line</code> face and the link part cannot be toggled as a normal link. This extension adds <code>org-transclusion-keyword</code> face to the keyword part and lets the link part to be treated as a normal link for <code>org-toggle-link-display</code>.
+</p>
+</dd>
+<dt><span>(off by default) <code>org-transclusion-html</code></span></dt>
+<dd><p>Transclude local HTML files by converting them to Org with Pandoc.
 </p></dd>
 </dl>
 
@@ -1257,6 +1292,7 @@ Next: <a href="#Index-_002d-Commands" accesskey="n" rel="next">Index - Commands<
 <tr><td colspan="4"> <hr></td></tr>
 <tr><th id="Index-_002d-Features_cp_letter-E">E</th><td></td><td></td></tr>
 <tr><td></td><td valign="top"><a href="#index-Extension-_002d-org_002dtransclusion_002dfont_002dlock">Extension - org-transclusion-font-lock</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Extensions">Extensions</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Extension-_002d-org_002dtransclusion_002dhtml">Extension - org-transclusion-html</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Extensions">Extensions</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-Extension-_002d-org_002dtransclusion_002dindent_002dmode">Extension - org-transclusion-indent-mode</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Extensions">Extensions</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-Extension-_002d-org_002dtransclusion_002dsrc_002dlines">Extension - org-transclusion-src-lines</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Extensions">Extensions</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-Extensions">Extensions</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Extensions">Extensions</a></td></tr>
@@ -1288,6 +1324,7 @@ Next: <a href="#Index-_002d-Commands" accesskey="n" rel="next">Index - Commands<
 <tr><td></td><td valign="top"><a href="#index-Property-_002d-_003athingatpt">Property - :thingatpt</a>:</td><td>&nbsp;</td><td valign="top"><a href="#thing_002dat_002dpoint-or-thingatpt-property-to-specify-a-_0060_0060thing_0027_0027-to-transclude-from-the-source">&lsquo;<samp>thing-at-point</samp>&rsquo; or &lsquo;<samp>thingatpt</samp>&rsquo; property to specify a ``thing'' to transclude from the source</a></td></tr>
 <tr><td colspan="4"> <hr></td></tr>
 <tr><th id="Index-_002d-Features_cp_letter-T">T</th><td></td><td></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Transclude-HTML-content-with-Pandoc">Transclude HTML content with Pandoc</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Transclude-HTML-content-with-Pandoc">Transclude HTML content with Pandoc</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-Transclude-into-Org_0027s-src_002dblock">Transclude into Org&rsquo;s src-block</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Transclude-source-file-into-src_002dblock">Transclude source file into src-block</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-Transclude-range-of-lines">Transclude range of lines</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Transclude-range-of-lines-for-text-and-source-files">Transclude range of lines for text and source files</a></td></tr>
 <tr><td colspan="4"> <hr></td></tr>
