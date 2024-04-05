@@ -201,8 +201,11 @@ For the =:only-contents= property, refer to sub-section [[#filtering-org-element
 :END:
 #+cindex: Links with hyper://, http://, and other protocols
 
-With version 1.4, a transclusion works with hyper:// links (see [[https://git.sr.ht/~ushin/hyperdrive.el][hyperdrive.el]])
-or http:// links. Splitting the org-transclusion-add into two parts enables  functions in org-transclusion-add-functions to be asynchronous. With this change, content can be transcluded over a network, using http://, hyper://, or other protocols. For a proof-of-concept integration with hyperdrive.el, see [[https://git.sr.ht/~ushin/hyperdrive.el/tree/org-transclusion/item/hyperdrive-org-transclusion.el][this file]].
+As of version 1.4, it is possible to transclude content over the
+network via =hyper://= (see [[https://git.sr.ht/~ushin/hyperdrive.el][hyperdrive.el]]) or =http://= (see
+[[https://git.sr.ht/~breatheoutbreathein/org-transclusion-http][org-transclusion-http]]).  Under the hood, splitting the
+~org-transclusion-add~ into two parts enables functions in
+~org-transclusion-add-functions~ to be asynchronous.
 
 [We expect more information and examples to be added for this section]
 
@@ -537,6 +540,24 @@ Example 5:
 #+transclude: [[./things-at-point-dir/baz.el::id:1234567890][barz-baz-fuzz]]  :src elisp :thingatpt defun
 #+end_example
 
+*** Transclude HTML content with Pandoc
+#+cindex: Transclude HTML content with Pandoc
+
+If you have Pandoc installed, you can transclude local HTML files
+as Org documents.
+
+This feature is provided as an [[#extensions][extension]] (default off).
+
+#+begin_example
+#+transclude: [[file:../test/source-html-no-ext]]
+#+end_example
+
+Since it's not currently possible to add anchor links to local =file:=
+Org links, HTML transclusions always render the entire document as
+Org.  However, packages which transclude HTML documents over a
+network, such as [[https://git.sr.ht/~ushin/hyperdrive.el][hyperdrive.el]] and [[https://git.sr.ht/~breatheoutbreathein/org-transclusion-http][org-transclusion-http]], are able to
+render specific HTML elements by tag.
+
 ** Extensions
 :PROPERTIES:
 :CUSTOM_ID: extensions
@@ -547,6 +568,7 @@ Example 5:
 #+cindex: Extension - org-transclusion-indent-mode
 #+cindex: Extension - org-transclusion-src-lines
 #+cindex: Extension - org-transclusion-font-lock
+#+cindex: Extension - org-transclusion-html
 
 Org-transclusion provides a simple extension framework, where you can use ~customize~ to selectively add new features.
 
@@ -573,6 +595,9 @@ Currently, the following extensions are available.
 
 - (on by default) ~org-transclusion-font-lock~ ::
   Add font-lock for =#+transclude=. Org mode's standard syntax treats the combination of a =#+transclude:= keyword and a link used by Org-transclusion as a keyword. This means it applies the ~org-meta-line~ face and the link part cannot be toggled as a normal link. This extension adds ~org-transclusion-keyword~ face to the keyword part and lets the link part to be treated as a normal link for ~org-toggle-link-display~.
+
+- (off by default) ~org-transclusion-html~ ::
+  Transclude local HTML files by converting them to Org with Pandoc.
 
 * Customizing
 
