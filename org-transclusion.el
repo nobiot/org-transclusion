@@ -69,7 +69,7 @@ Intended for :set property for `customize'."
 
         (const :tag "indent-mode: Support org-indent-mode" org-transclusion-indent-mode)
         (const :tag "html: Transclude HTML converted to Org with Pandoc"
-               org-transclusion-http)
+               org-transclusion-html)
         (repeat :tag "Other packages" :inline t (symbol :tag "Package"))))
 
 (defcustom org-transclusion-add-all-on-activate t
