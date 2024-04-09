@@ -32,6 +32,7 @@
 ;;;; Requirements
 
 (require 'org)
+(require 'org-element)
 (require 'cl-lib)
 (require 'pcase)
 (require 'dom)
