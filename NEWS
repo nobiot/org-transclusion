@@ -12,7 +12,7 @@
     https://git.sr.ht/~ushin/hyperdrive.el/tree/org-transclusion/item/hyperdrive-org-transclusion.el.
 
     - chg: #213 Allow making transclusion links from any protocol link
-    - refactor: #209 Split -add-callback from -add to enable async transclusion
+    - refactor: #209 Split -add-payload from -add to enable async transclusion
 
     add :things-at-point (or :thingatpt) property for transcluding
     source and other non-org text files. Both property names are synonym
