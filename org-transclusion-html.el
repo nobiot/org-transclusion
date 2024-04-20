@@ -52,7 +52,7 @@ Return nil if not found."
            (with-current-buffer (find-file-noselect
                                  (org-element-property :path link) t)
              (org-transclusion-html--html-p (current-buffer))))
-       (append '(:tc-type "html-org-file")
+       (append '(:tc-type "org-html-file")
                (org-transclusion-html-org-file-content link plist))))
 
 (defun org-transclusion-html-org-file-content (link _plist)
