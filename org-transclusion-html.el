@@ -38,13 +38,13 @@
 
 ;;;; Hook into org-transclusion
 
-(add-hook 'org-transclusion-add-functions #'org-transclusion-add-html-file)
+(add-hook 'org-transclusion-add-functions #'org-transclusion-html-add-file)
 
 ;;;; Functions
 
 ;;;;; Add HTML file
 
-(defun org-transclusion-add-html-file (link plist)
+(defun org-transclusion-html-add-file (link plist)
   "Return a list for HTML file LINK object and PLIST.
 Return nil if not found."
   (and (string= "file" (org-element-property :type link))
