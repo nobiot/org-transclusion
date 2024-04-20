@@ -198,18 +198,17 @@ that consists of the following properties:
 - :src-end
 - :src-content
 
-Otherwise, the payload may be a named or lambda callback
-function.  In that case, the callback function will be called
-with the following arguments:
+Otherwise, the payload may be a named or lambda function which
+will be called with the following arguments:
 
 - \\+`link'
 - \\+`keyword-plist'
 - \\+`copy'
 
 In order for the transclusion to be inserted into the buffer, the
-callback function should generate a payload plist, then call
-`org-transclusion-add-callback', passing in the payload as well
-as the \\+`link', \\+`keyword-plist', and \\+`copy' arguments.")
+payload function should generate a payload plist, then call
+`org-transclusion-add-payload', passing in the payload as well as
+the \\+`link', \\+`keyword-plist', and \\+`copy' arguments.")
 
 (defvar org-transclusion-keyword-value-functions
   '(org-transclusion-keyword-value-link
@@ -446,9 +445,9 @@ does not support all the elements.
       (if (functionp payload)
           ;; Allow for asynchronous transclusion
           (funcall payload link keyword-plist copy)
-        (org-transclusion-add-callback payload link keyword-plist copy)))))
+        (org-transclusion-add-payload payload link keyword-plist copy)))))
 
-(defun org-transclusion-add-callback (payload link keyword-plist copy)
+(defun org-transclusion-add-payload (payload link keyword-plist copy)
   "Insert transcluded content with error handling.
 
 PAYLOAD should be a plist according to the description in
@@ -458,8 +457,8 @@ context object for the link.  KEYWORD-PLIST should contain the
 non-nil COPY, copy the transcluded content into the buffer.
 
 This function is intended to be called from within
-`org-transclusion-add' as well as callback functions returned by
-functions in `org-transclusion-add-functions'."
+`org-transclusion-add' as well as payload functions returned by
+hooks in `org-transclusion-add-functions'."
   (let ((tc-type (plist-get payload :tc-type))
         (src-buf (plist-get payload :src-buf))
         (src-beg (plist-get payload :src-beg))
