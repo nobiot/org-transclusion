@@ -6,9 +6,8 @@
   (time-stamp-line-limit . 20)
   ;; Need this locale to be "C" or "en_US.UTF-8" or something to standardize the
   ;; time stamp with English
-  (system-time-locale . "C"))
+  (system-time-locale . "C")
   (fill-column . 80)
   (indent-tabs-mode . nil)
-  (coding . utf-8)
-  (require-final-newline: t)
-  (sentence-end-double-space: t))
+  (require-final-newline . t)
+  (sentence-end-double-space . nil)))

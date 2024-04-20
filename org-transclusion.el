@@ -405,6 +405,10 @@ transclusion keyword."
 When minor-mode `org-transclusion-mode' is inactive in the
 current buffer, this function toggles it on.
 
+With using `universal-argument' (\\[universal-argument]) or
+non-nil COPY argument, you can copy the transcluded content into
+the buffer instead of transclusion.
+
 Examples of acceptable formats are as below:
 
 - \"#+transclude: [[file:path/file.org::search-option][desc]]:level n\"
@@ -609,6 +613,8 @@ the rest of the buffer unchanged."
 
 (defun org-transclusion-refresh (&optional detach)
   "Refresh the transcluded text at point.
+With using `universal-argument' (\\[universal-argument]), you can
+pass DETACH, which copies the source instead of transclusion.
 
 TODO: Support asynchronous transclusions (set point correctly)."
   (interactive "P")
