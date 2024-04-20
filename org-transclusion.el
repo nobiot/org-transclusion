@@ -157,7 +157,7 @@ The default is no color specification (transparent).")
 ;;;; Variables
 
 (defvar org-transclusion-extensions-loaded nil
-  "Have the exntensions been loaded already?")
+  "Have the extensions been loaded already?")
 
 (defvar-local org-transclusion-remember-point nil
   "This variable is used to remember the current just before `save-buffer'.
@@ -564,7 +564,7 @@ When success, return the beginning point of the keyword re-inserted."
               (when (> indent 0) (indent-to indent))
               (insert-before-markers keyword))
             ;; Move markers of adjacent transclusions if any to their original
-            ;; potisions.  Some markers move if two transclusions are placed
+            ;; positions.  Some markers move if two transclusions are placed
             ;; without any blank lines, and either of beg and end markers will
             ;; inevitably have the same position (location "between" lines)
             (when mkr-at-beg (move-marker mkr-at-beg beg))
@@ -574,9 +574,9 @@ When success, return the beginning point of the keyword re-inserted."
     (message "Nothing done. No transclusion exists here.") nil))
 
 (defun org-transclusion-detach ()
-  "Make the transcluded region normal text contentent."
+  "Make the transcluded region normal copied text content."
   (interactive)
-  ;; Make sure the translusion is removed first so that undo can be used
+  ;; Make sure the transclusion is removed first so that undo can be used
   ;; to go back to the #+transclusion before detach.
   (org-transclusion-refresh 'detach))
 
@@ -690,7 +690,7 @@ quote-block, special-block table, and verse-block.
 
 It is known that live-sync does not work for the other Org
 elements: comment-block, export-block, example-block,
-fixed-width, keyword, src-block, and property-drawerd.
+fixed-width, keyword, src-block, and property-drawer.
 
 `org-transclusion-live-sync-map' inherits `org-mode-map' and adds
 a couple of org-transclusion specific keybindings; namely:
@@ -769,7 +769,7 @@ This is meant to be used within live-sync overlay as part of
 ;;;; Functions for Activate / Deactivate / save-buffer hooks
 
 (defun org-transclusion-before-save-buffer ()
-  "Remove translusions in `before-save-hook'.
+  "Remove transclusions in `before-save-hook'.
 This function is meant to clear the file clear of the
 transclusions.  It also remembers the current point for
 `org-transclusion-after-save-buffer' to move it back."
@@ -811,7 +811,7 @@ Intended to be used with `kill-buffer-hook' and `kill-emacs-hook'
 to clear the file of the transcluded text regions.  This function
 also flags the buffer modified and `save-buffer'.  Calling the
 second `org-transclusion-remove-all' ensures the clearing process
-to occur.  This is reqiured because during live-sync, some hooks
+to occur.  This is required because during live-sync, some hooks
 that manage the clearing process are temporarily turned
 off (removed)."
   ;; Remove transclusions first. To deal with an edge case where transclusions
@@ -826,7 +826,7 @@ off (removed)."
 ;;;; Functions for Transclude Keyword
 
 (defun org-transclusion-keyword-string-to-plist ()
-  "Return the \"#+transcldue:\" keyword's values if any at point."
+  "Return the \"#+transclude:\" keyword's values if any at point."
   (save-excursion
     (beginning-of-line)
     (let ((plist))
@@ -882,7 +882,7 @@ It needs to be set in
 It is meant to be used by `org-transclusion-get-string-to-plist'.
 It needs to be set in
 `org-transclusion-get-keyword-values-hook'.
-Double qutations are mandatory."
+Double quotations are mandatory."
   (when (string-match ":exclude-elements +\"\\(.*\\)\"" string)
     (list :exclude-elements
           (org-trim (org-strip-quotes (match-string 1 string))))))
@@ -1096,7 +1096,7 @@ based on the following arguments:
 Returns nil if there is no headline.  Note that level 1 is the
 highest; the lower the number, higher the level of headline.
 
-This function sssumes the buffer is an Org buffer."
+This function assumes the buffer is an Org buffer."
   (let ((tree (org-element-parse-buffer))
         list)
     (org-element-map tree 'headline
@@ -1144,7 +1144,7 @@ INDENT is the number of current indentation of the #+transclude."
 
 (defun org-transclusion-content-org-marker (marker plist)
   "Return a list of payload from MARKER and PLIST.
-This function is intended to be used for Org-ID.  It delates the
+This function is intended to be used for Org-ID.  It delegates the
 work to
 `org-transclusion-content-org-buffer-or-element'."
   (if (and marker (marker-buffer marker)
@@ -1162,7 +1162,7 @@ work to
 
 (defun org-transclusion-content-org-link (link plist)
   "Return a list of payload from Org LINK object and PLIST.
-This function is intended to be used for Org-ID.  It delates the
+This function is intended to be used for Org-ID.  It delegates the
 work to
 `org-transclusion-content-org-buffer-or-element'."
   (save-excursion
@@ -1186,8 +1186,8 @@ work to
           plist))))))
 
 (defun org-transclusion-content-org-buffer-or-element (only-element plist)
-  "Return a list of playload for transclusion.
-Tis function assumes the point is at the beginning of the org
+  "Return a list of payload for transclusion.
+This function assumes the point is at the beginning of the org
 element to transclude.
 
 The payload is a plist that consists of the following properties:
@@ -1200,7 +1200,7 @@ When ONLY-ELEMENT is non-nil, this function looks at only the element
 at point; if nil, the whole buffer.
 
 This function applies multiple filters on the Org elements before
-construting the payload based on PLIST. It is the
+constructing the payload based on PLIST. It is the
 \"keyword-plist\" for the transclusion being worked on; each
 property controls the filter applied to the transclusion."
   (let* ((el (org-element-context))
@@ -1326,7 +1326,7 @@ using `org-element-parse-buffer' and
 does not seem to add :parent, which makes live-sync not working
 for them.
 
-Text properties are addeb by `org-element-put-property' which in
+Text properties are added by `org-element-put-property' which in
 turn uses `org-add-props' macro. If any of this substantially
 changes, the logic in this function will need to reviewed."
   (let ((parent (get-text-property (point) ':parent))
@@ -1441,7 +1441,7 @@ https://github.com/nobiot/org-transclusion/issues/177."
               t)))))))
 
 (defun org-transclusion-within-transclusion-p ()
-  "Return t if the current point is within a tranclusion region."
+  "Return t if the current point is within a transclusion region."
   (when (get-char-property (point) 'org-transclusion-type) t))
 
 (defun org-transclusion-within-live-sync-p ()
@@ -1480,7 +1480,7 @@ and is a string."
 ;;;; Functions for open-source
 
 (defun org-transclusion-open-source-marker (_type)
-  "Return a marker pointing to the position and soure buffer.
+  "Return a marker pointing to the position and source buffer.
 It is intended to be used for `org-transclusion-open-source' and
 `org-transclusion-move-to-source'.
 
@@ -1560,11 +1560,11 @@ Note that live-sync is known to work only for the following elements:
 It is known that live-sync does not work for the other elements
 as `org-element' does not add :parent prop to them:
   comment-block export-block example-block fixed-width keyword
-  src-block property-drawerd not work well
+  src-block property-drawer not work well
 
 This function works in a temporary org buffer to isolate the
 transcluded region and source region from the rest of the
-original buffer.  This is required especially when translusion is
+original buffer.  This is required especially when transclusion is
 for a paragraph, which can be right next to another paragraph
 without a blank space; thus, subsumed by the surrounding
 paragraph."
@@ -1650,7 +1650,7 @@ attempts to bring back the original window configuration."
     (select-window win)))
 
 (defun org-transclusion-live-sync-buffers ()
-  "Return cons cell of overlays for source and trasnclusion.
+  "Return cons cell of overlays for source and transclusion.
 The cons cell to be returned is in this format:
 
    (src-ov . tc-ov)
@@ -1665,7 +1665,7 @@ org-transclusion overlay."
      'org-transclusion-live-sync-buffers-functions type)))
 
 (defun org-transclusion-live-sync-buffers-org (type)
-  "Return cons cell of overlays for source and trasnclusion.
+  "Return cons cell of overlays for source and transclusion.
 The cons cell to be returned is in this format:
 
     (src-ov . tc-ov)
@@ -1720,7 +1720,7 @@ links and IDs."
       (cons src-ov tc-ov))))
 
 (defun org-transclusion-live-sync-buffers-others-default (_type)
-  "Return cons cell of overlays for source and trasnclusion.
+  "Return cons cell of overlays for source and transclusion.
 The cons cell to be returned is in this format:
 
     (src-ov . tc-ov)
