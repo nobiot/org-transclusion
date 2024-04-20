@@ -290,7 +290,7 @@ Next: <a href="#Customizing" accesskey="n" rel="next">Customizing</a>, Previous:
 <ul class="section-toc">
 <li><a href="#Org_002dtransclusion-mode-activate-and-deactivate" accesskey="1">Org-transclusion mode, activate, and deactivate</a></li>
 <li><a href="#Org-links-supported" accesskey="2">Org links supported</a></li>
-<li><a href="#Links-with-hyper_002f_002f-http_002f_002f-and-other-protocols" accesskey="3">Links with <code>hyper://</code>, <code>http://</code>, and other protocols</a></li>
+<li><a href="#Transclude-over-a-network-with-hyper_002f_002f-http_002f_002f-etc" accesskey="3">Transclude over a network with <code>hyper://</code>, <code>http://</code>, etc.</a></li>
 <li><a href="#Control-levels-of-headlines-per-transclusion" accesskey="4">Control levels of headlines per transclusion</a></li>
 <li><a href="#Filter-Org-elements-per-transclusion" accesskey="5">Filter Org elements per transclusion</a></li>
 <li><a href="#Detach-transclusion-and-copy-source-buffer" accesskey="6">Detach transclusion and copy source buffer</a></li>
@@ -338,7 +338,7 @@ Next: <a href="#Org-links-supported" accesskey="n" rel="next">Org links supporte
 <div class="section" id="Org-links-supported">
 <div class="header">
 <p>
-Next: <a href="#Links-with-hyper_002f_002f-http_002f_002f-and-other-protocols" accesskey="n" rel="next">Links with <code>hyper://</code>, <code>http://</code>, and other protocols</a>, Previous: <a href="#Org_002dtransclusion-mode-activate-and-deactivate" accesskey="p" rel="prev">Org-transclusion mode, activate, and deactivate</a>, Up: <a href="#Usage" accesskey="u" rel="up">Usage</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+Next: <a href="#Transclude-over-a-network-with-hyper_002f_002f-http_002f_002f-etc" accesskey="n" rel="next">Transclude over a network with <code>hyper://</code>, <code>http://</code>, etc.</a>, Previous: <a href="#Org_002dtransclusion-mode-activate-and-deactivate" accesskey="p" rel="prev">Org-transclusion mode, activate, and deactivate</a>, Up: <a href="#Usage" accesskey="u" rel="up">Usage</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
 </div>
 <span id="Org-links-supported-1"></span><h3 class="section">4.2 Org links supported</h3>
 
@@ -379,29 +379,40 @@ tincidunt quam. &lt;&lt;paragraph-id&gt;&gt;
 </p>
 <hr>
 </div>
-<div class="section" id="Links-with-hyper_002f_002f-http_002f_002f-and-other-protocols">
+<div class="section" id="Transclude-over-a-network-with-hyper_002f_002f-http_002f_002f-etc">
 <div class="header">
 <p>
 Next: <a href="#Control-levels-of-headlines-per-transclusion" accesskey="n" rel="next">Control levels of headlines per transclusion</a>, Previous: <a href="#Org-links-supported" accesskey="p" rel="prev">Org links supported</a>, Up: <a href="#Usage" accesskey="u" rel="up">Usage</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
 </div>
-<span id="Links-with-hyper_003a_002f_002f_002c-http_003a_002f_002f_002c-and-other-protocols"></span><h3 class="section">4.3 Links with <code>hyper://</code>, <code>http://</code>, and other protocols</h3>
+<span id="Transclude-over-a-network-with-hyper_003a_002f_002f_002c-http_003a_002f_002f_002c-etc_002e"></span><h3 class="section">4.3 Transclude over a network with <code>hyper://</code>, <code>http://</code>, etc.</h3>
 
 <span id="index-Links-with-hyper_003a_002f_002f_002c-http_003a_002f_002f_002c-and-other-protocols"></span>
 
-<p>As of version 1.4, it is possible to transclude content over the
-network via &lsquo;<samp>hyper://</samp>&rsquo; (see <a href="https://git.sr.ht/~ushin/hyperdrive.el">hyperdrive.el</a>) or &lsquo;<samp>http://</samp>&rsquo; (see
-<a href="https://git.sr.ht/~breatheoutbreathein/org-transclusion-http">org-transclusion-http</a>).  Under the hood, splitting the
-<code>org-transclusion-add</code> into two parts enables functions in
-<code>org-transclusion-add-functions</code> to be asynchronous.
+<p>Version 1.4 includes changes which make it possible for asynchronously
+transclude content, e.g., over a network.  To transclude content via
+&lsquo;<samp>http://</samp>&rsquo;, first install <a href="https://git.sr.ht/~ushin/org-transclusion-http">org-transclusion-http</a>, then run <code>M-x
+org-transclusion-add</code> on the following link to transclude the HTML
+element with the &ldquo;#emacs&rdquo; id:
 </p>
-<p>[We expect more information and examples to be added for this section]
+<div class="example">
+<pre class="example">#+transclude: [[https://ushin.org/software.html#emacs]]
+</pre></div>
+
+<p>To transclude content via &lsquo;<samp>hyper://</samp>&rsquo;, first install <a href="https://ushin.org/hyperdrive/hyperdrive-manual.org">hyperdrive.el</a>, then
+run <code>M-x org-transclusion-add</code> on the following link to transclude the
+the Org heading with the property <code>CUSTOM_ID: emacs</code> inside the
+<code>/software.org</code> file inside the USHIN hyperdrive:
 </p>
+<div class="example">
+<pre class="example">#+transclude: [[hyper://aaj45d88g4eenu76rpmwzjiabsof1w8u6fufq6oogyhjk1ubygxy/software.org#%3A%3A%23emacs]]
+</pre></div>
+
 <hr>
 </div>
 <div class="section" id="Control-levels-of-headlines-per-transclusion">
 <div class="header">
 <p>
-Next: <a href="#Filter-Org-elements-per-transclusion" accesskey="n" rel="next">Filter Org elements per transclusion</a>, Previous: <a href="#Links-with-hyper_002f_002f-http_002f_002f-and-other-protocols" accesskey="p" rel="prev">Links with <code>hyper://</code>, <code>http://</code>, and other protocols</a>, Up: <a href="#Usage" accesskey="u" rel="up">Usage</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+Next: <a href="#Filter-Org-elements-per-transclusion" accesskey="n" rel="next">Filter Org elements per transclusion</a>, Previous: <a href="#Transclude-over-a-network-with-hyper_002f_002f-http_002f_002f-etc" accesskey="p" rel="prev">Transclude over a network with <code>hyper://</code>, <code>http://</code>, etc.</a>, Up: <a href="#Usage" accesskey="u" rel="up">Usage</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
 </div>
 <span id="Control-levels-of-headlines-per-transclusion-1"></span><h3 class="section">4.4 Control levels of headlines per transclusion</h3>
 
@@ -831,7 +842,7 @@ as Org documents.
 <p>Since it&rsquo;s not currently possible to add anchor links to local &lsquo;<samp>file:</samp>&rsquo;
 Org links, HTML transclusions always render the entire document as
 Org.  However, packages which transclude HTML documents over a
-network, such as <a href="https://git.sr.ht/~ushin/hyperdrive.el">hyperdrive.el</a> and <a href="https://git.sr.ht/~breatheoutbreathein/org-transclusion-http">org-transclusion-http</a>, are able to
+network, such as <a href="https://git.sr.ht/~ushin/hyperdrive.el">hyperdrive.el</a> and <a href="https://git.sr.ht/~ushin/org-transclusion-http">org-transclusion-http</a>, are able to
 render specific HTML elements by tag.
 </p>
 <hr>
@@ -1304,7 +1315,7 @@ Next: <a href="#Index-_002d-Commands" accesskey="n" rel="next">Index - Commands<
 <tr><td></td><td valign="top"><a href="#index-Hooks-_002d-org_002dtransclusion_002dafter_002dadd_002dfunctions">Hooks - org-transclusion-after-add-functions</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Customizing">Customizing</a></td></tr>
 <tr><td colspan="4"> <hr></td></tr>
 <tr><th id="Index-_002d-Features_cp_letter-L">L</th><td></td><td></td></tr>
-<tr><td></td><td valign="top"><a href="#index-Links-with-hyper_003a_002f_002f_002c-http_003a_002f_002f_002c-and-other-protocols">Links with hyper://, http://, and other protocols</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Links-with-hyper_002f_002f-http_002f_002f-and-other-protocols">Links with <code>hyper//</code> <code>http//</code> and other protocols</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-Links-with-hyper_003a_002f_002f_002c-http_003a_002f_002f_002c-and-other-protocols">Links with hyper://, http://, and other protocols</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Transclude-over-a-network-with-hyper_002f_002f-http_002f_002f-etc">Transclude over a network with <code>hyper//</code> <code>http//</code> etc</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-Live_002dsync-edit">Live-sync edit</a>:</td><td>&nbsp;</td><td valign="top"><a href="#Live_002dsync-edit">Live-sync edit</a></td></tr>
 <tr><td colspan="4"> <hr></td></tr>
 <tr><th id="Index-_002d-Features_cp_letter-O">O</th><td></td><td></td></tr>
