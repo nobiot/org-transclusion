@@ -6,7 +6,16 @@ This is a link to a [[id:2022-05-30T203553][Bertrand Russell]] wikipedia excerpt
 #+transclude: [[file:empty.txt::2][empty text file]]
 
 ** test text
+
 #+transclude: [[file:test.txt][text file]]
+
+Below are tesing the new ~org-transclusion-fix-common-misspelling~ function.
+
+    #+transclude: [[file:test.txt][text file]]
+
+    #+transclude [[file:test.txt][text file]]
+
+#+trans [[file:test.txt][text file]]
 
 ** test t/nil
 t/nil will be dropped after remove-at-point

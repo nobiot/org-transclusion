@@ -436,7 +436,8 @@ does not support all the elements.
 
 \\{org-transclusion-map}"
   (interactive "P")
-  (when (org-transclusion-check-add)
+  (when (progn (org-transclusion-fix-common-misspelling)
+               (org-transclusion-check-add))
     ;; Turn on the minor mode to load extensions before staring to add.
     (unless org-transclusion-mode
       (let ((org-transclusion-add-all-on-activate nil))
@@ -1398,8 +1399,8 @@ Case 2. #+transclude inside another transclusion"
   (let ((elm (org-element-at-point)))
     (cond
      ;; Case 1. Element at point is NOT #+transclude:
-     ((not (and (string= "keyword" (org-element-type elm))
-                (string= "TRANSCLUDE" (org-element-property :key elm))))
+     ((not (and (string-equal "keyword" (org-element-type elm))
+                (string-equal "TRANSCLUDE" (org-element-property :key elm))))
       (user-error (format "Not at a transclude keyword or transclusion in a block at point %d, line %d"
                           (point) (org-current-line))))
      ;; Case 2. #+transclude inside another transclusion
@@ -1408,6 +1409,36 @@ Case 2. #+transclude inside another transclusion"
                           (point) (org-current-line))))
      (t
       t))))
+
+(defun org-transclusion-fix-common-misspelling ()
+  "Fix \"#+transclude\" by appending a colon \":\".
+
+When `org-element-at-point' is a paragraph and the first string
+of the line after spaces and tabs is \"transclude\", this
+function appends a colon \":\". This function does not change the
+case, so both \"#+TRANSCLUDE\" and \"#+transclude\" work and the
+case will be kept unchanged.
+
+It is a common mistake for users to omit the colon. It is a
+workaround to minimize the chance for users experience the known
+infinite issue. Refer to issue #177 on the GitHub repository:
+https://github.com/nobiot/org-transclusion/issues/177."
+  (let ((elm (org-element-at-point)))
+    (when (string-equal "paragraph" (org-element-type elm))
+      (save-excursion
+        (save-match-data
+          (let ((bol (line-beginning-position))
+                (eol (line-end-position))
+                (case-fold-search t))
+            (goto-char bol)
+            (when (and (re-search-forward "^[[:blank:]]*#\\+\\(\\S-*\\)" eol :noerror)
+                       (string-equal-ignore-case "transclude" (match-string-no-properties 1)))
+              (replace-match
+               (concat (match-string-no-properties 1) ":")
+               t nil nil 1)
+              ;; return t when the string replaced
+              (message "A colon \":\" added to \"#+TRANSCLUDE\" keyword")
+              t)))))))
 
 (defun org-transclusion-within-transclusion-p ()
   "Return t if the current point is within a tranclusion region."
