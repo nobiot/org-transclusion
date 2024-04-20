@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 14 January 2024
+;; Last modified: 20 April 2024
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -1389,19 +1389,19 @@ Currently the following cases are prevented:
 Case 1. Element at point is NOT #+transclude:
         Element is in a block - e.g. example
 Case 2. #+transclude inside another transclusion"
-  (cond
-   ;; Case 1. Element at point is NOT #+transclude:
-   ((let ((elm (org-element-at-point)))
-      (not (and (string= "keyword" (org-element-type elm))
-                (string= "TRANSCLUDE" (org-element-property :key elm)))))
-    (user-error (format "Not at a transclude keyword or transclusion in a block at point %d, line %d"
-                        (point) (org-current-line))))
-   ;; Case 2. #+transclude inside another transclusion
-   ((org-transclusion-within-transclusion-p)
-    (user-error (format "Cannot transclude in another transclusion at point %d, line %d"
-                        (point) (org-current-line))))
-   (t
-    t)))
+  (let ((elm (org-element-at-point)))
+    (cond
+     ;; Case 1. Element at point is NOT #+transclude:
+     ((not (and (string= "keyword" (org-element-type elm))
+                (string= "TRANSCLUDE" (org-element-property :key elm))))
+      (user-error (format "Not at a transclude keyword or transclusion in a block at point %d, line %d"
+                          (point) (org-current-line))))
+     ;; Case 2. #+transclude inside another transclusion
+     ((org-transclusion-within-transclusion-p)
+      (user-error (format "Cannot transclude in another transclusion at point %d, line %d"
+                          (point) (org-current-line))))
+     (t
+      t))))
 
 (defun org-transclusion-within-transclusion-p ()
   "Return t if the current point is within a tranclusion region."
