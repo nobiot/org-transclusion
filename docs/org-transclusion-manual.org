@@ -203,18 +203,19 @@ For the =:only-contents= property, refer to sub-section [[#filtering-org-element
 
 Version 1.4 includes changes which make it possible for asynchronously
 transclude content, e.g., over a network.  To transclude content via
-=http://=, first install [[https://git.sr.ht/~ushin/org-transclusion-http][org-transclusion-http]], then run ~M-x
-org-transclusion-add~ on the following link to transclude the HTML
-element with the "#emacs" id:
+=http://=, first install the ~org-transclusion-http~ extension (see
+[[#extensions][extensions]]), then run ~M-x org-transclusion-add~ on the following link
+to transclude the HTML element with the "#emacs" id:
 
 #+begin_example
 #+transclude: [[https://ushin.org/software.html#emacs]]
 #+end_example
 
-To transclude content via =hyper://=, first install [[https://ushin.org/hyperdrive/hyperdrive-manual.org][hyperdrive.el]], then
-run ~M-x org-transclusion-add~ on the following link to transclude the
-the Org heading with the property ~CUSTOM_ID: emacs~ inside the
-~/software.org~ file inside the USHIN hyperdrive:
+To transclude content via =hyper://=, first install the
+~hyperdrive-org-transclusion~ extension (see [[#extensions][extensions]]), then run ~M-x
+org-transclusion-add~ on the following link to transclude the Org
+heading with the property ~CUSTOM_ID: emacs~ inside the ~/software.org~
+file inside the USHIN hyperdrive:
 
 #+begin_example
 #+transclude: [[hyper://aaj45d88g4eenu76rpmwzjiabsof1w8u6fufq6oogyhjk1ubygxy/software.org#%3A%3A%23emacs]]
@@ -563,11 +564,11 @@ This feature is provided as an [[#extensions][extension]] (default off).
 #+transclude: [[file:../test/source-html-no-ext]]
 #+end_example
 
-Since it's not currently possible to add anchor links to local =file:=
-Org links, HTML transclusions always render the entire document as
-Org.  However, packages which transclude HTML documents over a
-network, such as [[https://git.sr.ht/~ushin/hyperdrive.el][hyperdrive.el]] and [[https://git.sr.ht/~ushin/org-transclusion-http][org-transclusion-http]], are able to
-render specific HTML elements by tag.
+Since it's not currently possible to add anchor links to local =file:= Org links,
+HTML transclusions always render the entire document as Org.  However, packages
+which transclude HTML documents over a network protocol that supports link
+fragments, such as [[https://git.sr.ht/~ushin/hyperdrive-org-transclusion][hyperdrive-org-transclusion]] and [[https://git.sr.ht/~ushin/org-transclusion-http][org-transclusion-http]], are
+able to render specific HTML elements by tag (see [[#network-transclusion][subsection]]).
 
 ** Extensions
 :PROPERTIES:
@@ -612,6 +613,28 @@ Currently, the following extensions are available.
 - (off by default) ~org-transclusion-html~ ::
 
   Transclude local HTML files by converting them to Org with Pandoc.
+
+- (off by default) ~org-transclusion-http~ ::
+
+  Asynchronously transclude remote HTML files (and other file types)
+  over HTTP.  To use this feature, first install [[https://git.sr.ht/~ushin/org-transclusion-http][org-transclusion-http]]
+  and then add the following snippet to your configuration:
+
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'org-transclusion-extensions 'org-transclusion-http)
+  (require 'org-transclusion-http)
+#+END_SRC
+
+- (off by default) ~hyperdrive-org-transclusion~ ::
+
+  Asynchronously transclude remote hyperdrive files over HTTP.  To use this
+  feature, first install [[https://git.sr.ht/~ushin/hyperdrive-org-transclusion][hyperdrive-org-transclusion]] and then add the following
+  snippet to your configuration:
+
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'org-transclusion-extensions 'hyperdrive-org-transclusion)
+  (require 'hyperdrive-org-transclusion)
+#+END_SRC
 
 * Customizing
 
