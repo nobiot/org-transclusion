@@ -602,12 +602,15 @@ Currently, the following extensions are available.
   Support org-indent-mode. Known limitation: when transcluded, the source will temporarily lose the indentation. When the transclusion is removed, the source will regain the indentation.
 
 - (on by default) ~org-transclusion-src-lines~ ::
+
   Add features for =:src= and =:lines= properties to =#+transclude=. It is meant for non-Org files such as program source and text files
 
 - (on by default) ~org-transclusion-font-lock~ ::
+
   Add font-lock for =#+transclude=. Org mode's standard syntax treats the combination of a =#+transclude:= keyword and a link used by Org-transclusion as a keyword. This means it applies the ~org-meta-line~ face and the link part cannot be toggled as a normal link. This extension adds ~org-transclusion-keyword~ face to the keyword part and lets the link part to be treated as a normal link for ~org-toggle-link-display~.
 
 - (off by default) ~org-transclusion-html~ ::
+
   Transclude local HTML files by converting them to Org with Pandoc.
 
 * Customizing
