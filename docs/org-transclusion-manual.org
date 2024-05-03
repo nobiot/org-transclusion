@@ -589,11 +589,12 @@ If you use ~customize~, the features are loaded automatically. Note that it does
 If you do not use ~customize~ (e.g. Doom), you may need to explicitly require an extension. For example, to activate ~org-transclusion-indent-mode~, you might need to add something like this in your configuration file.
 
  #+BEGIN_SRC emacs-lisp
- ;; Ensure that load-path to org-transclusion is already added
- ;; If you installed it with the built-in package.el, this should be already done.
- ;; (add-to-list  'load-path "path/to/org-transclusion/")
- (add-to-list 'org-transclusion-extensions 'org-transclusion-indent-mode)
- (require 'org-transclusion-indent-mode)
+   ;; Ensure that load-path to org-transclusion is already added
+   ;; If you installed it with the built-in package.el, this should be already done.
+   ;; (add-to-list  'load-path "path/to/org-transclusion/")
+   (with-eval-after-load 'org-transclusion
+     (add-to-list 'org-transclusion-extensions 'org-transclusion-indent-mode)
+     (require 'org-transclusion-indent-mode))
  #+END_SRC
 
 Currently, the following extensions are available.
@@ -621,8 +622,9 @@ Currently, the following extensions are available.
   and then add the following snippet to your configuration:
 
 #+BEGIN_SRC emacs-lisp
-  (add-to-list 'org-transclusion-extensions 'org-transclusion-http)
-  (require 'org-transclusion-http)
+  (with-eval-after-load 'org-transclusion
+    (add-to-list 'org-transclusion-extensions 'org-transclusion-http)
+    (require 'org-transclusion-http))
 #+END_SRC
 
 - (off by default) ~hyperdrive-org-transclusion~ ::
@@ -632,8 +634,9 @@ Currently, the following extensions are available.
   snippet to your configuration:
 
 #+BEGIN_SRC emacs-lisp
-  (add-to-list 'org-transclusion-extensions 'hyperdrive-org-transclusion)
-  (require 'hyperdrive-org-transclusion)
+  (with-eval-after-load 'org-transclusion
+    (add-to-list 'org-transclusion-extensions 'hyperdrive-org-transclusion)
+    (require 'hyperdrive-org-transclusion))
 #+END_SRC
 
 * Customizing
