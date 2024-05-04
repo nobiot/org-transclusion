@@ -2,14 +2,12 @@
 
   - Features ::
 
-    Allows for a transclusion workflow with hyper:// links (see
-    hyperdrive.el) or http:// links. Splitting the org-transclusion-add
-    into two parts enables functions in org-transclusion-add-functions
-    to be asynchronous. With this change, content can be transcluded
-    over a network, using http://, hyper://, or other protocols.
-
-    For a proof-of-concept integration with hyperdrive.el, see this file:
-    https://git.sr.ht/~ushin/hyperdrive.el/tree/org-transclusion/item/hyperdrive-org-transclusion.el.
+    Transclude content over network protocols like http:// (with
+    org-transclusion-http: https://git.sr.ht/ushin/org-transclusion-http) and
+    hyper:// (with hyperdrive-org-transclusion:
+    https://git.sr.ht/~ushin/hyperdrive-org-transclusion).  Splitting
+    org-transclusion-add into two parts enables functions in
+    org-transclusion-add-functions to be asynchronous.
 
     - chg: #213 Allow making transclusion links from any protocol link
     - refactor: #209 Split -add-payload from -add to enable async transclusion
