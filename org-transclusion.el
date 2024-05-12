@@ -1064,7 +1064,7 @@ based on the following arguments:
                                        org-transclusion-beg-mkr
                                        ,beg-mkr
                                        org-transclusion-end-mkr
-                                       ,end-mkr
+                                       ,beg-mkr
                                        org-transclusion-pair
                                        ,tc-pair
                                        org-transclusion-orig-keyword
