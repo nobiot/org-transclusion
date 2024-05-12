@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 20 April 2024
+;; Last modified: 12 May 2024
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -543,6 +543,13 @@ When success, return the beginning point of the keyword re-inserted."
             (keyword (org-transclusion-keyword-plist-to-string keyword-plist))
             (tc-pair-ov (get-char-property (point) 'org-transclusion-pair)))
       (progn
+        (when (equal beg end)
+          (message "(org-transclusion) Something is off")
+          ;; We need to know the size of the transclusion to remove it.
+          ;; The size of overlay cannot be used because filter can change the text.
+          (when-let* ((prop-match (text-property-search-forward 'org-transclusion-beg-mkr)))
+            (setq beg (prop-match-beginning prop-match))
+            (setq end (prop-match-end prop-match))))
         ;; Need to retain the markers of the other adjacent transclusions
         ;; if any.  If their positions differ after insert, move them back
         ;; beg or end
