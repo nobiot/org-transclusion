@@ -59,7 +59,7 @@ Intended for :set property for `customize'."
   (when (featurep 'org-transclusion)
     (org-transclusion-load-extensions-maybe 'force)))
 
- (defcustom org-transclusion-extensions '(org-transclusion-src-lines org-transclusion-font-lock)
+(defcustom org-transclusion-extensions '(org-transclusion-src-lines org-transclusion-font-lock)
   "Extensions to be loaded with org-transclusion.el."
   :set #'org-transclusion-set-extensions
   :type
