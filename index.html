@@ -136,7 +136,7 @@ Next: <a href="#Installation" accesskey="n" rel="next">Installation</a>, Previou
 
 </li><li> Work with any text file such as program source code, plain text, Markdown, or other Org files
 
-</li><li> With version 1.4, a transclusion works with hyper:// links (see <a href="https://git.sr.ht/~ushin/hyperdrive.el">hyperdrive.el</a>) or <a href="http://">http://</a> links. Splitting the org-transclusion-add into two parts enables  functions in org-transclusion-add-functions to be asynchronous. With this change, content can be transcluded over a network, using <a href="http://">http://</a>, hyper://, or other protocols. For a proof-of-concept integration with hyperdrive.el, see <a href="https://git.sr.ht/~ushin/hyperdrive.el/tree/org-transclusion/item/hyperdrive-org-transclusion.el">this file</a>.
+</li><li> With version 1.4, transclude content over network protocols like <code>http://</code> (with <a href="https://git.sr.ht/~ushin/org-transclusion-http">org-transclusion-http</a>) and <code>hyper://</code> (with <a href="https://git.sr.ht/~ushin/hyperdrive-org-transclusion">hyperdrive-org-transclusion</a>).  Splitting <code>org-transclusion-add</code> into two parts enables functions in <code>org-transclusion-add-functions</code> to be asynchronous.
 
 </li><li> Keep the file system clear of the copies of text content &ndash; Org-transclusion tries hard to save only the links to the file system
 
@@ -390,18 +390,19 @@ Next: <a href="#Control-levels-of-headlines-per-transclusion" accesskey="n" rel=
 
 <p>Version 1.4 includes changes which make it possible for asynchronously
 transclude content, e.g., over a network.  To transclude content via
-&lsquo;<samp>http://</samp>&rsquo;, first install <a href="https://git.sr.ht/~ushin/org-transclusion-http">org-transclusion-http</a>, then run <code>M-x
-org-transclusion-add</code> on the following link to transclude the HTML
-element with the &ldquo;#emacs&rdquo; id:
+&lsquo;<samp>http://</samp>&rsquo;, first install the <code>org-transclusion-http</code> extension (see
+<a href="#Extensions">extensions</a>), then run <code>M-x org-transclusion-add</code> on the following link
+to transclude the HTML element with the &ldquo;#emacs&rdquo; id:
 </p>
 <div class="example">
 <pre class="example">#+transclude: [[https://ushin.org/software.html#emacs]]
 </pre></div>
 
-<p>To transclude content via &lsquo;<samp>hyper://</samp>&rsquo;, first install <a href="https://ushin.org/hyperdrive/hyperdrive-manual.org">hyperdrive.el</a>, then
-run <code>M-x org-transclusion-add</code> on the following link to transclude the
-the Org heading with the property <code>CUSTOM_ID: emacs</code> inside the
-<code>/software.org</code> file inside the USHIN hyperdrive:
+<p>To transclude content via &lsquo;<samp>hyper://</samp>&rsquo;, first install the
+<code>hyperdrive-org-transclusion</code> extension (see <a href="#Extensions">extensions</a>), then run <code>M-x
+org-transclusion-add</code> on the following link to transclude the Org
+heading with the property <code>CUSTOM_ID: emacs</code> inside the <code>/software.org</code>
+file inside the USHIN hyperdrive:
 </p>
 <div class="example">
 <pre class="example">#+transclude: [[hyper://aaj45d88g4eenu76rpmwzjiabsof1w8u6fufq6oogyhjk1ubygxy/software.org#%3A%3A%23emacs]]
@@ -839,11 +840,11 @@ as Org documents.
 <pre class="example">#+transclude: [[file:../test/source-html-no-ext]]
 </pre></div>
 
-<p>Since it&rsquo;s not currently possible to add anchor links to local &lsquo;<samp>file:</samp>&rsquo;
-Org links, HTML transclusions always render the entire document as
-Org.  However, packages which transclude HTML documents over a
-network, such as <a href="https://git.sr.ht/~ushin/hyperdrive.el">hyperdrive.el</a> and <a href="https://git.sr.ht/~ushin/org-transclusion-http">org-transclusion-http</a>, are able to
-render specific HTML elements by tag.
+<p>Since it&rsquo;s not currently possible to add anchor links to local &lsquo;<samp>file:</samp>&rsquo; Org links,
+HTML transclusions always render the entire document as Org.  However, packages
+which transclude HTML documents over a network protocol that supports link
+fragments, such as <a href="https://git.sr.ht/~ushin/hyperdrive-org-transclusion">hyperdrive-org-transclusion</a> and <a href="https://git.sr.ht/~ushin/org-transclusion-http">org-transclusion-http</a>, are
+able to render specific HTML elements by tag (see <a href="#Transclude-over-a-network-with-hyper_002f_002f-http_002f_002f-etc">subsection</a>).
 </p>
 <hr>
 </div>
@@ -872,8 +873,9 @@ Previous: <a href="#Transclude-range-of-lines-for-text-and-source-files" accessk
 <pre class="lisp">;; Ensure that load-path to org-transclusion is already added
 ;; If you installed it with the built-in package.el, this should be already done.
 ;; (add-to-list  'load-path &quot;path/to/org-transclusion/&quot;)
-(add-to-list 'org-transclusion-extensions 'org-transclusion-indent-mode)
-(require 'org-transclusion-indent-mode)
+(with-eval-after-load 'org-transclusion
+  (add-to-list 'org-transclusion-extensions 'org-transclusion-indent-mode)
+  (require 'org-transclusion-indent-mode))
 </pre></div>
 
 <p>Currently, the following extensions are available.
@@ -893,8 +895,34 @@ Previous: <a href="#Transclude-range-of-lines-for-text-and-source-files" accessk
 </dd>
 <dt><span>(off by default) <code>org-transclusion-html</code></span></dt>
 <dd><p>Transclude local HTML files by converting them to Org with Pandoc.
+</p>
+</dd>
+<dt><span>(off by default) <code>org-transclusion-http</code></span></dt>
+<dd><p>Asynchronously transclude remote HTML files (and other file types)
+over HTTP.  To use this feature, first install <a href="https://git.sr.ht/~ushin/org-transclusion-http">org-transclusion-http</a>
+and then add the following snippet to your configuration:
 </p></dd>
 </dl>
+
+<div class="example lisp">
+<pre class="lisp">(with-eval-after-load 'org-transclusion
+  (add-to-list 'org-transclusion-extensions 'org-transclusion-http)
+  (require 'org-transclusion-http))
+</pre></div>
+
+<dl compact="compact">
+<dt><span>(off by default) <code>hyperdrive-org-transclusion</code></span></dt>
+<dd><p>Asynchronously transclude remote hyperdrive files over HTTP.  To use this
+feature, first install <a href="https://git.sr.ht/~ushin/hyperdrive-org-transclusion">hyperdrive-org-transclusion</a> and then add the following
+snippet to your configuration:
+</p></dd>
+</dl>
+
+<div class="example lisp">
+<pre class="lisp">(with-eval-after-load 'org-transclusion
+  (add-to-list 'org-transclusion-extensions 'hyperdrive-org-transclusion)
+  (require 'hyperdrive-org-transclusion))
+</pre></div>
 
 <hr>
 </div>
