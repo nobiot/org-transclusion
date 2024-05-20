@@ -17,12 +17,12 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 20 April 2024
+;; Last modified: 20 May 2024
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
 
-;; Version: 1.3.2
+;; Version: 1.4.0
 ;; Package-Requires: ((emacs "27.1") (org "9.4"))
 
 ;; This file is not part of GNU Emacs.
