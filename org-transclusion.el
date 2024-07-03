@@ -389,8 +389,9 @@ transclusion keyword."
                               (not org-transclusion-mode))))
     (let* ((contents-beg (org-element-property :contents-begin context))
            (contents-end (org-element-property :contents-end context))
-           (contents (when contents-beg
-                       (buffer-substring-no-properties contents-beg contents-end)))
+           (contents (and contents-beg
+                          (buffer-substring-no-properties contents-beg
+                                                          contents-end)))
            (link (org-element-link-interpreter context contents)))
       (save-excursion
         (org-transclusion-search-or-add-next-empty-line)
@@ -1574,12 +1575,12 @@ original buffer.  This is required especially when transclusion is
 for a paragraph, which can be right next to another paragraph
 without a blank space; thus, subsumed by the surrounding
 paragraph."
-  (let* ((beg (or (when-let ((m (get-char-property (point)
+  (let* ((beg (or (and-let* ((m (get-char-property (point)
                                                    'org-transclusion-beg-mkr)))
                     (marker-position m))
                   (overlay-start (get-char-property (point)
                                                     'org-transclusion-pair))))
-         (end (or (when-let ((m (get-char-property (point)
+         (end (or (and-let* ((m (get-char-property (point)
                                                    'org-transclusion-end-mkr)))
                     (marker-position m))
                   (overlay-end (get-char-property (point)
