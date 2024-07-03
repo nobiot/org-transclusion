@@ -382,7 +382,7 @@ transclusion keyword."
          (auto-transclude-p (if (or (not arg) (numberp arg)) org-transclusion-mode
                               ;; if `universal-argument' is passed,
                               ;; reverse nil/t when
-                              (if org-transclusion-mode nil t))))
+                              (not org-transclusion-mode))))
     (let* ((contents-beg (org-element-property :contents-begin context))
            (contents-end (org-element-property :contents-end context))
            (contents (when contents-beg
