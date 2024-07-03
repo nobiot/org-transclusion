@@ -474,10 +474,9 @@ hooks in `org-transclusion-add-functions'."
         ;; Keep going with program when no content `org-transclusion-add-all'
         ;; should move to the next transclusion
         (progn (message
-                (format
-                 "No content found with \"%s\".  Check the link at point %d, line %d"
-                 (org-element-property :raw-link link) (point) (org-current-line))
-                nil))
+                "No content found with \"%s\".  Check the link at point %d, line %d"
+                (org-element-property :raw-link link) (point) (org-current-line))
+               nil)
       (let ((beg (line-beginning-position))
             (end))
         (org-transclusion-with-inhibit-read-only
@@ -524,7 +523,8 @@ the rest of the buffer unchanged."
             (with-demoted-errors
                 "Not transcluded. Continue to next: %S"
               (when (org-transclusion-add)
-                (message (format "Transcluded at point %d, line %d" (point) (org-current-line))))))))
+                (message "Transcluded at point %d, line %d"
+                         (point) (org-current-line)))))))
       (goto-char marker)
       (move-marker marker nil) ; point nowhere for GC
       t)))
@@ -973,8 +973,8 @@ Return nil if not found."
       (if mkr
           (append payload (org-transclusion-content-org-marker mkr plist))
         (message
-         (format "No transclusion done for this ID. Ensure it works at point %d, line %d"
-                 (point) (org-current-line)))
+         "No transclusion done for this ID. Ensure it works at point %d, line %d"
+         (point) (org-current-line))
         nil))))
 
 (defun org-transclusion-add-org-file (link plist)
@@ -1401,12 +1401,14 @@ Case 2. #+transclude inside another transclusion"
      ;; Case 1. Element at point is NOT #+transclude:
      ((not (and (string-equal "keyword" (org-element-type elm))
                 (string-equal "TRANSCLUDE" (org-element-property :key elm))))
-      (user-error (format "Not at a transclude keyword or transclusion in a block at point %d, line %d"
-                          (point) (org-current-line))))
+      (user-error
+       "Not at a transclude keyword or transclusion in a block at point %d, line %d"
+       (point) (org-current-line)))
      ;; Case 2. #+transclude inside another transclusion
      ((org-transclusion-within-transclusion-p)
-      (user-error (format "Cannot transclude in another transclusion at point %d, line %d"
-                          (point) (org-current-line))))
+      (user-error
+       "Cannot transclude in another transclusion at point %d, line %d"
+       (point) (org-current-line)))
      (t
       t))))
 
