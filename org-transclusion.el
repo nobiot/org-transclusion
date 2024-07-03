@@ -59,15 +59,18 @@ Intended for :set property for `customize'."
   (when (featurep 'org-transclusion)
     (org-transclusion-load-extensions-maybe 'force)))
 
-(defcustom org-transclusion-extensions '(org-transclusion-src-lines org-transclusion-font-lock)
+(defcustom org-transclusion-extensions
+  '(org-transclusion-src-lines org-transclusion-font-lock)
   "Extensions to be loaded with org-transclusion.el."
   :set #'org-transclusion-set-extensions
   :type
   '(set :greedy t
-        (const :tag "src-lines: Add :src and :lines for non-Org files" org-transclusion-src-lines)
-        (const :tag "font-lock: Add font-lock for Org-transclusion" org-transclusion-font-lock)
-
-        (const :tag "indent-mode: Support org-indent-mode" org-transclusion-indent-mode)
+        (const :tag "src-lines: Add :src and :lines for non-Org files"
+               org-transclusion-src-lines)
+        (const :tag "font-lock: Add font-lock for Org-transclusion"
+               org-transclusion-font-lock)
+        (const :tag "indent-mode: Support org-indent-mode"
+               org-transclusion-indent-mode)
         (const :tag "html: Transclude HTML converted to Org with Pandoc"
                org-transclusion-html)
         (repeat :tag "Other packages" :inline t (symbol :tag "Package"))))
@@ -379,7 +382,8 @@ transclusion keyword."
   (interactive "P")
   (let* ((context (org-element-lineage
                    (org-element-context)'(link) t))
-         (auto-transclude-p (if (or (not arg) (numberp arg)) org-transclusion-mode
+         (auto-transclude-p (if (or (not arg) (numberp arg))
+                                org-transclusion-mode
                               ;; if `universal-argument' is passed,
                               ;; reverse nil/t when
                               (not org-transclusion-mode))))
@@ -473,10 +477,10 @@ hooks in `org-transclusion-add-functions'."
             (eq src-content nil))
         ;; Keep going with program when no content `org-transclusion-add-all'
         ;; should move to the next transclusion
-        (progn (message
-                "No content found with \"%s\".  Check the link at point %d, line %d"
-                (org-element-property :raw-link link) (point) (org-current-line))
-               nil)
+        (prog1 nil
+          (message
+           "No content found with \"%s\".  Check the link at point %d, line %d"
+           (org-element-property :raw-link link) (point) (org-current-line)))
       (let ((beg (line-beginning-position))
             (end))
         (org-transclusion-with-inhibit-read-only
@@ -533,10 +537,10 @@ the rest of the buffer unchanged."
   "Remove transcluded text at point.
 When success, return the beginning point of the keyword re-inserted."
   (interactive)
-  (if-let* ((beg (marker-position (get-char-property (point)
-                                                     'org-transclusion-beg-mkr)))
-            (end (marker-position (get-char-property (point)
-                                                     'org-transclusion-end-mkr)))
+  (if-let* ((beg (marker-position
+                  (get-char-property (point) 'org-transclusion-beg-mkr)))
+            (end (marker-position
+                  (get-char-property (point) 'org-transclusion-end-mkr)))
             (keyword-plist (get-char-property (point)
                                               'org-transclusion-orig-keyword))
             (indent (plist-get keyword-plist :current-indentation))
@@ -795,9 +799,10 @@ set in `before-save-hook'.  It also move the point back to
               (move-marker p nil)
               (setq do-count (1+ do-count))
               (when (> do-count do-length)
-                (error "org-transclusion: Aborting. You may be in an infinite loop"))))
-          ;; After save and adding all transclusions, the modified flag should be
-          ;; set to nil
+                (error
+                 "org-transclusion: Aborting. You may be in an infinite loop"))))
+          ;; After save and adding all transclusions, the modified flag should
+          ;; be set to nil.
           (restore-buffer-modified-p nil)
           (when org-transclusion-remember-point
             (goto-char org-transclusion-remember-point))))
@@ -995,7 +1000,8 @@ Return nil if not found."
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for inserting content
 
-(defun org-transclusion-content-insert (keyword-values type content sbuf sbeg send copy)
+(defun org-transclusion-content-insert ( keyword-values type content
+                                         sbuf sbeg send copy)
   "Insert CONTENT at point and put source overlay in SBUF.
 Return t when successful.
 
@@ -1052,28 +1058,23 @@ based on the following arguments:
     (setq end (point))
     (setq end-mkr (set-marker (make-marker) end))
     (unless copy
-      (add-text-properties beg end
-                           `(local-map ,org-transclusion-map
-                                       read-only t
-                                       front-sticky t
-                                       ;; rear-nonticky seems better for
-                                       ;; src-lines to add "#+result" after C-c
-                                       ;; C-c
-                                       rear-nonsticky t
-                                       org-transclusion-type ,type
-                                       org-transclusion-beg-mkr
-                                       ,beg-mkr
-                                       org-transclusion-end-mkr
-                                       ,end-mkr
-                                       org-transclusion-pair
-                                       ,tc-pair
-                                       org-transclusion-orig-keyword
-                                       ,keyword-values
-                                       ;; TODO Fringe is not supported for terminal
-                                       line-prefix
-                                       ,(org-transclusion-propertize-transclusion)
-                                       wrap-prefix
-                                       ,(org-transclusion-propertize-transclusion)))
+      (add-text-properties
+       beg end
+       `( local-map ,org-transclusion-map
+          read-only t
+          front-sticky t
+          ;; rear-nonticky seems better for
+          ;; src-lines to add "#+result" after C-c
+          ;; C-c
+          rear-nonsticky t
+          org-transclusion-type ,type
+          org-transclusion-beg-mkr ,beg-mkr
+          org-transclusion-end-mkr ,end-mkr
+          org-transclusion-pair ,tc-pair
+          org-transclusion-orig-keyword ,keyword-values
+          ;; TODO Fringe is not supported for terminal
+          line-prefix ,(org-transclusion-propertize-transclusion)
+          wrap-prefix ,(org-transclusion-propertize-transclusion)))
       ;; Put the transclusion overlay
       (let ((ov-tc (text-clone-make-overlay beg end)))
         (overlay-put ov-tc 'evaporate t)
@@ -1210,7 +1211,8 @@ property controls the filter applied to the transclusion."
       ;; For dedicated target, we want to get the parent paragraph,
       ;; rather than the target itself
       (when (and (string= "target" type)
-                 (string= "paragraph" (org-element-type (org-element-property :parent el))))
+                 (string= "paragraph"
+                          (org-element-type (org-element-property :parent el))))
         (setq el (org-element-property :parent el)))
       (let ((beg (org-element-property :begin el))
             (end (org-element-property :end el))
@@ -1243,7 +1245,8 @@ property controls the filter applied to the transclusion."
 
         ;; Expand file names in all the links
         (when expand-links
-          (org-element-map obj 'link #'org-transclusion-content-filter-expand-links))
+          (org-element-map obj 'link
+            #'org-transclusion-content-filter-expand-links))
 
         (list :src-content (org-element-interpret-data obj)
               :src-buf (current-buffer)
@@ -1433,8 +1436,9 @@ https://github.com/nobiot/org-transclusion/issues/177."
                 (eol (line-end-position))
                 (case-fold-search t))
             (goto-char bol)
-            (when (and (re-search-forward "^[[:blank:]]*#\\+\\(\\S-*\\)" eol :noerror)
-                       (string-equal-ignore-case "transclude" (match-string-no-properties 1)))
+            (when (and (re-search-forward "^[[:blank:]]*#\\+\\(\\S-*\\)" eol t)
+                       (string-equal-ignore-case
+                        "transclude" (match-string-no-properties 1)))
               (replace-match
                (concat (match-string-no-properties 1) ":")
                t nil nil 1)
