@@ -1078,6 +1078,8 @@ based on the following arguments:
       (let ((ov-tc (text-clone-make-overlay beg end)))
         (overlay-put ov-tc 'evaporate t)
         (overlay-put ov-tc 'face 'org-transclusion)
+        (overlay-put ov-tc 'line-prefix (org-transclusion-propertize-transclusion))
+        (overlay-put ov-tc 'wrap-prefix (org-transclusion-propertize-transclusion))
         (overlay-put ov-tc 'priority -60))
       ;; Put to the source overlay
       (overlay-put ov-src 'org-transclusion-by beg-mkr)
