@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 24 May 2021
-;; Last modified: 21 January 2024
+;; Last modified: 27 December 2024
 
 ;;; Commentary:
 ;;  This is an extension to `org-transclusion'.  When active, it adds features
@@ -281,7 +281,9 @@ Return nil if neither."
   "Return marker for `org-transclusion-open-source'.
 Use TYPE to check relevance."
   (when (org-transclusion-src-lines-p type)
-    (get-text-property (point) 'tc-src-beg-mkr)))
+    (let ((ov (get-char-property (point)
+                                 'org-transclusion-pair)))
+      (move-marker (make-marker) (overlay-start ov) (overlay-buffer ov)))))
 
 (defun org-transclusion-live-sync-buffers-src-lines (type)
   "Return cons cell of overlays for source and trasnclusion.

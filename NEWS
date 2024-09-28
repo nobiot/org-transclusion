@@ -1,3 +1,48 @@
+* 1.4.1 (2024-12-29)
+
+  - Fixes ::
+
+    fix: #177 Infinite loop when saving buffer with transclusions
+
+         Fixing a long-lasting (issue open since March 2023, but it had been an
+         known issue before it) issue that was difficult to reproduce.
+
+         The fix is to stop using the text-properties of the transclusion that
+         hold markers of beginning and ending points of itself, which is meant
+         to remember and indicate its own the location; or the range of "this"
+         transclusion at point. The text-properties are named
+         `org-transclusion-beg-mkr' and `org-transclusion-end-mkr'. They are
+         replaced with use of a new text-property `org-transclusion-id' and
+         function `org-transclusion-at-point'. This new function uses
+         `prop-match' with `org-transclusion-id' to identify the range of "this"
+         transclusion at point only when it is needed, thus eliminating the need
+         for memorizing it as a pair of markers.
+
+         Stable reproduction was achieved and recorded in a comment to the GitHub
+         issue at
+         https://github.com/nobiot/org-transclusion/issues/177#issuecomment-2108453402.
+
+         A quick summary of the design hitherto and how the infinite loop occurs
+         is as follows:
+
+         [Fact / design of org-transclusion]
+
+         - Each transclusion has text-properties org-transclusion-beg-mkr and
+           org-transclusion-end-mkr.
+
+         - They hold markers to keep track of where the transclusion begins and
+           ends.
+
+         [Now what happens]
+
+         - In some combination of undo and buffer-save with transclusions, the
+           markers can temporarily point to non-existing locations in the
+           buffer.
+
+         - If the garbage collection happens to run at this moment, it will
+           sweep these pointers. Now they end up pointing to start of the buffer
+           (point 1).
+
 * 1.4.0 (2024-05-20)
 
   - Features ::
