@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 29 December 2024
+;; Last modified: 31 December 2024
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -420,7 +420,7 @@ Examples of acceptable formats are as below:
 
 The file path or id in the transclude keyword value are
 translated to the normal Org Mode link format such as
-[[file:path/tofile.org::*Heading]] or [[id:uuid]] to copy a piece
+[[file:path/to/file.org::*Heading]] or [[id:uuid]] to copy a piece
 of text from the link target.
 
 TODO: id:uuid without brackets [[]] is a valid link within Org
@@ -537,28 +537,27 @@ the rest of the buffer unchanged."
   "Remove transcluded text at point.
 When success, return the beginning point of the keyword re-inserted."
   (interactive)
-  (pcase-let*
-      ((`(,_id ,beg ,end) (org-transclusion-at-point)))
-    (if-let*
-        ((beg beg)
-         (end end)
-         (keyword-plist (get-char-property (point)
-                                           'org-transclusion-orig-keyword))
-         (indent (plist-get keyword-plist :current-indentation))
-         (keyword (org-transclusion-keyword-plist-to-string keyword-plist))
-         (tc-pair-ov (get-char-property (point) 'org-transclusion-pair)))
-        (prog1
-            beg
-          (when (org-transclusion-within-live-sync-p)
-            (org-transclusion-live-sync-exit))
-          (delete-overlay tc-pair-ov)
-          (org-transclusion-with-inhibit-read-only
-            (save-excursion
-              (delete-region beg end)
-              (when (> indent 0) (indent-to indent))
-              (insert-before-markers keyword)))
-          (goto-char beg))
-      (message "Nothing done. No transclusion exists here.") nil)))
+  (if-let*
+      ((beg-end (plist-get (org-transclusion-at-point) :location))
+       (beg (car beg-end))
+       (end (cdr beg-end))
+       (keyword-plist (get-char-property (point)
+                                         'org-transclusion-orig-keyword))
+       (indent (plist-get keyword-plist :current-indentation))
+       (keyword (org-transclusion-keyword-plist-to-string keyword-plist))
+       (tc-pair-ov (get-char-property (point) 'org-transclusion-pair)))
+      (prog1
+          beg
+        (when (org-transclusion-within-live-sync-p)
+          (org-transclusion-live-sync-exit))
+        (delete-overlay tc-pair-ov)
+        (org-transclusion-with-inhibit-read-only
+          (save-excursion
+            (delete-region beg end)
+            (when (> indent 0) (indent-to indent))
+            (insert-before-markers keyword)))
+        (goto-char beg))
+    (message "Nothing done. No transclusion exists here.") nil))
 
 (defun org-transclusion-detach ()
   "Make the transcluded region normal copied text content."
@@ -1419,6 +1418,37 @@ https://github.com/nobiot/org-transclusion/issues/177."
               (message "A colon \":\" added to \"#+TRANSCLUDE\" keyword")
               t)))))))
 
+(defun org-transclusion-at-point (&optional point)
+  "Return plist representing the transclusion at point.
+This function returns a plist of this form:
+
+   (:id ID-STRING :location (BEG . END))
+
+With Elisp, POINT can be passed. Otherwise, the current point is
+used."
+  (save-excursion
+    (and-let* ((pt (or point (point)))
+               ;; If the ID is present, the current point is within a
+               ;; transclusion.
+               (id (get-text-property pt 'org-transclusion-id))
+               ;; We need to get both BEGINNING and END of the transclusion at
+               ;; point. `prop-match-forward' sets BEGINNING as the current
+               ;; point, rather than the beginning of the current transclusion,
+               ;; so `prop-match-backward' is also used.
+               (prop-match-forward
+                (text-property-search-forward 'org-transclusion-id))
+               ;; Because the cursor (or POINT) is unlikely to be at the
+               ;; beginning, find the END point first.
+               (end (prop-match-end prop-match-forward))
+               (value (prop-match-value prop-match-forward))
+               (prop-match-backward
+                ;; As the call to `text-property-search-backward' needs to match
+                ;; VALUE, t needs to be passed to PREDICATE unlike
+                ;; `text-property-search-forward' a few lines above.
+                (text-property-search-backward 'org-transclusion-id value t))
+               (beg (prop-match-beginning prop-match-backward)))
+      (list :id id :location (cons beg end)))))
+
 (defun org-transclusion-within-transclusion-p ()
   "Return t if the current point is within a transclusion region."
   (when (get-char-property (point) 'org-transclusion-type) t))
@@ -1497,7 +1527,10 @@ Return \"(src-beg-mkr . src-end-mkr)\"."
         (user-error "No live-sync can be started at: %d" (point))
       (with-current-buffer src-buf
         (goto-char src-search-beg)
-        (when-let* ((src-elem (org-transclusion-live-sync-enclosing-element))
+        (when-let* ((ov (get-char-property (point)
+                                           'org-transclusion-pair))
+                    (src-elem (org-transclusion-live-sync-enclosing-element
+                               (overlay-start ov) (overlay-end ov)))
                     (src-beg (org-element-property :begin src-elem))
                     (src-end (org-element-property :end src-elem)))
           (cons
@@ -1523,9 +1556,9 @@ Org-transclusion always works with a pair of overlays."
     (overlay-put tc-ov 'face 'org-transclusion-edit)
     (overlay-put tc-ov 'local-map org-transclusion-live-sync-map)))
 
-(defun org-transclusion-live-sync-enclosing-element ()
-  "Return an enclosing Org element for live-sync.
-This assumes the point is within the element (at point).
+(defun org-transclusion-live-sync-enclosing-element (beg end)
+  "Return an enclosing Org element between BEG and END.
+This function is intended for live-sync.
 
 This function first looks for elements other than paragraph:
 
@@ -1547,18 +1580,8 @@ original buffer.  This is required especially when transclusion is
 for a paragraph, which can be right next to another paragraph
 without a blank space; thus, subsumed by the surrounding
 paragraph."
-  (pcase-let*
-      ((`(,_id ,beg ,end) (or (org-transclusion-at-point)
-                              ;; FIXME This second is hard to understand without
-                              ;; a comment. It looks at the source, not the
-                              ;; transclusion. It works but it's confusing.
-                              (let ((ov (get-char-property (point)
-                                                           'org-transclusion-pair)))
-                                (list nil
-                                      (overlay-start ov)
-                                      (overlay-end ov)))))
-       (content (buffer-substring beg end))
-       (pos (point)))
+  (let* ((content (buffer-substring beg end))
+         (pos (point)))
     (if (length< content 0)
         (user-error (format "Live sync cannot start here: point %d" (point)))
       (with-temp-buffer
@@ -1627,31 +1650,11 @@ attempts to bring back the original window configuration."
     (recenter-top-bottom)
     (select-window win)))
 
-(defun org-transclusion-at-point (&optional point)
-  "Return list of id beg and end of transclusion at point.
-With Elisp, POINT can be passed. Otherwise, the current point is
-used. This function returns a list of this form:
-   (ID-STRING BEG END)."
-  (save-excursion
-    (and-let* ((pt (or point (point)))
-               (id (get-text-property pt 'org-transclusion-id))
-               (prop-match-forward
-                (text-property-search-forward 'org-transclusion-id))
-               (end (prop-match-end prop-match-forward))
-               (value (prop-match-value prop-match-forward))
-               (prop-match-backward
-                ;; As the call to `text-property-search-backward' needs to match
-                ;; VALUE, t needs to be passed to PREDICATE unlike
-                ;; `text-property-search-forward' a few lines above.
-                (text-property-search-backward 'org-transclusion-id value t))
-               (beg (prop-match-beginning prop-match-backward)))
-      (list id beg end))))
-
 (defun org-transclusion-live-sync-buffers ()
   "Return cons cell of overlays for source and transclusion.
-The cons cell to be returned is in this format:
+The cons cell to be returned is in this form:
 
-   (src-ov . tc-ov)
+   (SRC-OV . TC-OV)
 
 This function looks at transclusion type property and delegates
 the actual process to the specific function for the type.
@@ -1664,14 +1667,17 @@ org-transclusion overlay."
 
 (defun org-transclusion-live-sync-buffers-org (type)
   "Return cons cell of overlays for source and transclusion.
-The cons cell to be returned is in this format:
+The cons cell to be returned is in this form:
 
-    (src-ov . tc-ov)
+    (SRC-OV . TC-OV)
 
 This function uses TYPE to identify Org files to work on only Org
 links and IDs."
   (when (org-transclusion-type-is-org type)
-    (let* ((tc-elem (org-transclusion-live-sync-enclosing-element))
+    (let* ((beg-end (plist-get (org-transclusion-at-point) :location))
+           (beg (car beg-end))
+           (end (cdr beg-end))
+           (tc-elem (org-transclusion-live-sync-enclosing-element beg end))
            (tc-beg (org-element-property :begin tc-elem))
            (tc-end (org-element-property :end tc-elem))
            (src-range-mkrs (org-transclusion-live-sync-source-range-markers
@@ -1707,22 +1713,22 @@ links and IDs."
   "Return cons cell of overlays for source and transclusion.
 The cons cell to be returned is in this format:
 
-    (src-ov . tc-ov)
+    (SRC-OV . TC-OV)
 
 This function is for non-Org text files."
   ;; Get the transclusion source's overlay but do not directly use it; it is
   ;; needed after exiting live-sync, which deletes live-sync overlays.
-  (pcase-let*
-      ((`(,_id ,beg ,end) (org-transclusion-at-point)))
-    (when-let* ((tc-beg beg)
-                (tc-end end)
-                (tc-ov (text-clone-make-overlay tc-beg tc-end))
-                (tc-pair (get-text-property (point) 'org-transclusion-pair))
-                (src-ov (text-clone-make-overlay
-                         (overlay-start tc-pair)
-                         (overlay-end tc-pair)
-                         (overlay-buffer tc-pair))))
-      (cons src-ov tc-ov))))
+  (when-let*
+      ((beg-end (plist-get (org-transclusion-at-point) :location))
+       (tc-beg (car beg-end))
+       (tc-end (cdr beg-end))
+       (tc-ov (text-clone-make-overlay tc-beg tc-end))
+       (tc-pair (get-text-property (point) 'org-transclusion-pair))
+       (src-ov (text-clone-make-overlay
+                (overlay-start tc-pair)
+                (overlay-end tc-pair)
+                (overlay-buffer tc-pair))))
+    (cons src-ov tc-ov)))
 
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for yank/paste a region within transclusion

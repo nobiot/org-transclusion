@@ -6,7 +6,9 @@
 :link: https://en.wikipedia.org/wiki/Bertrand_Russell
 :end:
 
-*Bertrand Arthur William Russell, 3rd Earl Russell* OM FRS[65] (18 May 1872 – 2 February 1970) was a British polymath ande writer. He was born in Monmouthshire into one of the most prominent aristocratic families in the United Kingdom.
+*Bertrand Arthur William Russell, 3rd Earl Russell* OM FRS[65] (18 May 1872 – 2
+February 1970) was a British polymath ande writer. He was born in Monmouthshire
+into one of the most prominent aristocratic families in the United Kingdom. 
 
 #+transclude: [[file:bertrand-russell.org::*Bertrand Russell - Wikipedia]] :level 1
 
