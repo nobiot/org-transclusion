@@ -942,7 +942,7 @@ inserted when more than one space is inserted between symbols."
 ;;-----------------------------------------------------------------------------
 ;;;; Add-at-point functions
 (defun org-transclusion-add-org-id (link plist)
-  "Return the payload list for Org-ID LINK object and PLIST.
+  "Return a list for Org-ID LINK object and PLIST.
 Return nil if not found."
   (when (string= "id" (org-element-property :type link))
     ;; when type is id, the value of path is the id
@@ -957,7 +957,7 @@ Return nil if not found."
         nil))))
 
 (defun org-transclusion-add-org-file (link plist)
-  "Return the payload list for Org file LINK object and PLIST.
+  "Return a list for Org file LINK object and PLIST.
 Return nil if not found."
   (and (string= "file" (org-element-property :type link))
        (org-transclusion-org-file-p (org-element-property :path link))
@@ -965,7 +965,7 @@ Return nil if not found."
                (org-transclusion-content-org-link link plist))))
 
 (defun org-transclusion-add-other-file (link plist)
-  "Return the payload list for non-Org file LINK object and PLIST.
+  "Return a list for non-Org file LINK object and PLIST.
 Return nil if not found."
   (and (string= "file" (org-element-property :type link))
        (append '(:tc-type "others-default")
@@ -1136,7 +1136,7 @@ work to
 
 (defun org-transclusion-content-org-link (link plist)
   "Return a list of payload from Org LINK object and PLIST.
-This function is intended to be used for Org-ID.  It delegates the
+This function is intended to be used for Org-ID. It delegates the
 work to
 `org-transclusion-content-org-filtered'."
   (save-excursion
@@ -1174,7 +1174,7 @@ work to
 (defun org-transclusion-content-org-filtered (only-element plist)
   "Return a list of payload for transclusion.
 This function assumes the point is at the beginning of the org
-element to transclude.-
+element to transclude.
 
 The payload is a plist that consists of the following properties:
 - :src-content
@@ -1194,7 +1194,7 @@ property controls the filter applied to the transclusion."
     (if (or (not el)(not type))
         (message "Nothing done")
       ;; For dedicated target, we want to get the parent paragraph,
-      ;; rather than the target itself-
+      ;; rather than the target itself
       (when (and (string= "target" type)
                  (string= "paragraph"
                           (org-element-type (org-element-property :parent el))))
