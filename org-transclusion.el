@@ -456,48 +456,6 @@ does not support all the elements.
           (funcall payload link keyword-plist copy)
         (org-transclusion-add-payload payload link keyword-plist copy)))))
 
-(defun org-transclusion-add-payload (payload link keyword-plist copy)
-  "Insert transcluded content with error handling.
-
-PAYLOAD should be a plist according to the description in
-`org-transclusion-add-functions'.  LINK should be an org-element
-context object for the link.  KEYWORD-PLIST should contain the
-\"#+transclude:\" keywords for the transclusion at point.  With
-non-nil COPY, copy the transcluded content into the buffer.
-
-This function is intended to be called from within
-`org-transclusion-add' as well as payload functions returned by
-hooks in `org-transclusion-add-functions'."
-  (let ((tc-type (plist-get payload :tc-type))
-        (src-buf (plist-get payload :src-buf))
-        (src-beg (plist-get payload :src-beg))
-        (src-end (plist-get payload :src-end))
-        (src-content (plist-get payload :src-content)))
-    (if (or (string= src-content "")
-            (eq src-content nil))
-        ;; Keep going with program when no content `org-transclusion-add-all'
-        ;; should move to the next transclusion
-        (prog1 nil
-          (message
-           "No content found with \"%s\".  Check the link at point %d, line %d"
-           (org-element-property :raw-link link) (point) (org-current-line)))
-      (let ((beg (line-beginning-position))
-            (end))
-        (org-transclusion-with-inhibit-read-only
-          (when (save-excursion
-                  (end-of-line) (insert-char ?\n)
-                  (org-transclusion-content-insert
-                   keyword-plist tc-type src-content
-                   src-buf src-beg src-end copy)
-                  (unless (eobp) (delete-char 1))
-                  (setq end (point))
-                  t)
-            ;; `org-transclusion-keyword-remove' checks element at point is a
-            ;; keyword or not
-            (org-transclusion-keyword-remove)))
-        (run-hook-with-args 'org-transclusion-after-add-functions beg end))
-      t)))
-
 ;;;###autoload
 (defun org-transclusion-add-all (&optional narrowed)
   "Add all active transclusions in the current buffer.
@@ -941,6 +899,49 @@ inserted when more than one space is inserted between symbols."
 
 ;;-----------------------------------------------------------------------------
 ;;;; Add-at-point functions
+
+(defun org-transclusion-add-payload (payload link keyword-plist copy)
+  "Insert transcluded content with error handling.
+
+PAYLOAD should be a plist according to the description in
+`org-transclusion-add-functions'.  LINK should be an org-element
+context object for the link.  KEYWORD-PLIST should contain the
+\"#+transclude:\" keywords for the transclusion at point.  With
+non-nil COPY, copy the transcluded content into the buffer.
+
+This function is intended to be called from within
+`org-transclusion-add' as well as payload functions returned by
+hooks in `org-transclusion-add-functions'."
+  (let ((tc-type (plist-get payload :tc-type))
+        (src-buf (plist-get payload :src-buf))
+        (src-beg (plist-get payload :src-beg))
+        (src-end (plist-get payload :src-end))
+        (src-content (plist-get payload :src-content)))
+    (if (or (string= src-content "")
+            (eq src-content nil))
+        ;; Keep going with program when no content `org-transclusion-add-all'
+        ;; should move to the next transclusion
+        (prog1 nil
+          (message
+           "No content found with \"%s\".  Check the link at point %d, line %d"
+           (org-element-property :raw-link link) (point) (org-current-line)))
+      (let ((beg (line-beginning-position))
+            (end))
+        (org-transclusion-with-inhibit-read-only
+          (when (save-excursion
+                  (end-of-line) (insert-char ?\n)
+                  (org-transclusion-content-insert
+                   keyword-plist tc-type src-content
+                   src-buf src-beg src-end copy)
+                  (unless (eobp) (delete-char 1))
+                  (setq end (point))
+                  t)
+            ;; `org-transclusion-keyword-remove' checks element at point is a
+            ;; keyword or not
+            (org-transclusion-keyword-remove)))
+        (run-hook-with-args 'org-transclusion-after-add-functions beg end))
+      t)))
+
 (defun org-transclusion-add-org-id (link plist)
   "Return a list for Org-ID LINK object and PLIST.
 Return nil if not found."
