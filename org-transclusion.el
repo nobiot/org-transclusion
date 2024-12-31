@@ -801,9 +801,10 @@ It needs to be set in
 It is meant to be used by `org-transclusion-get-string-to-plist'.
 It needs to be set in
 `org-transclusion-keyword-value-functions'."
-  (when (string-match ":level *\\([1-9]\\)" string)
-    (list :level
-          (string-to-number (org-strip-quotes (match-string 1 string))))))
+  (and-let* ((_ (string-match ":level *\\([1-9]?\\)" string))
+             (match (match-string 1 string))
+             (val (if (string-empty-p match) "auto" (string-to-number match))))
+    (list :level val)))
 
 (defun org-transclusion-keyword-value-only-contents (string)
   "It is a utility function used converting a keyword STRING to plist.
@@ -873,7 +874,9 @@ keyword.  If not, returns nil."
                       (concat custom-properties-string " " str ))))))
     (concat "#+transclude: "
             link
-            (when level (format " :level %d" level))
+            (when level (if (and (stringp level) (string= level "auto"))
+                            " :level "
+                          (format " :level %d" level)))
             (when disable-auto (format " :disable-auto"))
             (when only-contents (format " :only-contents"))
             (when exclude-elements (format " :exclude-elements \"%s\""
@@ -1025,8 +1028,7 @@ Return nil if not found."
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for inserting content
 
-(defun org-transclusion-content-insert ( keyword-values type content
-                                         sbuf sbeg send copy)
+(defun org-transclusion-content-insert (keyword-values type content sbuf sbeg send copy)
   "Insert CONTENT at point and put source overlay in SBUF.
 Return t when successful.
 
@@ -1055,7 +1057,8 @@ based on the following arguments:
          (tc-buffer (current-buffer))
          (ov-src (text-clone-make-overlay sbeg send sbuf)) ;; source-buffer overlay
          (tc-pair ov-src)
-         (content content))
+         (content content)
+         (current-level (or (org-current-level) 0)))
     (when (org-transclusion-type-is-org type)
       (with-temp-buffer
         ;; This temp buffer needs to be in Org Mode
@@ -1063,7 +1066,11 @@ based on the following arguments:
         (delay-mode-hooks (org-mode))
         (insert content)
         (org-with-point-at 1
-          (let* ((to-level (plist-get keyword-values :level))
+          (let* ((raw-to-level (plist-get keyword-values :level))
+                 (to-level (if (and (stringp raw-to-level)
+                                    (string= raw-to-level "auto"))
+                               (1+ current-level)
+                             raw-to-level))
                  (level (org-transclusion-content-highest-org-headline))
                  (diff (when (and level to-level) (- level to-level))))
             (when diff
