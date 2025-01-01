@@ -32,6 +32,16 @@ level (1-9) or leave empty: ")
                      (message "Invalid input. Number 1-9 or leave empty")
                      (sit-for 1))))
 
+(defun org-transclusion--transient-read-lines (&rest _)
+  "Read a string from the minibuffer, restricted to eg 5-10, 6-, -6."
+  (cl-loop for result =
+           (read-string "Enter :lines option values (eg 5-10, 6-, -6): ")
+           if (string-match-p "\"?[0-9]*-[0-9]*\"?" result)
+           return result
+           else do (progn
+                     (message "Invalid input. The format must be eg 5-10, 6-, -6")
+                     (sit-for 1))))
+
 (defun org-transclusion-insert-from-link ()
   (interactive)
   (and-let* ((link-elem-at-pt
@@ -53,7 +63,9 @@ level (1-9) or leave empty: ")
 (transient-define-prefix org-transclusion--buffer-transient ()
   "Prefix that waves at the user"
   [[:description "Add/Remove"
-                  ("a" "Add at point"   org-transclusion-add)
+                 ("a" "Add at point"
+                  org-transclusion-add
+                  :transient transient--do-return)
                   ("A" "Add all in buffer" org-transclusion-add-all)
                   ("R" "Remove all in buffer" org-transclusion-remove-all)]
     [:description "Options for #+TRANSCLUDE keyword"
@@ -69,13 +81,33 @@ level (1-9) or leave empty: ")
                    org-transclusion-transient--exclude-elements
                    :inapt-if-not org-transclusion-at-keyword-p)
                   ("el" "expand-links" org-transclusion-transient--expand-links
+                   :inapt-if-not org-transclusion-at-keyword-p)]
+    [:description "Addiitonal options: :src and :lines"
+                  ;; TODO check the extension to be active
+                  :inapt-if-not org-transclusion-at-keyword-p
+                  (:info "For extension src-lines")
+                  ("ss" "src"
+                   org-transclusion-transient--src
+                   :inapt-if-not org-transclusion-at-keyword-p)
+                  ("sr" "rest"
+                   org-transclusion-transient--rest
+                   :inapt-if-not org-transclusion-at-keyword-p)
+                  ""
+                  ("sl" "lines (eg 3-5, 6-, -6)"
+                   org-transclusion-transient--lines
+                   :inapt-if-not org-transclusion-at-keyword-p)
+                  ("sl" "end"
+                   org-transclusion-transient--end
+                   :inapt-if-not org-transclusion-at-keyword-p)
+                  ("st" "thing-at-point"
+                   org-transclusion-transient--thingatpt
                    :inapt-if-not org-transclusion-at-keyword-p)]]
   [:description ""
                 (:info ".")])
 
 (transient-define-prefix org-transclusion--at-point-transient ()
   "Prefix that waves at the user"
-  [:description 
+  [:description
     "Operation on Transclusion at Point"
     [:description "Remove"
                   ("r" "Remove at point"   org-transclusion-remove)
@@ -126,10 +158,51 @@ level (1-9) or leave empty: ")
     (hydra-org-transclusion--detect-transclude-at-point-wrapper
      (insert (format ":exclude-elements %S" elements-string)))))
 
+(transient-define-suffix org-transclusion-transient--src ()
+  :transient 'transient--do-stay
+  (interactive)
+  (let ((string (read-string "Enter language for :src option: ")))
+    (when string
+      (hydra-org-transclusion--detect-transclude-at-point-wrapper
+       (insert (format ":src %s" string))))))
+
+(transient-define-suffix org-transclusion-transient--rest ()
+  :transient 'transient--do-stay
+  (interactive)
+  (let ((string (read-string "Enter :rest option values: ")))
+    (when string
+      (hydra-org-transclusion--detect-transclude-at-point-wrapper
+       (insert (format ":rest %S" string))))))
+
+(transient-define-suffix org-transclusion-transient--lines ()
+  :transient 'transient--do-stay
+  (interactive)
+  (let ((string (org-transclusion--transient-read-lines)))
+    (when string
+      (hydra-org-transclusion--detect-transclude-at-point-wrapper
+       (insert (format ":lines %s" string))))))
+
+(transient-define-suffix org-transclusion-transient--end ()
+  :transient 'transient--do-stay
+  (interactive)
+  (let ((string (read-string "Enter :end option value: ")))
+    (when string
+      (hydra-org-transclusion--detect-transclude-at-point-wrapper
+       (insert (format ":end %S" string))))))
+
+(transient-define-suffix org-transclusion-transient--thingatpt ()
+  :transient 'transient--do-stay
+  (interactive)
+  (let ((string (completing-read "Enter :thingatpt option value: "
+                                 '("sentence" "paragraph" "defun" "sexp"))))
+    (when string
+      (hydra-org-transclusion--detect-transclude-at-point-wrapper
+       (insert (format ":thingatpt %s" string))))))
+
+
 (defun org-transclusion-transient-menu ()
   (interactive)
   (let ((org-transclusion-buffer (current-buffer)))
     (if (org-transclusion-within-transclusion-p)
         (org-transclusion--at-point-transient)
       (org-transclusion--buffer-transient))))
-

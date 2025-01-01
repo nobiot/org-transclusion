@@ -212,10 +212,12 @@ Temporarily set ~org-transclusion-include-first-section~ to nil
 #+transclude: [[id:2022-06-26T141859]] :exclude-elements "paragraph"
 
 #+transclude: [[id:2022-06-26T141859]]
-* Test src
+* Test src and end
 
 #+transclude: [[file:./python-1.py]]
-#+transclude: [[file:./python-1.py]]  :src python
+#+transclude: [[file:./python-1.py]] :src python
+
+#+transclude: [[file:./python-1.py::id-1234]]  :src python :end "id-1234 end here"
 
 #+begin_src python
   import matplotlib
