@@ -230,7 +230,9 @@ Temporarily set ~org-transclusion-include-first-section~ to nil
   # id-1234 end here
   return fname # return this to org-mode
 #+end_src
-* Test "auto" level
+* Test "auto" level  and :no-first-heading
+
+  #+transclude: [[file:bertrand-russell.org::*On Denoting]] :level  :no-first-heading
 
   #+transclude: [[file:bertrand-russell.org::*On Denoting]] :level
 

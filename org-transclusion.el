@@ -220,7 +220,8 @@ the \\+`link', \\+`keyword-plist', and \\+`copy' arguments.")
     org-transclusion-keyword-value-only-contents
     org-transclusion-keyword-value-exclude-elements
     org-transclusion-keyword-value-expand-links
-    org-transclusion-keyword-current-indentation)
+    org-transclusion-keyword-current-indentation
+    org-transclusion-keyword-value-no-first-heading)
   "Define a list of functions used to parse a #+transclude keyword.
 These functions take a single argument, the whole keyword value
 as a string.  Each function retrieves a property with using a
@@ -841,6 +842,14 @@ It needs to be set in
     (list :expand-links
           (org-strip-quotes (match-string 0 string)))))
 
+(defun org-transclusion-keyword-value-no-first-heading (string)
+  "It is a utility function used converting a keyword STRING to plist.
+It is meant to be used by `org-transclusion-get-string-to-plist'.
+It needs to be set in
+`org-transclusion-keyword-value-functions'."
+  (when (string-match ":no-first-heading" string)
+    (list :no-first-heading (org-strip-quotes (match-string 0 string)))))
+
 (defun org-transclusion-keyword-remove ()
   "Remove the keyword element at point.
 Returns t if successful.  It checks if the element at point is a
@@ -864,6 +873,7 @@ keyword.  If not, returns nil."
         (only-contents (plist-get plist :only-contents))
         (exclude-elements (plist-get plist :exclude-elements))
         (expand-links (plist-get plist :expand-links))
+        (no-first-heading (plist-get plist :no-first-heading))
         (custom-properties-string nil))
     (setq custom-properties-string
           (dolist (fn org-transclusion-keyword-plist-to-string-functions
@@ -882,6 +892,7 @@ keyword.  If not, returns nil."
             (when exclude-elements (format " :exclude-elements \"%s\""
                                            exclude-elements))
             (when expand-links (format " :expand-links"))
+            (when no-first-heading (format " :no-first-heading"))
             custom-properties-string
             "\n")))
 
@@ -1066,6 +1077,10 @@ based on the following arguments:
         (delay-mode-hooks (org-mode))
         (insert content)
         (org-with-point-at 1
+          ;; If NO-FIRST-HEADING
+          (and (org-at-heading-p)
+               (plist-get keyword-values :no-first-heading)
+               (delete-line))
           (let* ((raw-to-level (plist-get keyword-values :level))
                  (to-level (if (and (stringp raw-to-level)
                                     (string= raw-to-level "auto"))
