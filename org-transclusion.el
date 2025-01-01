@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 31 December 2024
+;; Last modified: 01 January 2025
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -1796,9 +1796,6 @@ ensure the settings revert to the user's setting prior to
 
 (defun org-transclusion-promote-adjust-after ()
   "Adjust the level information after promote/demote."
-  ;; find org-transclusion-beg-mkr. If the point is directly on the starts,
-  ;; you need to find it in the headline title.  Assume point at beginning of
-  ;; the subtree after promote/demote
   (let* ((pos (next-property-change (point) nil (line-end-position)))
          (keyword-plist (get-text-property pos
                                            'org-transclusion-orig-keyword))
@@ -1815,17 +1812,17 @@ ensure the settings revert to the user's setting prior to
 (defun org-transclusion-promote-or-demote-subtree (&optional demote)
   "Promote or demote transcluded subtree.
 When DEMOTE is non-nil, demote."
-  (if (not (org-transclusion-within-transclusion-p))
-      (message "Not in a transcluded headline.")
-    (let ((inhibit-read-only t)
-          (beg (get-text-property (point) 'org-transclusion-beg-mkr)))
-      (let ((pos (point)))
-        (save-excursion
-          (goto-char beg)
-          (when (org-at-heading-p)
-            (if demote (org-demote-subtree) (org-promote-subtree))
-            (org-transclusion-promote-adjust-after)))
-        (goto-char pos)))))
+  (unless (org-transclusion-within-transclusion-p)
+    (user-error "Not in a transcluded headline."))
+  (let* ((inhibit-read-only t)
+         (beg (car (plist-get (org-transclusion-at-point) :location)))
+         (pos (point)))
+    (save-excursion
+      (goto-char beg)
+      (when (org-at-heading-p)
+        (if demote (org-demote-subtree) (org-promote-subtree))
+        (org-transclusion-promote-adjust-after)))
+    (goto-char pos)))
 
 ;;-----------------------------------------------------------------------------
 ;;;; Functions to support Org-export
