@@ -381,7 +381,7 @@ transclusion keyword."
 
   (interactive "P")
   (let* ((context (org-element-lineage
-                   (org-element-context)'(link) t))
+                   (org-element-context) '(link) t))
          (auto-transclude-p (if (or (not arg) (numberp arg))
                                 org-transclusion-mode
                               ;; if `universal-argument' is passed,
