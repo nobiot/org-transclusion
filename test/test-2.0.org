@@ -8,6 +8,7 @@ This is a link to a [[id:2022-05-30T203553][Bertrand Russell]] wikipedia excerpt
 ** test text
 
 #+transclude: [[file:test.txt][text file]]
+#+transclude: [[file:test.txt][text file]]
 
 Below are tesing the new ~org-transclusion-fix-common-misspelling~ function.
 

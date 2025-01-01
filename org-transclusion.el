@@ -1389,21 +1389,19 @@ Currently the following cases are prevented:
 Case 1. Element at point is NOT #+transclude:
         Element is in a block - e.g. example
 Case 2. #+transclude inside another transclusion"
-  (let ((elm (org-element-at-point)))
-    (cond
-     ;; Case 1. Element at point is NOT #+transclude:
-     ((not (and (string-equal "keyword" (org-element-type elm))
-                (string-equal "TRANSCLUDE" (org-element-property :key elm))))
-      (user-error
-       "Not at a transclude keyword or transclusion in a block at point %d, line %d"
-       (point) (org-current-line)))
-     ;; Case 2. #+transclude inside another transclusion
-     ((org-transclusion-within-transclusion-p)
-      (user-error
-       "Cannot transclude in another transclusion at point %d, line %d"
-       (point) (org-current-line)))
-     (t
-      t))))
+  (cond
+   ;; Case 1. Element at point is NOT #+transclude:
+   ((not (org-transclusion-at-keyword-p))
+    (user-error
+     "Not at a transclude keyword or transclusion in a block at point %d, line %d"
+     (point) (org-current-line)))
+   ;; Case 2. #+transclude inside another transclusion
+   ((org-transclusion-within-transclusion-p)
+    (user-error
+     "Cannot transclude in another transclusion at point %d, line %d"
+     (point) (org-current-line)))
+   (t
+    t)))
 
 (defun org-transclusion-fix-common-misspelling ()
   "Fix \"#+transclude\" by appending a colon \":\".
@@ -1466,6 +1464,29 @@ used."
                 (text-property-search-backward 'org-transclusion-id value t))
                (beg (prop-match-beginning prop-match-backward)))
       (list :id id :location (cons beg end)))))
+
+(defun org-transclusion-at-keyword-p ()
+  "Return non-nil if the current line is on #+TRANSCLUDE: keyword."
+  ;;
+  ;; BUG (I believe): The following edge case is considered part of keyword
+  ;; where "|" is the cursor.
+  ;;
+  ;; Avoid the following situation to be recognized as "t"
+  ;;
+  ;;   #+transclude: [[link]]
+  ;;   |
+  ;;   New paragraph starts
+  (let ((edge-case-p
+         (save-excursion
+           (and (looking-at-p "$")
+                (not (bobp))
+                (progn (forward-char -1)
+                       (looking-at-p "$")))))
+        (element (org-element-at-point)))
+    ;; If edge-case, do not transclude.
+    (unless edge-case-p
+      (and (string-equal "keyword" (org-element-type element))
+           (string-equal "TRANSCLUDE" (org-element-property :key element))))))
 
 (defun org-transclusion-within-transclusion-p ()
   "Return t if the current point is within a transclusion region."
