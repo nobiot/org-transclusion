@@ -52,7 +52,7 @@
      org-transclusion-html-extension-functions :remove)))
 
 (defvar org-transclusion-html-extension-functions
-  '((cons 'org-transclusion-add-functions #'org-transclusion-html-add-file))
+  (list (cons 'org-transclusion-add-functions #'org-transclusion-html-add-file))
   "Alist of functions to activate `org-transclusion-html'.
 CAR of each cons cell is a symbol name of an abnormal hook
 \(*-functions\). CDR is either a symbol or list of symbols, which

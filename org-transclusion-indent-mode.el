@@ -42,8 +42,8 @@
      org-transclusion-indent-extension-functions :remove)))
 
 (defvar org-transclusion-indent-extension-functions
-  '((cons 'org-transclusion-after-add-functions
-          #'org-translusion-indent-add-properties))
+  (list (cons 'org-transclusion-after-add-functions
+              #'org-translusion-indent-add-properties))
   "Alist of functions to activate `org-transclusion-indent-mode'.
 CAR of each cons cell is a symbol name of an abnormal hook
 \(*-functions\). CDR is either a symbol or list of symbols, which

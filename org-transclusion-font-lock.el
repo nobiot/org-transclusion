@@ -40,7 +40,7 @@
      org-transclusion-font-lock-extension-functions :remove)))
 
 (defvar org-transclusion-font-lock-extension-functions
-  '((cons 'org-font-lock-set-keywords-hook #'org-transclusion-font-lock-set))
+  (list (cons 'org-font-lock-set-keywords-hook #'org-transclusion-font-lock-set))
   "Alist of functions to activate `org-transclusion-font-lock'.
 CAR of each cons cell is a symbol name of an abnormal hook
 \(*-functions\). CDR is either a symbol or list of symbols, which
