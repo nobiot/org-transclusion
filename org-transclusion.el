@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 02 January 2025
+;; Last modified: 03 January 2025
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -942,13 +942,19 @@ hooks in `org-transclusion-add-functions'."
         (run-hook-with-args 'org-transclusion-after-add-functions beg end))
       t)))
 
+(defun org-transclusion-id-marker (path)
+  (save-selected-window
+    (org-id-open path nil)
+    ;; In the target buffer temporarily
+    (move-marker (make-marker) (point))))
+
 (defun org-transclusion-add-org-id (link plist)
   "Return a list for Org-ID LINK object and PLIST.
 Return nil if not found."
   (when (string= "id" (org-element-property :type link))
     ;; when type is id, the value of path is the id
-    (let* ((id (org-element-property :path link))
-           (mkr (ignore-errors (org-id-find id t)))
+    (let* ((path (org-element-property :path link))
+           (mkr (ignore-errors (org-transclusion-id-marker path)))
            (payload '(:tc-type "org-id")))
       (if mkr
           (append payload (org-transclusion-content-org-marker mkr plist))

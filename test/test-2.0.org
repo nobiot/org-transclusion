@@ -2,6 +2,11 @@
 ** make from link
 This is a link to a [[id:2022-05-30T203553][Bertrand Russell]] wikipedia excerpt
 #+transclude: [[id:2022-05-30T203553][Bertrand Russell]]
+
+#+transclude: [[id:2022-10-10T173507::*H2]]
+
+[[id:2022-10-10T173507::*H2]]
+
 ** test empty file
 #+transclude: [[file:empty.txt::2][empty text file]]
 
@@ -199,4 +204,3 @@ Temporarily set ~org-transclusion-include-first-section~ to nil
   # id-1234 end here
   return fname # return this to org-mode
 #+end_src
-
