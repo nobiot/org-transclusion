@@ -3,6 +3,8 @@
 ;;    https://github.com/nobiot/org-transclusion/issues/169
 
 (require 'org-transclusion)
+(require 'transient) ; Need more recent than that comes with 29.4; tested on
+                    ; transient-20241224.2234
 
 ;; Utilities
 
@@ -56,7 +58,7 @@ level (1-9) or leave empty: ")
         (funcall function)
         (buffer-string)))))
 
-(defun org-transclusion-insert-from-link (insert-below)
+(defun org-transclusion-insert-from-link (&optional insert-below)
   "Insert #+TRANSCLUDE: keyword from a link.
 If you pass a `universal-argument' via \\[universal-argument]
  \(INSERT-BELOW is non-nil\), the keyword is added to the line
@@ -132,8 +134,24 @@ If you pass a `universal-argument' via \\[universal-argument]
                   ("st" "thing-at-point"
                    org-transclusion-transient--thingatpt
                    :inapt-if-not org-transclusion-at-keyword-p)]]
-  [:description ""
-                (:info ".")])
+  [:description "Setting"
+                (:info ".")
+                ("-m" "Show more" test/set-level)
+                ("-l" "show less" test/set-level-less)])
+
+(transient-define-suffix test/set-level ()
+  :transient t
+  (interactive)
+  (transient-set-level 'org-transclusion--buffer-transient
+                       4)
+  (org-transclusion-transient-menu))
+
+(transient-define-suffix test/set-level-less ()
+  :transient t
+  (interactive)
+  (transient-set-level 'org-transclusion--buffer-transient
+                       3)
+  (org-transclusion-transient-menu))
 
 (transient-define-prefix org-transclusion--at-point-transient ()
   "Prefix that waves at the user"
