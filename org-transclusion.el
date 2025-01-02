@@ -103,7 +103,7 @@ See `display-buffer' for example options."
   " OT"
   "Mode-line indicator for minor-mode variable `org-transclusion-mode'."
   :type '(choice (const :tag "No lighter" "") string)
-  :safe 'stringp)
+  :safe #'stringp)
 
 (defcustom org-transclusion-after-add-functions nil
   "Functions to be called after a transclusion content has been added.

@@ -1,4 +1,4 @@
-org-transclusion.org: docs/org-transclusion-manual.org
+docs/org-transclusion.org: docs/org-transclusion-manual.org
 	-emacs --batch -L "$$(pwd)" -l org-transclusion $< \
 	       --eval '(progn (org-transclusion-add-all) (write-region nil nil "org-transclusion.org"))'
 

@@ -1,3 +1,7 @@
 test/
 refile/
 *.elc
+
+# ELPA-generated files.
+/org-transclusion-autoloads.el
+/org-transclusion-pkg.el
