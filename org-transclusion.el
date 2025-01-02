@@ -42,7 +42,6 @@
 (require 'text-clone)
 (require 'text-property-search)
 (require 'seq)
-(require 'cl-macs) ; for cl-loop
 
 ;;;; Customization
 
@@ -1835,7 +1834,7 @@ ensure the settings revert to the user's setting prior to
   "Promote or demote transcluded subtree.
 When DEMOTE is non-nil, demote."
   (unless (org-transclusion-within-transclusion-p)
-    (user-error "Not in a transcluded headline."))
+    (user-error "Not in a transcluded headline"))
   (let* ((inhibit-read-only t)
          (beg (car (plist-get (org-transclusion-at-point) :location)))
          (pos (point)))
