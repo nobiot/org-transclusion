@@ -1,6 +1,6 @@
 ;;; org-transclusion.el --- Transclude text content via links -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021-2024  Free Software Foundation, Inc.
+;; Copyright (C) 2021-2025  Free Software Foundation, Inc.
 
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 01 January 2025
+;; Last modified: 02 January 2025
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -42,6 +42,7 @@
 (require 'text-clone)
 (require 'text-property-search)
 (require 'seq)
+(require 'cl-macs) ; for cl-loop
 
 ;;;; Customization
 
@@ -1866,9 +1867,44 @@ FORCE will let this function ignore
 `org-transclusion-extensions-loaded' and load extensions again."
   (when (or force (not org-transclusion-extensions-loaded))
     (dolist (ext org-transclusion-extensions)
-      (condition-case nil (require ext)
-        (error (message "Problems while trying to load feature `%s'" ext))))
+      (let* ((ext-name (symbol-name ext))
+             (minor-mode (intern (if (string-suffix-p "-mode" ext-name)
+                                    ext-name
+                                  (concat ext-name "-mode")))))
+        (condition-case nil
+            (progn
+              (require ext)
+              (when (fboundp minor-mode) (funcall minor-mode +1)))
+          (error (message "Problems while trying to load feature `%s'" ext)))))
     (setq org-transclusion-extensions-loaded t)))
+
+(defun org-transclusion-extension-set-a-hook-functions (add-or-remove list)
+  "Add/remove functions to an abnormal hook.
+LIST must be a cons cell for an extension. CAR is a symbol name
+of an abnormal hook \(generally suffixed with \"-functions\"\).
+CDR is either a symbol or list of symbols, which are names of
+functions to be set to the abnormal hook. ADD-OR-REMOVE must either
+`add-hook' or `remove-hook'."
+  (let* ((hook-name (car list))
+         (symbols (cdr list))
+         ;; If CDR is a single function symbol name, put it into a list.
+         (symbols (if (listp symbols) symbols (list symbols))))
+    (mapc (lambda (symbol) (funcall add-or-remove hook-name symbol))
+          symbols)))
+
+(defun org-transclusion-extension-functions-add-or-remove (extension-functions &optional remove)
+  "Add or remove functions to abnormal hooks for extensions.
+EXTENSION-FUNCTIONS is an alist. CAR of each cons cell is a
+symbol name of an abnormal hook \(generally suffixed with
+\"-functions\"\). CDR is either a symbol or list of symbols,
+which are names of functions to be set to the abnormal hook. If
+REMOVE is non-nil, the functions will be removed from the
+abnormal hooks; otherwise, added to them."
+  (let* ((add-or-remove (if remove #'remove-hook #'add-hook))
+         (set-function (apply-partially
+                        #'org-transclusion-extension-set-a-hook-functions
+                        add-or-remove)))
+    (mapc set-function extension-functions)))
 
 ;; Load extensions upon loading this file
 (org-transclusion-load-extensions-maybe)

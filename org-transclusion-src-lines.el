@@ -1,6 +1,6 @@
 ;;; org-transclusion-src-lines.el --- Extension -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021-2024  Free Software Foundation, Inc.
+;; Copyright (C) 2021-2025  Free Software Foundation, Inc.
 
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 24 May 2021
-;; Last modified: 27 December 2024
+;; Last modified: 02 January 2025
 
 ;;; Commentary:
 ;;  This is an extension to `org-transclusion'.  When active, it adds features
@@ -25,6 +25,7 @@
 
 ;;; Code:
 
+(require 'org-transclusion)
 (require 'org-element)
 (declare-function text-clone-make-overlay "text-clone")
 (declare-function org-transclusion-live-sync-buffers-others-default
@@ -34,34 +35,45 @@
 
 ;;;; Setting up the extension
 
-;; Add a new transclusion type
-(add-hook 'org-transclusion-add-functions
-          #'org-transclusion-add-src-lines)
-;; Keyword values
-(add-hook 'org-transclusion-keyword-value-functions
-          #'org-transclusion-keyword-value-lines)
-(add-hook 'org-transclusion-keyword-value-functions
-          #'org-transclusion-keyword-value-src)
-(add-hook 'org-transclusion-keyword-value-functions
-          #'org-transclusion-keyword-value-rest)
-(add-hook 'org-transclusion-keyword-value-functions
-          #'org-transclusion-keyword-value-end)
-(add-hook 'org-transclusion-keyword-value-functions
-          #'org-transclusion-keyword-value-thing-at-point)
-;; plist back to string
-(add-hook 'org-transclusion-keyword-plist-to-string-functions
-          #'org-transclusion-keyword-plist-to-string-src-lines)
+;;;###autoload
+(define-minor-mode org-transclusion-src-lines-mode ()
+  :lighter nil
+  :global t
+  :group 'org-transclusion
+  (if org-transclusion-src-lines-mode
+      (org-transclusion-extension-functions-add-or-remove
+       org-transclusion-src-lines-extension-functions)
+    (org-transclusion-extension-functions-add-or-remove
+     org-transclusion-src-lines-extension-functions :remove)))
 
-;; Transclusion content formatting
-(add-hook 'org-transclusion-content-format-functions
-          #'org-transclusion-content-format-src-lines)
-
-;; Open source buffer
-(add-hook 'org-transclusion-open-source-marker-functions
-          #'org-transclusion-open-source-marker-src-lines)
-;; Live-sync
-(add-hook 'org-transclusion-live-sync-buffers-functions
-          #'org-transclusion-live-sync-buffers-src-lines)
+(defvar org-transclusion-src-lines-extension-functions
+  (list
+   ;; Add a new transclusion type
+   (cons 'org-transclusion-add-functions #'org-transclusion-add-src-lines)
+    ;; Keyword values
+   (cons 'org-transclusion-keyword-value-functions
+         '(org-transclusion-keyword-value-lines
+           org-transclusion-keyword-value-src
+           org-transclusion-keyword-value-rest
+           org-transclusion-keyword-value-end
+           org-transclusion-keyword-value-thing-at-point))
+   ;; plist back to string
+   (cons 'org-transclusion-keyword-plist-to-string-functions
+         #'org-transclusion-keyword-plist-to-string-src-lines)
+   ;; Transclusion content formatting
+   (cons 'org-transclusion-content-format-functions
+         #'org-transclusion-content-format-src-lines)
+   ;; Open source buffer
+   (cons 'org-transclusion-open-source-marker-functions
+         #'org-transclusion-open-source-marker-src-lines)
+   ;; Live-sync
+   (cons 'org-transclusion-live-sync-buffers-functions
+         #'org-transclusion-live-sync-buffers-src-lines))
+  "Alist of functions to activate `org-transclusion-src-lines'.
+CAR of each cons cell is a symbol name of an abnormal hook
+\(*-functions\). CDR is either a symbol or list of symbols, which
+are names of functions to be called in the corresponding abnormal
+hook.")
 
 ;;; Functions
 
