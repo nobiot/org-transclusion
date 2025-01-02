@@ -587,7 +587,7 @@ the rest of the buffer unchanged."
   (interactive "P")
   (save-restriction
     (let ((current-marker (move-marker (make-marker) (point)))
-          match removed-marker list)
+          match list)
       (unless narrowed (widen))
       (goto-char (point-min))
       (while (setq match (text-property-search-forward 'org-transclusion-id))
