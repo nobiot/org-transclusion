@@ -42,23 +42,53 @@ level (1-9) or leave empty: ")
                      (message "Invalid input. The format must be eg 5-10, 6-, -6")
                      (sit-for 1))))
 
-(defun org-transclusion-insert-from-link ()
-  (interactive)
-  (and-let* ((link-elem-at-pt
-              (or (org-element-lineage (org-element-context) 'link t) ; at-point
-                  ;; if not at-point, find the first one in the current line
-                  (save-excursion
-                    (beginning-of-line)
-                    (re-search-forward org-link-bracket-re (line-end-position) t)
-                    (org-element-lineage (org-element-context) 'link t))))
-             (beg (org-element-begin link-elem-at-pt))
-             (end (org-element-end link-elem-at-pt))
-             (link-string (buffer-substring beg end)))
-    (beginning-of-line)
-    (open-line 1)
-    (insert (format "#+transclude: %s" link-string))
-    (beginning-of-line)
-    (pulse-momentary-highlight-region beg (line-end-position) 'pulse-highlight-start-face)))
+;; You can add `org-roam-node-insert' as an example.
+(defvar org-transclusion-insert-link-functions '(org-insert-link))
+
+(defun org-transclusion-insert-org-link ()
+  (let ((function (if (length> org-transclusion-insert-link-functions 1)
+                      (intern (completing-read
+                               "Choose a function: "
+                               org-transclusion-insert-link-functions))
+                    (car org-transclusion-insert-link-functions))))
+    (when function
+      (with-temp-buffer
+        (funcall function)
+        (buffer-string)))))
+
+(defun org-transclusion-insert-from-link (insert-below)
+  "Insert #+TRANSCLUDE: keyword from a link.
+If you pass a `universal-argument' via \\[universal-argument]
+ \(INSERT-BELOW is non-nil\), the keyword is added to the line
+ below current one. Otherwise, to the line above."
+  (interactive "P")
+  (let* ((link-elem-at-pt
+          (or (org-element-lineage (org-element-context) 'link t) ; at-point
+              ;; if not at-point, find the first one in the current line
+              (save-excursion
+                (beginning-of-line)
+                (re-search-forward org-link-bracket-re (line-end-position) t)
+                (org-element-lineage (org-element-context) 'link t))))
+         (blank-line-p (save-excursion
+                         (beginning-of-line)
+                         (looking-at-p "^[ \t]*$")))
+         (link-string (cond
+                       (link-elem-at-pt
+                        (buffer-substring (org-element-begin link-elem-at-pt)
+                                          (org-element-end link-elem-at-pt)))
+                       (blank-line-p
+                        (org-transclusion-insert-org-link)))))
+    (when link-string
+      ;; When the current line is not blank, open a line above or below the
+      ;; current.
+      (unless blank-line-p
+        (when insert-below (progn (forward-line 1) (unless (bolp) (insert "\n"))))
+        (beginning-of-line)
+        (open-line 1))
+      (insert (format "#+transclude: %s" link-string))
+      (beginning-of-line)
+      (pulse-momentary-highlight-region
+       (point) (line-end-position) 'pulse-highlight-start-face))))
 
 (transient-define-prefix org-transclusion--buffer-transient ()
   "Prefix that waves at the user"
