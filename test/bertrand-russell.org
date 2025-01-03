@@ -8,7 +8,7 @@
 
 *Bertrand Arthur William Russell, 3rd Earl Russell* OM FRS[65] (18 May 1872 – 2
 February 1970) was a British polymath ande writer. He was born in Monmouthshire
-into one of the most prominent aristocratic families in the United Kingdom. 
+into one of the most prominent aristocratic families in the United Kingdom.
 
 #+transclude: [[file:bertrand-russell.org::*Bertrand Russell - Wikipedia]] :level 1
 
@@ -61,18 +61,30 @@ Russell with Moore led the British "revolt against idealism".[a] Together with h
 #+end:
 
 *** H3
-This is content of H3
+    This is content of H3
 
 * On Denoting
-:PROPERTIES:
-:ID:       2022-10-10T173507
-:link: https://en.wikipedia.org/wiki/On_Denoting
-:end:
+  :PROPERTIES:
+  :ID:       2022-10-10T173507
+  :link:     https://en.wikipedia.org/wiki/On_Denoting
+  :end:
 
- "On Denoting" is an essay by Bertrand Russell. It was published in the philosophy journal Mind in 1905. In it, Russell introduces and advocates his theory of denoting phrases, according to which definite descriptions and other "denoting phrases ... never have any meaning in themselves, but every proposition in whose verbal expression they occur has a meaning."[1] This theory later became the basis for Russell's descriptivism with regard to proper names, and his view that proper names are "disguised" or "abbreviated" definite descriptions.
+  "On Denoting" is an essay by Bertrand Russell. It was published in the
+  philosophy journal Mind in 1905. In it, Russell introduces and advocates his
+  theory of denoting phrases, according to which definite descriptions and other
+  "denoting phrases ... never have any meaning in themselves, but every
+  proposition in whose verbal expression they occur has a meaning."[1] This
+  theory later became the basis for Russell's descriptivism with regard to
+  proper names, and his view that proper names are "disguised" or "abbreviated"
+  definite descriptions.
 
 ** H2
-In the 1920s, Frank P. Ramsey referred to the essay as "that paradigm of philosophy".[2][3] In the Stanford Encyclopedia of Philosophy entry Descriptions, Peter Ludlow singled the essay out as "the paradigm of philosophy", and called it a work of "tremendous insight"; provoking discussion and debate among philosophers of language and linguists for over a century.[4]
+   In the 1920s, Frank P. Ramsey referred to the essay as "that paradigm of
+   philosophy".[2][3] In the Stanford Encyclopedia of Philosophy entry
+   Descriptions, Peter Ludlow singled the essay out as "the paradigm of
+   philosophy", and called it a work of "tremendous insight"; provoking
+   discussion and debate among philosophers of language and linguists for over a
+   century.[4]
 
 *** H3
 This is content of H3

@@ -459,8 +459,8 @@ does not support all the elements.
            (content (plist-get payload :src-content))
            (keyword-plist (if (org-transclusion-type-is-org tc-type)
                               (plist-put
-                               keyword-plist :highest-level
-                               (org-transclusion-content-highest-org-headline))
+                               keyword-plist :current-level
+                               (or (org-current-level) 0))
                             keyword-plist))
            (content
             (run-hook-with-args-until-success
@@ -1246,7 +1246,10 @@ This function is the default for org-transclusion-type (TYPE)
         (delay-mode-hooks (org-mode))
         (insert content)
         ;; Adjust headline levels
-        (org-transclusion-content-format-org-headlines type content keyword-values)
+        (org-transclusion-content-format-org-headlines
+         type content keyword-values)
+
+        ;; TODO The following two formatting operations should be in a function.
 
         ;; Fix table alignment
         (let ((point (point-min)))
@@ -1268,18 +1271,19 @@ KEYWORD-VALUES is a plist of transclusion properties. This
 function assumes the point is within temp-buffer with `org-mode'
 active."
   (org-with-point-at 1
-    ;; If NO-FIRST-HEADING
+    ;; If NO-FIRST-HEADING, delete the first level
     (and (org-at-heading-p)
          (plist-get keyword-values :no-first-heading)
          (delete-line))
     (let* ((raw-to-level (plist-get keyword-values :level))
            (to-level (if (and (stringp raw-to-level)
                               (string= raw-to-level "auto"))
-                         (1+ (org-current-level))
+                         (1+ (plist-get keyword-values :current-level))
                        raw-to-level))
-           ;; TODO this function must know about the transclusion-buffer, but it
-           ;; does not.
-           (level (plist-get :highest-level keyword-values))
+           (level (or (org-current-level)
+                      (save-excursion
+                        (org-next-visible-heading 1)
+                        (org-current-level))))
            (diff (when (and level to-level) (- level to-level))))
       (when diff
         (cond ((< diff 0) ; demote
@@ -1288,8 +1292,7 @@ active."
                                     (org-do-demote)))))
               ((> diff 0) ; promote
                (org-map-entries (lambda ()
-                                  (dotimes (_ diff) (org-do-promote))))))))
-    (buffer-string)))
+                                  (dotimes (_ diff) (org-do-promote))))))))))
 
 
 (defun org-transclusion-content-format (_type content keyword-values)

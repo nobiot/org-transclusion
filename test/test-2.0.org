@@ -1,3 +1,4 @@
+This is first content
 * Regression
 ** notmuch
 
@@ -233,7 +234,6 @@ Temporarily set ~org-transclusion-include-first-section~ to nil
   return fname # return this to org-mode
 #+end_src
 * Test "auto" level  and :no-first-heading
-
   #+transclude: [[file:bertrand-russell.org::*On Denoting]] :level  :no-first-heading
 
   #+transclude: [[file:bertrand-russell.org::*On Denoting]] :level
@@ -243,7 +243,7 @@ Temporarily set ~org-transclusion-include-first-section~ to nil
   #+transclude: [[file:bertrand-russell.org::*On Denoting]] :level  :exclude-elements "headline drawer"
 
 
-  #+transclude: [[file:bertrand-russell.org::*On Denoting]] :level 3 :exclude-elements "headline drawer"
+    #+transclude: [[file:bertrand-russell.org::*On Denoting]] :level 3 :exclude-elements "headline drawer"
 
 *** First sectiona and "auto" level
 
