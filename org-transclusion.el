@@ -946,48 +946,6 @@ inserted when more than one space is inserted between symbols."
 ;;-----------------------------------------------------------------------------
 ;;;; Add-at-point functions
 
-(defun org-transclusion-add-payload (payload link keyword-plist copy)
-  "Insert transcluded content with error handling.
-
-PAYLOAD should be a plist according to the description in
-`org-transclusion-add-functions'.  LINK should be an org-element
-context object for the link.  KEYWORD-PLIST should contain the
-\"#+transclude:\" keywords for the transclusion at point.  With
-non-nil COPY, copy the transcluded content into the buffer.
-
-This function is intended to be called from within
-`org-transclusion-add' as well as payload functions returned by
-hooks in `org-transclusion-add-functions'."
-  (let ((tc-type (plist-get payload :tc-type))
-        (src-buf (plist-get payload :src-buf))
-        (src-beg (plist-get payload :src-beg))
-        (src-end (plist-get payload :src-end))
-        (src-content (plist-get payload :src-content)))
-    (if (or (string= src-content "")
-            (eq src-content nil))
-        ;; Keep going with program when no content `org-transclusion-add-all'
-        ;; should move to the next transclusion
-        (prog1 nil
-          (message
-           "No content found with \"%s\".  Check the link at point %d, line %d"
-           (org-element-property :raw-link link) (point) (org-current-line)))
-      (let ((beg (line-beginning-position))
-            (end))
-        (org-transclusion-with-inhibit-read-only
-          (when (save-excursion
-                  (end-of-line) (insert-char ?\n)
-                  (org-transclusion-content-insert
-                   keyword-plist tc-type src-content
-                   src-buf src-beg src-end copy)
-                  (unless (eobp) (delete-char 1))
-                  (setq end (point))
-                  t)
-            ;; `org-transclusion-keyword-remove' checks element at point is a
-            ;; keyword or not
-            (org-transclusion-keyword-remove)))
-        (run-hook-with-args 'org-transclusion-after-add-functions beg end))
-      t)))
-
 (defun org-transclusion-add-target-marker (link)
   (save-selected-window
     ;; Don't ever prompt to create a headline when transcluding.
@@ -1148,76 +1106,6 @@ current buffer."
     (overlay-put ov-src 'org-transclusion-pair tc-pair)
     ;; Return t
     t))
-
-;; (defun org-transclusion-content-insert (keyword-values type content sbuf sbeg send copy)
-;;   "Insert CONTENT at point and put source overlay in SBUF.
-;; Return t when successful.
-
-;; This function formats CONTENT with using one of the
-;; `org-transclusion-content-format-functions'; e.g. align a table
-;; for Org.
-
-;; This function is intended to be used within;; `org-transclusion-add'.  All the arguments should be
-;; obtained by one of the `org-transclusion-add-functions'.
-
-;; This function adds text properties required for Org-transclusion
-;; to the inserted content.  It also puts an overlay to an
-;; appropriate region of the source buffer.  They are constructed
-;; based on the following arguments:
-
-;; - KEYWORD-VALUES :: Property list of the value of transclusion keyword
-;; - TYPE :: Transclusion type; e.g. \"org-link\"
-;; - CONTENT :: Text content of the transclusion source to be inserted
-;; - SBUF :: Buffer of the transclusion source where CONTENT comes from
-;; - SBEG :: Begin point of CONTENT in SBUF
-;; - SEND :: End point of CONTENT in SBUF"
-;;   (let* ((beg (point)) ;; before the text is inserted
-;;          (end) ;; at the end of text content after inserting it
-;;          (id (org-id-uuid))
-;;          (tc-buffer (current-buffer))
-;;          (ov-src (text-clone-make-overlay sbeg send sbuf)) ;; source-buffer overlay
-;;          (tc-pair ov-src)
-;;          (content content)
-;;          (current-level (or (org-current-level) 0)))
-;;     (insert
-;;      (run-hook-with-args-until-success
-;;       'org-transclusion-content-format-functions
-;;       type content (plist-get keyword-values :current-indentation)))
-;;     (setq end (point))
-;;     (unless copy
-;;       (add-text-properties
-;;        beg end
-;;        `( local-map ,org-transclusion-map
-;;           read-only t
-;;           front-sticky t
-;;           ;; rear-nonticky seems better for
-;;           ;; src-lines to add "#+result" after C-c
-;;           ;; C-c
-;;           rear-nonsticky t
-;;           org-transclusion-id ,id
-;;           org-transclusion-type ,type
-;;           org-transclusion-pair ,tc-pair
-;;           org-transclusion-orig-keyword ,keyword-values
-;;           ;; TODO Fringe is not supported for terminal
-;;           line-prefix ,(org-transclusion-propertize-transclusion)
-;;           wrap-prefix ,(org-transclusion-propertize-transclusion)))
-;;       ;; Put the transclusion overlay
-;;       (let ((ov-tc (text-clone-make-overlay beg end)))
-;;         (overlay-put ov-tc 'evaporate t)
-;;         (overlay-put ov-tc 'face 'org-transclusion)
-;;         (overlay-put ov-tc 'priority -60))
-;;       ;; Put to the source overlay
-;;       (overlay-put ov-src 'org-transclusion-by id)
-;;       (overlay-put ov-src 'org-transclusion-buffer tc-buffer)
-;;       (overlay-put ov-src 'evaporate t)
-;;       (overlay-put ov-src 'face 'org-transclusion-source)
-;;       (overlay-put ov-src 'line-prefix (org-transclusion-propertize-source))
-;;       (overlay-put ov-src 'wrap-prefix (org-transclusion-propertize-source))
-;;       (overlay-put ov-src 'priority -60)
-;;       ;; TODO this should not be necessary, but it is at the moment
-;;       ;; live-sync-enclosing-element fails without tc-pair on source overlay
-;;       (overlay-put ov-src 'org-transclusion-pair tc-pair))
-;;     t))
 
 (defun org-transclusion-content-highest-org-headline ()
   "Return the highest level as an integer of all the headlines in buffer.
