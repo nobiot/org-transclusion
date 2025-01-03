@@ -1,6 +1,6 @@
 ;;; org-transclusion-font-lock.el --- font-lock for Org-transclusion -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021-2024  Free Software Foundation, Inc.
+;; Copyright (C) 2021-2025  Free Software Foundation, Inc.
 
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 22 August 2021
-;; Last modified: 21 January 2024
+;; Last modified: 02 January 2025
 
 ;;; Commentary:
 ;;  This file is part of Org-transclusion
@@ -26,7 +26,26 @@
 ;;; Code:
 
 (require 'org)
-(add-hook 'org-font-lock-set-keywords-hook #'org-transclusion-font-lock-set)
+(require 'org-transclusion)
+
+;;;###autoload
+(define-minor-mode org-transclusion-font-lock-mode ()
+  :lighter nil
+  :global t
+  :group 'org-transclusion
+  (if org-transclusion-font-lock-mode
+      (org-transclusion-extension-functions-add-or-remove
+       org-transclusion-font-lock-extension-functions)
+    (org-transclusion-extension-functions-add-or-remove
+     org-transclusion-font-lock-extension-functions :remove)))
+
+(defvar org-transclusion-font-lock-extension-functions
+  (list (cons 'org-font-lock-set-keywords-hook #'org-transclusion-font-lock-set))
+  "Alist of functions to activate `org-transclusion-font-lock'.
+CAR of each cons cell is a symbol name of an abnormal hook
+\(*-functions\). CDR is either a symbol or list of symbols, which
+are names of functions to be called in the corresponding abnormal
+hook.")
 
 (defface org-transclusion-keyword
   '((((class color) (min-colors 88) (background light))
