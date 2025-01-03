@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 24 May 2021
-;; Last modified: 02 January 2025
+;; Last modified: 03 January 2025
 
 ;;; Commentary:
 ;;  This is an extension to `org-transclusion'.  When active, it adds features
@@ -329,16 +329,16 @@ match any valid elisp symbol (but please don't quote it)."
   (when (string-match "\\(:thing-at-point\\|:thingatpt\\) \\([[:alnum:][:punct:]]+\\)" string)
     (list :thing-at-point (org-strip-quotes (match-string 0 string)))))
 
-(defun org-transclusion-content-format-src-lines (type content indent)
+(defun org-transclusion-content-format-src-lines (type content keyword-values)
   "Format text CONTENT from source before transcluding.
 Return content modified (or unmodified, if not applicable).
 
 This is the default one.  It only returns the content as is.
 
-INDENT is the number of current indentation of the #+transclude."
+KEYWORD-VALUES is a plist of transclusion properties."
   (when (org-transclusion-src-lines-p type)
     (let ((content (org-transclusion-ensure-newline content)))
-      (org-transclusion-content-format type content indent))))
+      (org-transclusion-content-format type content keyword-values))))
 
 (defun org-transclusion-ensure-newline (str)
   (if (not (string-suffix-p "\n" str))

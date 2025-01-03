@@ -1070,34 +1070,6 @@ based on the following arguments:
          (tc-pair ov-src)
          (content content)
          (current-level (or (org-current-level) 0)))
-    (when (org-transclusion-type-is-org type)
-      (with-temp-buffer
-        ;; This temp buffer needs to be in Org Mode
-        ;; Otherwise, subtree won't be recognized as a Org subtree
-        (delay-mode-hooks (org-mode))
-        (insert content)
-        (org-with-point-at 1
-          ;; If NO-FIRST-HEADING
-          (and (org-at-heading-p)
-               (plist-get keyword-values :no-first-heading)
-               (delete-line))
-          (let* ((raw-to-level (plist-get keyword-values :level))
-                 (to-level (if (and (stringp raw-to-level)
-                                    (string= raw-to-level "auto"))
-                               (1+ current-level)
-                             raw-to-level))
-                 (level (org-transclusion-content-highest-org-headline))
-                 (diff (when (and level to-level) (- level to-level))))
-            (when diff
-              (cond ((< diff 0) ; demote
-                     (org-map-entries (lambda ()
-                                        (dotimes (_ (abs diff))
-                                          (org-do-demote)))))
-                    ((> diff 0) ; promote
-                     (org-map-entries (lambda ()
-                                        (dotimes (_ diff)
-                                          (org-do-promote))))))))
-          (setq content (buffer-string)))))
     (insert
      (run-hook-with-args-until-success
       'org-transclusion-content-format-functions
@@ -1151,18 +1123,22 @@ This function assumes the buffer is an Org buffer."
         (push (org-element-property :level h) list)))
     (when list (seq-min list))))
 
-(defun org-transclusion-content-format-org (type content _indent)
+(defun org-transclusion-content-format-org (type content keyword-values)
   "Format text CONTENT from source before transcluding.
 Return content modified (or unmodified, if not applicable).
 
+KEYWORD-VALUES is a plist of transclusion properties.
+
 This function is the default for org-transclusion-type (TYPE)
-\"org-*\". Currently it only re-aligns table with links in the
-content."
+\"org-*\"."
   (when (org-transclusion-type-is-org type)
     (with-temp-buffer
       (let ((org-inhibit-startup t))
         (delay-mode-hooks (org-mode))
         (insert content)
+        ;; Adjust headline levels
+        (org-transclusion-content-format-org-headlines type content keyword-values)
+
         ;; Fix table alignment
         (let ((point (point-min)))
           (while point
@@ -1171,22 +1147,55 @@ content."
               (org-table-align)
               (goto-char (org-table-end)))
             (setq point (search-forward "|" (point-max) t))))
+
         ;; Fix indentation when `org-adapt-indentation' is non-nil
         (org-indent-region (point-min) (point-max))
         ;; Return the temp-buffer's string
         (buffer-string)))))
 
-(defun org-transclusion-content-format (_type content indent)
+(defun org-transclusion-content-format-org-headlines (_type content keyword-values)
+  "Adjust org headline levels for CONTENT.
+KEYWORD-VALUES is a plist of transclusion properties. This
+function assumes the point is within temp-buffer with `org-mode'
+active."
+  (org-with-point-at 1
+    ;; If NO-FIRST-HEADING
+    (and (org-at-heading-p)
+         (plist-get keyword-values :no-first-heading)
+         (delete-line))
+    (let* ((raw-to-level (plist-get keyword-values :level))
+           (to-level (if (and (stringp raw-to-level)
+                              (string= raw-to-level "auto"))
+                         (1+ current-level)
+                       raw-to-level))
+           ;; TODO this function must know about the transclusion-buffer, but it
+           ;; does not.
+           (level (plist-get :highest-level keyword-values))
+           (diff (when (and level to-level) (- level to-level))))
+      (when diff
+        (cond ((< diff 0) ; demote
+               (org-map-entries (lambda ()
+                                  (dotimes (_ (abs diff))
+                                    (org-do-demote)))))
+              ((> diff 0) ; promote
+               (org-map-entries (lambda ()
+                                  (dotimes (_ diff)
+                                    (org-do-promote))))))))
+    (buffer-string)))
+
+
+(defun org-transclusion-content-format (_type content keyword-values)
   "Format text CONTENT from source before transcluding.
 Return content modified (or unmodified, if not applicable).
 
 This is the default one.  It only returns the content as is.
 
-INDENT is the number of current indentation of the #+transclude."
+KEYWORD-VALUES is a plist of transclusion properties."
   (with-temp-buffer
     (insert content)
     ;; Return the temp-buffer's string
-    (set-left-margin (point-min)(point-max) indent)
+    (set-left-margin (point-min)(point-max)
+                     (plist-get keyword-values :current-indentation))
     (buffer-string)))
 
 (defvar org-transclusion-content-filter-org-functions '())
