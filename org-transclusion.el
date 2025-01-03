@@ -942,9 +942,9 @@ hooks in `org-transclusion-add-functions'."
         (run-hook-with-args 'org-transclusion-after-add-functions beg end))
       t)))
 
-(defun org-transclusion-id-marker (path)
+(defun org-transclusion-id-marker (link)
   (save-selected-window
-    (org-id-open path nil)
+    (org-link-open link)
     ;; In the target buffer temporarily
     (move-marker (make-marker) (point))))
 
@@ -953,8 +953,7 @@ hooks in `org-transclusion-add-functions'."
 Return nil if not found."
   (when (string= "id" (org-element-property :type link))
     ;; when type is id, the value of path is the id
-    (let* ((path (org-element-property :path link))
-           (mkr (ignore-errors (org-transclusion-id-marker path)))
+    (let* ((mkr (ignore-errors (org-transclusion-id-marker link)))
            (payload '(:tc-type "org-id")))
       (if mkr
           (append payload (org-transclusion-content-org-marker mkr plist))
