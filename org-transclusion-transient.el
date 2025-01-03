@@ -247,9 +247,11 @@ If you pass a `universal-argument' via \\[universal-argument]
       (hydra-org-transclusion--detect-transclude-at-point-wrapper
        (insert (format ":thingatpt %s" string))))))
 
-
+;;;###autoload
 (defun org-transclusion-transient-menu ()
   (interactive)
+  (unless (derived-mode-p 'org-mode)
+    (user-error "`org-transclusion' works only in `org' buffer"))
   (let ((org-transclusion-buffer (current-buffer)))
     (if (org-transclusion-within-transclusion-p)
         (org-transclusion--at-point-transient)

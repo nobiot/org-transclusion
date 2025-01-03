@@ -33,7 +33,6 @@ ID with "first section" [[id:2022-06-26T152831]]
 
 #+transclude: [[id:2022-06-26T152831]]
 
-
 ** test empty file
 #+transclude: [[file:empty.txt::2][empty text file]]
 
@@ -216,7 +215,7 @@ Temporarily set ~org-transclusion-include-first-section~ to nil
 * Test src and end
 
 #+transclude: [[file:./python-1.py]]
-#+transclude: [[file:./python-1.py]] :src python
+#+transclude: [[file:./python-1.py]]  :src python
 
 #+transclude: [[file:./python-1.py::id-1234]]  :src python :end "id-1234 end here"
 
