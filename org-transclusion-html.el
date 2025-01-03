@@ -1,6 +1,6 @@
 ;;; org-transclusion-html.el --- Converting HTML content to Org -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2024  Free Software Foundation, Inc.
+;; Copyright (C) 2024-2025 Free Software Foundation, Inc.
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU Affero General Public License
@@ -31,6 +31,7 @@
 
 ;;;; Requirements
 
+(require 'org-transclusion)
 (require 'org)
 (require 'org-element)
 (require 'cl-lib)
@@ -39,7 +40,24 @@
 
 ;;;; Hook into org-transclusion
 
-(add-hook 'org-transclusion-add-functions #'org-transclusion-html-add-file)
+;;;###autoload
+(define-minor-mode org-transclusion-html-mode ()
+  :lighter nil
+  :global t
+  :group 'org-transclusion
+  (if org-transclusion-html-mode
+      (org-transclusion-extension-functions-add-or-remove
+       org-transclusion-html-extension-functions)
+    (org-transclusion-extension-functions-add-or-remove
+     org-transclusion-html-extension-functions :remove)))
+
+(defvar org-transclusion-html-extension-functions
+  (list (cons 'org-transclusion-add-functions #'org-transclusion-html-add-file))
+  "Alist of functions to activate `org-transclusion-html'.
+CAR of each cons cell is a symbol name of an abnormal hook
+\(*-functions\). CDR is either a symbol or list of symbols, which
+are names of functions to be called in the corresponding abnormal
+hook.")
 
 ;;;; Functions
 
