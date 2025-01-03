@@ -942,40 +942,85 @@ hooks in `org-transclusion-add-functions'."
         (run-hook-with-args 'org-transclusion-after-add-functions beg end))
       t)))
 
-(defun org-transclusion-id-marker (link)
+(defun org-transclusion-add-target-marker (link)
   (save-selected-window
-    (org-link-open link)
-    ;; In the target buffer temporarily
-    (move-marker (make-marker) (point))))
+    ;; Don't ever prompt to create a headline when transcluding.
+    ;; t is a less surprising default than nil - fuzzy search.
+    (let ((org-link-search-must-match-exact-headline t))
+      (org-link-open link)
+      ;; In the target buffer temporarily
+      (move-marker (make-marker) (point)))))
 
 (defun org-transclusion-add-org-id (link plist)
   "Return a list for Org-ID LINK object and PLIST.
 Return nil if not found."
-  (when (string= "id" (org-element-property :type link))
-    ;; when type is id, the value of path is the id
-    (let* ((mkr (ignore-errors (org-transclusion-id-marker link)))
-           (payload '(:tc-type "org-id")))
-      (if mkr
-          (append payload (org-transclusion-content-org-marker mkr plist))
-        (message
-         "No transclusion done for this ID. Ensure it works at point %d, line %d"
-         (point) (org-current-line))
-        nil))))
+  (and-let*
+      ((_ (string= "id" (org-element-property :type link)))
+       (mkr (ignore-errors (org-transclusion-add-target-marker link)))
+       (buf (marker-buffer mkr))
+       (_ (buffer-live-p (marker-buffer mkr))))
+    (with-current-buffer buf
+      (org-with-wide-buffer
+       (goto-char mkr)
+       (append '(:tc-type "org-id")
+               (if (org-before-first-heading-p)
+                   (org-transclusion-content-org-filtered
+                    nil plist)
+                 (org-transclusion-content-org-filtered
+                  'only-element plist)))))))
 
 (defun org-transclusion-add-org-file (link plist)
   "Return a list for Org file LINK object and PLIST.
 Return nil if not found."
-  (and (string= "file" (org-element-property :type link))
-       (org-transclusion-org-file-p (org-element-property :path link))
+  (and-let* ((_ (string= "file" (org-element-property :type link)))
+             (_ (org-transclusion-org-file-p (org-element-property :path link)))
+  ;; The target needs to be carefully differentiated between the whole buffer or
+  ;; element at point.
+
+  ;; When the link is ID, the current logic to check the first section should
+  ;; work.
+
+  ;; For the normal file links pointing to an Org file, the target buffer may be
+  ;; already open with a point. If the search option is present, the point will
+  ;; move to the appropriate point and get the element. If the search option is
+  ;; not present, the whole buffer needs to be obtained.
+             (mkr (ignore-errors (org-transclusion-add-target-marker link)))
+             (buf (marker-buffer mkr)))
+    ;; FIXME `org-transclusion-add-target-marker'
+    ;;
+    ;; - Change name. It's not just for org file being targeted.
+
+    ;; - Silly to go back to the buffer here.
+
+    ;; - `org-transclusion-content-org-filtered' should not return other
+    ;;   properties -- confusing.
+    (with-current-buffer buf
+      (org-with-wide-buffer
        (append '(:tc-type "org-link")
-               (org-transclusion-content-org-link link plist))))
+               ;; If search-option present, get only the element at point;
+               ;; otherwise, get the whole buffer.
+               (if (org-element-property :search-option link)
+                   (progn
+                     (goto-char mkr)
+                     (org-transclusion-content-org-filtered
+                      'only-element plist))
+                 (org-transclusion-content-org-filtered
+                  nil plist)))))))
 
 (defun org-transclusion-add-other-file (link plist)
   "Return a list for non-Org file LINK object and PLIST.
 Return nil if not found."
-  (and (string= "file" (org-element-property :type link))
+  (and-let* (;; (_ (string= "file" (org-element-property :type link)))
+             (mkr (ignore-errors (org-transclusion-add-target-marker link)))
+             (buf (marker-buffer mkr)))
+    ;; FIXME It's silly to revisit the buffer when it was already visited.
+    (with-current-buffer buf
+      (org-with-wide-buffer
        (append '(:tc-type "others-default")
-               (org-transclusion-content-others-default link plist))))
+               (list :src-content (buffer-string)
+                     :src-buf buf
+                     :src-beg (point-min)
+                     :src-end (point-max)))))))
 
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for inserting content
@@ -1122,50 +1167,6 @@ INDENT is the number of current indentation of the #+transclude."
     (set-left-margin (point-min)(point-max) indent)
     (buffer-string)))
 
-(defun org-transclusion-content-org-marker (marker plist)
-  "Return a list of payload from MARKER and PLIST.
-This function is intended to be used for Org-ID.  It delegates the
-work to
-`org-transclusion-content-org-filtered'."
-  (if (and marker (marker-buffer marker)
-           (buffer-live-p (marker-buffer marker)))
-      (progn
-        (with-current-buffer (marker-buffer marker)
-          (org-with-wide-buffer
-           (goto-char marker)
-           (if (org-before-first-heading-p)
-               (org-transclusion-content-org-filtered
-                nil plist)
-             (org-transclusion-content-org-filtered
-              'only-element plist)))))
-    (message "Nothing done. Cannot find marker for the ID.")))
-
-(defun org-transclusion-content-org-link (link plist)
-  "Return a list of payload from Org LINK object and PLIST.
-This function is intended to be used for Org-ID. It delegates the
-work to
-`org-transclusion-content-org-filtered'."
-  (save-excursion
-    ;; First visit the buffer and go to the relevant element if
-    ;; search-option is present.
-    (let* ((path (org-element-property :path link))
-           (search-option (org-element-property :search-option link))
-           (buf (find-file-noselect path))
-           (org-link-search-must-match-exact-headline
-            ;; Don't ever prompt to create a headline when transcluding
-            (if (eq 'query-to-create org-link-search-must-match-exact-headline)
-                t  ;; Less surprising default than nil - fuzzy search
-              org-link-search-must-match-exact-headline)))
-      (with-current-buffer buf
-        (org-with-wide-buffer
-         (if search-option
-             (progn
-               (org-link-search search-option)
-               (org-transclusion-content-org-filtered
-                'only-element plist))
-           (org-transclusion-content-org-filtered
-            nil plist)))))))
-
 (defvar org-transclusion-content-filter-org-functions '())
 
 (add-hook 'org-transclusion-content-filter-org-functions
@@ -1292,18 +1293,6 @@ is non-nil."
     data))
 
 ;;;;---------------------------------------------------------------------------
-;;;; Functions to support non-Org-mode link types
-
-(defun org-transclusion-content-others-default (link _plist)
-  "Use Org LINK element to return SRC-CONTENT, SRC-BEG, and SRC-END."
-  (let* ((path (org-element-property :path link))
-         (buf (find-file-noselect path)))
-    (with-current-buffer buf
-      (org-with-wide-buffer
-       (list :src-content (buffer-string)
-             :src-buf buf
-             :src-beg (point-min)
-             :src-end (point-max))))))
 
 ;;-----------------------------------------------------------------------------
 ;;; Utility Functions
