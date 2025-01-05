@@ -314,12 +314,12 @@ Org mode's caching relies upon modification hooks to function."
   :global nil
   :keymap (let ((map (make-sparse-keymap)))
             map)
-  (cond
-   (org-transclusion-mode
-    (org-transclusion-activate)
-    (when org-transclusion-add-all-on-activate
-      (org-transclusion-add-all)))
-   (t (org-transclusion-deactivate))))
+  (if org-transclusion-mode
+      (progn
+        (org-transclusion-activate)
+        (when org-transclusion-add-all-on-activate
+          (org-transclusion-add-all)))
+    (org-transclusion-deactivate)))
 
 ;;;###autoload
 (defun org-transclusion-activate ()
@@ -377,7 +377,6 @@ so on) or `universal-argument' (\\[universal-argument]).
 If you pass a positive number 1-9 with `digit-argument', this
 function automatically puts the :level property to the resultant
 transclusion keyword."
-
   (interactive "P")
   (let* ((context (org-element-lineage
                    (org-element-context)'(link) t))
@@ -513,7 +512,7 @@ function to work only on the narrowed region you are in, leaving
 the rest of the buffer unchanged."
   (interactive "P")
   (save-restriction
-    (let ((marker (move-marker (make-marker) (point))))
+    (let ((marker (point-marker)))
       (unless narrowed (widen))
       (goto-char (point-min))
       (let ((regexp "^[ \t]*#\\+TRANSCLUDE:"))
