@@ -218,6 +218,7 @@ the \\+`link', \\+`keyword-plist', and \\+`copy' arguments.")
     org-transclusion-keyword-value-level
     org-transclusion-keyword-value-disable-auto
     org-transclusion-keyword-value-only-contents
+    org-transclusion-keyword-value-only-target
     org-transclusion-keyword-value-exclude-elements
     org-transclusion-keyword-value-expand-links
     org-transclusion-keyword-current-indentation)
@@ -855,6 +856,15 @@ It needs to be set in
     (list :only-contents
           (org-strip-quotes (match-string 0 string)))))
 
+(defun org-transclusion-keyword-value-only-target (string)
+  "It is a utility function used converting a keyword STRING to plist.
+It is meant to be used by `org-transclusion-get-string-to-plist'.
+It needs to be set in
+`org-transclusion-keyword-value-functions'."
+  (when (string-match ":only-target +\\(.*\\)" string)
+    (list :only-target
+          (org-trim (org-strip-quotes (match-string 1 string))))))
+
 (defun org-transclusion-keyword-value-exclude-elements (string)
   "It is a utility function used converting a keyword STRING to plist.
 It is meant to be used by `org-transclusion-get-string-to-plist'.
@@ -902,6 +912,7 @@ keyword.  If not, returns nil."
         (level (plist-get plist :level))
         (disable-auto (plist-get plist :disable-auto))
         (only-contents (plist-get plist :only-contents))
+        (only-target (plist-get plist :only-target))
         (exclude-elements (plist-get plist :exclude-elements))
         (expand-links (plist-get plist :expand-links))
         (custom-properties-string nil))
@@ -917,6 +928,7 @@ keyword.  If not, returns nil."
             (when level (format " :level %d" level))
             (when disable-auto (format " :disable-auto"))
             (when only-contents (format " :only-contents"))
+            (when only-target (format " :only-target"))
             (when exclude-elements (format " :exclude-elements \"%s\""
                                            exclude-elements))
             (when expand-links (format " :expand-links"))
@@ -1165,6 +1177,9 @@ work to
           #'org-transclusion-content-filter-org-only-contents-function)
 
 (add-hook 'org-transclusion-content-filter-org-functions
+          #'org-transclusion-content-filter-org-only-target-function)
+
+(add-hook 'org-transclusion-content-filter-org-functions
           #'org-transclusion-content-filter-org-expand-links-function)
 
 (make-obsolete 'org-transclusion-content-org-buffer-or-element
@@ -1283,6 +1298,14 @@ is non-nil."
   (if (eq (org-element-type data) 'headline)
       nil
     data))
+
+(defun org-transclusion-content-filter-org-only-target-function (obj plist)
+  (when-let ((only-target (plist-get plist :only-target)))
+    (org-element-map obj 'target
+      (lambda (data)
+        (and (string= (org-element-property :value data) only-target)
+             (org-element-property :parent data)))
+      nil t 'target nil nil)))
 
 ;;;;---------------------------------------------------------------------------
 ;;;; Functions to support non-Org-mode link types
