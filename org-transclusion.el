@@ -928,7 +928,7 @@ keyword.  If not, returns nil."
             (when level (format " :level %d" level))
             (when disable-auto (format " :disable-auto"))
             (when only-contents (format " :only-contents"))
-            (when only-target (format " :only-target"))
+            (when only-target (format " :only-target %s" only-target))
             (when exclude-elements (format " :exclude-elements \"%s\""
                                            exclude-elements))
             (when expand-links (format " :expand-links"))
