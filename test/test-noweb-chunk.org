@@ -1,0 +1,42 @@
+* File: test-noweb-chunk-1.nw
+
+#+transclude: [[./test-noweb-chunk-1.nw::aaa]] :noweb-chunk
+#+transclude: [[./test-noweb-chunk-1.nw::aaa]] :noweb-chunk :src python
+
+#+transclude: [[./test-noweb-chunk-1.nw::bbb]] :noweb-chunk
+#+transclude: [[./test-noweb-chunk-1.nw::bbb]] :noweb-chunk :src python
+
+#+transclude: [[./test-noweb-chunk-1.nw::ccc]] :noweb-chunk
+#+transclude: [[./test-noweb-chunk-1.nw::ccc]] :noweb-chunk :src python
+
+#+transclude: [[./test-noweb-chunk-1.nw::long chunk name]] :noweb-chunk
+#+transclude: [[./test-noweb-chunk-1.nw::long chunk name]] :noweb-chunk :src python
+
+* File: test-noweb-chunk-2.nw
+
+#+transclude: [[./test-noweb-chunk-2.nw::aaa]] :noweb-chunk
+#+transclude: [[./test-noweb-chunk-2.nw::aaa]] :noweb-chunk :src python
+
+* File: test-noweb-chunk-3.nw
+
+#+transclude: [[./test-noweb-chunk-3.nw::aaa]] :noweb-chunk
+#+transclude: [[./test-noweb-chunk-3.nw::aaa]] :noweb-chunk :src python
+
+* File: test-noweb-chunk-4.nw
+
+#+transclude: [[./test-noweb-chunk-4.nw::aaa]] :noweb-chunk
+#+transclude: [[./test-noweb-chunk-4.nw::aaa]] :noweb-chunk :src python
+
+* Restrict range (:lines)
+** :lines 3-5
+#+transclude: [[./test-noweb-chunk-1.nw::aaa]] :noweb-chunk :lines 3-5
+#+transclude: [[./test-noweb-chunk-1.nw::aaa]] :noweb-chunk :lines 3-5 :src python
+
+** :lines -5
+#+transclude: [[./test-noweb-chunk-1.nw::aaa]] :noweb-chunk :lines -5
+#+transclude: [[./test-noweb-chunk-1.nw::aaa]] :noweb-chunk :lines -5 :src python
+
+** :lines 3-
+#+transclude: [[./test-noweb-chunk-1.nw::aaa]] :noweb-chunk :lines 3-
+#+transclude: [[./test-noweb-chunk-1.nw::aaa]] :noweb-chunk :lines 3- :src python
+

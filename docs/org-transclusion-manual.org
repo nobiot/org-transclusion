@@ -570,6 +570,36 @@ which transclude HTML documents over a network protocol that supports link
 fragments, such as [[https://git.sr.ht/~ushin/hyperdrive-org-transclusion][hyperdrive-org-transclusion]] and [[https://git.sr.ht/~ushin/org-transclusion-http][org-transclusion-http]], are
 able to render specific HTML elements by tag (see [[#network-transclusion][subsection]]).
 
+*** Chunks of noweb files
+#+cindex: noweb chunks
+#+cindex: Property - :noweb-chunk
+
+It is possible to transclude named chunks of noweb[fn:1] files using the =:noweb-chunk=
+property. The name of the chunk is appended to the file name, separated by `::'.
+
+For example to transclude chunk =chunk-A= from file =file.nw= do this:
+
+#+begin_example
+#+transclude: [[./file.nw::chunk-A]] :noweb-chunk
+#+end_example
+
+You can combine the =:noweb-chunk= property with other properties. Like
+using =:src=  to put the chunk into a source block:
+
+#+begin_example
+#+transclude: [[./file.nw::chunk-A]] :noweb-chunk :src python
+#+end_example
+
+Or extracting certain lines with the =:lines= property:
+
+#+begin_example
+#+transclude: [[./file.nw::chunk-A]] :noweb-chunk :src python :lines 2-5
+#+end_example
+
+Note that chunks are transcluded as is, without recursively replacing other noweb links.
+
+[fn:1]  [[https://github.com/nrnrnr/noweb]]
+
 ** Extensions
 :PROPERTIES:
 :CUSTOM_ID: extensions

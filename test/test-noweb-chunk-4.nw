@@ -1,0 +1,7 @@
+<<<aaa>>>=
+def test_aaa ():
+    print('aaa')
+
+# An @ sign inside a comment does not start a new text chunk.
+# This is still part of the code chunk.
+# @
