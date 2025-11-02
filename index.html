@@ -701,6 +701,7 @@ Next: <a href="#Extensions" accesskey="n" rel="next">Extensions</a>, Previous: <
 <li><a href="#end-property-to-specify-a-search-term-to-dynamically-look-for-the-end-of-a-range" accesskey="2">&lsquo;<samp class="samp">:end</samp>&rsquo; property to specify a search term to dynamically look for the end of a range</a></li>
 <li><a href="#thing_002dat_002dpoint-or-thingatpt-property-to-specify-a-_0060_0060thing_0027_0027-to-transclude-from-the-source" accesskey="3">&lsquo;<samp class="samp">:thing-at-point</samp>&rsquo; or &lsquo;<samp class="samp">:thingatpt</samp>&rsquo; property to specify a &ldquo;thing&rdquo; to transclude from the source.</a></li>
 <li><a href="#Transclude-HTML-content-with-Pandoc" accesskey="4">Transclude HTML content with Pandoc</a></li>
+<li><a href="#Chunks-of-noweb-files" accesskey="5">Chunks of noweb files</a></li>
 </ul>
 <hr>
 <div class="subsection-level-extent" id="lines-property-to-specify-a-range-of-lines">
@@ -821,7 +822,7 @@ Next: <a href="#Transclude-HTML-content-with-Pandoc" accesskey="n" rel="next">Tr
 <div class="subsection-level-extent" id="Transclude-HTML-content-with-Pandoc">
 <div class="nav-panel">
 <p>
-Previous: <a href="#thing_002dat_002dpoint-or-thingatpt-property-to-specify-a-_0060_0060thing_0027_0027-to-transclude-from-the-source" accesskey="p" rel="prev">&lsquo;<samp class="samp">:thing-at-point</samp>&rsquo; or &lsquo;<samp class="samp">:thingatpt</samp>&rsquo; property to specify a &ldquo;thing&rdquo; to transclude from the source.</a>, Up: <a href="#Transclude-range-of-lines-for-text-and-source-files" accesskey="u" rel="up">Transclude range of lines for text and source files</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+Next: <a href="#Chunks-of-noweb-files" accesskey="n" rel="next">Chunks of noweb files</a>, Previous: <a href="#thing_002dat_002dpoint-or-thingatpt-property-to-specify-a-_0060_0060thing_0027_0027-to-transclude-from-the-source" accesskey="p" rel="prev">&lsquo;<samp class="samp">:thing-at-point</samp>&rsquo; or &lsquo;<samp class="samp">:thingatpt</samp>&rsquo; property to specify a &ldquo;thing&rdquo; to transclude from the source.</a>, Up: <a href="#Transclude-range-of-lines-for-text-and-source-files" accesskey="u" rel="up">Transclude range of lines for text and source files</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
 </div>
 <h4 class="subsection" id="Transclude-HTML-content-with-Pandoc-1"><span>4.9.4 Transclude HTML content with Pandoc<a class="copiable-link" href="#Transclude-HTML-content-with-Pandoc-1"> &para;</a></span></h4>
 
@@ -841,6 +842,42 @@ HTML transclusions always render the entire document as Org.  However, packages
 which transclude HTML documents over a network protocol that supports link
 fragments, such as <a class="uref" href="https://git.sr.ht/~ushin/hyperdrive-org-transclusion">hyperdrive-org-transclusion</a> and <a class="uref" href="https://git.sr.ht/~ushin/org-transclusion-http">org-transclusion-http</a>, are
 able to render specific HTML elements by tag (see <a class="ref" href="#Transclude-over-a-network-with-hyper_002f_002f-http_002f_002f-etc">subsection</a>).
+</p>
+<hr>
+</div>
+<div class="subsection-level-extent" id="Chunks-of-noweb-files">
+<div class="nav-panel">
+<p>
+Previous: <a href="#Transclude-HTML-content-with-Pandoc" accesskey="p" rel="prev">Transclude HTML content with Pandoc</a>, Up: <a href="#Transclude-range-of-lines-for-text-and-source-files" accesskey="u" rel="up">Transclude range of lines for text and source files</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<h4 class="subsection" id="Chunks-of-noweb-files-1"><span>4.9.5 Chunks of noweb files<a class="copiable-link" href="#Chunks-of-noweb-files-1"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-noweb-chunks"></a>
+<a class="index-entry-id" id="index-Property-_002d-_003anoweb_002dchunk"></a>
+
+<p>It is possible to transclude named chunks of noweb<a class="footnote" id="DOCF2" href="#FOOT2"><sup>2</sup></a> files using the &lsquo;<samp class="samp">:noweb-chunk</samp>&rsquo;
+property. The name of the chunk is appended to the file name, separated by &lsquo;::&rsquo;.
+</p>
+<p>For example to transclude chunk &lsquo;<samp class="samp">chunk-A</samp>&rsquo; from file &lsquo;<samp class="samp">file.nw</samp>&rsquo; do this:
+</p>
+<div class="example">
+<pre class="example-preformatted">#+transclude: [[./file.nw::chunk-A]] :noweb-chunk
+</pre></div>
+
+<p>You can combine the &lsquo;<samp class="samp">:noweb-chunk</samp>&rsquo; property with other properties. Like
+using &lsquo;<samp class="samp">:src</samp>&rsquo;  to put the chunk into a source block:
+</p>
+<div class="example">
+<pre class="example-preformatted">#+transclude: [[./file.nw::chunk-A]] :noweb-chunk :src python
+</pre></div>
+
+<p>Or extracting certain lines with the &lsquo;<samp class="samp">:lines</samp>&rsquo; property:
+</p>
+<div class="example">
+<pre class="example-preformatted">#+transclude: [[./file.nw::chunk-A]] :noweb-chunk :src python :lines 2-5
+</pre></div>
+
+<p>Note that chunks are transcluded as is, without recursively replacing other noweb links.
 </p>
 <hr>
 </div>
@@ -1239,7 +1276,7 @@ Next: <a href="#Text_002dClone" accesskey="n" rel="next">Text-Clone</a>, Up: <a 
 </p>
 <blockquote class="quotation">
 <p>{O} transcluding some org-elements in multiple places
-<em class="emph">[2016-12-09 ven.] </em> John Kitchin asks:
+<em class="emph">[2016-12-09 Fri] </em> John Kitchin asks:
 </p>
 <p>I have an idea for how I could transclude “copies” or links to org-elements in multiple places and keep them up to date. A prototypical example of this is I have a set of org-contacts in one place, and I want to create a new list of people for a committee in a new place made of “copies” of the contact headlines. But I do not really want to duplicate the headlines, and if I modify one, I want it reflected in the other places. I do not want just links to those contacts, because then I can not do things with org-map-entries, and other org-machinery which needs the actual headlines/properties present. Another example might be I want a table in two places, but the contents of them should stay synchronized, ditto for a code block.
 </p>
@@ -1310,6 +1347,8 @@ Next: <a href="#Index-_002d-Commands" accesskey="n" rel="next">Index - Commands<
  &nbsp; 
 <a class="summary-letter-printindex" href="#Index-_002d-Features_cp_letter-L"><b>L</b></a>
  &nbsp; 
+<a class="summary-letter-printindex" href="#Index-_002d-Features_cp_letter-N"><b>N</b></a>
+ &nbsp; 
 <a class="summary-letter-printindex" href="#Index-_002d-Features_cp_letter-O"><b>O</b></a>
  &nbsp; 
 <a class="summary-letter-printindex" href="#Index-_002d-Features_cp_letter-P"><b>P</b></a>
@@ -1343,6 +1382,9 @@ Next: <a href="#Index-_002d-Commands" accesskey="n" rel="next">Index - Commands<
 <tr><td></td><td class="printindex-index-entry"><a href="#index-Links-with-hyper_003a_002f_002f_002c-http_003a_002f_002f_002c-and-other-protocols">Links with hyper://, http://, and other protocols</a></td><td class="printindex-index-section"><a href="#Transclude-over-a-network-with-hyper_002f_002f-http_002f_002f-etc">Transclude over a network with <code class="code">hyper//</code> <code class="code">http//</code> etc</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-Live_002dsync-edit">Live-sync edit</a></td><td class="printindex-index-section"><a href="#Live_002dsync-edit">Live-sync edit</a></td></tr>
 <tr><td colspan="3"><hr></td></tr>
+<tr><th id="Index-_002d-Features_cp_letter-N">N</th></tr>
+<tr><td></td><td class="printindex-index-entry"><a href="#index-noweb-chunks">noweb chunks</a></td><td class="printindex-index-section"><a href="#Chunks-of-noweb-files">Chunks of noweb files</a></td></tr>
+<tr><td colspan="3"><hr></td></tr>
 <tr><th id="Index-_002d-Features_cp_letter-O">O</th></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-Org-Links-Supported">Org Links Supported</a></td><td class="printindex-index-section"><a href="#Org-links-supported">Org links supported</a></td></tr>
 <tr><td colspan="3"><hr></td></tr>
@@ -1352,6 +1394,7 @@ Next: <a href="#Index-_002d-Commands" accesskey="n" rel="next">Index - Commands<
 <tr><td></td><td class="printindex-index-entry"><a href="#index-Property-_002d-_003aend">Property - :end</a></td><td class="printindex-index-section"><a href="#end-property-to-specify-a-search-term-to-dynamically-look-for-the-end-of-a-range">&lsquo;<samp class="samp">end</samp>&rsquo; property to specify a search term to dynamically look for the end of a range</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-Property-_002d-_003alevel">Property - :level</a></td><td class="printindex-index-section"><a href="#Control-levels-of-headlines-per-transclusion">Control levels of headlines per transclusion</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-Property-_002d-_003alines">Property - :lines</a></td><td class="printindex-index-section"><a href="#lines-property-to-specify-a-range-of-lines">&lsquo;<samp class="samp">lines</samp>&rsquo; property to specify a range of lines</a></td></tr>
+<tr><td></td><td class="printindex-index-entry"><a href="#index-Property-_002d-_003anoweb_002dchunk">Property - :noweb-chunk</a></td><td class="printindex-index-section"><a href="#Chunks-of-noweb-files">Chunks of noweb files</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-Property-_002d-_003aonly_002dcontents">Property - :only-contents</a></td><td class="printindex-index-section"><a href="#Org-links-supported">Org links supported</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-Property-_002d-_003aonly_002dcontents-1">Property - :only-contents</a></td><td class="printindex-index-section"><a href="#Filter-Org-elements-per-transclusion">Filter Org elements per transclusion</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-Property-_002d-_003arest">Property - :rest</a></td><td class="printindex-index-section"><a href="#Transclude-source-file-into-src_002dblock">Transclude source file into src-block</a></td></tr>
@@ -1376,6 +1419,8 @@ Next: <a href="#Index-_002d-Commands" accesskey="n" rel="next">Index - Commands<
 <a class="summary-letter-printindex" href="#Index-_002d-Features_cp_letter-H"><b>H</b></a>
  &nbsp; 
 <a class="summary-letter-printindex" href="#Index-_002d-Features_cp_letter-L"><b>L</b></a>
+ &nbsp; 
+<a class="summary-letter-printindex" href="#Index-_002d-Features_cp_letter-N"><b>N</b></a>
  &nbsp; 
 <a class="summary-letter-printindex" href="#Index-_002d-Features_cp_letter-O"><b>O</b></a>
  &nbsp; 
@@ -1949,6 +1994,8 @@ to permit their use in free software.
 <h4 class="footnotes-heading">Footnotes</h4>
 
 <h5 class="footnote-body-heading"><a id="FOOT1" href="#DOCF1">(1)</a></h5>
+<p>&ldquo;Expanding&rdquo; in Emacs means converting a relative file name to an absolute one. Info node &lsquo;(elisp) File-Name-Expansion&rsquo;</p>
+<h5 class="footnote-body-heading"><a id="FOOT2" href="#DOCF2">(2)</a></h5>
 <p>&ldquo;Expanding&rdquo; in Emacs means converting a relative file name to an absolute one. Info node &lsquo;(elisp) File-Name-Expansion&rsquo;</p>
 </div>
 
