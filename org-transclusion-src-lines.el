@@ -47,6 +47,8 @@
 (add-hook 'org-transclusion-keyword-value-functions
           #'org-transclusion-keyword-value-end)
 (add-hook 'org-transclusion-keyword-value-functions
+           #'org-transclusion-keyword-value-noweb-chunk)
+(add-hook 'org-transclusion-keyword-value-functions
           #'org-transclusion-keyword-value-thing-at-point)
 ;; plist back to string
 (add-hook 'org-transclusion-keyword-plist-to-string-functions
@@ -127,6 +129,7 @@ it means from line 10 to the end of file."
          (entry-pos) (buf)
          (lines (plist-get plist :lines))
          (end-search-op (plist-get plist :end))
+	 (noweb-chunk (plist-get plist :noweb-chunk))
          (thing-at-point (plist-get plist :thing-at-point))
          (thing-at-point (when thing-at-point
                            (make-symbol (cadr (split-string thing-at-point))))))
@@ -141,12 +144,14 @@ it means from line 10 to the end of file."
                             (entry-pos)
                             ((when search-option
                                (save-excursion
-                                 (ignore-errors
-                                   ;; FIXME `org-link-search' does not
-                                   ;; return position when eithher
-                                   ;; ::/regex/ or ::number is used
-                                   (if (org-link-search search-option)
-                                       (line-beginning-position))))))
+				 (if noweb-chunk
+				     (org-transclusion--goto-noweb-chunk-beginning search-option)
+                                   (ignore-errors
+                                     ;; FIXME `org-link-search' does not
+                                     ;; return position when eithher
+                                     ;; ::/regex/ or ::number is used
+                                     (if (org-link-search search-option)
+				       (line-beginning-position)))))))
                             ((point-min))))
                 (bounds (when thing-at-point
                           (let ((count (if end-search-op
@@ -163,7 +168,11 @@ it means from line 10 to the end of file."
                                       ;; return position when either ::/regex/
                                       ;; or ::number is used
                                       (when (org-link-search end-search-op)
-                                        (line-beginning-position))))))))
+                                        (line-beginning-position))))))
+			       ((when noweb-chunk
+				    (goto-char (1+ start-pos))
+				    (org-transclusion--goto-noweb-chunk-end)
+				    (point)))))
                 (range (when lines (split-string lines "-")))
                 (lbeg (if range (string-to-number (car range))
                         0))
@@ -178,6 +187,9 @@ it means from line 10 to the end of file."
                 ;;; This `cond' means :end prop has priority over the end
                 ;;; position of the range. They don't mix.
                 (end (cond
+		      ((when noweb-chunk
+			 (org-transclusion--goto-noweb-chunk-:lines-end start-pos end-pos lend)
+			 (point)))
                       ((when thing-at-point end-pos))
                       ((when (and end-pos (> end-pos beg))
                          end-pos))
@@ -192,6 +204,37 @@ it means from line 10 to the end of file."
                  :src-buf (current-buffer)
                  :src-beg beg
                  :src-end end)))))))
+
+(defun org-transclusion--goto-noweb-chunk-beginning (chunk-name)
+  "Go to the beginning of chunk CHUNK-NAME."
+  (goto-char (point-min))
+  (re-search-forward (format "<<%s>>=" chunk-name) nil t)
+  (next-line)
+  (line-beginning-position))
+
+(defun org-transclusion--goto-noweb-chunk-end ()
+  "Go to the end of the current chunk.
+POINT shall be inside the current chunk."
+  ;; A noweb chunk ends at the beginning of the next text chunk ("@")
+  ;; or the beginning of the next code chunk ("<<.*>>=").
+  (if (re-search-forward "^\\(?:[[:blank:]]*\n\\)*\\(?:@\\|<<.*?>>=\\)" nil t)
+      (progn
+	(goto-char (match-beginning 0))
+	(line-beginning-position))
+    ;; Else the chunk ends at the end of the buffer.
+    (when (re-search-forward "\\(?:[[:blank:]\n]*\\)*\\'" nil t)
+      (goto-char (match-beginning 0)))))
+
+(defun org-transclusion--goto-noweb-chunk-:lines-end (start-pos end-pos lend)
+  "Go to the end of the `:lines' range.
+START-POS is the beginning of the chunk, END-POS the end of the chunk.
+LEND is the end line of the `:lines' range."
+  (if (eql lend 0) ; magic number 0 meaning end value of range is missing
+      (goto-char end-pos)
+    (goto-char start-pos)
+    (forward-line lend)
+    (when (> (point) end-pos)
+	(goto-char end-pos))))
 
 (defun org-transclusion-content-src-lines (link plist)
   "Return a list of payload from LINK and PLIST in a src-block.
@@ -253,6 +296,11 @@ Double qutations are mandatory"
   (when (string-match ":end +\"\\(.*\\)\"" string)
     (list :end (org-strip-quotes (match-string 1 string)))))
 
+(defun org-transclusion-keyword-value-noweb-chunk (string)
+  "Convert keyword STRING to a plist."
+  (when (string-match ":noweb-chunk" string)
+    (list :noweb-chunk (org-strip-quotes (match-string 0 string)))))
+
 (defun org-transclusion-keyword-plist-to-string-src-lines (plist)
   "Convert a keyword PLIST to a string.
 This function is meant to be used as an extension for function
@@ -263,9 +311,11 @@ abnormal hook
         (src (plist-get plist :src))
         (rest (plist-get plist :rest))
         (end (plist-get plist :end))
+	(noweb-chunk (plist-get plist :noweb-chunk))
         (thing-at-point (plist-get plist :thing-at-point)))
     (concat
-     (when lines (format ":lines %s" lines))
+     (when noweb-chunk ":noweb-chunk")
+     (when lines (format " :lines %s" lines))
      (when src (format " :src %s" src))
      (when rest (format " :rest \"%s\"" rest))
      (when end (format " :end \"%s\"" end))

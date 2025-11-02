@@ -1,0 +1,9 @@
+<<aaa>>=
+def test_aaa ():
+    print('aaa')
+
+# Some blank lines at the end of the file that should not be transcluded.
+  
+
+
+ 

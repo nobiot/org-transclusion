@@ -1,0 +1,35 @@
+@
+some text
+
+<<oups>>=
+<<aaa>>
+# This is not chunk <<aaa>> but a reference to <<aaa>>.
+# Searching for chunk <<aaa>> must not retrieve this chunk.
+
+<<long chunk name>>=
+def test_long_chunk_name():
+    print('a long chunk name')
+
+<<aaa>>=
+print('line 1')
+print('line 2')
+print('line 3')
+print('line 4')
+print('line 5')
+print('line 6 -- last line')
+
+@
+some text
+
+<<bbb>>=
+def test_bbb ():
+    print('bbb')
+
+@
+some text
+
+<<ccc>>=
+def test_ccc ():
+    print('ccc')
+
+# No blank lines at the end of this file.
