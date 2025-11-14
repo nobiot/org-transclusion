@@ -732,6 +732,10 @@ the state before live-sync started."
   (if (not (org-transclusion-within-live-sync-p))
       (user-error "Not within a transclusion in live-sync")
     (text-clone-delete-overlays)
+    (let* ((src-ov (car (org-transclusion-live-sync-buffers)))
+	   (src-buf (overlay-buffer src-ov)))
+      (with-current-buffer src-buf
+	(org-element-cache-reset)))
     ;; Re-activate hooks inactive during live-sync
     (org-transclusion-activate)
     (org-transclusion-refresh)
