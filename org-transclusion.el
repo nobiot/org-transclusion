@@ -1559,26 +1559,6 @@ used."
              (get-char-property (point) 'text-clones))
     t))
 
-(defun org-transclusion-propertize-transclusion ()
-  "."
-  (if (not (display-graphic-p))
-      (propertize "| " 'face 'org-transclusion)
-    (propertize
-     "x"
-     'display
-     '(left-fringe org-transclusion-fringe-bitmap
-                   org-transclusion-fringe))))
-
-(defun org-transclusion-propertize-source ()
-  "."
-  (if (not (display-graphic-p))
-      (propertize "| " 'face 'org-transclusion-source)
-    (propertize
-     "x"
-     `display
-     `(left-fringe empty-line
-                   org-transclusion-source-fringe))))
-
 (defun org-transclusion-type-is-org (type)
   "Return non-nil if TYPE begins with \"org\".
 TYPE is assumed to be a text-property \"org-transclusion-type\"
