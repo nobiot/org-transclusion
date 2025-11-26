@@ -1305,6 +1305,20 @@ is non-nil."
 ;;-----------------------------------------------------------------------------
 ;;; Utility Functions
 
+(defun org-transclusion-append-fringe-to-prefix (existing-prefix face)
+  "Append fringe indicator to EXISTING-PREFIX, preserving it.
+FACE determines the fringe color (org-transclusion-source-fringe or
+org-transclusion-fringe).
+Returns concatenated string suitable for `line-prefix' or `wrap-prefix'."
+  (let ((fringe-indicator
+         (if (display-graphic-p)
+             (propertize "x" 'display
+                         `(left-fringe org-transclusion-fringe-bitmap ,face))
+           (propertize "| " 'face face))))
+    (if existing-prefix
+        (concat existing-prefix fringe-indicator)
+      fringe-indicator)))
+
 (defun org-transclusion-find-source-marker (beg end)
   "Return marker that points to source begin point for transclusion.
 It works on the transclusion region at point.  BEG and END are
