@@ -1046,23 +1046,27 @@ based on the following arguments:
           org-transclusion-id ,id
           org-transclusion-type ,type
           org-transclusion-pair ,tc-pair
-          org-transclusion-orig-keyword ,keyword-values
-          ;; TODO Fringe is not supported for terminal
-          line-prefix ,(org-transclusion-propertize-transclusion)
-          wrap-prefix ,(org-transclusion-propertize-transclusion)))
-      ;; Put the transclusion overlay
-      (let ((ov-tc (text-clone-make-overlay beg end)))
-        (overlay-put ov-tc 'evaporate t)
-        (overlay-put ov-tc 'face 'org-transclusion)
-        (overlay-put ov-tc 'priority -60))
+          org-transclusion-orig-keyword ,keyword-values))
       ;; Put to the source overlay
       (overlay-put ov-src 'org-transclusion-by id)
       (overlay-put ov-src 'org-transclusion-buffer tc-buffer)
       (overlay-put ov-src 'evaporate t)
       (overlay-put ov-src 'face 'org-transclusion-source)
-      (overlay-put ov-src 'line-prefix (org-transclusion-propertize-source))
-      (overlay-put ov-src 'wrap-prefix (org-transclusion-propertize-source))
+      (overlay-put ov-src 'modification-hooks
+                   '(org-transclusion-source-overlay-modified))
       (overlay-put ov-src 'priority -60)
+
+      ;; Apply fringe indicators per-line when org-indent-mode is active
+      ;; Check source buffer's org-indent-mode state
+      (when (and (boundp 'org-indent-mode)
+                 (buffer-local-value 'org-indent-mode sbuf))
+        (org-transclusion-add-fringe-to-region
+         sbuf sbeg send 'org-transclusion-source-fringe))
+
+      ;; Check transclusion buffer's org-indent-mode state
+      (when (and (boundp 'org-indent-mode) org-indent-mode)
+        (org-transclusion-add-fringe-to-region
+         (current-buffer) beg end 'org-transclusion-fringe))
       ;; TODO this should not be necessary, but it is at the moment
       ;; live-sync-enclosing-element fails without tc-pair on source overlay
       (overlay-put ov-src 'org-transclusion-pair tc-pair))
