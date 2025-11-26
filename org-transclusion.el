@@ -1319,6 +1319,35 @@ Returns concatenated string suitable for `line-prefix' or `wrap-prefix'."
         (concat existing-prefix fringe-indicator)
       fringe-indicator)))
 
+(defun org-transclusion-add-fringe-to-region (buffer beg end face)
+  "Add fringe indicator to each line in BUFFER between BEG and END.
+FACE determines the fringe color.
+This modifies existing `line-prefix' and `wrap-prefix' text properties
+by appending the fringe indicator, preserving org-indent's indentation.
+Only operates when `org-indent-mode' is active in BUFFER."
+  (with-current-buffer buffer
+    (when (and (boundp 'org-indent-mode)   ; Is org-indent loaded?
+               org-indent-mode)            ; Is it active in THIS buffer?
+      (with-silent-modifications
+        (save-excursion
+          (goto-char beg)
+          (while (< (point) end)
+            (let* ((line-beg (line-beginning-position))
+                   (existing-line-prefix (get-text-property line-beg 'line-prefix))
+                   (existing-wrap-prefix (get-text-property line-beg 'wrap-prefix)))
+              ;; Append fringe to existing prefixes
+              (when existing-line-prefix
+                (put-text-property line-beg (min (1+ line-beg) end)
+                                   'line-prefix
+                                   (org-transclusion-append-fringe-to-prefix
+                                    existing-line-prefix face)))
+              (when existing-wrap-prefix
+                (put-text-property line-beg (min (1+ line-beg) end)
+                                   'wrap-prefix
+                                   (org-transclusion-append-fringe-to-prefix
+                                    existing-wrap-prefix face))))
+            (forward-line 1)))))))
+
 (defun org-transclusion-find-source-marker (beg end)
   "Return marker that points to source begin point for transclusion.
 It works on the transclusion region at point.  BEG and END are
