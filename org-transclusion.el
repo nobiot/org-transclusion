@@ -1348,6 +1348,17 @@ Only operates when `org-indent-mode' is active in BUFFER."
                                     existing-wrap-prefix face))))
             (forward-line 1)))))))
 
+(defun org-transclusion-source-overlay-modified (ov after-p _beg _end &optional _len)
+  "Update source overlay OV indentation after modification.
+Called by overlay modification hooks. AFTER-P is t after modification.
+This ensures fringe indicators stay synchronized with org-indent-mode's
+dynamic updates."
+  (when (and after-p (overlay-buffer ov))
+    (let ((ov-beg (overlay-start ov))
+          (ov-end (overlay-end ov)))
+      (org-transclusion-add-fringe-to-region
+       (overlay-buffer ov) ov-beg ov-end 'org-transclusion-source-fringe))))
+
 (defun org-transclusion-find-source-marker (beg end)
   "Return marker that points to source begin point for transclusion.
 It works on the transclusion region at point.  BEG and END are
