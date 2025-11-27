@@ -116,6 +116,17 @@ and end, pointing to the beginning and end of the transcluded
 content."
   :type '(repeat function))
 
+(defcustom org-transclusion-after-remove-functions nil
+  "Functions to be called after a transclusion has been removed.
+The hook runs after the transclusion overlay has been deleted and
+the #+transclude keyword has been re-inserted. It is intended for
+cleanup operations in the source buffer. For example, it is used by
+the `org-transclusion-indent-mode' extension to refresh org-indent
+properties after transclusion removal. The functions are called with
+arguments (src-buf src-beg src-end), pointing to the source buffer
+and the region that was transcluded."
+  :type '(repeat function))
+
 ;;;; Faces
 
 (defface org-transclusion-source-fringe
