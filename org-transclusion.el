@@ -1000,8 +1000,8 @@ Return nil if not found."
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for inserting content
 
-(defun org-transclusion-content-insert ( keyword-values type content
-                                         sbuf sbeg send copy)
+(defun org-transclusion-content-insert (keyword-values type content
+                                                       sbuf sbeg send copy)
   "Insert CONTENT at point and put source overlay in SBUF.
 Return t when successful.
 
@@ -1057,37 +1057,39 @@ based on the following arguments:
       type content (plist-get keyword-values :current-indentation)))
     (setq end (point))
     (unless copy
+      ;; Add uniform fringe indicator to transcluded content
       (add-text-properties
        beg end
        `( local-map ,org-transclusion-map
           read-only t
           front-sticky t
-          ;; rear-nonticky seems better for
-          ;; src-lines to add "#+result" after C-c
-          ;; C-c
           rear-nonsticky t
           org-transclusion-id ,id
           org-transclusion-type ,type
           org-transclusion-pair ,tc-pair
-          org-transclusion-orig-keyword ,keyword-values))
+          org-transclusion-orig-keyword ,keyword-values
+          line-prefix ,(org-transclusion--make-fringe-indicator
+                        'org-transclusion-fringe)
+          wrap-prefix ,(org-transclusion--make-fringe-indicator
+                        'org-transclusion-fringe)))
+      ;; Put the transclusion overlay
+      (let ((ov-tc (text-clone-make-overlay beg end)))
+        (overlay-put ov-tc 'evaporate t)
+        (overlay-put ov-tc 'face 'org-transclusion)
+        (overlay-put ov-tc 'priority -60))
       ;; Put to the source overlay
       (overlay-put ov-src 'org-transclusion-by id)
       (overlay-put ov-src 'org-transclusion-buffer tc-buffer)
       (overlay-put ov-src 'evaporate t)
       (overlay-put ov-src 'face 'org-transclusion-source)
+      (overlay-put ov-src 'priority -60)
+      (overlay-put ov-src 'org-transclusion-pair tc-pair)
+      ;; Add modification hook to source overlay
       (overlay-put ov-src 'modification-hooks
                    '(org-transclusion-source-overlay-modified))
-      (overlay-put ov-src 'priority -60)
-
-      ;; Always apply fringe indicators (works with or without org-indent-mode)
+      ;; Add per-line fringe indicators to source buffer only
       (org-transclusion-add-fringe-to-region
-       sbuf sbeg send 'org-transclusion-source-fringe)
-      (org-transclusion-add-fringe-to-region
-       (current-buffer) beg end 'org-transclusion-fringe)
-
-      ;; TODO this should not be necessary, but it is at the moment
-      ;; live-sync-enclosing-element fails without tc-pair on source overlay
-      (overlay-put ov-src 'org-transclusion-pair tc-pair))
+       sbuf sbeg send 'org-transclusion-source-fringe))
     t))
 
 (defun org-transclusion-content-highest-org-headline ()
