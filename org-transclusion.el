@@ -1347,10 +1347,14 @@ terminal fringe (face property)."
 
 (defun org-transclusion--make-fringe-indicator (face)
   "Create fringe indicator string for FACE.
-Handles both graphical and terminal display modes."
+Handles both graphical and terminal display modes.
+Uses empty-line bitmap for source fringe, org-transclusion-fringe-bitmap
+for transclusion fringe to match original overlay-based appearance."
   (if (display-graphic-p)
-      (propertize "x" 'display
-                  `(left-fringe org-transclusion-fringe-bitmap ,face))
+      (let ((bitmap (if (eq face 'org-transclusion-source-fringe)
+                        'empty-line
+                      'org-transclusion-fringe-bitmap)))
+        (propertize "x" 'display `(left-fringe ,bitmap ,face)))
     (propertize "| " 'face face)))
 
 (defun org-transclusion--update-line-prefix (line-beg line-end prop-name new-value)
