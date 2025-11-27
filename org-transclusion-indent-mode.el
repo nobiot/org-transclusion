@@ -22,70 +22,44 @@
 ;;; Commentary:
 ;;  This file is part of Org-transclusion
 ;;  URL: https://github.com/nobiot/org-transclusion
+;;  
+;;  This extension ensures org-indent-mode properties are correctly
+;;  applied to transcluded content and refreshed after transclusion
+;;  removal.
 
 ;;; Code:
 
 (require 'org-indent)
-(declare-function org-transclusion-within-transclusion-p
-                  "org-transclusion")
+(declare-function org-transclusion-add-fringe-to-region "org-transclusion")
 
-(add-hook 'org-transclusion-after-add-functions
-          #'org-translusion-indent-add-properties)
+(defun org-transclusion-indent--add-properties-and-fringes (beg end)
+  "Ensure org-indent properties exist in transcluded region, then re-add fringes.
+BEG and END are the transcluded region bounds.
 
-(defun org-translusion-indent-add-properties (beg end)
-  "BEG END."
+The main package adds fringes during content insertion, but org-indent's
+after-change hook may not have run yet. This function ensures org-indent
+properties are set, then re-applies fringes that may have been overwritten."
   (when org-indent-mode
-    (advice-add #'org-indent-set-line-properties
-                :override
-                #'org-transclusion-indent-set-line-properties-ad)
+    ;; Ensure org-indent properties exist
     (org-indent-add-properties beg end)
-    (advice-remove #'org-indent-set-line-properties
-                   #'org-transclusion-indent-set-line-properties-ad)))
+    ;; Re-apply fringes (org-indent-add-properties may have overwritten them)
+    (org-transclusion-add-fringe-to-region
+     (current-buffer) beg end 'org-transclusion-fringe)))
 
-(defun org-transclusion-indent-set-line-properties-ad (level indentation &optional heading)
-  "Set prefix properties on current line an move to next one.
+(defun org-transclusion-indent--refresh-source-region (src-buf src-beg src-end)
+  "Refresh org-indent properties in source region after transclusion removal.
+SRC-BUF is the source buffer, SRC-BEG and SRC-END are the region bounds.
+This ensures visual indentation updates immediately when org-indent-mode
+is active."
+  (when (buffer-local-value 'org-indent-mode src-buf)
+    (with-current-buffer src-buf
+      (org-indent-add-properties src-beg src-end))))
 
-LEVEL is the current level of heading.  INDENTATION is the
-expected indentation when wrapping line.
-
-When optional argument HEADING is non-nil, assume line is at
-a heading.  Moreover, if it is `inlinetask', the first star will
-have `org-warning' face."
-
-  (let* ((line (aref (pcase heading
-                       (`nil org-indent--text-line-prefixes)
-                       (`inlinetask org-indent--inlinetask-line-prefixes)
-                       (_ org-indent--heading-line-prefixes))
-                     level))
-         (wrap
-          (org-add-props
-              (concat line
-                      (if heading (concat (make-string level ?*) " ")
-                        (make-string indentation ?\s)))
-              nil 'face 'org-indent)))
-
-    ;; Org-transclusion's addition begin
-    (when (org-transclusion-within-transclusion-p)
-      (setq line
-            (concat line
-                    (propertize
-                     "x"
-                     'display
-                     '(left-fringe org-transclusion-fringe-bitmap
-                                   org-transclusion-fringe))))
-      (setq wrap
-            (concat line
-                    (propertize
-                     "x"
-                     'display
-                     '(left-fringe org-transclusion-fringe-bitmap
-                                   org-transclusion-fringe)))))
-    ;; Org-transclusion's addition end
-
-    ;; Add properties down to the next line to indent empty lines.
-    (add-text-properties (line-beginning-position) (line-beginning-position 2)
-                         `(line-prefix ,line wrap-prefix ,wrap)))
-  (forward-line))
+;; Register hooks when extension loads
+(add-hook 'org-transclusion-after-add-functions
+          #'org-transclusion-indent--add-properties-and-fringes)
+(add-hook 'org-transclusion-after-remove-functions
+          #'org-transclusion-indent--refresh-source-region)
 
 (provide 'org-transclusion-indent-mode)
 
