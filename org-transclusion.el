@@ -1467,27 +1467,39 @@ Returns the cleaned prefix, or nil if prefix was only the fringe indicator."
 (defun org-transclusion-remove-fringe-from-region (buffer beg end)
   "Remove fringe indicators from each line in BUFFER between BEG and END.
 This restores `line-prefix' and `wrap-prefix' to their state before
-`org-transclusion-add-fringe-to-region' was called."
+`org-transclusion-add-fringe-to-region' was called.
+
+When org-indent-mode is active, removes only the fringe portion while
+preserving indentation. When org-indent-mode is inactive, removes the
+properties entirely."
   (with-current-buffer buffer
     (with-silent-modifications
       (save-excursion
         (goto-char beg)
-        (while (< (point) end)
-          (let* ((line-beg (line-beginning-position))
-                 (line-end (min (1+ line-beg) end))
-                 (line-prefix (get-text-property line-beg 'line-prefix))
-                 (wrap-prefix (get-text-property line-beg 'wrap-prefix)))
-            ;; Clean line-prefix
-            (when line-prefix
-              (org-transclusion--update-line-prefix
-               line-beg line-end 'line-prefix
-               (org-transclusion-remove-fringe-from-prefix line-prefix)))
-            ;; Clean wrap-prefix
-            (when wrap-prefix
-              (org-transclusion--update-line-prefix
-               line-beg line-end 'wrap-prefix
-               (org-transclusion-remove-fringe-from-prefix wrap-prefix))))
-          (forward-line 1))))))
+        (let ((org-indent-active-p (and (boundp 'org-indent-mode)
+                                        org-indent-mode)))
+          (while (< (point) end)
+            (let* ((line-beg (line-beginning-position))
+                   (line-end (min (1+ line-beg) end))
+                   (line-prefix (get-text-property line-beg 'line-prefix))
+                   (wrap-prefix (get-text-property line-beg 'wrap-prefix)))
+              
+              (if org-indent-active-p
+                  ;; org-indent-mode active: remove fringe, keep indentation
+                  (progn
+                    (when line-prefix
+                      (org-transclusion--update-line-prefix
+                       line-beg line-end 'line-prefix
+                       (org-transclusion-remove-fringe-from-prefix line-prefix)))
+                    (when wrap-prefix
+                      (org-transclusion--update-line-prefix
+                       line-beg line-end 'wrap-prefix
+                       (org-transclusion-remove-fringe-from-prefix wrap-prefix))))
+                
+                ;; org-indent-mode inactive: remove properties entirely
+                (org-transclusion--update-line-prefix line-beg line-end 'line-prefix nil)
+                (org-transclusion--update-line-prefix line-beg line-end 'wrap-prefix nil)))
+            (forward-line 1)))))))
 
 ;;;; Hook
 (defun org-transclusion-source-overlay-modified (ov after-p _beg _end &optional _len)
