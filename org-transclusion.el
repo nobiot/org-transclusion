@@ -560,6 +560,18 @@ When success, return the beginning point of the keyword re-inserted."
           beg
         (when (org-transclusion-within-live-sync-p)
           (org-transclusion-live-sync-exit))
+
+        ;; Clean up source buffer fringe indicators before deleting overlay
+        (when (overlay-buffer tc-pair-ov)
+          (let ((src-buf (overlay-buffer tc-pair-ov))
+                (src-beg (overlay-start tc-pair-ov))
+                (src-end (overlay-end tc-pair-ov)))
+            ;; Remove our fringe indicators from source
+            (org-transclusion-remove-fringe-from-region src-buf src-beg src-end)
+            ;; Run hooks for extensions to do additional cleanup
+            (run-hook-with-args 'org-transclusion-after-remove-functions
+                                src-buf src-beg src-end)))
+
         (delete-overlay tc-pair-ov)
         (org-transclusion-with-inhibit-read-only
           (save-excursion
