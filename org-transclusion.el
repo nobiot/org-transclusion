@@ -1302,21 +1302,25 @@ is non-nil."
              :src-end (point-max))))))
 
 ;;-----------------------------------------------------------------------------
-;;; Utility Functions
-
-(defun org-transclusion-append-fringe-to-prefix (existing-prefix face)
-  "Append fringe indicator to EXISTING-PREFIX, preserving it.
-FACE determines the fringe color (org-transclusion-source-fringe or
-org-transclusion-fringe).
-Returns concatenated string suitable for `line-prefix' or `wrap-prefix'."
-  (let ((fringe-indicator
-         (if (display-graphic-p)
-             (propertize "x" 'display
-                         `(left-fringe org-transclusion-fringe-bitmap ,face))
-           (propertize "| " 'face face))))
-    (if existing-prefix
-        (concat existing-prefix fringe-indicator)
-      fringe-indicator)))
+;;; Helper Functions
+(defun org-transclusion--fringe-spec-p (prop-value)
+  "Return non-nil if PROP-VALUE represents a transclusion fringe indicator.
+Checks both graphical fringe (display property) and
+terminal fringe (face property)."
+  (or
+   ;; Graphical: (left-fringe org-transclusion-fringe-bitmap FACE)
+   (and (listp prop-value)
+        (eq (car prop-value) 'left-fringe)
+        (eq (cadr prop-value) 'org-transclusion-fringe-bitmap)
+        (memq (nth 2 prop-value)
+              '(org-transclusion-source-fringe
+                org-transclusion-fringe)))
+   ;; Terminal: face property with our face names
+   (memq prop-value
+         '(org-transclusion-source-fringe
+           org-transclusion-fringe
+           org-transclusion-source
+           org-transclusion))))
 
 (defun org-transclusion--make-fringe-indicator (face)
   "Create fringe indicator string for FACE.
@@ -1326,22 +1330,48 @@ Handles both graphical and terminal display modes."
                   `(left-fringe org-transclusion-fringe-bitmap ,face))
     (propertize "| " 'face face)))
 
+(defun org-transclusion--update-line-prefix (line-beg line-end prop-name new-value)
+  "Update text property PROP-NAME to NEW-VALUE for line at LINE-BEG.
+LINE-END is the end of the region to update.
+If NEW-VALUE is nil, removes the property entirely."
+  (if new-value
+      (put-text-property line-beg line-end prop-name new-value)
+    (remove-text-properties line-beg line-end (list prop-name nil))))
+
+;;; Fringe Management
+
+;;;; Fringe Detection
+
 (defun org-transclusion-prefix-has-fringe-p (prefix)
-  "Return non-nil if PREFIX already contains a fringe indicator.
-Checks for both graphical fringe display property and terminal text."
+  "Return non-nil if PREFIX string contains a transclusion fringe indicator.
+Checks for both graphical fringe (display property) and terminal
+fringe (face property)."
   (when (stringp prefix)
-    (let ((pos 0)
-          (found nil))
-      (while (and (not found) (< pos (length prefix)))
-        (let ((display-prop (get-text-property pos 'display prefix)))
-          (when (and (consp display-prop)
-                     (eq (car display-prop) 'left-fringe)
-                     (eq (nth 1 display-prop) 'org-transclusion-fringe-bitmap))
-            (setq found t)))
-        (setq pos (1+ pos)))
-      (or found
-          ;; Also check for terminal fallback "| "
-          (string-match-p (regexp-quote "| ") prefix)))))
+    (let ((pos 0))
+      (catch 'found
+        ;; Check display properties (graphical fringe)
+        (while (setq pos (next-single-property-change pos 'display prefix))
+          (when (org-transclusion--fringe-spec-p
+                 (get-text-property pos 'display prefix))
+            (throw 'found t)))
+        ;; Check face properties (terminal fringe)
+        (setq pos 0)
+        (while (setq pos (next-single-property-change pos 'face prefix))
+          (when (org-transclusion--fringe-spec-p
+                 (get-text-property pos 'face prefix))
+            (throw 'found t)))
+        nil))))
+
+;;;; Fringe Creation
+(defun org-transclusion-append-fringe-to-prefix (existing-prefix face)
+  "Append fringe indicator to EXISTING-PREFIX, preserving it.
+FACE determines the fringe color (org-transclusion-source-fringe or
+org-transclusion-fringe).
+Returns concatenated string suitable for `line-prefix' or `wrap-prefix'."
+  (let ((fringe-indicator (org-transclusion--make-fringe-indicator face)))
+    (if existing-prefix
+        (concat existing-prefix fringe-indicator)
+      fringe-indicator)))
 
 (defun org-transclusion-add-fringe-to-region (buffer beg end face)
   "Add fringe indicator to each line in BUFFER between BEG and END.
@@ -1365,23 +1395,72 @@ adds fringe-only prefix."
             (if line-prefix
                 ;; org-indent-mode case: append to existing prefix
                 (unless (org-transclusion-prefix-has-fringe-p line-prefix)
-                  (put-text-property line-beg line-end 'line-prefix
-                                     (org-transclusion-append-fringe-to-prefix
-                                      line-prefix face)))
+                  (org-transclusion--update-line-prefix
+                   line-beg line-end 'line-prefix
+                   (org-transclusion-append-fringe-to-prefix line-prefix face)))
               ;; Non-indent case: add fringe-only prefix
-              (put-text-property line-beg line-end 'line-prefix fringe-only))
+              (org-transclusion--update-line-prefix
+               line-beg line-end 'line-prefix fringe-only))
 
             ;; Handle wrap-prefix
             (if wrap-prefix
                 ;; org-indent-mode case: append to existing prefix
                 (unless (org-transclusion-prefix-has-fringe-p wrap-prefix)
-                  (put-text-property line-beg line-end 'wrap-prefix
-                                     (org-transclusion-append-fringe-to-prefix
-                                      wrap-prefix face)))
+                  (org-transclusion--update-line-prefix
+                   line-beg line-end 'wrap-prefix
+                   (org-transclusion-append-fringe-to-prefix wrap-prefix face)))
               ;; Non-indent case: add fringe-only prefix
-              (put-text-property line-beg line-end 'wrap-prefix fringe-only)))
+              (org-transclusion--update-line-prefix
+               line-beg line-end 'wrap-prefix fringe-only)))
           (forward-line 1))))))
 
+;;;; Fringe Removal
+(defun org-transclusion-remove-fringe-from-prefix (prefix)
+  "Remove fringe indicator from PREFIX string.
+Returns the cleaned prefix, or nil if prefix was only the fringe indicator."
+  (when (stringp prefix)
+    (let ((cleaned prefix)
+          (pos 0))
+      ;; Remove all fringe indicators (both graphical and terminal)
+      (while (setq pos (next-single-property-change pos nil cleaned))
+        (let ((display-prop (get-text-property pos 'display cleaned))
+              (face-prop (get-text-property pos 'face cleaned)))
+          (when (or (org-transclusion--fringe-spec-p display-prop)
+                    (org-transclusion--fringe-spec-p face-prop))
+            ;; Found a fringe indicator, remove it
+            (setq cleaned (concat (substring cleaned 0 pos)
+                                  (substring cleaned (1+ pos))))
+            ;; Adjust position since we removed a character
+            (setq pos (max 0 (1- pos))))))
+      ;; Return nil if nothing left, otherwise return cleaned prefix
+      (if (string-empty-p cleaned) nil cleaned))))
+
+(defun org-transclusion-remove-fringe-from-region (buffer beg end)
+  "Remove fringe indicators from each line in BUFFER between BEG and END.
+This restores `line-prefix' and `wrap-prefix' to their state before
+`org-transclusion-add-fringe-to-region' was called."
+  (with-current-buffer buffer
+    (with-silent-modifications
+      (save-excursion
+        (goto-char beg)
+        (while (< (point) end)
+          (let* ((line-beg (line-beginning-position))
+                 (line-end (min (1+ line-beg) end))
+                 (line-prefix (get-text-property line-beg 'line-prefix))
+                 (wrap-prefix (get-text-property line-beg 'wrap-prefix)))
+            ;; Clean line-prefix
+            (when line-prefix
+              (org-transclusion--update-line-prefix
+               line-beg line-end 'line-prefix
+               (org-transclusion-remove-fringe-from-prefix line-prefix)))
+            ;; Clean wrap-prefix
+            (when wrap-prefix
+              (org-transclusion--update-line-prefix
+               line-beg line-end 'wrap-prefix
+               (org-transclusion-remove-fringe-from-prefix wrap-prefix))))
+          (forward-line 1))))))
+
+;;;; Hook
 (defun org-transclusion-source-overlay-modified (ov after-p _beg _end &optional _len)
   "Update source overlay OV indentation after modification.
 Called by overlay modification hooks. AFTER-P is t after modification.
@@ -1393,6 +1472,7 @@ dynamic updates."
       (org-transclusion-add-fringe-to-region
        (overlay-buffer ov) ov-beg ov-end 'org-transclusion-source-fringe))))
 
+;;;; Utility Functions
 (defun org-transclusion-find-source-marker (beg end)
   "Return marker that points to source begin point for transclusion.
 It works on the transclusion region at point.  BEG and END are
