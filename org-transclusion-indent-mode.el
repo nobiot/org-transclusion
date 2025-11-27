@@ -30,21 +30,18 @@
 ;;; Code:
 
 (require 'org-indent)
-(declare-function org-transclusion-add-fringe-to-region "org-transclusion")
 
-(defun org-transclusion-indent--add-properties-and-fringes (beg end)
-  "Ensure org-indent properties exist in transcluded region, then re-add fringes.
+(defun org-transclusion-indent--add-properties (beg end)
+  "Ensure org-indent properties exist in transcluded region.
 BEG and END are the transcluded region bounds.
 
-The main package adds fringes during content insertion, but org-indent's
-after-change hook may not have run yet. This function ensures org-indent
-properties are set, then re-applies fringes that may have been overwritten."
+The main package adds uniform fringe indicators to transcluded content
+via text properties. This function ensures org-indent-mode's indentation
+properties are applied if org-indent-mode is active, but does not modify
+the fringe indicators."
   (when org-indent-mode
     ;; Ensure org-indent properties exist
-    (org-indent-add-properties beg end)
-    ;; Re-apply fringes (org-indent-add-properties may have overwritten them)
-    (org-transclusion-add-fringe-to-region
-     (current-buffer) beg end 'org-transclusion-fringe)))
+    (org-indent-add-properties beg end)))
 
 (defun org-transclusion-indent--refresh-source-region (src-buf src-beg src-end)
   "Refresh org-indent properties in source region after transclusion removal.
@@ -57,7 +54,7 @@ is active."
 
 ;; Register hooks when extension loads
 (add-hook 'org-transclusion-after-add-functions
-          #'org-transclusion-indent--add-properties-and-fringes)
+          #'org-transclusion-indent--add-properties)
 (add-hook 'org-transclusion-after-remove-functions
           #'org-transclusion-indent--refresh-source-region)
 
