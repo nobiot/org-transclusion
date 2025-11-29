@@ -1406,42 +1406,46 @@ Returns concatenated string suitable for `line-prefix' or `wrap-prefix'."
   "Add fringe indicator to each line in BUFFER between BEG and END.
 FACE determines the fringe color.
 
-When org-indent-mode is active (line-prefix/wrap-prefix properties exist),
+When org-indent-mode is active (`line-prefix'/`wrap-prefix' properties exist),
 appends fringe to existing indentation. When org-indent-mode is inactive,
 adds fringe-only prefix."
   (with-current-buffer buffer
     (with-silent-modifications
       (save-excursion
         (goto-char beg)
-        (while (< (point) end)
-          (let* ((line-beg (line-beginning-position))
-                 (line-end (min (1+ line-beg) end))
-                 (line-prefix (get-text-property line-beg 'line-prefix))
-                 (wrap-prefix (get-text-property line-beg 'wrap-prefix))
-                 (fringe-only (org-transclusion--make-fringe-indicator face)))
+        (catch 'done
+          (while (< (point) end)
+            (let* ((line-beg (line-beginning-position))
+                   (line-end (min (line-end-position) end))
+                   (line-prefix (get-text-property line-beg 'line-prefix))
+                   (wrap-prefix (get-text-property line-beg 'wrap-prefix))
+                   (fringe-only (org-transclusion--make-fringe-indicator face)))
 
-            ;; Handle line-prefix
-            (if line-prefix
-                ;; org-indent-mode case: append to existing prefix
-                (unless (org-transclusion-prefix-has-fringe-p line-prefix)
-                  (org-transclusion--update-line-prefix
-                   line-beg line-end 'line-prefix
-                   (org-transclusion-append-fringe-to-prefix line-prefix face)))
-              ;; Non-indent case: add fringe-only prefix
-              (org-transclusion--update-line-prefix
-               line-beg line-end 'line-prefix fringe-only))
+              ;; Handle line-prefix
+              (if line-prefix
+                  ;; org-indent-mode case: append to existing prefix
+                  (unless (org-transclusion-prefix-has-fringe-p line-prefix)
+                    (org-transclusion--update-line-prefix
+                     line-beg line-end 'line-prefix
+                     (org-transclusion-append-fringe-to-prefix line-prefix face)))
+                ;; Non-indent case: add fringe-only prefix
+                (org-transclusion--update-line-prefix
+                 line-beg line-end 'line-prefix fringe-only))
 
-            ;; Handle wrap-prefix
-            (if wrap-prefix
-                ;; org-indent-mode case: append to existing prefix
-                (unless (org-transclusion-prefix-has-fringe-p wrap-prefix)
-                  (org-transclusion--update-line-prefix
-                   line-beg line-end 'wrap-prefix
-                   (org-transclusion-append-fringe-to-prefix wrap-prefix face)))
-              ;; Non-indent case: add fringe-only prefix
-              (org-transclusion--update-line-prefix
-               line-beg line-end 'wrap-prefix fringe-only)))
-          (forward-line 1))))))
+              ;; Handle wrap-prefix
+              (if wrap-prefix
+                  ;; org-indent-mode case: append to existing prefix
+                  (unless (org-transclusion-prefix-has-fringe-p wrap-prefix)
+                    (org-transclusion--update-line-prefix
+                     line-beg line-end 'wrap-prefix
+                     (org-transclusion-append-fringe-to-prefix wrap-prefix face)))
+                ;; Non-indent case: add fringe-only prefix
+                (org-transclusion--update-line-prefix
+                 line-beg line-end 'wrap-prefix fringe-only)))
+
+            ;; Try to advance to next line; if we can't, we're done
+            (when (not (zerop (forward-line 1)))
+              (throw 'done nil))))))))
 
 ;;;; Fringe Removal
 (defun org-transclusion-remove-fringe-from-prefix (prefix)
