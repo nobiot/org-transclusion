@@ -22,37 +22,232 @@
 ;;; Commentary:
 ;;  This file is part of Org-transclusion
 ;;  URL: https://github.com/nobiot/org-transclusion
-;;  
+;;
 ;;  This extension ensures org-indent-mode properties are correctly
 ;;  applied to transcluded content and refreshed after transclusion
-;;  removal.
+;;  removal. It also preserves fringe indicators in source buffers
+;;  when org-indent-mode regenerates line-prefix properties.
+;;
+;;  The timing mechanism for synchronizing with org-indent's asynchronous
+;;  initialization is copied from org-modern-indent.
 
 ;;; Code:
 
 (require 'org-indent)
 
+;;;; Variables
+
+(defvar-local org-transclusion-indent--timer nil
+  "Timer for debounced fringe re-application.")
+
+(defvar-local org-transclusion-indent--last-change-tick nil
+  "Buffer modification tick at last fringe application.")
+
+(defvar-local org-transclusion-indent--has-overlays nil
+  "Non-nil if buffer has ever had source overlays.
+Used to prevent premature mode deactivation during buffer refresh.")
+
+(defvar-local org-transclusion-indent--init nil
+  "Initialization state for waiting on org-indent.
+Either nil, t (initialized), or (TIMER ATTEMPT-COUNT).")
+
+;;;; Helper Functions
+
+(defun org-transclusion-indent--find-source-overlays ()
+  "Return list of all transclusion source overlays in current buffer."
+  (seq-filter
+   (lambda (ov) (overlay-get ov 'org-transclusion-by))
+   (overlays-in (point-min) (point-max))))
+
+(defun org-transclusion-indent--reapply-all-fringes ()
+  "Re-apply fringe indicators to all transcluded regions in buffer.
+This function is called after any change that might have removed
+`line-prefix' or `wrap-prefix' properties."
+  (when (buffer-live-p (current-buffer))
+    (let ((current-tick (buffer-modified-tick))
+          (overlays (org-transclusion-indent--find-source-overlays)))
+      ;; Track if we have overlays
+      (when overlays
+        (setq org-transclusion-indent--has-overlays t))
+
+      ;; Only re-apply if buffer actually changed since last application
+      (unless (eq current-tick org-transclusion-indent--last-change-tick)
+        (setq org-transclusion-indent--last-change-tick current-tick)
+        (dolist (ov overlays)
+          (let ((ov-beg (overlay-start ov))
+                (ov-end (overlay-end ov)))
+            (when (and ov-beg ov-end)
+              ;; Check if fringes are missing by examining first line
+              (save-excursion
+                (goto-char ov-beg)
+                (let* ((line-beg (line-beginning-position))
+                       (line-end (min (1+ line-beg) ov-end))
+                       (line-prefix (get-text-property line-beg 'line-prefix)))
+                  ;; If line-prefix exists but has no fringe, re-apply
+                  (when (and line-prefix
+                             (not (org-transclusion-prefix-has-fringe-p line-prefix)))
+                    (org-transclusion-add-fringe-to-region
+                     (current-buffer) ov-beg ov-end
+                     'org-transclusion-source-fringe)))))))))))
+
+(defun org-transclusion-indent--schedule-reapply ()
+  "Schedule fringe re-application after a short delay.
+This debounces rapid changes to avoid excessive processing."
+  (when org-transclusion-indent--timer
+    (cancel-timer org-transclusion-indent--timer))
+  (setq org-transclusion-indent--timer
+        (run-with-idle-timer 0.1 nil
+                             (lambda (buf)
+                               (when (buffer-live-p buf)
+                                 (with-current-buffer buf
+                                   (org-transclusion-indent--reapply-all-fringes))))
+                             (current-buffer))))
+
+(defun org-transclusion-indent--after-change (_beg _end _len)
+  "Schedule fringe re-application after buffer change.
+Added to `after-change-functions' in source buffers."
+  (org-transclusion-indent--schedule-reapply))
+
+(defun org-transclusion-indent--check-and-disable ()
+  "Disable mode if no source overlays remain in buffer.
+Only disables if overlays have been checked and confirmed absent,
+not during temporary states like buffer refresh."
+  (when (and org-transclusion-indent--has-overlays
+             (not (org-transclusion-indent--find-source-overlays)))
+    ;; Wait a bit to ensure this isn't just a temporary state
+    (run-with-idle-timer
+     0.2 nil
+     (lambda (buf)
+       (when (buffer-live-p buf)
+         (with-current-buffer buf
+           (unless (org-transclusion-indent--find-source-overlays)
+             (org-transclusion-indent-mode -1)))))
+     (current-buffer))))
+
+(defun org-transclusion-indent--wait-and-init (buf)
+  "Wait for org-indent to finish initializing BUF, then apply fringes.
+Copied from org-modern-indent's timing mechanism."
+  (if (or (not (bound-and-true-p org-indent-agentized-buffers))
+          (memq buf org-indent-agentized-buffers))
+      ;; org-indent is ready
+      (org-transclusion-indent--init buf)
+    ;; Still waiting
+    (when (buffer-live-p buf)
+      (with-current-buffer buf
+        (if org-transclusion-indent--init
+            (let ((cnt (cl-incf (cadr org-transclusion-indent--init))))
+              (if (> cnt 5)
+                  (progn
+                    (message "org-transclusion-indent-mode: Gave up waiting for %s to initialize" buf)
+                    (setq org-transclusion-indent--init t))
+                (timer-activate
+                 (timer-set-time (car org-transclusion-indent--init)
+                                 (time-add (current-time) 0.2)))))
+          (setq org-transclusion-indent--init
+                (list (run-at-time 0.1 nil #'org-transclusion-indent--wait-and-init buf)
+                      1)))))))
+
+(defun org-transclusion-indent--init (buf)
+  "Initialize indent mode in BUF after org-indent completes.
+To be added to `org-indent-post-buffer-init-functions'."
+  (when (buffer-live-p buf)
+    (with-current-buffer buf
+      (setq org-transclusion-indent--init t)
+      (org-transclusion-indent--reapply-all-fringes))))
+
+(defun org-transclusion-indent--auto-enable-maybe ()
+  "Auto-enable indent mode if source overlays are detected.
+Added to `post-command-hook' in `org-mode' buffers with `org-indent-mode'."
+  (when (and (not org-transclusion-indent-mode)
+             (org-transclusion-indent--find-source-overlays))
+    (org-transclusion-indent-mode +1)))
+
+;;;; Destination Buffer Support
+
 (defun org-transclusion-indent--add-properties (beg end)
   "Ensure org-indent properties exist in transcluded region.
-BEG and END are the transcluded region bounds.
-
-The main package adds uniform fringe indicators to transcluded content
-via text properties. This function ensures org-indent-mode's indentation
-properties are applied if org-indent-mode is active, but does not modify
-the fringe indicators."
+BEG and END are the transcluded region bounds."
   (when org-indent-mode
-    ;; Ensure org-indent properties exist
     (org-indent-add-properties beg end)))
 
 (defun org-transclusion-indent--refresh-source-region (src-buf src-beg src-end)
   "Refresh org-indent properties in source region after transclusion removal.
-SRC-BUF is the source buffer, SRC-BEG and SRC-END are the region bounds.
-This ensures visual indentation updates immediately when org-indent-mode
-is active."
+SRC-BUF is the source buffer, SRC-BEG and SRC-END are the region bounds."
   (when (buffer-local-value 'org-indent-mode src-buf)
     (with-current-buffer src-buf
-      (org-indent-add-properties src-beg src-end))))
+      (org-indent-add-properties src-beg src-end)
+      ;; Check if mode should be disabled
+      (when (and (boundp 'org-transclusion-indent-mode)
+                 org-transclusion-indent-mode)
+        (org-transclusion-indent--check-and-disable)))))
 
-;; Register hooks when extension loads
+;;;; Minor Mode Definition
+
+;;;###autoload
+(define-minor-mode org-transclusion-indent-mode
+  "Minor mode for org-indent-mode support in org-transclusion.
+
+This mode serves two purposes:
+
+1. In destination buffers: ensures org-indent properties are applied
+   to transcluded content.
+
+2. In source buffers: preserves fringe indicators when org-indent-mode
+   regenerates `line-prefix' properties.
+
+The mode auto-activates in source buffers when transclusion source
+overlays are detected, and auto-deactivates when all transclusions
+are removed."
+  :init-value nil
+  :lighter " OT-Indent"
+  :group 'org-transclusion
+  (if org-transclusion-indent-mode
+      (progn
+        ;; Install hooks for source buffer fringe preservation
+        (add-hook 'after-change-functions
+                  #'org-transclusion-indent--after-change nil t)
+
+        ;; Register with org-indent or wait for it
+        (cond
+         ;; Already initialized before, just toggle
+         ((or (called-interactively-p 'any) org-transclusion-indent--init)
+          (org-transclusion-indent--init (current-buffer)))
+         ;; Register with buffer init hook if available
+         ((boundp 'org-indent-post-buffer-init-functions)
+          (add-hook 'org-indent-post-buffer-init-functions
+                    #'org-transclusion-indent--init nil t))
+         ;; Fallback: wait for org-indent
+         (t (org-transclusion-indent--wait-and-init (current-buffer)))))
+
+    ;; Cleanup
+    (remove-hook 'after-change-functions
+                 #'org-transclusion-indent--after-change t)
+    (when (boundp 'org-indent-post-buffer-init-functions)
+      (remove-hook 'org-indent-post-buffer-init-functions
+                   #'org-transclusion-indent--init t))
+    (when org-transclusion-indent--timer
+      (cancel-timer org-transclusion-indent--timer)
+      (setq org-transclusion-indent--timer nil))
+    (when (and (listp org-transclusion-indent--init)
+               (timerp (car org-transclusion-indent--init)))
+      (cancel-timer (car org-transclusion-indent--init)))
+    (setq org-transclusion-indent--has-overlays nil
+          org-transclusion-indent--init nil)))
+
+;;;###autoload
+(defun org-transclusion-indent-mode-setup ()
+  "Set up auto-activation of `indent mode' in `org-mode' buffers.
+Adds `post-command-hook' to detect when source overlays appear."
+  (when (and (derived-mode-p 'org-mode)
+             (bound-and-true-p org-indent-mode))
+    (add-hook 'post-command-hook
+              #'org-transclusion-indent--auto-enable-maybe nil t)))
+
+;; Auto-setup in org-mode buffers - add late to hook like org-modern-indent
+(add-hook 'org-mode-hook #'org-transclusion-indent-mode-setup 90)
+
+;;;; Hook Registration
+
 (add-hook 'org-transclusion-after-add-functions
           #'org-transclusion-indent--add-properties)
 (add-hook 'org-transclusion-after-remove-functions

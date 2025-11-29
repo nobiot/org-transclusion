@@ -1510,8 +1510,11 @@ dynamic updates."
   (when (and after-p (overlay-buffer ov))
     (let ((ov-beg (overlay-start ov))
           (ov-end (overlay-end ov)))
-      (org-transclusion-add-fringe-to-region
-       (overlay-buffer ov) ov-beg ov-end 'org-transclusion-source-fringe))))
+      ;; Only re-apply fringes if org-transclusion-indent-mode is NOT active
+      ;; When indent-mode is active, its after-change-function handles this
+      (unless (buffer-local-value 'org-transclusion-indent-mode (overlay-buffer ov))
+        (org-transclusion-add-fringe-to-region
+         (overlay-buffer ov) ov-beg ov-end 'org-transclusion-source-fringe)))))
 
 ;;;; Utility Functions
 (defun org-transclusion-find-source-marker (beg end)
