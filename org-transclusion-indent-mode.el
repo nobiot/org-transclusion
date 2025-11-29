@@ -25,8 +25,9 @@
 ;;
 ;;  This extension ensures org-indent-mode properties are correctly
 ;;  applied to transcluded content and refreshed after transclusion
-;;  removal. It also preserves fringe indicators in source buffers
-;;  when org-indent-mode regenerates line-prefix properties.
+;;  removal. It also preserves fringe indicators in both source and
+;;  destination buffers when org-indent-mode regenerates line-prefix
+;;  properties.
 ;;
 ;;  The timing mechanism for synchronizing with org-indent's asynchronous
 ;;  initialization is copied from org-modern-indent.
@@ -164,11 +165,20 @@ Added to `post-command-hook' in `org-mode' buffers with `org-indent-mode'."
 
 ;;;; Destination Buffer Support
 
-(defun org-transclusion-indent--add-properties (beg end)
-  "Ensure org-indent properties exist in transcluded region.
-BEG and END are the transcluded region bounds."
+(defun org-transclusion-indent--add-properties-and-fringes (beg end)
+  "Ensure org-indent properties and fringe indicators in transcluded region.
+BEG and END are the transcluded region bounds.
+
+When org-indent-mode is active, `org-indent-add-properties' overwrites
+the uniform `line-prefix' and `wrap-prefix' properties set by the main
+package, removing fringe indicators. This function re-applies fringes
+by appending them to org-indent's indentation prefixes."
   (when org-indent-mode
-    (org-indent-add-properties beg end)))
+    ;; First ensure org-indent properties exist
+    (org-indent-add-properties beg end)
+    ;; Then re-apply fringe indicators to destination buffer
+    (org-transclusion-add-fringe-to-region
+     (current-buffer) beg end 'org-transclusion-fringe)))
 
 (defun org-transclusion-indent--refresh-source-region (src-buf src-beg src-end)
   "Refresh org-indent properties in source region after transclusion removal.
@@ -190,7 +200,7 @@ SRC-BUF is the source buffer, SRC-BEG and SRC-END are the region bounds."
 This mode serves two purposes:
 
 1. In destination buffers: ensures org-indent properties are applied
-   to transcluded content.
+   and fringe indicators are preserved when org-indent overwrites them.
 
 2. In source buffers: preserves fringe indicators when org-indent-mode
    regenerates `line-prefix' properties.
@@ -249,7 +259,7 @@ Adds `post-command-hook' to detect when source overlays appear."
 ;;;; Hook Registration
 
 (add-hook 'org-transclusion-after-add-functions
-          #'org-transclusion-indent--add-properties)
+          #'org-transclusion-indent--add-properties-and-fringes)
 (add-hook 'org-transclusion-after-remove-functions
           #'org-transclusion-indent--refresh-source-region)
 
