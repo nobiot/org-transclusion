@@ -52,7 +52,14 @@ Used to prevent premature mode deactivation during buffer refresh.")
   "Initialization state for waiting on org-indent.
 Either nil, t (initialized), or (TIMER ATTEMPT-COUNT).")
 
-;;;; Helper Functions
+;;;; Forward Declarations
+
+;; Silence byte-compiler warnings for functions defined in org-transclusion.el
+(declare-function org-transclusion-prefix-has-fringe-p "org-transclusion" (prefix))
+(declare-function org-transclusion-add-fringe-to-region "org-transclusion" (buffer beg end face))
+
+;; Variable defined by define-minor-mode later in this file
+(defvar org-transclusion-indent-mode)
 
 (defun org-transclusion-indent--find-source-overlays ()
   "Return list of all transclusion source overlays in current buffer."
@@ -82,7 +89,6 @@ This function is called after any change that might have removed
               (save-excursion
                 (goto-char ov-beg)
                 (let* ((line-beg (line-beginning-position))
-                       (line-end (min (1+ line-beg) ov-end))
                        (line-prefix (get-text-property line-beg 'line-prefix)))
                   ;; If line-prefix exists but has no fringe, re-apply
                   (when (and line-prefix
