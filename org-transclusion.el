@@ -1396,10 +1396,17 @@ fringe (face property)."
   "Append fringe indicator to EXISTING-PREFIX, preserving it.
 FACE determines the fringe color (org-transclusion-source-fringe or
 org-transclusion-fringe).
-Returns concatenated string suitable for `line-prefix' or `wrap-prefix'."
+Returns concatenated string suitable for `line-prefix' or `wrap-prefix'.
+
+In terminal mode, prepends fringe to place it at the left margin.
+In graphical mode, appends fringe to preserve indentation alignment."
   (let ((fringe-indicator (org-transclusion--make-fringe-indicator face)))
     (if existing-prefix
-        (concat existing-prefix fringe-indicator)
+        (if (display-graphic-p)
+            ;; Graphical: append fringe (invisible in fringe area)
+            (concat existing-prefix fringe-indicator)
+          ;; Terminal: prepend fringe to show at left margin
+          (concat fringe-indicator existing-prefix))
       fringe-indicator)))
 
 (defun org-transclusion-add-fringe-to-region (buffer beg end face)
