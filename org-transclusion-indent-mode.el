@@ -70,7 +70,13 @@ Either nil, t (initialized), or (TIMER ATTEMPT-COUNT).")
 (defun org-transclusion-indent--reapply-all-fringes ()
   "Re-apply fringe indicators to all transcluded regions in buffer.
 This function is called after any change that might have removed
-`line-prefix' or `wrap-prefix' properties."
+`line-prefix' or `wrap-prefix' properties.
+
+In graphical mode, optimizes by checking only the first line of each
+overlay region, since org-indent regenerates entire subtrees at once.
+
+In terminal mode, always re-applies fringes to all lines, since
+org-indent may regenerate individual lines during typing."
   (when (buffer-live-p (current-buffer))
     (let ((current-tick (buffer-modified-tick))
           (overlays (org-transclusion-indent--find-source-overlays)))
@@ -85,17 +91,21 @@ This function is called after any change that might have removed
           (let ((ov-beg (overlay-start ov))
                 (ov-end (overlay-end ov)))
             (when (and ov-beg ov-end)
-              ;; Check if fringes are missing by examining first line
-              (save-excursion
-                (goto-char ov-beg)
-                (let* ((line-beg (line-beginning-position))
-                       (line-prefix (get-text-property line-beg 'line-prefix)))
-                  ;; If line-prefix exists but has no fringe, re-apply
-                  (when (and line-prefix
-                             (not (org-transclusion-prefix-has-fringe-p line-prefix)))
-                    (org-transclusion-add-fringe-to-region
-                     (current-buffer) ov-beg ov-end
-                     'org-transclusion-source-fringe)))))))))))
+              (if (display-graphic-p)
+                  ;; Graphical mode: optimize by checking only first line
+                  (save-excursion
+                    (goto-char ov-beg)
+                    (let* ((line-beg (line-beginning-position))
+                           (line-prefix (get-text-property line-beg 'line-prefix)))
+                      (when (and line-prefix
+                                 (not (org-transclusion-prefix-has-fringe-p line-prefix)))
+                        (org-transclusion-add-fringe-to-region
+                         (current-buffer) ov-beg ov-end
+                         'org-transclusion-source-fringe))))
+                ;; Terminal mode: always re-apply to all lines
+                (org-transclusion-add-fringe-to-region
+                 (current-buffer) ov-beg ov-end
+                 'org-transclusion-source-fringe)))))))))
 
 (defun org-transclusion-indent--schedule-reapply ()
   "Schedule fringe re-application after a short delay.

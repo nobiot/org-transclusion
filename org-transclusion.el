@@ -1374,7 +1374,7 @@ If NEW-VALUE is nil, removes the property entirely."
 (defun org-transclusion-prefix-has-fringe-p (prefix)
   "Return non-nil if PREFIX string contains a transclusion fringe indicator.
 Checks for both graphical fringe (display property) and terminal
-fringe (face property)."
+fringe (face property within the string)."
   (when (stringp prefix)
     (let ((pos 0))
       (catch 'found
@@ -1383,12 +1383,18 @@ fringe (face property)."
           (when (org-transclusion--fringe-spec-p
                  (get-text-property pos 'display prefix))
             (throw 'found t)))
-        ;; Check face properties (terminal fringe)
-        (setq pos 0)
-        (while (setq pos (next-single-property-change pos 'face prefix))
-          (when (org-transclusion--fringe-spec-p
-                 (get-text-property pos 'face prefix))
-            (throw 'found t)))
+
+        ;; Check face properties within the string (terminal fringe only)
+        ;; Terminal fringes are strings like "| " with face property
+        (unless (display-graphic-p)
+          (setq pos 0)
+          (while (< pos (length prefix))
+            (let ((face (get-text-property pos 'face prefix)))
+              (when (memq face '(org-transclusion-source-fringe
+                                 org-transclusion-fringe))
+                (throw 'found t)))
+            (setq pos (1+ pos))))
+
         nil))))
 
 ;;;; Fringe Creation
