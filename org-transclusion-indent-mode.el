@@ -171,20 +171,27 @@ Added to `post-command-hook' in `org-mode' buffers with `org-indent-mode'."
 
 ;;;; Destination Buffer Support
 
-(defun org-transclusion-indent--add-properties-and-fringes (beg end)
+(defun org-transclusion-indent--add-properties-and-fringes (beg __end)
   "Ensure org-indent properties and fringe indicators in transcluded region.
-BEG and END are the transcluded region bounds.
+BEG and END are approximate bounds; we find actual bounds from text properties.
 
 When org-indent-mode is active, `org-indent-add-properties' overwrites
 the uniform `line-prefix' and `wrap-prefix' properties set by the main
 package, removing fringe indicators. This function re-applies fringes
 by appending them to org-indent's indentation prefixes."
   (when org-indent-mode
-    ;; First ensure org-indent properties exist
-    (org-indent-add-properties beg end)
-    ;; Then re-apply fringe indicators to destination buffer
-    (org-transclusion-add-fringe-to-region
-     (current-buffer) beg end 'org-transclusion-fringe)))
+    ;; Find actual transclusion bounds using text properties
+    ;; The transclusion that was just added should be at or near BEG
+    (save-excursion
+      (goto-char beg)
+      ;; Search forward for org-transclusion-type property
+      (when-let* ((match (text-property-search-forward 'org-transclusion-type))
+                  (actual-beg (prop-match-beginning match))
+                  (actual-end (prop-match-end match)))
+        ;; Apply org-indent properties and fringes to actual bounds
+        (org-indent-add-properties actual-beg actual-end)
+        (org-transclusion-add-fringe-to-region
+         (current-buffer) actual-beg actual-end 'org-transclusion-fringe)))))
 
 (defun org-transclusion-indent--refresh-source-region (src-buf src-beg src-end)
   "Refresh org-indent properties in source region after transclusion removal.
