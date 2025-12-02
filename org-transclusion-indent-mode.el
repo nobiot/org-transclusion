@@ -109,16 +109,22 @@ org-indent may regenerate individual lines during typing."
 
 (defun org-transclusion-indent--schedule-reapply ()
   "Schedule fringe re-application after a short delay.
-This debounces rapid changes to avoid excessive processing."
+This debounces rapid changes to avoid excessive processing.
+
+In graphical mode, uses a shorter delay (0.2s) since bitmap rendering
+is fast and flicker-free.  In terminal mode, uses a longer delay (0.7s)
+to reduce visible flicker of ASCII fringe indicators during rapid typing."
   (when org-transclusion-indent--timer
     (cancel-timer org-transclusion-indent--timer))
   (setq org-transclusion-indent--timer
-        (run-with-idle-timer 0.1 nil
-                             (lambda (buf)
-                               (when (buffer-live-p buf)
-                                 (with-current-buffer buf
-                                   (org-transclusion-indent--reapply-all-fringes))))
-                             (current-buffer))))
+        (run-with-idle-timer
+         (if (display-graphic-p) 0.2 0.7)  ; Shorter delay for graphical, longer for terminal
+         nil
+         (lambda (buf)
+           (when (buffer-live-p buf)
+             (with-current-buffer buf
+               (org-transclusion-indent--reapply-all-fringes))))
+         (current-buffer))))
 
 (defun org-transclusion-indent--after-change (_beg _end _len)
   "Schedule fringe re-application after buffer change.
