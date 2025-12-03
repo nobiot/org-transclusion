@@ -1,0 +1,85 @@
+#+title: Test Destination for org-transclusion-indent-mode
+#+startup: show2levels
+
+* Test Case 1: Short transclusion with following content
+Test that fringes don't extend beyond actual transcluded content.
+
+#+transclude: [[file:test-indent-mode-source.org::*testing - 1][testing - 1]]
+
+- line 1 - should NOT have fringe
+- line 2 - should NOT have fringe
+- line 3 - should NOT have fringe
+- line 4 - should NOT have fringe
+- line 5 - should NOT have fringe
+- line 6 - should NOT have fringe
+- line 7 - should NOT have fringe
+- line 8 - should NOT have fringe
+- line 9 - should NOT have fringe
+- line 10 - should NOT have fringe
+
+* Test Case 2: Full subtree transclusion
+Test fringe placement on complex nested structure.
+
+#+transclude: [[file:test-indent-mode-source.org::*TEST 2 - Complex nested structure][TEST 2]]
+
+* Test Case 3: Mid-level heading transclusion
+Test transclusion of heading with nested content.
+
+#+transclude: [[file:test-indent-mode-source.org::*HEADING 2.1][HEADING 2.1]]
+
+* Test Case 4: Multiple transclusions in sequence
+Test that multiple transclusions maintain correct fringe boundaries.
+
+#+transclude: [[file:test-indent-mode-source.org::*testing - 1][testing - 1]]
+
+Some text between transclusions.
+
+#+transclude: [[file:test-indent-mode-source.org::*TEST 3 - Single paragraph][TEST 3]]
+
+More text between transclusions.
+
+#+transclude: [[file:test-indent-mode-source.org::*Table example][Table example]]
+
+ Test Case 5: Transclusion within list
+Test fringe behavior when transclusion is nested in a list.
+
+- List item 1
+  - Nested item with transclusion below:
+    #+transclude: [[file:test-indent-mode-source.org::*testing - 1][testing - 1]]
+  - Another nested item after transclusion
+
+* Test Case 6: Top-level heading transclusion
+Test transclusion of a top-level heading.
+
+#+transclude: [[file:test-indent-mode-source.org::*Heading test 1 - edit this to test fringe persistence][Heading test 1]]
+
+* Test Case 7: Special blocks
+Test transclusion of quote blocks and code blocks.
+
+#+transclude: [[file:test-indent-mode-source.org::*Quote block][Quote block]]
+
+* Instructions for Testing
+
+1. Open both files in Emacs with org-indent-mode enabled
+2. Enable org-transclusion-mode in destination buffer
+3. Run M-x org-transclusion-add-all
+
+** Expected Behavior - Graphical Mode
+- Fringe bitmaps appear in left fringe area
+- Fringes only on transcluded content, not following lines
+- Editing source content preserves fringes
+- Editing headings preserves fringes on all child content
+
+** Expected Behavior - Terminal Mode (emacs -nw)
+- ASCII "| " appears at left margin before indentation
+- Fringes only on transcluded content, not following lines
+- Editing source content preserves fringes (may flicker briefly)
+- Longer idle delay (0.7s) reduces flicker during rapid typing
+
+** Common Issues to Verify Fixed
+- [ ] Fringes don't extend beyond transclusion (Test Case 1)
+- [ ] Fringes don't accumulate on repeated edits
+- [ ] Fringes persist when editing list items
+- [ ] Fringes persist when editing headings
+- [ ] Terminal fringes appear at left margin, not after indent
+- [ ] Multiple transclusions maintain separate boundaries (Test Case 4)

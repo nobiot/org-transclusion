@@ -1,0 +1,74 @@
+#+title: Test Source for org-transclusion-indent-mode
+
+* TEST 1
+** Heading test 1 - edit this to test fringe persistence
+*** testing - 1
+This is a short transclusion target for testing basic fringe placement.
+Edit this text to verify fringes remain visible during typing.
+
+*** Heading test 2
+- line item - edit this to test fringe on list items
+  - line item 2 - nested list item for testing indentation
+
+* TEST 2 - Complex nested structure
+** HEADING 1
+*** HEADING 2
+- list item 1 in heading 2
+  - list item 2 in heading 2 under list item 1
+    - deeply nested item for testing indentation levels
+
+Aliquam erat volutpat. Nunc eleifend leo vitae magna. In id erat non
+orci commodo lobortis. Proin neque massa, cursus ut, gravida ut,
+lobortis eget, lacus. Sed diam. Praesent fermentum tempor tellus.
+Nullam tempus. Mauris ac felis vel velit tristique imperdiet. Donec at
+pede. Etiam vel neque nec dui dignissim bibendum. Vivamus id enim.
+Phasellus neque orci, porta a, aliquet quis, semper a, massa.
+Phasellus purus. Pellentesque tristique imperdiet tortor. Nam euismod
+tellus id erat.
+
+**** HEADING 2.1
+Proin quam nisl, tincidunt et, mattis eget, convallis nec, purus.
+Edit this paragraph to test fringe behavior on heading content.
+
+***** HEADING 2.1.1
+- Proin neque massa, cursus ut, gravida ut, lobortis eget, lacus.
+- Nunc rutrum turpis sed pede.
+  - Nested item under second list item
+  - Another nested item for testing
+
+**** HEADING 2.2
+Aliquam erat volutpat. Nunc eleifend leo vitae magna. In id erat non orci
+commodo lobortis. Proin neque massa, cursus ut, gravida ut, lobortis eget,
+lacus. Sed diam. Praesent fermentum tempor tellus. Nullam tempus. Mauris ac
+felis vel velit tristique imperdiet. Donec at pede. Etiam vel neque nec dui
+dignissim bibendum. Vivamus id enim. Phasellus neque orci, porta a, aliquet
+quis, semper a, massa. Phasellus purus. Pellentesque tristique imperdiet tortor.
+Nam euismod tellus id erat.
+
+* TEST 3 - Single paragraph
+This is a single paragraph target for testing transclusion of simple content.
+Edit this text to verify fringe persistence on paragraph-level transclusions.
+
+* TEST 4 - Table and code
+** Table example
+| Column 1 | Column 2 | Column 3 |
+|----------+----------+----------|
+| Data 1   | Data 2   | Data 3   |
+| Data 4   | Data 5   | Data 6   |
+
+** Code block example
+#+begin_src elisp
+(defun test-function ()
+  "A test function for transclusion."
+  (message "Testing transclusion with code blocks"))
+#+end_src
+
+* TEST 5 - Mixed content with quotes
+** Quote block
+#+begin_quote
+This is a quote block to test transclusion of special blocks.
+Edit this to verify fringe behavior on quoted content.
+#+end_quote
+
+** Regular text after quote
+This paragraph follows the quote block to test mixed content transclusion.
