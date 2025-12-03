@@ -1333,10 +1333,11 @@ is non-nil."
 Checks both graphical fringe (display property) and
 terminal fringe (face property)."
   (or
-   ;; Graphical: (left-fringe org-transclusion-fringe-bitmap FACE)
+   ;; Graphical: (left-fringe BITMAP FACE)
+   ;; BITMAP can be 'empty-line (source) or 'org-transclusion-fringe-bitmap (destination)
    (and (listp prop-value)
         (eq (car prop-value) 'left-fringe)
-        (eq (cadr prop-value) 'org-transclusion-fringe-bitmap)
+        (memq (cadr prop-value) '(empty-line org-transclusion-fringe-bitmap))
         (memq (nth 2 prop-value)
               '(org-transclusion-source-fringe
                 org-transclusion-fringe)))
@@ -1486,28 +1487,36 @@ Returns the cleaned prefix, or nil if prefix was only the fringe indicator."
 This restores `line-prefix' and `wrap-prefix' to their state before
 `org-transclusion-add-fringe-to-region' was called.
 
-Removes only the fringe portion while preserving any other prefix
-content, regardless of whether org-indent-mode is active."
+In `org-mode' buffers, removes only the fringe portion while preserving
+org-indent indentation.  In non-org buffers, removes the properties
+entirely since they were added solely for fringe display."
   (with-current-buffer buffer
     (with-silent-modifications
       (save-excursion
         (goto-char beg)
-        (while (< (point) end)
-          (let* ((line-beg (line-beginning-position))
-                 (line-end (min (1+ line-beg) end))
-                 (line-prefix (get-text-property line-beg 'line-prefix))
-                 (wrap-prefix (get-text-property line-beg 'wrap-prefix)))
+        (let ((is-org-buffer (derived-mode-p 'org-mode)))
+          (while (< (point) end)
+            (let* ((line-beg (line-beginning-position))
+                   (line-end (min (1+ line-beg) end))
+                   (line-prefix (get-text-property line-beg 'line-prefix))
+                   (wrap-prefix (get-text-property line-beg 'wrap-prefix)))
 
-            ;; Always strip fringes precisely, preserving other content
-            (when line-prefix
-              (org-transclusion--update-line-prefix
-               line-beg line-end 'line-prefix
-               (org-transclusion-remove-fringe-from-prefix line-prefix)))
-            (when wrap-prefix
-              (org-transclusion--update-line-prefix
-               line-beg line-end 'wrap-prefix
-               (org-transclusion-remove-fringe-from-prefix wrap-prefix))))
-          (forward-line 1))))))
+              (if is-org-buffer
+                  ;; Org buffer: strip fringes, preserve org-indent content
+                  (progn
+                    (when line-prefix
+                      (org-transclusion--update-line-prefix
+                       line-beg line-end 'line-prefix
+                       (org-transclusion-remove-fringe-from-prefix line-prefix)))
+                    (when wrap-prefix
+                      (org-transclusion--update-line-prefix
+                       line-beg line-end 'wrap-prefix
+                       (org-transclusion-remove-fringe-from-prefix wrap-prefix))))
+                ;; Non-org buffer: remove properties entirely
+                (progn
+                  (org-transclusion--update-line-prefix line-beg line-end 'line-prefix nil)
+                  (org-transclusion--update-line-prefix line-beg line-end 'wrap-prefix nil))))
+            (forward-line 1)))))))
 
 ;;;; Hook
 (defun org-transclusion-source-overlay-modified (ov after-p _beg _end &optional _len)

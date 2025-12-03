@@ -57,6 +57,8 @@ Either nil, t (initialized), or (TIMER ATTEMPT-COUNT).")
 ;; Silence byte-compiler warnings for functions defined in org-transclusion.el
 (declare-function org-transclusion-prefix-has-fringe-p "org-transclusion" (prefix))
 (declare-function org-transclusion-add-fringe-to-region "org-transclusion" (buffer beg end face))
+(declare-function org-transclusion-remove-fringe-from-region "org-transclusion" (buffer beg end))
+
 
 ;; Variable defined by define-minor-mode later in this file
 (defvar org-transclusion-indent-mode)
@@ -211,14 +213,21 @@ by appending them to org-indent's indentation prefixes."
 
 (defun org-transclusion-indent--refresh-source-region (src-buf src-beg src-end)
   "Refresh org-indent properties in source region after transclusion removal.
-SRC-BUF is the source buffer, SRC-BEG and SRC-END are the region bounds."
-  (when (buffer-local-value 'org-indent-mode src-buf)
-    (with-current-buffer src-buf
-      (org-indent-add-properties src-beg src-end)
-      ;; Check if mode should be disabled
-      (when (and (boundp 'org-transclusion-indent-mode)
-                 org-transclusion-indent-mode)
-        (org-transclusion-indent--check-and-disable)))))
+SRC-BUF is the source buffer, SRC-BEG and SRC-END are the region bounds.
+
+For `org-mode' buffers with `org-indent-mode', refreshes indentation properties.
+For non-org buffers, removes fringe indicators that were added during
+transclusion."
+  (with-current-buffer src-buf
+    (if (buffer-local-value 'org-indent-mode src-buf)
+        ;; Org buffer with indent-mode: refresh properties
+        (progn
+          (org-indent-add-properties src-beg src-end)
+          (when (and (boundp 'org-transclusion-indent-mode)
+                     org-transclusion-indent-mode)
+            (org-transclusion-indent--check-and-disable)))
+      ;; Non-org buffer or org buffer without indent-mode: just remove fringes
+      (org-transclusion-remove-fringe-from-region src-buf src-beg src-end))))
 
 ;;;; Minor Mode Definition
 
