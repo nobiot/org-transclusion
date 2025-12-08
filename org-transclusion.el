@@ -116,6 +116,17 @@ and end, pointing to the beginning and end of the transcluded
 content."
   :type '(repeat function))
 
+(defcustom org-transclusion-after-remove-functions nil
+  "Functions to be called after a transclusion has been removed.
+The hook runs after the transclusion overlay has been deleted and
+the #+transclude keyword has been re-inserted. It is intended for
+cleanup operations in the source buffer. For example, it is used by
+the `org-transclusion-indent-mode' extension to refresh org-indent
+properties after transclusion removal. The functions are called with
+arguments (src-buf src-beg src-end), pointing to the source buffer
+and the region that was transcluded."
+  :type '(repeat function))
+
 ;;;; Faces
 
 (defface org-transclusion-source-fringe
@@ -549,6 +560,18 @@ When success, return the beginning point of the keyword re-inserted."
           beg
         (when (org-transclusion-within-live-sync-p)
           (org-transclusion-live-sync-exit))
+
+        ;; Clean up source buffer fringe indicators before deleting overlay
+        (when (overlay-buffer tc-pair-ov)
+          (let ((src-buf (overlay-buffer tc-pair-ov))
+                (src-beg (overlay-start tc-pair-ov))
+                (src-end (overlay-end tc-pair-ov)))
+            ;; Remove our fringe indicators from source
+            (org-transclusion-remove-fringe-from-region src-buf src-beg src-end)
+            ;; Run hooks for extensions to do additional cleanup
+            (run-hook-with-args 'org-transclusion-after-remove-functions
+                                src-buf src-beg src-end)))
+
         (delete-overlay tc-pair-ov)
         (org-transclusion-with-inhibit-read-only
           (save-excursion
@@ -977,8 +1000,8 @@ Return nil if not found."
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for inserting content
 
-(defun org-transclusion-content-insert ( keyword-values type content
-                                         sbuf sbeg send copy)
+(defun org-transclusion-content-insert (keyword-values type content
+                                                       sbuf sbeg send copy)
   "Insert CONTENT at point and put source overlay in SBUF.
 Return t when successful.
 
@@ -1034,22 +1057,21 @@ based on the following arguments:
       type content (plist-get keyword-values :current-indentation)))
     (setq end (point))
     (unless copy
+      ;; Add uniform fringe indicator to transcluded content
       (add-text-properties
        beg end
        `( local-map ,org-transclusion-map
           read-only t
           front-sticky t
-          ;; rear-nonticky seems better for
-          ;; src-lines to add "#+result" after C-c
-          ;; C-c
           rear-nonsticky t
           org-transclusion-id ,id
           org-transclusion-type ,type
           org-transclusion-pair ,tc-pair
           org-transclusion-orig-keyword ,keyword-values
-          ;; TODO Fringe is not supported for terminal
-          line-prefix ,(org-transclusion-propertize-transclusion)
-          wrap-prefix ,(org-transclusion-propertize-transclusion)))
+          line-prefix ,(org-transclusion--make-fringe-indicator
+                        'org-transclusion-fringe)
+          wrap-prefix ,(org-transclusion--make-fringe-indicator
+                        'org-transclusion-fringe)))
       ;; Put the transclusion overlay
       (let ((ov-tc (text-clone-make-overlay beg end)))
         (overlay-put ov-tc 'evaporate t)
@@ -1060,12 +1082,14 @@ based on the following arguments:
       (overlay-put ov-src 'org-transclusion-buffer tc-buffer)
       (overlay-put ov-src 'evaporate t)
       (overlay-put ov-src 'face 'org-transclusion-source)
-      (overlay-put ov-src 'line-prefix (org-transclusion-propertize-source))
-      (overlay-put ov-src 'wrap-prefix (org-transclusion-propertize-source))
       (overlay-put ov-src 'priority -60)
-      ;; TODO this should not be necessary, but it is at the moment
-      ;; live-sync-enclosing-element fails without tc-pair on source overlay
-      (overlay-put ov-src 'org-transclusion-pair tc-pair))
+      (overlay-put ov-src 'org-transclusion-pair tc-pair)
+      ;; Add modification hook to source overlay
+      (overlay-put ov-src 'modification-hooks
+                   '(org-transclusion-source-overlay-modified))
+      ;; Add per-line fringe indicators to source buffer only
+      (org-transclusion-add-fringe-to-region
+       sbuf sbeg send 'org-transclusion-source-fringe))
     t))
 
 (defun org-transclusion-content-highest-org-headline ()
@@ -1303,8 +1327,213 @@ is non-nil."
              :src-end (point-max))))))
 
 ;;-----------------------------------------------------------------------------
-;;; Utility Functions
+;;; Helper Functions
+(defun org-transclusion--fringe-spec-p (prop-value)
+  "Return non-nil if PROP-VALUE represents a transclusion fringe indicator.
+Checks both graphical fringe (display property) and
+terminal fringe (face property)."
+  (or
+   ;; Graphical: (left-fringe BITMAP FACE)
+   ;; BITMAP can be 'empty-line (source) or 'org-transclusion-fringe-bitmap (destination)
+   (and (listp prop-value)
+        (eq (car prop-value) 'left-fringe)
+        (memq (cadr prop-value) '(empty-line org-transclusion-fringe-bitmap))
+        (memq (nth 2 prop-value)
+              '(org-transclusion-source-fringe
+                org-transclusion-fringe)))
+   ;; Terminal: face property with our face names
+   (memq prop-value
+         '(org-transclusion-source-fringe
+           org-transclusion-fringe
+           org-transclusion-source
+           org-transclusion))))
 
+(defun org-transclusion--make-fringe-indicator (face)
+  "Create fringe indicator string for FACE.
+Handles both graphical and terminal display modes.
+Uses empty-line bitmap for source fringe, org-transclusion-fringe-bitmap
+for transclusion fringe to match original overlay-based appearance."
+  (if (display-graphic-p)
+      (let ((bitmap (if (eq face 'org-transclusion-source-fringe)
+                        'empty-line
+                      'org-transclusion-fringe-bitmap)))
+        (propertize "x" 'display `(left-fringe ,bitmap ,face)))
+    (propertize "| " 'face face)))
+
+(defun org-transclusion--update-line-prefix (line-beg line-end prop-name new-value)
+  "Update text property PROP-NAME to NEW-VALUE for line at LINE-BEG.
+LINE-END is the end of the region to update.
+If NEW-VALUE is nil, removes the property entirely."
+  (if new-value
+      (put-text-property line-beg line-end prop-name new-value)
+    (remove-text-properties line-beg line-end (list prop-name nil))))
+
+;;; Fringe Management
+
+;;;; Fringe Detection
+
+(defun org-transclusion-prefix-has-fringe-p (prefix)
+  "Return non-nil if PREFIX string contains a transclusion fringe indicator.
+Checks for both graphical fringe (display property) and terminal
+fringe (face property within the string)."
+  (when (stringp prefix)
+    (let ((pos 0))
+      (catch 'found
+        ;; Check display properties (graphical fringe)
+        (while (setq pos (next-single-property-change pos 'display prefix))
+          (when (org-transclusion--fringe-spec-p
+                 (get-text-property pos 'display prefix))
+            (throw 'found t)))
+
+        ;; Check face properties within the string (terminal fringe only)
+        ;; Terminal fringes are strings like "| " with face property
+        (unless (display-graphic-p)
+          (setq pos 0)
+          (while (< pos (length prefix))
+            (let ((face (get-text-property pos 'face prefix)))
+              (when (memq face '(org-transclusion-source-fringe
+                                 org-transclusion-fringe))
+                (throw 'found t)))
+            (setq pos (1+ pos))))
+
+        nil))))
+
+;;;; Fringe Creation
+(defun org-transclusion-append-fringe-to-prefix (existing-prefix face)
+  "Append fringe indicator to EXISTING-PREFIX, preserving it.
+FACE determines the fringe color (org-transclusion-source-fringe or
+org-transclusion-fringe).
+Returns concatenated string suitable for `line-prefix' or `wrap-prefix'.
+
+In terminal mode, prepends fringe to place it at the left margin.
+In graphical mode, appends fringe to preserve indentation alignment."
+  (let ((fringe-indicator (org-transclusion--make-fringe-indicator face)))
+    (if existing-prefix
+        (if (display-graphic-p)
+            ;; Graphical: append fringe (invisible in fringe area)
+            (concat existing-prefix fringe-indicator)
+          ;; Terminal: prepend fringe to show at left margin
+          (concat fringe-indicator existing-prefix))
+      fringe-indicator)))
+
+(defun org-transclusion-add-fringe-to-region (buffer beg end face)
+  "Add fringe indicator to each line in BUFFER between BEG and END.
+FACE determines the fringe color.
+
+When org-indent-mode is active (`line-prefix'/`wrap-prefix' properties exist),
+appends fringe to existing indentation. When org-indent-mode is inactive,
+adds fringe-only prefix."
+  (with-current-buffer buffer
+    (with-silent-modifications
+      (save-excursion
+        (goto-char beg)
+        (catch 'done
+          (while (< (point) end)
+            (let* ((line-beg (line-beginning-position))
+                   (line-end (min (line-end-position) end))
+                   (line-prefix (get-text-property line-beg 'line-prefix))
+                   (wrap-prefix (get-text-property line-beg 'wrap-prefix))
+                   (fringe-only (org-transclusion--make-fringe-indicator face)))
+
+              ;; Handle line-prefix
+              (if line-prefix
+                  ;; org-indent-mode case: append to existing prefix
+                  (unless (org-transclusion-prefix-has-fringe-p line-prefix)
+                    (org-transclusion--update-line-prefix
+                     line-beg line-end 'line-prefix
+                     (org-transclusion-append-fringe-to-prefix line-prefix face)))
+                ;; Non-indent case: add fringe-only prefix
+                (org-transclusion--update-line-prefix
+                 line-beg line-end 'line-prefix fringe-only))
+
+              ;; Handle wrap-prefix
+              (if wrap-prefix
+                  ;; org-indent-mode case: append to existing prefix
+                  (unless (org-transclusion-prefix-has-fringe-p wrap-prefix)
+                    (org-transclusion--update-line-prefix
+                     line-beg line-end 'wrap-prefix
+                     (org-transclusion-append-fringe-to-prefix wrap-prefix face)))
+                ;; Non-indent case: add fringe-only prefix
+                (org-transclusion--update-line-prefix
+                 line-beg line-end 'wrap-prefix fringe-only)))
+
+            ;; Try to advance to next line; if we can't, we're done
+            (when (not (zerop (forward-line 1)))
+              (throw 'done nil))))))))
+
+;;;; Fringe Removal
+(defun org-transclusion-remove-fringe-from-prefix (prefix)
+  "Remove fringe indicator from PREFIX string.
+Returns the cleaned prefix, or nil if prefix was only the fringe indicator."
+  (when (stringp prefix)
+    (let ((cleaned prefix)
+          (pos 0))
+      ;; Remove all fringe indicators (both graphical and terminal)
+      (while (setq pos (next-single-property-change pos nil cleaned))
+        (let ((display-prop (get-text-property pos 'display cleaned))
+              (face-prop (get-text-property pos 'face cleaned)))
+          (when (or (org-transclusion--fringe-spec-p display-prop)
+                    (org-transclusion--fringe-spec-p face-prop))
+            ;; Found a fringe indicator, remove it
+            (setq cleaned (concat (substring cleaned 0 pos)
+                                  (substring cleaned (1+ pos))))
+            ;; Adjust position since we removed a character
+            (setq pos (max 0 (1- pos))))))
+      ;; Return nil if nothing left, otherwise return cleaned prefix
+      (if (string-empty-p cleaned) nil cleaned))))
+
+(defun org-transclusion-remove-fringe-from-region (buffer beg end)
+  "Remove fringe indicators from each line in BUFFER between BEG and END.
+This restores `line-prefix' and `wrap-prefix' to their state before
+`org-transclusion-add-fringe-to-region' was called.
+
+In `org-mode' buffers, removes only the fringe portion while preserving
+org-indent indentation.  In non-org buffers, removes the properties
+entirely since they were added solely for fringe display."
+  (with-current-buffer buffer
+    (with-silent-modifications
+      (save-excursion
+        (goto-char beg)
+        (let ((is-org-buffer (derived-mode-p 'org-mode)))
+          (while (< (point) end)
+            (let* ((line-beg (line-beginning-position))
+                   (line-end (min (1+ line-beg) end))
+                   (line-prefix (get-text-property line-beg 'line-prefix))
+                   (wrap-prefix (get-text-property line-beg 'wrap-prefix)))
+
+              (if is-org-buffer
+                  ;; Org buffer: strip fringes, preserve org-indent content
+                  (progn
+                    (when line-prefix
+                      (org-transclusion--update-line-prefix
+                       line-beg line-end 'line-prefix
+                       (org-transclusion-remove-fringe-from-prefix line-prefix)))
+                    (when wrap-prefix
+                      (org-transclusion--update-line-prefix
+                       line-beg line-end 'wrap-prefix
+                       (org-transclusion-remove-fringe-from-prefix wrap-prefix))))
+                ;; Non-org buffer: remove properties entirely
+                (progn
+                  (org-transclusion--update-line-prefix line-beg line-end 'line-prefix nil)
+                  (org-transclusion--update-line-prefix line-beg line-end 'wrap-prefix nil))))
+            (forward-line 1)))))))
+
+;;;; Hook
+(defun org-transclusion-source-overlay-modified (ov after-p _beg _end &optional _len)
+  "Update source overlay OV indentation after modification.
+Called by overlay modification hooks. AFTER-P is t after modification.
+This ensures fringe indicators stay synchronized with org-indent-mode's
+dynamic updates."
+  (when (and after-p (overlay-buffer ov))
+    (let ((ov-beg (overlay-start ov))
+          (ov-end (overlay-end ov)))
+      ;; Only re-apply fringes if org-transclusion-indent-mode is NOT active
+      ;; When indent-mode is active, its after-change-function handles this
+      (unless (buffer-local-value 'org-transclusion-indent-mode (overlay-buffer ov))
+        (org-transclusion-add-fringe-to-region
+         (overlay-buffer ov) ov-beg ov-end 'org-transclusion-source-fringe)))))
+
+;;;; Utility Functions
 (defun org-transclusion-find-source-marker (beg end)
   "Return marker that points to source begin point for transclusion.
 It works on the transclusion region at point.  BEG and END are
@@ -1500,26 +1729,6 @@ used."
   (when (and (org-transclusion-within-transclusion-p)
              (get-char-property (point) 'text-clones))
     t))
-
-(defun org-transclusion-propertize-transclusion ()
-  "."
-  (if (not (display-graphic-p))
-      (propertize "| " 'face 'org-transclusion)
-    (propertize
-     "x"
-     'display
-     '(left-fringe org-transclusion-fringe-bitmap
-                   org-transclusion-fringe))))
-
-(defun org-transclusion-propertize-source ()
-  "."
-  (if (not (display-graphic-p))
-      (propertize "| " 'face 'org-transclusion-source)
-    (propertize
-     "x"
-     `display
-     `(left-fringe empty-line
-                   org-transclusion-source-fringe))))
 
 (defun org-transclusion-type-is-org (type)
   "Return non-nil if TYPE begins with \"org\".
