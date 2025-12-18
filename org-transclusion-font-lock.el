@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 22 August 2021
-;; Last modified: 02 January 2025
+;; Last modified: 18 December 2025
 
 ;;; Commentary:
 ;;  This file is part of Org-transclusion
@@ -40,7 +40,7 @@
      org-transclusion-font-lock-extension-functions :remove)))
 
 (defvar org-transclusion-font-lock-extension-functions
-  (list (cons 'org-font-lock-set-keywords-hook #'org-transclusion-font-lock-set))
+  (list (cons 'org-mode-hook #'org-transclusion-font-lock-set))
   "Alist of functions to activate `org-transclusion-font-lock'.
 CAR of each cons cell is a symbol name of an abnormal hook
 \(*-functions\). CDR is either a symbol or list of symbols, which
@@ -60,8 +60,7 @@ hook.")
 (defun org-transclusion-font-lock-set ()
   "Add font-lock function to Org's hook.
 The hook is `org-font-lock-set-keywords-hook'."
-  (add-to-list 'org-font-lock-extra-keywords
-               '(org-transclusion-fontify-meta-lines-and-blocks) 'append))
+  (font-lock-add-keywords nil '(org-transclusion-fontify-meta-lines-and-blocks)))
 
 (defun org-transclusion-fontify-meta-lines-and-blocks (limit)
   "Override Org's font-lock for #+transclude keyword.
