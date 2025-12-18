@@ -1031,29 +1031,27 @@ LINK must be Org's link object that `org-link-open' can act on. As long
 as `org-link-open' opens a buffer within Emacs, this function should
 return a marker."
   ;; Assume the point now is the transcluding buffer
-  (let ((cur-buf (current-buffer))
-        (cur-marker (move-marker (make-marker) (line-beginning-position))))
-    ;; Note 2025-12-18 `org-link-open' does not necessarily obey
-    ;; `display-buffer-alist' and can open the target buffer in the currently
-    ;; selected window. This is disruptive for users. We want transclusions to
-    ;; keep the current buffer in the current window. To do this, it seems
-    ;; `save-window-excursion' is the only way.
-    (save-window-excursion
-      ;; This `save-excursion' is needed for the case where the target and
-      ;; source are the same buffer.
-      (save-excursion
-        ;; Don't ever prompt to create a headline when transcluding.
-        ;; t is a less surprising default than nil - fuzzy search.
-        (let ((org-link-search-must-match-exact-headline t))
-          (condition-case nil
-              (progn
-                (org-link-open link)
-                ;; In the target buffer temporarily.
-                (save-excursion
-                  (move-marker (make-marker) (point))))
-            (error (user-error
-                    "Org-transclusion: `org-link-open' cannot open link, %s"
-                    (org-element-property :raw-link link)))))))))
+  ;; Note 2025-12-18 `org-link-open' does not necessarily obey
+  ;; `display-buffer-alist' and can open the target buffer in the currently
+  ;; selected window. This is disruptive for users. We want transclusions to
+  ;; keep the current buffer in the current window. To do this, it seems
+  ;; `save-window-excursion' is the only way.
+  (save-window-excursion
+    ;; This `save-excursion' is needed for the case where the target and
+    ;; source are the same buffer.
+    (save-excursion
+      ;; Don't ever prompt to create a headline when transcluding.
+      ;; t is a less surprising default than nil - fuzzy search.
+      (let ((org-link-search-must-match-exact-headline t))
+        (condition-case nil
+            (progn
+              (org-link-open link)
+              ;; In the target buffer temporarily.
+              (save-excursion
+                (move-marker (make-marker) (point))))
+          (error (user-error
+                  "Org-transclusion: `org-link-open' cannot open link, %s"
+                  (org-element-property :raw-link link))))))))
 
 (defun org-transclusion-add-org-id (link plist)
   "Return a list for Org-ID LINK object and PLIST.
