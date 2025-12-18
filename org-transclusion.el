@@ -476,28 +476,34 @@ does not support all the elements.
             (run-hook-with-args-until-success
              'org-transclusion-content-format-functions
              tc-type content keyword-plist)))
-      (if (or (string-empty-p content)
-              (eq content nil))
-          ;; Keep going with program when no content `org-transclusion-add-all'
-          ;; should move to the next transclusion
-          (prog1 nil
-            (message
-             "No content found with \"%s\".  Check the link at point %d, line %d"
-             (org-element-property :raw-link link)
-             (point) (org-current-line)))
-        (pcase-let ((`(,beg . ,end) (org-transclusion-content-insert content)))
-          (when (and beg end)
-            (unless copy
-              (org-transclusion-content-add-text-props-and-overlay
-               payload keyword-plist beg end))
-            (run-hook-with-args 'org-transclusion-after-add-functions
-                                beg end)))
-
-        ;; (if (functionp payload)
-        ;;     ;; Allow for asynchronous transclusion
-        ;;     (funcall payload link keyword-plist copy)
-        ;; (org-transclusion-add-payload payload link keyword-plist copy)
-        ))))
+      (cond ((functionp payload)
+             ;; Allow for asynchronous transclusion
+             (funcall payload link keyword-plist copy))
+            ;; No content
+            ((or (string-empty-p content)
+                 (eq content nil))
+             ;; Keep going with program when no content `org-transclusion-add-all'
+             ;; should move to the next transclusion
+             (prog1 nil
+               (message
+                "No content found with \"%s\".  Check the link at point %d, line %d"
+                (org-element-property :raw-link link)
+                (point) (org-current-line))))
+            ;; Normal case
+            (t
+             (pcase-let ((buffer-modified-p (buffer-modified-p))
+                         (`(,beg . ,end) (org-transclusion-content-insert content)))
+               (when (and beg end)
+                 ;; If COPY, then we want to get the buffer-modified-p flag always t.
+                 ;; If transclusion, it should be the same as before transclusion.
+                 (if copy
+                     (restore-buffer-modified-p t)
+                   (restore-buffer-modified-p buffer-modified-p)
+                   (with-silent-modifications
+                     (org-transclusion-content-add-text-props-and-overlay
+                      payload keyword-plist beg end)))
+                 (run-hook-with-args 'org-transclusion-after-add-functions
+                                     beg end))))))))
 
 ;;;###autoload
 (defun org-transclusion-add-all (&optional narrowed)
@@ -971,6 +977,53 @@ inserted when more than one space is inserted between symbols."
 
 ;;-----------------------------------------------------------------------------
 ;;;; Add-at-point functions
+
+(make-obsolete 'org-transclusion-add-payload
+               "Use `org-transclusion-add' directly." "2.0.0")
+
+(defun org-transclusion-add-payload (payload link keyword-plist copy)
+  "Insert transcluded content with error handling.
+
+DO NOT USE THIS FUNCTION ANY LONGER. This function is kept for backward
+compatibility for `hyperdrive-org-transclusion'.
+
+PAYLOAD should be a plist according to the description in
+`org-transclusion-add-functions'.  LINK should be an org-element
+context object for the link.  KEYWORD-PLIST should contain the
+\"#+transclude:\" keywords for the transclusion at point.  With
+non-nil COPY, copy the transcluded content into the buffer.
+
+This function is intended to be called from within payload functions
+returned by hooks in `org-transclusion-add-functions'."
+  (let ((tc-type (plist-get payload :tc-type))
+        (src-buf (plist-get payload :src-buf))
+        (src-beg (plist-get payload :src-beg))
+        (src-end (plist-get payload :src-end))
+        (src-content (plist-get payload :src-content)))
+    (if (or (string= src-content "")
+            (eq src-content nil))
+        ;; Keep going with program when no content `org-transclusion-add-all'
+        ;; should move to the next transclusion
+        (prog1 nil
+          (message
+           "No content found with \"%s\".  Check the link at point %d, line %d"
+           (org-element-property :raw-link link) (point) (org-current-line)))
+      (let ((beg (line-beginning-position))
+            (end))
+        (org-transclusion-with-inhibit-read-only
+          (when (save-excursion
+                  (end-of-line) (insert-char ?\n)
+                  (org-transclusion-content-insert
+                   keyword-plist tc-type src-content
+                   src-buf src-beg src-end copy)
+                  (unless (eobp) (delete-char 1))
+                  (setq end (point))
+                  t)
+            ;; `org-transclusion-keyword-remove' checks element at point is a
+            ;; keyword or not
+            (org-transclusion-keyword-remove)))
+        (run-hook-with-args 'org-transclusion-after-add-functions beg end))
+      t)))
 
 (defun org-transclusion-add-target-marker (link)
   "Return the marker of transclusion target by opening LINK.
