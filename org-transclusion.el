@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 28 September 2025
+;; Last modified: 18 December 2025
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -947,30 +947,41 @@ inserted when more than one space is inserted between symbols."
 ;;;; Add-at-point functions
 
 (defun org-transclusion-add-target-marker (link)
+  "Return the marker of transclusion target by opening LINK.
+LINK must be Org's link object that `org-link-open' can act on. As long
+as `org-link-open' opens a buffer within Emacs, this function should
+return a marker."
   ;; Assume the point now is the transcluding buffer
   (let ((cur-buf (current-buffer))
         (cur-marker (move-marker (make-marker) (line-beginning-position))))
-    (save-excursion
-      ;; Don't ever prompt to create a headline when transcluding.
-      ;; t is a less surprising default than nil - fuzzy search.
-      (let ((org-link-search-must-match-exact-headline t))
-        (condition-case nil
-            (progn
-              (org-link-open link)
-              ;; In the target buffer temporarily. If the target and source are
-              ;; the same buffer, do not move the point and return the curent
-              ;; maker.
-              (if (eq cur-buf (current-buffer)) cur-marker
-                (move-marker (make-marker) (point))))
-          ;; TODO add more link info
-          (error (message "Cannot open link")))))))
+    ;; Note 2025-12-18 `org-link-open' does not necessarily obey
+    ;; `display-buffer-alist' and can open the target buffer in the currently
+    ;; selected window. This is disruptive for users. We want transclusions to
+    ;; keep the current buffer in the current window. To do this, it seems
+    ;; `save-window-excursion' is the only way.
+    (save-window-excursion
+      ;; This `save-excursion' is needed for the case where the target and
+      ;; source are the same buffer.
+      (save-excursion
+        ;; Don't ever prompt to create a headline when transcluding.
+        ;; t is a less surprising default than nil - fuzzy search.
+        (let ((org-link-search-must-match-exact-headline t))
+          (condition-case nil
+              (progn
+                (org-link-open link)
+                ;; In the target buffer temporarily.
+                (save-excursion
+                  (move-marker (make-marker) (point))))
+            (error (user-error
+                    "Org-transclusion: `org-link-open' cannot open link, %s"
+                    (org-element-property :raw-link link)))))))))
 
 (defun org-transclusion-add-org-id (link plist)
   "Return a list for Org-ID LINK object and PLIST.
 Return nil if not found."
   (and-let*
       ((_ (string= "id" (org-element-property :type link)))
-       (mkr (ignore-errors (org-transclusion-add-target-marker link)))
+       (mkr (org-transclusion-add-target-marker link))
        (buf (marker-buffer mkr))
        (_ (buffer-live-p (marker-buffer mkr))))
     (with-current-buffer buf
@@ -1000,14 +1011,9 @@ Return nil if not found."
   ;; already open with a point. If the search option is present, the point will
   ;; move to the appropriate point and get the element. If the search option is
   ;; not present, the whole buffer needs to be obtained.
-             (mkr (ignore-errors (org-transclusion-add-target-marker link)))
+             (mkr (org-transclusion-add-target-marker link))
              (buf (marker-buffer mkr)))
-    ;; FIXME `org-transclusion-add-target-marker'
-    ;;
-    ;; - Change name. It's not just for org file being targeted.
-
     ;; - Silly to go back to the buffer here.
-
     ;; - `org-transclusion-content-org-filtered' should not return other
     ;;   properties -- confusing.
     (with-current-buffer buf
@@ -1027,7 +1033,7 @@ Return nil if not found."
   "Return a list for non-Org file LINK object and PLIST.
 Return nil if not found."
   (and-let* (;; (_ (string= "file" (org-element-property :type link)))
-             (mkr (ignore-errors (org-transclusion-add-target-marker link)))
+             (mkr (org-transclusion-add-target-marker link))
              (buf (marker-buffer mkr)))
     ;; FIXME It's silly to revisit the buffer when it was already visited.
     (with-current-buffer buf

@@ -20,6 +20,8 @@ This is the first section before the first headline.
    #+transclude: [[file:paragraph.org::non-exisitent]]
    => Should not transclude anything
 
+#+transclude: [[paragraph.tx]]
+
 ** make from link -- ID and ID with search option
 This is a link to a [[id:2022-05-30T203553][Bertrand Russell]] wikipedia excerpt
 #+transclude: [[id:2022-05-30T203553][Bertrand Russell]]
