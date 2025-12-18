@@ -1102,87 +1102,50 @@ END: the end of text content after inserting it
 ;; - KEYWORD-VALUES :: Property list of the value of transclusion keyword
 ;; - TYPE :: Transclusion type; e.g. \"org-link\"
 
-This function is intended to be used within
-`org-transclusion-add'.  All the arguments should be
-obtained by one of the `org-transclusion-add-functions'.
-
-This function adds text properties required for Org-transclusion
-to the inserted content.  It also puts an overlay to an
-appropriate region of the source buffer.  They are constructed
-based on the following arguments:
-
-- KEYWORD-VALUES :: Property list of the value of transclusion keyword
-- TYPE :: Transclusion type; e.g. \"org-link\"
-- CONTENT :: Text content of the transclusion source to be inserted
-- SBUF :: Buffer of the transclusion source where CONTENT comes from
-- SBEG :: Begin point of CONTENT in SBUF
-- SEND :: End point of CONTENT in SBUF"
-  (let* ((beg (point)) ;; before the text is inserted
-         (end) ;; at the end of text content after inserting it
-         (id (org-id-uuid))
-         (tc-buffer (current-buffer))
-         (ov-src (text-clone-make-overlay sbeg send sbuf)) ;; source-buffer overlay
-         (tc-pair ov-src)
-         (content content))
-    (when (org-transclusion-type-is-org type)
-      (with-temp-buffer
-        ;; This temp buffer needs to be in Org Mode
-        ;; Otherwise, subtree won't be recognized as a Org subtree
-        (delay-mode-hooks (org-mode))
-        (insert content)
-        (org-with-point-at 1
-          (let* ((to-level (plist-get keyword-values :level))
-                 (level (org-transclusion-content-highest-org-headline))
-                 (diff (when (and level to-level) (- level to-level))))
-            (when diff
-              (cond ((< diff 0) ; demote
-                     (org-map-entries (lambda ()
-                                        (dotimes (_ (abs diff))
-                                          (org-do-demote)))))
-                    ((> diff 0) ; promote
-                     (org-map-entries (lambda ()
-                                        (dotimes (_ diff)
-                                          (org-do-promote))))))))
-          (setq content (buffer-string)))))
-    (insert
-     (run-hook-with-args-until-success
-      'org-transclusion-content-format-functions
-      type content (plist-get keyword-values :current-indentation)))
-    (setq end (point))
-    (unless copy
-      ;; Add uniform fringe indicator to transcluded content
-      (add-text-properties
-       beg end
-       `( local-map ,org-transclusion-map
-          read-only t
-          front-sticky t
-          rear-nonsticky t
-          org-transclusion-id ,id
-          org-transclusion-type ,type
-          org-transclusion-pair ,tc-pair
-          org-transclusion-orig-keyword ,keyword-values
-          line-prefix ,(org-transclusion--make-fringe-indicator
-                        'org-transclusion-fringe)
-          wrap-prefix ,(org-transclusion--make-fringe-indicator
-                        'org-transclusion-fringe)))
-      ;; Put the transclusion overlay
-      (let ((ov-tc (text-clone-make-overlay beg end)))
-        (overlay-put ov-tc 'evaporate t)
-        (overlay-put ov-tc 'face 'org-transclusion)
-        (overlay-put ov-tc 'priority -60))
-      ;; Put to the source overlay
-      (overlay-put ov-src 'org-transclusion-by id)
-      (overlay-put ov-src 'org-transclusion-buffer tc-buffer)
-      (overlay-put ov-src 'evaporate t)
-      (overlay-put ov-src 'face 'org-transclusion-source)
-      (overlay-put ov-src 'priority -60)
-      (overlay-put ov-src 'org-transclusion-pair tc-pair)
-      ;; Add modification hook to source overlay
-      (overlay-put ov-src 'modification-hooks
-                   '(org-transclusion-source-overlay-modified))
-      ;; Add per-line fringe indicators to source buffer only
-      (org-transclusion-add-fringe-to-region
-       sbuf sbeg send 'org-transclusion-source-fringe))
+This function assumes that the current point is within the
+current buffer."
+  (and-let* ((id (org-id-uuid))
+             (tc-buffer (current-buffer))
+             (src-beg (plist-get payload :src-beg))
+             (src-end (plist-get payload :src-end))
+             (src-buf (plist-get payload :src-buf))
+             (ov-src (text-clone-make-overlay src-beg src-end src-buf))
+             (tc-pair ov-src)
+             (tc-type (plist-get payload :tc-type)))
+    (add-text-properties
+     beg end
+     `( local-map ,org-transclusion-map
+        read-only t
+        front-sticky t
+        rear-nonsticky t
+        org-transclusion-id ,id
+        org-transclusion-type ,tc-type
+        org-transclusion-pair ,tc-pair
+        org-transclusion-orig-keyword ,keyword-values
+        ;; Add uniform fringe indicator to transcluded content
+        line-prefix ,(org-transclusion--make-fringe-indicator
+                      'org-transclusion-fringe)
+        wrap-prefix ,(org-transclusion--make-fringe-indicator
+                      'org-transclusion-fringe)))
+    ;; Put the transclusion overlay
+    (let ((ov-tc (text-clone-make-overlay beg end)))
+      (overlay-put ov-tc 'evaporate t)
+      (overlay-put ov-tc 'face 'org-transclusion)
+      (overlay-put ov-tc 'priority -60))
+    ;; Put to the source overlay
+    (overlay-put ov-src 'org-transclusion-by id)
+    (overlay-put ov-src 'org-transclusion-buffer tc-buffer)
+    (overlay-put ov-src 'evaporate t)
+    (overlay-put ov-src 'face 'org-transclusion-source)
+    (overlay-put ov-src 'priority -60)
+    (overlay-put ov-src 'org-transclusion-pair tc-pair)
+    ;; Add modification hook to source overlay
+    (overlay-put ov-src 'modification-hooks
+                 '(org-transclusion-source-overlay-modified))
+    ;; Add per-line fringe indicators to source buffer only
+    (org-transclusion-add-fringe-to-region
+     src-buf src-beg src-end 'org-transclusion-source-fringe)
+    ;; Return t
     t))
 
 (defun org-transclusion-content-highest-org-headline ()
