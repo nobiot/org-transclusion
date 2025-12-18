@@ -1,22 +1,26 @@
-This is first content
+#+title: Test file for Org-transclusion
+
+This is the first section before the first headline.
+
 * Regression
 ** notmuch
 
    #+transclude: [[notmuch:id:E5208A8C-F56A-4931-9E9F-A1F5F78B8698@nobiot.com]]
 
    [[notmuch:id:E5208A8C-F56A-4931-9E9F-A1F5F78B8698@nobiot.com]]
-** search option
 
-#+transclude: [[file:paragraph.org]]
-=> transclude entire buffer
+** file search option
 
-#+transclude: [[file:paragraph.org::Sub heading]]
-=> Sub heading only
+   #+transclude: [[file:paragraph.org]]
+   => transclude entire buffer
 
-#+transclude: [[file:paragraph.org::non-exisitent]]
-=> Should not transclude anything
+   #+transclude: [[file:paragraph.org::Sub heading][This is a description]]
+   => Sub heading only
 
-** make from link -- id
+   #+transclude: [[file:paragraph.org::non-exisitent]]
+   => Should not transclude anything
+
+** make from link -- ID and ID with search option
 This is a link to a [[id:2022-05-30T203553][Bertrand Russell]] wikipedia excerpt
 #+transclude: [[id:2022-05-30T203553][Bertrand Russell]]
 
@@ -83,7 +87,8 @@ t/nil will be dropped after remove-at-point
 #+transclude: [[file:paragraph.org::quote][Link to a quote]]
 
 ** #Custom ID
-#+transclude: [[file:testpara.org::#custom-id-1][Custom ID]] :level 2
+
+   #+transclude: [[file:testpara.org::#custom-id-1][Custom ID]] :level 2
 
 ** *Hadline
 #+transclude: [[file:bertrand-russell.org::*Bertrand Russell - Wikipedia]] :level 2 :disable-auto
@@ -116,15 +121,15 @@ Temporarily set ~org-transclusion-include-first-section~ to nil
 ** center-block dynamic-block example-block export-block special-block verse-block
 
 ** drawer
-#+begin_example
-(setq org-transclusion-exclude-elements '())
-(setq org-transclusion-exclude-elements '(property-drawer))
-#+end_example
+
+   #+begin_example
+   (setq org-transclusion-exclude-elements '())
+   (setq org-transclusion-exclude-elements '(property-drawer))
+   #+end_example
 
 #+transclude: [[id:2022-05-30T203553][Bertrand Russell]]
 
 ** fixed-width
-
 
 ** latex-environment
 

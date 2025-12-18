@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 03 January 2025
+;; Last modified: 28 September 2025
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -947,17 +947,23 @@ inserted when more than one space is inserted between symbols."
 ;;;; Add-at-point functions
 
 (defun org-transclusion-add-target-marker (link)
-  (save-selected-window
-    ;; Don't ever prompt to create a headline when transcluding.
-    ;; t is a less surprising default than nil - fuzzy search.
-    (let ((org-link-search-must-match-exact-headline t))
-      (condition-case nil
-          (progn
-            (org-link-open link)
-            ;; In the target buffer temporarily
-            (move-marker (make-marker) (point)))
-        ;; TODO add more link info
-        (error (message "Cannot open link"))))))
+  ;; Assume the point now is the transcluding buffer
+  (let ((cur-buf (current-buffer))
+        (cur-marker (move-marker (make-marker) (line-beginning-position))))
+    (save-excursion
+      ;; Don't ever prompt to create a headline when transcluding.
+      ;; t is a less surprising default than nil - fuzzy search.
+      (let ((org-link-search-must-match-exact-headline t))
+        (condition-case nil
+            (progn
+              (org-link-open link)
+              ;; In the target buffer temporarily. If the target and source are
+              ;; the same buffer, do not move the point and return the curent
+              ;; maker.
+              (if (eq cur-buf (current-buffer)) cur-marker
+                (move-marker (make-marker) (point))))
+          ;; TODO add more link info
+          (error (message "Cannot open link")))))))
 
 (defun org-transclusion-add-org-id (link plist)
   "Return a list for Org-ID LINK object and PLIST.
@@ -980,8 +986,10 @@ Return nil if not found."
 (defun org-transclusion-add-org-file (link plist)
   "Return a list for Org file LINK object and PLIST.
 Return nil if not found."
-  (and-let* ((_ (string= "file" (org-element-property :type link)))
-             (_ (org-transclusion-org-file-p (org-element-property :path link)))
+  (and-let* ((_ (or (string= "file" (org-element-property :type link))
+                    (string= "fuzzy" (org-element-property :type link))))
+             (_ (or (org-transclusion-org-file-p (org-element-property :path link))
+                    (string= "fuzzy" (org-element-property :type link))))
   ;; The target needs to be carefully differentiated between the whole buffer or
   ;; element at point.
 
@@ -1264,10 +1272,10 @@ property controls the filter applied to the transclusion."
                 #'org-transclusion-content-filter-org-first-section
                 nil nil org-element-all-elements nil)))
   ;; Apply other filters
-    (dolist (fn org-transclusion-content-filter-org-functions)
-      (let ((obj-returned (funcall fn obj plist)))
-        ;; If nil is returned, do not change the org-content (obj)
-        (when obj-returned (setq obj obj-returned))))
+  (dolist (fn org-transclusion-content-filter-org-functions)
+    (let ((obj-returned (funcall fn obj plist)))
+      ;; If nil is returned, do not change the org-content (obj)
+      (when obj-returned (setq obj obj-returned))))
   obj)
 
 (defun org-transclusion-content-filter-org-expand-links-function (obj plist)
