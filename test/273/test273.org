@@ -1,0 +1,23 @@
+* 08:49 Example of learning human languages via anki and youtube :german:language:journals:2025_09_25:
+:PROPERTIES:
+:CREATED: [2025-09-25 Thu 08:49]
+:ID:       2025-12-18T060626
+:END:
+
+The [[https://cjauvin.github.io/posts/learning-persian/][blog post]] is short and simple.  However, showcases an effective
+method of using youtube and spaced repetition with langauage learning.
+The gist of it is that <<gist>>
+
+* 08:53 Showcasing in-file targeting with org-transclusion
+:PROPERTIES:
+:ID: d697a00d-62b9-4d49-8196-b1ebadfdccda
+:CREATED: [2025-09-25 Thu 08:53]
+:END:
+
+See this one:
+
+#+transclude: [[id:2025-12-18T060626::gist]]
+
+or this one:
+
+#+transclude: [[id:ccf3c642-fbef-4485-a21b-e83784c3303f::test]]

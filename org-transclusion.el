@@ -1,6 +1,6 @@
 ;;; org-transclusion.el --- Transclude text content via links -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021-2024  Free Software Foundation, Inc.
+;; Copyright (C) 2021-2025  Free Software Foundation, Inc.
 
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 01 January 2025
+;; Last modified: 18 December 2025
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -231,7 +231,8 @@ the \\+`link', \\+`keyword-plist', and \\+`copy' arguments.")
     org-transclusion-keyword-value-only-contents
     org-transclusion-keyword-value-exclude-elements
     org-transclusion-keyword-value-expand-links
-    org-transclusion-keyword-current-indentation)
+    org-transclusion-keyword-current-indentation
+    org-transclusion-keyword-value-no-first-heading)
   "Define a list of functions used to parse a #+transclude keyword.
 These functions take a single argument, the whole keyword value
 as a string.  Each function retrieves a property with using a
@@ -390,7 +391,7 @@ function automatically puts the :level property to the resultant
 transclusion keyword."
   (interactive "P")
   (let* ((context (org-element-lineage
-                   (org-element-context)'(link) t))
+                   (org-element-context) '(link) t))
          (auto-transclude-p (if (or (not arg) (numberp arg))
                                 org-transclusion-mode
                               ;; if `universal-argument' is passed,
@@ -459,54 +460,44 @@ does not support all the elements.
     (let* ((keyword-plist (org-transclusion-keyword-string-to-plist))
            (link (org-transclusion-wrap-path-to-link
                   (plist-get keyword-plist :link)))
+           ;; Note 2025-01-03 Retrospectively, PAYLOAD feels redundant now that
+           ;; `org-transclusion-add' is being refactored. For
+           ;; backword-compatibility, I am keeping PAYLOAD.
            (payload (run-hook-with-args-until-success
-                     'org-transclusion-add-functions link keyword-plist)))
-      (if (functionp payload)
-          ;; Allow for asynchronous transclusion
-          (funcall payload link keyword-plist copy)
-        (org-transclusion-add-payload payload link keyword-plist copy)))))
+                     'org-transclusion-add-functions link keyword-plist))
+           (tc-type (plist-get payload :tc-type))
+           (content (plist-get payload :src-content))
+           (keyword-plist (if (org-transclusion-type-is-org tc-type)
+                              (plist-put
+                               keyword-plist :current-level
+                               (or (org-current-level) 0))
+                            keyword-plist))
+           (content
+            (run-hook-with-args-until-success
+             'org-transclusion-content-format-functions
+             tc-type content keyword-plist)))
+      (if (or (string-empty-p content)
+              (eq content nil))
+          ;; Keep going with program when no content `org-transclusion-add-all'
+          ;; should move to the next transclusion
+          (prog1 nil
+            (message
+             "No content found with \"%s\".  Check the link at point %d, line %d"
+             (org-element-property :raw-link link)
+             (point) (org-current-line)))
+        (pcase-let ((`(,beg . ,end) (org-transclusion-content-insert content)))
+          (when (and beg end)
+            (unless copy
+              (org-transclusion-content-add-text-props-and-overlay
+               payload keyword-plist beg end))
+            (run-hook-with-args 'org-transclusion-after-add-functions
+                                beg end)))
 
-(defun org-transclusion-add-payload (payload link keyword-plist copy)
-  "Insert transcluded content with error handling.
-
-PAYLOAD should be a plist according to the description in
-`org-transclusion-add-functions'.  LINK should be an org-element
-context object for the link.  KEYWORD-PLIST should contain the
-\"#+transclude:\" keywords for the transclusion at point.  With
-non-nil COPY, copy the transcluded content into the buffer.
-
-This function is intended to be called from within
-`org-transclusion-add' as well as payload functions returned by
-hooks in `org-transclusion-add-functions'."
-  (let ((tc-type (plist-get payload :tc-type))
-        (src-buf (plist-get payload :src-buf))
-        (src-beg (plist-get payload :src-beg))
-        (src-end (plist-get payload :src-end))
-        (src-content (plist-get payload :src-content)))
-    (if (or (string= src-content "")
-            (eq src-content nil))
-        ;; Keep going with program when no content `org-transclusion-add-all'
-        ;; should move to the next transclusion
-        (prog1 nil
-          (message
-           "No content found with \"%s\".  Check the link at point %d, line %d"
-           (org-element-property :raw-link link) (point) (org-current-line)))
-      (let ((beg (line-beginning-position))
-            (end))
-        (org-transclusion-with-inhibit-read-only
-          (when (save-excursion
-                  (end-of-line) (insert-char ?\n)
-                  (org-transclusion-content-insert
-                   keyword-plist tc-type src-content
-                   src-buf src-beg src-end copy)
-                  (unless (eobp) (delete-char 1))
-                  (setq end (point))
-                  t)
-            ;; `org-transclusion-keyword-remove' checks element at point is a
-            ;; keyword or not
-            (org-transclusion-keyword-remove)))
-        (run-hook-with-args 'org-transclusion-after-add-functions beg end))
-      t)))
+        ;; (if (functionp payload)
+        ;;     ;; Allow for asynchronous transclusion
+        ;;     (funcall payload link keyword-plist copy)
+        ;; (org-transclusion-add-payload payload link keyword-plist copy)
+        ))))
 
 ;;;###autoload
 (defun org-transclusion-add-all (&optional narrowed)
@@ -756,9 +747,9 @@ the state before live-sync started."
       (user-error "Not within a transclusion in live-sync")
     (text-clone-delete-overlays)
     (let* ((src-ov (car (org-transclusion-live-sync-buffers)))
-	   (src-buf (overlay-buffer src-ov)))
+           (src-buf (overlay-buffer src-ov)))
       (with-current-buffer src-buf
-	(org-element-cache-reset)))
+        (org-element-cache-reset)))
     ;; Re-activate hooks inactive during live-sync
     (org-transclusion-activate)
     (org-transclusion-refresh)
@@ -869,9 +860,10 @@ It needs to be set in
 It is meant to be used by `org-transclusion-get-string-to-plist'.
 It needs to be set in
 `org-transclusion-keyword-value-functions'."
-  (when (string-match ":level *\\([1-9]\\)" string)
-    (list :level
-          (string-to-number (org-strip-quotes (match-string 1 string))))))
+  (and-let* ((_ (string-match ":level *\\([1-9]?\\)" string))
+             (match (match-string 1 string))
+             (val (if (string-empty-p match) "auto" (string-to-number match))))
+    (list :level val)))
 
 (defun org-transclusion-keyword-value-only-contents (string)
   "It is a utility function used converting a keyword STRING to plist.
@@ -908,6 +900,14 @@ It needs to be set in
     (list :expand-links
           (org-strip-quotes (match-string 0 string)))))
 
+(defun org-transclusion-keyword-value-no-first-heading (string)
+  "It is a utility function used converting a keyword STRING to plist.
+It is meant to be used by `org-transclusion-get-string-to-plist'.
+It needs to be set in
+`org-transclusion-keyword-value-functions'."
+  (when (string-match ":no-first-heading" string)
+    (list :no-first-heading (org-strip-quotes (match-string 0 string)))))
+
 (defun org-transclusion-keyword-remove ()
   "Remove the keyword element at point.
 Returns t if successful.  It checks if the element at point is a
@@ -931,6 +931,7 @@ keyword.  If not, returns nil."
         (only-contents (plist-get plist :only-contents))
         (exclude-elements (plist-get plist :exclude-elements))
         (expand-links (plist-get plist :expand-links))
+        (no-first-heading (plist-get plist :no-first-heading))
         (custom-properties-string nil))
     (setq custom-properties-string
           (dolist (fn org-transclusion-keyword-plist-to-string-functions
@@ -941,12 +942,15 @@ keyword.  If not, returns nil."
                       (concat custom-properties-string " " str ))))))
     (concat "#+transclude: "
             link
-            (when level (format " :level %d" level))
+            (when level (if (and (stringp level) (string= level "auto"))
+                            " :level "
+                          (format " :level %d" level)))
             (when disable-auto (format " :disable-auto"))
             (when only-contents (format " :only-contents"))
             (when exclude-elements (format " :exclude-elements \"%s\""
                                            exclude-elements))
             (when expand-links (format " :expand-links"))
+            (when no-first-heading (format " :no-first-heading"))
             custom-properties-string
             "\n")))
 
@@ -967,47 +971,136 @@ inserted when more than one space is inserted between symbols."
 
 ;;-----------------------------------------------------------------------------
 ;;;; Add-at-point functions
+
+(defun org-transclusion-add-target-marker (link)
+  "Return the marker of transclusion target by opening LINK.
+LINK must be Org's link object that `org-link-open' can act on. As long
+as `org-link-open' opens a buffer within Emacs, this function should
+return a marker."
+  ;; Assume the point now is the transcluding buffer
+  (let ((cur-buf (current-buffer))
+        (cur-marker (move-marker (make-marker) (line-beginning-position))))
+    ;; Note 2025-12-18 `org-link-open' does not necessarily obey
+    ;; `display-buffer-alist' and can open the target buffer in the currently
+    ;; selected window. This is disruptive for users. We want transclusions to
+    ;; keep the current buffer in the current window. To do this, it seems
+    ;; `save-window-excursion' is the only way.
+    (save-window-excursion
+      ;; This `save-excursion' is needed for the case where the target and
+      ;; source are the same buffer.
+      (save-excursion
+        ;; Don't ever prompt to create a headline when transcluding.
+        ;; t is a less surprising default than nil - fuzzy search.
+        (let ((org-link-search-must-match-exact-headline t))
+          (condition-case nil
+              (progn
+                (org-link-open link)
+                ;; In the target buffer temporarily.
+                (save-excursion
+                  (move-marker (make-marker) (point))))
+            (error (user-error
+                    "Org-transclusion: `org-link-open' cannot open link, %s"
+                    (org-element-property :raw-link link)))))))))
+
 (defun org-transclusion-add-org-id (link plist)
   "Return a list for Org-ID LINK object and PLIST.
 Return nil if not found."
-  (when (string= "id" (org-element-property :type link))
-    ;; when type is id, the value of path is the id
-    (let* ((id (org-element-property :path link))
-           (mkr (ignore-errors (org-id-find id t)))
-           (payload '(:tc-type "org-id")))
-      (if mkr
-          (append payload (org-transclusion-content-org-marker mkr plist))
-        (message
-         "No transclusion done for this ID. Ensure it works at point %d, line %d"
-         (point) (org-current-line))
-        nil))))
+  (and-let*
+      ((_ (string= "id" (org-element-property :type link)))
+       (mkr (org-transclusion-add-target-marker link))
+       (buf (marker-buffer mkr))
+       (_ (buffer-live-p (marker-buffer mkr))))
+    (with-current-buffer buf
+      (org-with-wide-buffer
+       (goto-char mkr)
+       (append '(:tc-type "org-id")
+               (if (org-before-first-heading-p)
+                   (org-transclusion-content-org-filtered
+                    nil plist)
+                 (org-transclusion-content-org-filtered
+                  'only-element plist)))))))
 
 (defun org-transclusion-add-org-file (link plist)
   "Return a list for Org file LINK object and PLIST.
 Return nil if not found."
-  (and (string= "file" (org-element-property :type link))
-       (org-transclusion-org-file-p (org-element-property :path link))
-       (append '(:tc-type "org-link")
-               (org-transclusion-content-org-link link plist))))
+  (and-let* ((_ (or (string= "file" (org-element-property :type link))
+                    (string= "fuzzy" (org-element-property :type link))))
+             (_ (or (org-transclusion-org-file-p (org-element-property :path link))
+                    (string= "fuzzy" (org-element-property :type link))))
+  ;; The target needs to be carefully differentiated between the whole buffer or
+  ;; element at point.
 
-(defun org-transclusion-add-other-file (link plist)
+  ;; When the link is ID, the current logic to check the first section should
+  ;; work.
+
+  ;; For the normal file links pointing to an Org file, the target buffer may be
+  ;; already open with a point. If the search option is present, the point will
+  ;; move to the appropriate point and get the element. If the search option is
+  ;; not present, the whole buffer needs to be obtained.
+             (mkr (org-transclusion-add-target-marker link))
+             (buf (marker-buffer mkr)))
+    ;; - Silly to go back to the buffer here.
+    ;; - `org-transclusion-content-org-filtered' should not return other
+    ;;   properties -- confusing.
+    (with-current-buffer buf
+      (org-with-wide-buffer
+       (append '(:tc-type "org-link")
+               ;; If search-option present, get only the element at point;
+               ;; otherwise, get the whole buffer.
+               (if (org-element-property :search-option link)
+                   (progn
+                     (goto-char mkr)
+                     (org-transclusion-content-org-filtered
+                      'only-element plist))
+                 (org-transclusion-content-org-filtered
+                  nil plist)))))))
+
+(defun org-transclusion-add-other-file (link _plist)
   "Return a list for non-Org file LINK object and PLIST.
 Return nil if not found."
-  (and (string= "file" (org-element-property :type link))
+  (and-let* (;; (_ (string= "file" (org-element-property :type link)))
+             (mkr (org-transclusion-add-target-marker link))
+             (buf (marker-buffer mkr)))
+    ;; FIXME It's silly to revisit the buffer when it was already visited.
+    (with-current-buffer buf
+      (org-with-wide-buffer
        (append '(:tc-type "others-default")
-               (org-transclusion-content-others-default link plist))))
+               (list :src-content (buffer-string)
+                     :src-buf buf
+                     :src-beg (point-min)
+                     :src-end (point-max)))))))
 
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for inserting content
 
-(defun org-transclusion-content-insert (keyword-values type content
-                                                       sbuf sbeg send copy)
-  "Insert CONTENT at point and put source overlay in SBUF.
-Return t when successful.
+(defun org-transclusion-content-insert (content)
+  "Insert CONTENT and return cons cell of BEG and END."
+  (let ((beg (line-beginning-position))
+        end-mkr end)
+    (org-transclusion-with-inhibit-read-only
+      (when (save-excursion
+              (end-of-line) (insert-char ?\n)
+              (insert content)
+              (unless (eobp) (delete-char 1))
+              (setq end-mkr (move-marker (make-marker) (point)))
+              t)
+        ;; `org-transclusion-keyword-remove' checks element at point is a
+        ;; keyword or not
+        (org-transclusion-keyword-remove)
+        (setq end (marker-position end-mkr))))
+    ;; Assume beg and end are non-nil?
+    (when (and beg end)
+      ;; (run-hook-with-args 'org-transclusion-after-add-functions beg end)
+      ;; Point END-MKR to nowhere for garbage collection.
+      (move-marker end-mkr nil)
+      (cons beg end))))
 
-This function formats CONTENT with using one of the
-`org-transclusion-content-format-functions'; e.g. align a table
-for Org.
+(defun org-transclusion-content-add-text-props-and-overlay (payload keyword-values beg end)
+  "
+BEG: before the text is inserted
+END: the end of text content after inserting it
+;; - KEYWORD-VALUES :: Property list of the value of transclusion keyword
+;; - TYPE :: Transclusion type; e.g. \"org-link\"
 
 This function is intended to be used within
 `org-transclusion-add'.  All the arguments should be
@@ -1105,18 +1198,25 @@ This function assumes the buffer is an Org buffer."
         (push (org-element-property :level h) list)))
     (when list (seq-min list))))
 
-(defun org-transclusion-content-format-org (type content _indent)
+(defun org-transclusion-content-format-org (type content keyword-values)
   "Format text CONTENT from source before transcluding.
 Return content modified (or unmodified, if not applicable).
 
+KEYWORD-VALUES is a plist of transclusion properties.
+
 This function is the default for org-transclusion-type (TYPE)
-\"org-*\". Currently it only re-aligns table with links in the
-content."
+\"org-*\"."
   (when (org-transclusion-type-is-org type)
     (with-temp-buffer
       (let ((org-inhibit-startup t))
         (delay-mode-hooks (org-mode))
         (insert content)
+        ;; Adjust headline levels
+        (org-transclusion-content-format-org-headlines
+         type content keyword-values)
+
+        ;; TODO The following two formatting operations should be in a function.
+
         ;; Fix table alignment
         (let ((point (point-min)))
           (while point
@@ -1125,67 +1225,55 @@ content."
               (org-table-align)
               (goto-char (org-table-end)))
             (setq point (search-forward "|" (point-max) t))))
+
         ;; Fix indentation when `org-adapt-indentation' is non-nil
         (org-indent-region (point-min) (point-max))
         ;; Return the temp-buffer's string
         (buffer-string)))))
 
-(defun org-transclusion-content-format (_type content indent)
+(defun org-transclusion-content-format-org-headlines (_type _content keyword-values)
+  "Adjust org headline levels for CONTENT.
+KEYWORD-VALUES is a plist of transclusion properties. This
+function assumes the point is within temp-buffer with `org-mode'
+active."
+  (org-with-point-at 1
+    ;; If NO-FIRST-HEADING, delete the first level
+    (and (org-at-heading-p)
+         (plist-get keyword-values :no-first-heading)
+         (delete-line))
+    (let* ((raw-to-level (plist-get keyword-values :level))
+           (to-level (if (and (stringp raw-to-level)
+                              (string= raw-to-level "auto"))
+                         (1+ (plist-get keyword-values :current-level))
+                       raw-to-level))
+           (level (or (org-current-level)
+                      (save-excursion
+                        (org-next-visible-heading 1)
+                        (org-current-level))))
+           (diff (when (and level to-level) (- level to-level))))
+      (when diff
+        (cond ((< diff 0) ; demote
+               (org-map-entries (lambda ()
+                                  (dotimes (_ (abs diff))
+                                    (org-do-demote)))))
+              ((> diff 0) ; promote
+               (org-map-entries (lambda ()
+                                  (dotimes (_ diff) (org-do-promote))))))))))
+
+
+(defun org-transclusion-content-format (_type content keyword-values)
   "Format text CONTENT from source before transcluding.
 Return content modified (or unmodified, if not applicable).
 
 This is the default one.  It only returns the content as is.
 
-INDENT is the number of current indentation of the #+transclude."
+KEYWORD-VALUES is a plist of transclusion properties."
   (with-temp-buffer
     (insert content)
     ;; Return the temp-buffer's string
-    (set-left-margin (point-min)(point-max) indent)
+    (set-left-margin (point-min)(point-max)
+                     (plist-get keyword-values :current-indentation))
     (buffer-string)))
-
-(defun org-transclusion-content-org-marker (marker plist)
-  "Return a list of payload from MARKER and PLIST.
-This function is intended to be used for Org-ID.  It delegates the
-work to
-`org-transclusion-content-org-filtered'."
-  (if (and marker (marker-buffer marker)
-           (buffer-live-p (marker-buffer marker)))
-      (progn
-        (with-current-buffer (marker-buffer marker)
-          (org-with-wide-buffer
-           (goto-char marker)
-           (if (org-before-first-heading-p)
-               (org-transclusion-content-org-filtered
-                nil plist)
-             (org-transclusion-content-org-filtered
-              'only-element plist)))))
-    (message "Nothing done. Cannot find marker for the ID.")))
-
-(defun org-transclusion-content-org-link (link plist)
-  "Return a list of payload from Org LINK object and PLIST.
-This function is intended to be used for Org-ID. It delegates the
-work to
-`org-transclusion-content-org-filtered'."
-  (save-excursion
-    ;; First visit the buffer and go to the relevant element if
-    ;; search-option is present.
-    (let* ((path (org-element-property :path link))
-           (search-option (org-element-property :search-option link))
-           (buf (find-file-noselect path))
-           (org-link-search-must-match-exact-headline
-            ;; Don't ever prompt to create a headline when transcluding
-            (if (eq 'query-to-create org-link-search-must-match-exact-headline)
-                t  ;; Less surprising default than nil - fuzzy search
-              org-link-search-must-match-exact-headline)))
-      (with-current-buffer buf
-        (org-with-wide-buffer
-         (if search-option
-             (progn
-               (org-link-search search-option)
-               (org-transclusion-content-org-filtered
-                'only-element plist))
-           (org-transclusion-content-org-filtered
-            nil plist)))))))
 
 (defvar org-transclusion-content-filter-org-functions '())
 
@@ -1254,10 +1342,10 @@ property controls the filter applied to the transclusion."
                 #'org-transclusion-content-filter-org-first-section
                 nil nil org-element-all-elements nil)))
   ;; Apply other filters
-    (dolist (fn org-transclusion-content-filter-org-functions)
-      (let ((obj-returned (funcall fn obj plist)))
-        ;; If nil is returned, do not change the org-content (obj)
-        (when obj-returned (setq obj obj-returned))))
+  (dolist (fn org-transclusion-content-filter-org-functions)
+    (let ((obj-returned (funcall fn obj plist)))
+      ;; If nil is returned, do not change the org-content (obj)
+      (when obj-returned (setq obj obj-returned))))
   obj)
 
 (defun org-transclusion-content-filter-org-expand-links-function (obj plist)
@@ -1311,20 +1399,6 @@ is non-nil."
   (if (eq (org-element-type data) 'headline)
       nil
     data))
-
-;;;;---------------------------------------------------------------------------
-;;;; Functions to support non-Org-mode link types
-
-(defun org-transclusion-content-others-default (link _plist)
-  "Use Org LINK element to return SRC-CONTENT, SRC-BEG, and SRC-END."
-  (let* ((path (org-element-property :path link))
-         (buf (find-file-noselect path)))
-    (with-current-buffer buf
-      (org-with-wide-buffer
-       (list :src-content (buffer-string)
-             :src-buf buf
-             :src-beg (point-min)
-             :src-end (point-max))))))
 
 ;;-----------------------------------------------------------------------------
 ;;; Helper Functions
@@ -2046,7 +2120,7 @@ ensure the settings revert to the user's setting prior to
   "Promote or demote transcluded subtree.
 When DEMOTE is non-nil, demote."
   (unless (org-transclusion-within-transclusion-p)
-    (user-error "Not in a transcluded headline."))
+    (user-error "Not in a transcluded headline"))
   (let* ((inhibit-read-only t)
          (beg (car (plist-get (org-transclusion-at-point) :location)))
          (pos (point)))
@@ -2078,9 +2152,44 @@ FORCE will let this function ignore
 `org-transclusion-extensions-loaded' and load extensions again."
   (when (or force (not org-transclusion-extensions-loaded))
     (dolist (ext org-transclusion-extensions)
-      (condition-case nil (require ext)
-        (error (message "Problems while trying to load feature `%s'" ext))))
+      (let* ((ext-name (symbol-name ext))
+             (minor-mode (intern (if (string-suffix-p "-mode" ext-name)
+                                    ext-name
+                                  (concat ext-name "-mode")))))
+        (condition-case nil
+            (progn
+              (require ext)
+              (when (fboundp minor-mode) (funcall minor-mode +1)))
+          (error (message "Problems while trying to load feature `%s'" ext)))))
     (setq org-transclusion-extensions-loaded t)))
+
+(defun org-transclusion-extension-set-a-hook-functions (add-or-remove list)
+  "Add/remove functions to an abnormal hook.
+LIST must be a cons cell for an extension. CAR is a symbol name
+of an abnormal hook \(generally suffixed with \"-functions\"\).
+CDR is either a symbol or list of symbols, which are names of
+functions to be set to the abnormal hook. ADD-OR-REMOVE must either
+`add-hook' or `remove-hook'."
+  (let* ((hook-name (car list))
+         (symbols (cdr list))
+         ;; If CDR is a single function symbol name, put it into a list.
+         (symbols (if (listp symbols) symbols (list symbols))))
+    (mapc (lambda (symbol) (funcall add-or-remove hook-name symbol))
+          symbols)))
+
+(defun org-transclusion-extension-functions-add-or-remove (extension-functions &optional remove)
+  "Add or remove functions to abnormal hooks for extensions.
+EXTENSION-FUNCTIONS is an alist. CAR of each cons cell is a
+symbol name of an abnormal hook \(generally suffixed with
+\"-functions\"\). CDR is either a symbol or list of symbols,
+which are names of functions to be set to the abnormal hook. If
+REMOVE is non-nil, the functions will be removed from the
+abnormal hooks; otherwise, added to them."
+  (let* ((add-or-remove (if remove #'remove-hook #'add-hook))
+         (set-function (apply-partially
+                        #'org-transclusion-extension-set-a-hook-functions
+                        add-or-remove)))
+    (mapc set-function extension-functions)))
 
 ;; Load extensions upon loading this file
 (org-transclusion-load-extensions-maybe)

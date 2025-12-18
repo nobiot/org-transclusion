@@ -1,6 +1,6 @@
 ;;; org-transclusion-src-lines.el --- Extension -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021-2024  Free Software Foundation, Inc.
+;; Copyright (C) 2021-2025  Free Software Foundation, Inc.
 
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 24 May 2021
-;; Last modified: 27 December 2024
+;; Last modified: 18 December 2025
 
 ;;; Commentary:
 ;;  This is an extension to `org-transclusion'.  When active, it adds features
@@ -25,6 +25,7 @@
 
 ;;; Code:
 
+(require 'org-transclusion)
 (require 'org-element)
 (declare-function text-clone-make-overlay "text-clone")
 (declare-function org-transclusion-live-sync-buffers-others-default
@@ -34,36 +35,46 @@
 
 ;;;; Setting up the extension
 
-;; Add a new transclusion type
-(add-hook 'org-transclusion-add-functions
-          #'org-transclusion-add-src-lines)
-;; Keyword values
-(add-hook 'org-transclusion-keyword-value-functions
-          #'org-transclusion-keyword-value-lines)
-(add-hook 'org-transclusion-keyword-value-functions
-          #'org-transclusion-keyword-value-src)
-(add-hook 'org-transclusion-keyword-value-functions
-          #'org-transclusion-keyword-value-rest)
-(add-hook 'org-transclusion-keyword-value-functions
-          #'org-transclusion-keyword-value-end)
-(add-hook 'org-transclusion-keyword-value-functions
-           #'org-transclusion-keyword-value-noweb-chunk)
-(add-hook 'org-transclusion-keyword-value-functions
-          #'org-transclusion-keyword-value-thing-at-point)
-;; plist back to string
-(add-hook 'org-transclusion-keyword-plist-to-string-functions
-          #'org-transclusion-keyword-plist-to-string-src-lines)
+;;;###autoload
+(define-minor-mode org-transclusion-src-lines-mode ()
+  :lighter nil
+  :global t
+  :group 'org-transclusion
+  (if org-transclusion-src-lines-mode
+      (org-transclusion-extension-functions-add-or-remove
+       org-transclusion-src-lines-extension-functions)
+    (org-transclusion-extension-functions-add-or-remove
+     org-transclusion-src-lines-extension-functions :remove)))
 
-;; Transclusion content formatting
-(add-hook 'org-transclusion-content-format-functions
-          #'org-transclusion-content-format-src-lines)
-
-;; Open source buffer
-(add-hook 'org-transclusion-open-source-marker-functions
-          #'org-transclusion-open-source-marker-src-lines)
-;; Live-sync
-(add-hook 'org-transclusion-live-sync-buffers-functions
-          #'org-transclusion-live-sync-buffers-src-lines)
+(defvar org-transclusion-src-lines-extension-functions
+  (list
+   ;; Add a new transclusion type
+   (cons 'org-transclusion-add-functions #'org-transclusion-add-src-lines)
+    ;; Keyword values
+   (cons 'org-transclusion-keyword-value-functions
+         '(org-transclusion-keyword-value-lines
+           org-transclusion-keyword-value-src
+           org-transclusion-keyword-value-rest
+           org-transclusion-keyword-value-end
+           org-transclusion-keyword-value-noweb-chunk
+           org-transclusion-keyword-value-thing-at-point))
+   ;; plist back to string
+   (cons 'org-transclusion-keyword-plist-to-string-functions
+         #'org-transclusion-keyword-plist-to-string-src-lines)
+   ;; Transclusion content formatting
+   (cons 'org-transclusion-content-format-functions
+         #'org-transclusion-content-format-src-lines)
+   ;; Open source buffer
+   (cons 'org-transclusion-open-source-marker-functions
+         #'org-transclusion-open-source-marker-src-lines)
+   ;; Live-sync
+   (cons 'org-transclusion-live-sync-buffers-functions
+         #'org-transclusion-live-sync-buffers-src-lines))
+  "Alist of functions to activate `org-transclusion-src-lines'.
+CAR of each cons cell is a symbol name of an abnormal hook
+\(*-functions\). CDR is either a symbol or list of symbols, which
+are names of functions to be called in the corresponding abnormal
+hook.")
 
 ;;; Functions
 
@@ -129,7 +140,7 @@ it means from line 10 to the end of file."
          (entry-pos) (buf)
          (lines (plist-get plist :lines))
          (end-search-op (plist-get plist :end))
-	 (noweb-chunk (plist-get plist :noweb-chunk))
+         (noweb-chunk (plist-get plist :noweb-chunk))
          (thing-at-point (plist-get plist :thing-at-point))
          (thing-at-point (when thing-at-point
                            (make-symbol (cadr (split-string thing-at-point))))))
@@ -144,14 +155,14 @@ it means from line 10 to the end of file."
                             (entry-pos)
                             ((when search-option
                                (save-excursion
-				 (if noweb-chunk
-				     (org-transclusion--goto-noweb-chunk-beginning search-option)
+                                 (if noweb-chunk
+                                     (org-transclusion--goto-noweb-chunk-beginning search-option)
                                    (ignore-errors
                                      ;; FIXME `org-link-search' does not
                                      ;; return position when eithher
                                      ;; ::/regex/ or ::number is used
                                      (if (org-link-search search-option)
-				       (line-beginning-position)))))))
+                                       (line-beginning-position)))))))
                             ((point-min))))
                 (bounds (when thing-at-point
                           (let ((count (if end-search-op
@@ -169,10 +180,10 @@ it means from line 10 to the end of file."
                                       ;; or ::number is used
                                       (when (org-link-search end-search-op)
                                         (line-beginning-position))))))
-			       ((when noweb-chunk
-				    (goto-char (1+ start-pos))
-				    (org-transclusion--goto-noweb-chunk-end)
-				    (point)))))
+                               ((when noweb-chunk
+                                    (goto-char (1+ start-pos))
+                                    (org-transclusion--goto-noweb-chunk-end)
+                                    (point)))))
                 (range (when lines (split-string lines "-")))
                 (lbeg (if range (string-to-number (car range))
                         0))
@@ -187,9 +198,9 @@ it means from line 10 to the end of file."
                 ;;; This `cond' means :end prop has priority over the end
                 ;;; position of the range. They don't mix.
                 (end (cond
-		      ((when noweb-chunk
-			 (org-transclusion--goto-noweb-chunk-:lines-end start-pos end-pos lend)
-			 (point)))
+                      ((when noweb-chunk
+                         (org-transclusion--goto-noweb-chunk-:lines-end start-pos end-pos lend)
+                         (point)))
                       ((when thing-at-point end-pos))
                       ((when (and end-pos (> end-pos beg))
                          end-pos))
@@ -219,8 +230,8 @@ POINT shall be inside the current chunk."
   ;; or the beginning of the next code chunk ("<<.*>>=").
   (if (re-search-forward "^\\(?:[[:blank:]]*\n\\)*\\(?:@\\|<<.*?>>=\\)" nil t)
       (progn
-	(goto-char (match-beginning 0))
-	(line-beginning-position))
+        (goto-char (match-beginning 0))
+        (line-beginning-position))
     ;; Else the chunk ends at the end of the buffer.
     (when (re-search-forward "\\(?:[[:blank:]\n]*\\)*\\'" nil t)
       (goto-char (match-beginning 0)))))
@@ -234,7 +245,7 @@ LEND is the end line of the `:lines' range."
     (goto-char start-pos)
     (forward-line lend)
     (when (> (point) end-pos)
-	(goto-char end-pos))))
+        (goto-char end-pos))))
 
 (defun org-transclusion-content-src-lines (link plist)
   "Return a list of payload from LINK and PLIST in a src-block.
@@ -311,7 +322,7 @@ abnormal hook
         (src (plist-get plist :src))
         (rest (plist-get plist :rest))
         (end (plist-get plist :end))
-	(noweb-chunk (plist-get plist :noweb-chunk))
+        (noweb-chunk (plist-get plist :noweb-chunk))
         (thing-at-point (plist-get plist :thing-at-point)))
     (concat
      (when noweb-chunk ":noweb-chunk")
@@ -367,16 +378,16 @@ match any valid elisp symbol (but please don't quote it)."
   (when (string-match "\\(:thing-at-point\\|:thingatpt\\) \\([[:alnum:][:punct:]]+\\)" string)
     (list :thing-at-point (org-strip-quotes (match-string 0 string)))))
 
-(defun org-transclusion-content-format-src-lines (type content indent)
+(defun org-transclusion-content-format-src-lines (type content keyword-values)
   "Format text CONTENT from source before transcluding.
 Return content modified (or unmodified, if not applicable).
 
 This is the default one.  It only returns the content as is.
 
-INDENT is the number of current indentation of the #+transclude."
+KEYWORD-VALUES is a plist of transclusion properties."
   (when (org-transclusion-src-lines-p type)
     (let ((content (org-transclusion-ensure-newline content)))
-      (org-transclusion-content-format type content indent))))
+      (org-transclusion-content-format type content keyword-values))))
 
 (defun org-transclusion-ensure-newline (str)
   (if (not (string-suffix-p "\n" str))

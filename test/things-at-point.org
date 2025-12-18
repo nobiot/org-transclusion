@@ -19,10 +19,13 @@ I expect these will be more common:
 
 #+transclude: [[./things-at-point-dir/story.txt::Once upon a time][story]]  :end "2" :thing-at-point paragraph
 
-#+transclude: [[./things-at-point-dir/story.txt::Once upon a time][story]]  :end "3":thing-at-point sentence
+#+transclude: [[./things-at-point-dir/story.txt::Once upon a time][story]]  :end "1" :thing-at-point sentence
+
+#+transclude: [[./things-at-point-dir/story.txt::Once upon a time][story]]  :end "3" :thing-at-point sentence
 
 #+transclude: [[./things-at-point-dir/baz.el::id:1234567890][barz-baz-fuzz]]  :src elisp
 
-#+transclude: [[./things-at-point-dir/baz.el::foo][barz-baz-fuzz]]  :src elisp :thingatpt sexp
+#+transclude: [[./things-at-point-dir/baz.el::id:1234567890][barz-baz-fuzz]]  :src elisp :thing-at-point sexp
 
-#+transclude: [[./things-at-point-dir/baz.el::id:1234567890][barz-baz-fuzz]]  :src elisp :thing-at-point defun
+#+transclude: [[./things-at-point-dir/baz.el::foo][barz-baz-fuzz]]  :src elisp
+
