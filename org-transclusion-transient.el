@@ -86,6 +86,10 @@ which automatically calls the appropriate transient-prefix."
                    org-transclusion-transient--exclude-elements
                    :inapt-if-not org-transclusion-at-keyword-p)
                   ("el" "expand-links" org-transclusion-transient--expand-links
+                   :inapt-if-not org-transclusion-at-keyword-p)
+                  ("no" "no-first-heading" org-transclusion-transient--no-first-heading
+                   :inapt-if-not org-transclusion-at-keyword-p)
+                  ("da" "disable-auto" org-transclusion-transient--disable-auto
                    :inapt-if-not org-transclusion-at-keyword-p)]
 
     [:description "Addiitonal options: :src and :lines"
@@ -107,7 +111,11 @@ which automatically calls the appropriate transient-prefix."
                    :inapt-if-not org-transclusion-at-keyword-p)
                   ("st" "thing-at-point"
                    org-transclusion-transient--thingatpt
+                   :inapt-if-not org-transclusion-at-keyword-p)
+                  ("sn" "noweb-chunk"
+                   org-transclusion-transient--noweb-chunk
                    :inapt-if-not org-transclusion-at-keyword-p)]]
+
   [[:description "Undo / Redo"
                  ("<left>" "Undo" undo-only :transient t)
                  ("<right>" "Redo" undo-redo :transient t)]
@@ -236,6 +244,21 @@ you type a certain character (typically a comma). See `crm-separator'."
     (org-transclusion-transient--detect-transclude-at-point-wrapper
      (insert (format ":exclude-elements %S" elements-string)))))
 
+(transient-define-suffix org-transclusion-transient--no-first-heading ()
+  ":no-first-heading will remove the headline of a subtree.
+This is useful when you wish to merge a subtree into another headline."
+  :transient 'transient--do-stay
+  (interactive)
+  (org-transclusion-transient--detect-transclude-at-point-wrapper
+   (insert ":no-first-heading")))
+
+(transient-define-suffix org-transclusion-transient--disable-auto ()
+  "`org-transclusion-add-all' will skip transclusions with :disable-auto."
+  :transient 'transient--do-stay
+  (interactive)
+  (org-transclusion-transient--detect-transclude-at-point-wrapper
+   (insert ":disable-auto")))
+
 (transient-define-suffix org-transclusion-transient--src ()
   ":src property lets you wrap the content in a src-block.
 Choose a language from items in
@@ -287,6 +310,17 @@ Choose one of the things \"sentence\" \"paragraph\" \"defun\" \"sexp\"."
     (when string
       (org-transclusion-transient--detect-transclude-at-point-wrapper
        (insert (format ":thingatpt %s" string))))))
+
+(transient-define-suffix org-transclusion-transient--noweb-chunk ()
+  ":noweb-chunk lets you transclude named chunks of noweb.
+The name of the chunk is appended to the file name, separated by `::'
+like this example:
+
+    #+transclude: [[./file.nw::chunk-A]] :noweb-chunk"
+  :transient 'transient--do-stay
+  (interactive)
+  (org-transclusion-transient--detect-transclude-at-point-wrapper
+   (insert ":noweb-chunk")))
 
 (transient-define-suffix org-transclusion-transient--add ()
   "Call `org-transclusion-add'.
