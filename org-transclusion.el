@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 18 December 2025
+;; Last modified: 19 December 2025
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -169,6 +169,8 @@ The default is no color specification (transparent).")
   "Face for element in the transcluding buffer in the edit mode.")
 
 ;;;; Variables
+
+(defvar org-transclusion-insert-link-functions '(org-insert-link))
 
 (defvar org-transclusion-extensions-loaded nil
   "Have the extensions been loaded already?")
@@ -413,6 +415,46 @@ transclusion keyword."
           (end-of-line)
           (insert (format " :level %d" arg)))
         (when auto-transclude-p (org-transclusion-add))))))
+
+(defun org-transclusion-insert (&optional insert-above)
+  "Insert #+TRANSCLUDE: keyword from a link at point or to a blank line.
+If the point is not at a link but has text, this command will try to
+find the first link in the current line. If the point is at a blank
+line, this command will call a function in set to variable
+`org-transclusion-insert-link-functions' and prompt for the user to find
+a link.
+
+If you pass a `universal-argument' via \\[universal-argument]
+\(INSERT-ABOVE is non-nil\), the keyword is added to the line above
+current one. Otherwise, to the line below."
+  (interactive "P")
+  (let* ((link-elem-at-pt
+          (or (org-element-lineage (org-element-context) 'link t) ; at-point
+              ;; if not at-point, find the first one in the current line
+              (save-excursion
+                (beginning-of-line)
+                (re-search-forward org-link-bracket-re (line-end-position) t)
+                (org-element-lineage (org-element-context) 'link t))))
+         (blank-line-p (save-excursion
+                         (beginning-of-line)
+                         (looking-at-p "^[ \t]*$")))
+         (link-string (cond
+                       (link-elem-at-pt
+                        (buffer-substring (org-element-begin link-elem-at-pt)
+                                          (org-element-end link-elem-at-pt)))
+                       (blank-line-p
+                        (org-transclusion-insert-org-link)))))
+    (when link-string
+      ;; When the current line is not blank, open a line above or below the
+      ;; current.
+      (unless blank-line-p
+        (when insert-above (forward-line -1))
+        (end-of-line)
+        (unless (bolp) (newline nil t)))
+      (org-indent-line) (insert (format "#+transclude: %s" link-string))
+      (beginning-of-line)
+      (pulse-momentary-highlight-region
+       (point) (line-end-position) 'pulse-highlight-start-face))))
 
 ;;;###autoload
 (defun org-transclusion-add (&optional copy)
@@ -1627,6 +1669,18 @@ dynamic updates."
          (overlay-buffer ov) ov-beg ov-end 'org-transclusion-source-fringe)))))
 
 ;;;; Utility Functions
+
+(defun org-transclusion-insert-org-link ()
+  (let ((function (if (length> org-transclusion-insert-link-functions 1)
+                      (intern (completing-read
+                               "Choose a function: "
+                               org-transclusion-insert-link-functions))
+                    (car org-transclusion-insert-link-functions))))
+    (when function
+      (with-temp-buffer
+        (funcall function)
+        (buffer-string)))))
+
 (defun org-transclusion-find-source-marker (beg end)
   "Return marker that points to source begin point for transclusion.
 It works on the transclusion region at point.  BEG and END are
@@ -1801,17 +1855,19 @@ used."
   ;;   #+transclude: [[link]]
   ;;   |
   ;;   New paragraph starts
-  (let ((edge-case-p
-         (save-excursion
-           (and (looking-at-p "$")
-                (not (bobp))
-                (progn (forward-char -1)
-                       (looking-at-p "$")))))
-        (element (org-element-at-point)))
-    ;; If edge-case, do not transclude.
-    (unless edge-case-p
-      (and (string-equal "keyword" (org-element-type element))
-           (string-equal "TRANSCLUDE" (org-element-property :key element))))))
+  (and (equal (derived-mode-p major-mode) 'org-mode)
+       (let ((edge-case-p
+              (save-excursion
+                (and (looking-at-p "$")
+                     (not (bobp))
+                     (progn (forward-char -1)
+                            (looking-at-p "$")))))
+             (element (org-element-at-point)))
+         ;; If edge-case, do not transclude.
+         (unless edge-case-p
+           (and (string-equal "keyword" (org-element-type element))
+                (string-equal "TRANSCLUDE"
+                              (org-element-property :key element)))))))
 
 (defun org-transclusion-within-transclusion-p ()
   "Return t if the current point is within a transclusion region."

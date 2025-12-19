@@ -1,105 +1,78 @@
-;; -*- lexical-binding: t; -*-
+;;; org-transclusion-transient.el --- Transient menu for org-transclusion -*- lexical-binding: t; -*-
 
-;;    https://github.com/nobiot/org-transclusion/issues/169
+;; Copyright (C) 2021-2025  Free Software Foundation, Inc.
+
+;; This program is free software: you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by the
+;; Free Software Foundation, either version 3 of the License, or (at your
+;; option) any later version.
+
+;; This program is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;; General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License along
+;; with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;; Author: Noboru Ota <me@nobiot.com>
+;; Created: 1 January 2025
+;; Last modified: 19 December 2025
+
+;;; Commentary:
+
+;;  Transient menu for `org-transclusion'. To use the menu, simply call
+;;  `org-transclusion-transient-menu'. This command will call a different menu
+;;  depending on whether the point is at a transcluded content.
 
 (require 'org-transclusion)
 (require 'transient) ; Need more recent than that comes with 29.4; tested on
-                    ; transient-20241224.2234
+                     ; transient-20241224.2234
 
-;; Utilities
+;;; Code:
 
-(defmacro hydra-org-transclusion--detect-transclude-at-point-wrapper (body)
-  `(let ((line-text (buffer-substring-no-properties
-                     (line-beginning-position) (line-end-position)))
-         (position (point))
+;; Variables
+
+(defvar org-transclusion-transient-repeat-mode-was-active-p nil)
+
+(defvar org-transclusion-transient-src-languaes '(python emacs-lisp)
+  "History for `completing-read' when selecting a src language.")
+
+(defvar org-transclusion-transient-src-history nil
+  "History for `completing-read' when selecting a src language.")
+
+
+;; Helper macro
+
+;; This macro is originally shared by GitHub user stardiviner via
+;; https://github.com/nobiot/org-transclusion/issues/169
+(defmacro org-transclusion-transient--detect-transclude-at-point-wrapper (body)
+  "Evaluate BODY at the end of #+transclude: keyword.
+This macro checks if the current line is a transclude keyword line. If
+it is not, it emits a user error."
+  `(let ((position (point))
          (end-of-line (line-end-position)))
-     (if (string-match-p "#\\+transclude:" line-text)
+     (if (org-transclusion-at-keyword-p)
          (save-excursion
            (unless (eq position end-of-line) (end-of-line))
            (insert " ")
            ,body
            (pulse-momentary-highlight-region end-of-line (line-end-position)
                                              'pulse-highlight-start-face))
-       (user-error "You'r not on #+transclude: [[link]] line."))))
+       (user-error "You're not on #+transclude: [[link]] line.?"))))
 
-(defun org-transclusion--transient-read-level (&rest _)
-  "Read a string from the minibuffer, restricted to the range 1 to 9 or an empty value."
-  (cl-loop for result =
-           (read-string "Enter org-transclusion content headline\
-level (1-9) or leave empty: ")
-           if (or (string= result "")
-                  (string-match-p "^[1-9]$" result))
-           return result
-           else do (progn
-                     (message "Invalid input. Number 1-9 or leave empty")
-                     (sit-for 1))))
+;; Transient menus
 
-(defun org-transclusion--transient-read-lines (&rest _)
-  "Read a string from the minibuffer, restricted to eg 5-10, 6-, -6."
-  (cl-loop for result =
-           (read-string "Enter :lines option values (eg 5-10, 6-, -6): ")
-           if (string-match-p "\"?[0-9]*-[0-9]*\"?" result)
-           return result
-           else do (progn
-                     (message "Invalid input. The format must be eg 5-10, 6-, -6")
-                     (sit-for 1))))
-
-;; You can add `org-roam-node-insert' as an example.
-(defvar org-transclusion-insert-link-functions '(org-insert-link))
-
-(defun org-transclusion-insert-org-link ()
-  (let ((function (if (length> org-transclusion-insert-link-functions 1)
-                      (intern (completing-read
-                               "Choose a function: "
-                               org-transclusion-insert-link-functions))
-                    (car org-transclusion-insert-link-functions))))
-    (when function
-      (with-temp-buffer
-        (funcall function)
-        (buffer-string)))))
-
-(defun org-transclusion-insert-from-link (&optional insert-below)
-  "Insert #+TRANSCLUDE: keyword from a link.
-If you pass a `universal-argument' via \\[universal-argument]
- \(INSERT-BELOW is non-nil\), the keyword is added to the line
- below current one. Otherwise, to the line above."
-  (interactive "P")
-  (let* ((link-elem-at-pt
-          (or (org-element-lineage (org-element-context) 'link t) ; at-point
-              ;; if not at-point, find the first one in the current line
-              (save-excursion
-                (beginning-of-line)
-                (re-search-forward org-link-bracket-re (line-end-position) t)
-                (org-element-lineage (org-element-context) 'link t))))
-         (blank-line-p (save-excursion
-                         (beginning-of-line)
-                         (looking-at-p "^[ \t]*$")))
-         (link-string (cond
-                       (link-elem-at-pt
-                        (buffer-substring (org-element-begin link-elem-at-pt)
-                                          (org-element-end link-elem-at-pt)))
-                       (blank-line-p
-                        (org-transclusion-insert-org-link)))))
-    (when link-string
-      ;; When the current line is not blank, open a line above or below the
-      ;; current.
-      (unless blank-line-p
-        (when insert-below (progn (forward-line 1) (unless (bolp) (insert "\n"))))
-        (beginning-of-line)
-        (open-line 1))
-      (insert (format "#+transclude: %s" link-string))
-      (beginning-of-line)
-      (pulse-momentary-highlight-region
-       (point) (line-end-position) 'pulse-highlight-start-face))))
-
-(transient-define-prefix org-transclusion--buffer-transient ()
-  "Prefix that waves at the user"
+(transient-define-prefix org-transclusion-transient--buffer-menu ()
+  "Transient menu when point is not at transcluded content.
+In general, users should use command `org-transclusion-transient-menu',
+which automatically calls the appropriate transient-prefix."
   [[:description "Add/Remove"
-                 ("a" "Add at point"
-                  org-transclusion-add
-                  :transient transient--do-return)
-                  ("A" "Add all in buffer" org-transclusion-add-all)
-                  ("R" "Remove all in buffer" org-transclusion-remove-all)]
+                 ("a" "Add at point" org-transclusion-transient--add
+                  :inapt-if-not org-transclusion-at-keyword-p)
+                 ("A" "Add all in buffer" org-transclusion-add-all)
+                 ("R" "Remove all in buffer" org-transclusion-remove-all)]
+
     [:description "Options for #+TRANSCLUDE keyword"
                   (:info "Select options. Keep adding")
                   ("i" "insert from link at point or current line"
@@ -114,6 +87,7 @@ If you pass a `universal-argument' via \\[universal-argument]
                    :inapt-if-not org-transclusion-at-keyword-p)
                   ("el" "expand-links" org-transclusion-transient--expand-links
                    :inapt-if-not org-transclusion-at-keyword-p)]
+
     [:description "Addiitonal options: :src and :lines"
                   ;; TODO check the extension to be active
                   :inapt-if-not org-transclusion-at-keyword-p
@@ -128,131 +102,201 @@ If you pass a `universal-argument' via \\[universal-argument]
                   ("sl" "lines (eg 3-5, 6-, -6)"
                    org-transclusion-transient--lines
                    :inapt-if-not org-transclusion-at-keyword-p)
-                  ("sl" "end"
+                  ("se" "end"
                    org-transclusion-transient--end
                    :inapt-if-not org-transclusion-at-keyword-p)
                   ("st" "thing-at-point"
                    org-transclusion-transient--thingatpt
                    :inapt-if-not org-transclusion-at-keyword-p)]]
-  [:description "Setting"
-                (:info ".")
-                ("-m" "Show more" test/set-level)
-                ("-l" "show less" test/set-level-less)])
-
-(transient-define-suffix test/set-level ()
-  :transient t
+  [[:description "Undo / Redo"
+                 ("<left>" "Undo" undo-only :transient t)
+                 ("<right>" "Redo" undo-redo :transient t)]
+   [:description "Return"
+                 ("<RET>" "Quit" transient-quit-all)]]
   (interactive)
-  (transient-set-level 'org-transclusion--buffer-transient
-                       4)
-  (org-transclusion-transient-menu))
+  (org-transclusion-transient--setup)
+  (transient-setup 'org-transclusion-transient--buffer-menu))
 
-(transient-define-suffix test/set-level-less ()
-  :transient t
-  (interactive)
-  (transient-set-level 'org-transclusion--buffer-transient
-                       3)
-  (org-transclusion-transient-menu))
-
-(transient-define-prefix org-transclusion--at-point-transient ()
-  "Prefix that waves at the user"
-  [:description
-    "Operation on Transclusion at Point"
+(transient-define-prefix org-transclusion-transient--at-point-menu ()
+  "Transient menu when point is at transcluded content.
+In general, users should use command `org-transclusion-transient-menu',
+which automatically calls the appropriate transient-prefix."
+  [:description "Operation on Transclusion at Point"
     [:description "Remove"
-                  ("r" "Remove at point"   org-transclusion-remove)
-                  ("d" "Detach at point"   org-transclusion-detach)
+                  ("d" "Remove at point"   org-transclusion-remove)
+                  ("C" "Detach at point"   org-transclusion-detach)
                   ("R" "Remove all in buffer" org-transclusion-remove-all)]
     [:description "Other at-point functions"
-                  ("P" "Promote" org-transclusion-promote-subtree)
-                  ("D" "Demote"  org-transclusion-demote-subtree)
+                  ("P" "Promote" org-transclusion-promote-subtree :transient t)
+                  ("D" "Demote"  org-transclusion-demote-subtree :transient t)
                   ("o" "Open the source buffer" org-transclusion-open-source)
-                  ("O" "Move to the source buffer" org-transclusion-move-to-source)]]
-  [:description ""
-                (:info ".")])
+                  ("O" "Move to the source buffer" org-transclusion-move-to-source)]])
+
+;;;###autoload
+(defun org-transclusion-transient-menu ()
+  "Call a transient menu for `org-transclusion'.
+It calls different menu depending on whether the point is at a
+transcluded content or not."
+  (interactive)
+  (unless (derived-mode-p 'org-mode)
+    (user-error "`org-transclusion' works only in `org' buffer"))
+  (let ((org-transclusion-buffer (current-buffer)))
+    (if (org-transclusion-within-transclusion-p)
+        (org-transclusion-transient--at-point-menu)
+      (org-transclusion-transient--buffer-menu))))
+
+;; Private functions
+
+(defun org-transclusion-transient--setup ()
+  "Temporarily deactivate Repeat mode, which interferes with transient.
+Only when `repeat-mode' is active when calling the transient menu. This
+function also sets `org-transclusion-transient--teardown' to
+`transient-exit-hook' to automatically turn `repeat-mode' back on."
+  (when (and (require 'repeat nil t) repeat-mode)
+    (message "Temporarily deactivating Repeat mode")
+    (setq org-transclusion-transient-repeat-mode-was-active-p t)
+    (repeat-mode -1)
+    (add-hook 'transient-exit-hook #'org-transclusion-transient--teardown)))
+
+(defun org-transclusion-transient--teardown ()
+  "Turn `repeat-mode' on in `transient-exit-hook'.
+See `org-transclusion-transient--setup'"
+  (when org-transclusion-transient-repeat-mode-was-active-p
+    (repeat-mode +1)
+    (setq org-transclusion-transient-repeat-mode-was-active-p nil)))
+
+(defun org-transclusion-transient--read-level (&rest _)
+  "Read a string from the minibuffer, restricted to the range 1 to 9 or an empty value."
+  (cl-loop for result =
+           (read-string "Enter org-transclusion content headline\
+level (1-9) or leave empty: ")
+           if (or (string= result "")
+                  (string-match-p "^[1-9]$" result))
+           return result
+           else do (progn
+                     (message "Invalid input. Number 1-9 or leave empty")
+                     (sit-for 1))))
+
+(defun org-transclusion-transient--read-lines (&rest _)
+  "Read a string from the minibuffer, restricted to eg 5-10, 6-, -6."
+  (cl-loop for result =
+           (read-string "Enter :lines option values (eg 5-10, 6-, -6): ")
+           if (string-match-p "\"?[0-9]*-[0-9]*\"?" result)
+           return result
+           else do (progn
+                     (message "Invalid input. The format must be eg 5-10, 6-, -6")
+                     (sit-for 1))))
+
+;; Transient suffix
 
 (transient-define-suffix org-transclusion-transient--insert ()
-  :transient 'transient--do-return
-  (interactive)
-  (org-transclusion-insert-from-link)
-  (org-transclusion--buffer-transient))
-
-(transient-define-suffix org-transclusion-transient--level ()
+  "Call `org-transclusion-insert', which see."
   :transient 'transient--do-stay
   (interactive)
-  (let ((level-string (org-transclusion--transient-read-level)))
-    (hydra-org-transclusion--detect-transclude-at-point-wrapper
+  (org-transclusion-insert)
+  (org-transclusion-transient--buffer-menu))
+
+(transient-define-suffix org-transclusion-transient--level ()
+  "Add :level property to transclude keyword.
+The command prompts for a number or empty without a number,
+which automatically adjust headline levels."
+  :transient 'transient--do-stay
+  (interactive)
+  (let ((level-string (org-transclusion-transient--read-level)))
+    (org-transclusion-transient--detect-transclude-at-point-wrapper
      (insert (if (string-empty-p level-string)
                  ":level"
                (format ":level %s" level-string))))))
 
 (transient-define-suffix org-transclusion-transient--only-contents ()
+  ":only-content will exclude titles of headlines of a subtree (headline).
+With this property, transclude only the contents."
   :transient 'transient--do-stay
   (interactive)
-  (hydra-org-transclusion--detect-transclude-at-point-wrapper
+  (org-transclusion-transient--detect-transclude-at-point-wrapper
    (insert ":only-contents")))
 
 (transient-define-suffix org-transclusion-transient--expand-links ()
+  ":expand-links expand the file names in links to absolute file names."
   :transient 'transient--do-stay
   (interactive)
-  (hydra-org-transclusion--detect-transclude-at-point-wrapper
+  (org-transclusion-transient--detect-transclude-at-point-wrapper
    (insert ":expand-links")))
 
 (transient-define-suffix org-transclusion-transient--exclude-elements ()
+  "Add org-elements to be excluded.
+The command prompts for elements and lets you select multiple items when
+you type a certain character (typically a comma). See `crm-separator'."
   :transient 'transient--do-stay
   (interactive)
   (and-let* ((list-elements (completing-read-multiple
                              "Select elements to exclude: "
                              org-element-all-elements))
              (elements-string (mapconcat #'identity list-elements "\s")))
-    (hydra-org-transclusion--detect-transclude-at-point-wrapper
+    (org-transclusion-transient--detect-transclude-at-point-wrapper
      (insert (format ":exclude-elements %S" elements-string)))))
 
 (transient-define-suffix org-transclusion-transient--src ()
+  ":src property lets you wrap the content in a src-block.
+Choose a language from items in
+`org-transclusion-transient-src-languaes' or type a language."
   :transient 'transient--do-stay
   (interactive)
-  (let ((string (read-string "Enter language for :src option: ")))
+  (let ((string (completing-read "Enter language for :src option: "
+                                 org-transclusion-transient-src-languaes
+                                 nil nil nil
+                                 org-transclusion-transient-src-history)))
     (when string
-      (hydra-org-transclusion--detect-transclude-at-point-wrapper
+      (org-transclusion-transient--detect-transclude-at-point-wrapper
        (insert (format ":src %s" string))))))
 
 (transient-define-suffix org-transclusion-transient--rest ()
+  ":rest for additional properties for the src-block."
   :transient 'transient--do-stay
   (interactive)
   (let ((string (read-string "Enter :rest option values: ")))
     (when string
-      (hydra-org-transclusion--detect-transclude-at-point-wrapper
+      (org-transclusion-transient--detect-transclude-at-point-wrapper
        (insert (format ":rest %S" string))))))
 
 (transient-define-suffix org-transclusion-transient--lines ()
+  ":lines for range of lines to transclude from a source and text file."
   :transient 'transient--do-stay
   (interactive)
-  (let ((string (org-transclusion--transient-read-lines)))
+  (let ((string (org-transclusion-transient--read-lines)))
     (when string
-      (hydra-org-transclusion--detect-transclude-at-point-wrapper
+      (org-transclusion-transient--detect-transclude-at-point-wrapper
        (insert (format ":lines %s" string))))))
 
 (transient-define-suffix org-transclusion-transient--end ()
+  ":end for a search term as the end of content to be transcluded."
   :transient 'transient--do-stay
   (interactive)
   (let ((string (read-string "Enter :end option value: ")))
     (when string
-      (hydra-org-transclusion--detect-transclude-at-point-wrapper
+      (org-transclusion-transient--detect-transclude-at-point-wrapper
        (insert (format ":end %S" string))))))
 
 (transient-define-suffix org-transclusion-transient--thingatpt ()
+  ":thingatpt to specify a \"thing\" to transclude from the source.
+Choose one of the things \"sentence\" \"paragraph\" \"defun\" \"sexp\"."
   :transient 'transient--do-stay
   (interactive)
   (let ((string (completing-read "Enter :thingatpt option value: "
                                  '("sentence" "paragraph" "defun" "sexp"))))
     (when string
-      (hydra-org-transclusion--detect-transclude-at-point-wrapper
+      (org-transclusion-transient--detect-transclude-at-point-wrapper
        (insert (format ":thingatpt %s" string))))))
 
-;;;###autoload
-(defun org-transclusion-transient-menu ()
+(transient-define-suffix org-transclusion-transient--add ()
+  "Call `org-transclusion-add'.
+This will not exit the transient menu. You will navigate to another menu
+for the transcluded content."
+  :transient 'transient--do-stay
   (interactive)
-  (unless (derived-mode-p 'org-mode)
-    (user-error "`org-transclusion' works only in `org' buffer"))
-  (let ((org-transclusion-buffer (current-buffer)))
-    (if (org-transclusion-within-transclusion-p)
-        (org-transclusion--at-point-transient)
-      (org-transclusion--buffer-transient))))
+  (org-transclusion-add)
+  (org-transclusion-transient--at-point-menu))
+
+(provide 'org-transclusion-transient)
+
+;;; org-transclusion-transient.el ends here
