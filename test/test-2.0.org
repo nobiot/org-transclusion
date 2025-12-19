@@ -199,4 +199,22 @@ Temporarily set ~org-transclusion-include-first-section~ to nil
   # id-1234 end here
   return fname # return this to org-mode
 #+end_src
+* Test "auto" level
 
+  #+transclude: [[file:bertrand-russell.org::*On Denoting]] :level
+
+*** A auto level
+
+  #+transclude: [[file:bertrand-russell.org::*On Denoting]] :level  :exclude-elements "headline drawer"
+
+
+  #+transclude: [[file:bertrand-russell.org::*On Denoting]] :level 3 :exclude-elements "headline drawer"
+
+*** First sectiona and "auto" level
+
+#+begin_src emacs-lisp
+  (setq org-transclusion-include-first-section nil)
+  (setq org-transclusion-include-first-section t)
+#+end_src
+
+  #+transclude: [[file:./test-no-first-section.org]] :level
