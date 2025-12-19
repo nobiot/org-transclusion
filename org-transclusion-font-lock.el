@@ -17,16 +17,27 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 22 August 2021
-;; Last modified: 18 December 2025
+;; Last modified: 19 December 2025
 
 ;;; Commentary:
 ;;  This file is part of Org-transclusion
 ;;  URL: https://github.com/nobiot/org-transclusion
+;;
+;;  By default, this library does not need to be explicitly configured as it
+;;  will be automatically activated via `org-transclusion-extensions' (part of
+;;  `org-transclusion') (`org-transclusion-font-lock' is set to be active by
+;;  default).
+;;
+;;  Alternatively, you can set it up without loading the whole
+;;  `org-transclusion' library.
+;;
+;;  (use-package org-transclusion-font-lock
+;;   :after org
+;;   :config (org-transclusion-font-lock-mode +1))
 
 ;;; Code:
 
 (require 'org)
-(require 'org-transclusion)
 
 ;;;###autoload
 (define-minor-mode org-transclusion-font-lock-mode ()
@@ -34,26 +45,15 @@
   :global t
   :group 'org-transclusion
   (if org-transclusion-font-lock-mode
-      (org-transclusion-extension-functions-add-or-remove
-       org-transclusion-font-lock-extension-functions)
-    (org-transclusion-extension-functions-add-or-remove
-     org-transclusion-font-lock-extension-functions :remove)))
-
-(defvar org-transclusion-font-lock-extension-functions
-  (list (cons 'org-mode-hook #'org-transclusion-font-lock-set))
-  "Alist of functions to activate `org-transclusion-font-lock'.
-CAR of each cons cell is a symbol name of an abnormal hook
-\(*-functions\). CDR is either a symbol or list of symbols, which
-are names of functions to be called in the corresponding abnormal
-hook.")
+      (add-hook 'org-mode-hook #'org-transclusion-font-lock-set)
+    (remove-hook 'org-mode-hook #'org-transclusion-font-lock-set)))
 
 (defface org-transclusion-keyword
   '((((class color) (min-colors 88) (background light))
-     :foreground "#0030b4")
+     :inherit font-lock-keyword-face)
     (((class color) (min-colors 88) (background dark))
-     :foreground "#34cfff")
-    (t
-     :foreground "darkgray"))
+     :inherit font-lock-keyword-face)
+    (t :inherit font-lock-keyword-face))
   "Face for #+transclude keyword."
   :group 'org-transclusion)
 
