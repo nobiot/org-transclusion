@@ -573,7 +573,12 @@ When success, return the beginning point of the keyword re-inserted."
         (org-transclusion-with-inhibit-read-only
           (save-excursion
             (delete-region beg end)
-            (when (> indent 0) (indent-to indent))
+            (when (> indent 0) (indent-to indent)
+                  ;; Going back to beg is required as point has moved to
+                  ;; beg+indent; otherwise, there are cases where the remove
+                  ;; does not fully remove the read-only transclusion content,
+                  ;; leading to duplicating it.
+                  (goto-char beg))
             (insert-before-markers keyword)))
         (goto-char beg))
     (message "Nothing done. No transclusion exists here.") nil))
