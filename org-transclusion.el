@@ -1072,8 +1072,8 @@ returned by hooks in `org-transclusion-add-functions'."
         (run-hook-with-args 'org-transclusion-after-add-functions beg end))
       t)))
 
-(defun org-transclusion-add-target-marker (link)
-  "Return the marker of transclusion target by opening LINK.
+(defun org-transclusion-add-source-marker (link)
+  "Return the marker of transclusion source by opening LINK.
 LINK must be Org's link object that `org-link-open' can act on. As long
 as `org-link-open' opens a buffer within Emacs, this function should
 return a marker."
@@ -1105,7 +1105,7 @@ return a marker."
 Return nil if not found."
   (and-let*
       ((_ (string= "id" (org-element-property :type link)))
-       (mkr (org-transclusion-add-target-marker link))
+       (mkr (org-transclusion-add-source-marker link))
        (buf (marker-buffer mkr))
        (_ (buffer-live-p (marker-buffer mkr))))
     (with-current-buffer buf
@@ -1135,7 +1135,7 @@ Return nil if not found."
   ;; already open with a point. If the search option is present, the point will
   ;; move to the appropriate point and get the element. If the search option is
   ;; not present, the whole buffer needs to be obtained.
-             (mkr (org-transclusion-add-target-marker link))
+             (mkr (org-transclusion-add-source-marker link))
              (buf (marker-buffer mkr)))
     ;; - Silly to go back to the buffer here.
     ;; - `org-transclusion-content-org-filtered' should not return other
@@ -1157,7 +1157,7 @@ Return nil if not found."
   "Return a list for non-Org file LINK object and PLIST.
 Return nil if not found."
   (and-let* (;; (_ (string= "file" (org-element-property :type link)))
-             (mkr (org-transclusion-add-target-marker link))
+             (mkr (org-transclusion-add-source-marker link))
              (buf (marker-buffer mkr)))
     ;; FIXME It's silly to revisit the buffer when it was already visited.
     (with-current-buffer buf

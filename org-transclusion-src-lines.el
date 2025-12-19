@@ -134,7 +134,7 @@ One of the numbers can be omitted.  When the first number is
 omitted (e.g. -10), it means from the beginning of the file to
 line 10. Likewise, when the second number is omitted (e.g. 10-),
 it means from line 10 to the end of file."
-  (let* ((src-mkr (org-transclusion-add-target-marker link))
+  (let* ((src-mkr (org-transclusion-add-source-marker link))
          (search-option (org-element-property :search-option link))
          (type (org-element-property :type link))
          (buf (and src-mkr (marker-buffer src-mkr)))
