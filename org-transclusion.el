@@ -229,6 +229,7 @@ the \\+`link', \\+`keyword-plist', and \\+`copy' arguments.")
     org-transclusion-keyword-value-level
     org-transclusion-keyword-value-disable-auto
     org-transclusion-keyword-value-only-contents
+    org-transclusion-keyword-value-no-first-heading
     org-transclusion-keyword-value-exclude-elements
     org-transclusion-keyword-value-expand-links
     org-transclusion-keyword-current-indentation)
@@ -869,9 +870,15 @@ It needs to be set in
 It is meant to be used by `org-transclusion-get-string-to-plist'.
 It needs to be set in
 `org-transclusion-keyword-value-functions'."
-  (when (string-match ":level *\\([1-9]\\)" string)
-    (list :level
-          (string-to-number (org-strip-quotes (match-string 1 string))))))
+  (and-let* ((_ (string-match ":level *\\([1-9]?\\)" string))
+             (match (match-string 1 string))
+             (val (if (string-empty-p match) "auto" (string-to-number match))))
+    (list :level val)))
+
+(defun org-transclusion-keyword-value-no-first-heading (string)
+  (when (string-match-p ":no-first-heading" string)
+    (list :no-first-heading
+          (not (string-match-p ":no-first-heading +nil" string)))))
 
 (defun org-transclusion-keyword-value-only-contents (string)
   "It is a utility function used converting a keyword STRING to plist.
@@ -929,6 +936,7 @@ keyword.  If not, returns nil."
         (level (plist-get plist :level))
         (disable-auto (plist-get plist :disable-auto))
         (only-contents (plist-get plist :only-contents))
+        (no-first-heading (plist-get plist :no-first-heading))
         (exclude-elements (plist-get plist :exclude-elements))
         (expand-links (plist-get plist :expand-links))
         (custom-properties-string nil))
@@ -941,9 +949,12 @@ keyword.  If not, returns nil."
                       (concat custom-properties-string " " str ))))))
     (concat "#+transclude: "
             link
-            (when level (format " :level %d" level))
+            (when level (if (and (stringp level) (string= level "auto"))
+                            " :level "
+                          (format " :level %d" level)))
             (when disable-auto (format " :disable-auto"))
             (when only-contents (format " :only-contents"))
+            (when no-first-heading (format " :no-first-heading"))
             (when exclude-elements (format " :exclude-elements \"%s\""
                                            exclude-elements))
             (when expand-links (format " :expand-links"))
@@ -1030,6 +1041,9 @@ based on the following arguments:
          (tc-buffer (current-buffer))
          (ov-src (text-clone-make-overlay sbeg send sbuf)) ;; source-buffer overlay
          (tc-pair ov-src)
+         (src-odd (buffer-local-value 'org-odd-levels-only sbuf))
+         (dest-odd org-odd-levels-only)
+         (dest-effective-level (org-reduced-level (or (org-current-level) 0)))
          (content content))
     (when (org-transclusion-type-is-org type)
       (with-temp-buffer
@@ -1039,9 +1053,17 @@ based on the following arguments:
         (insert content)
         (org-with-point-at 1
           (let* ((to-level (plist-get keyword-values :level))
-                 (level (org-transclusion-content-highest-org-headline))
-                 (diff (when (and level to-level) (- level to-level))))
+                 (_ (when (equal "auto" to-level)
+                      (setq to-level (+ 1 dest-effective-level))))
+                 (level (let ((org-odd-levels-only src-odd))
+                          (org-transclusion-content-highest-org-headline)))
+                 (diff (when (and level to-level) (- level to-level)))
+                 (org-odd-levels-only dest-odd))
             (when diff
+              (when (and src-odd (not dest-odd))
+                (org-convert-to-oddeven-levels))
+              (when (and (not src-odd) dest-odd)
+                (org-convert-to-odd-levels))
               (cond ((< diff 0) ; demote
                      (org-map-entries (lambda ()
                                         (dotimes (_ (abs diff))
@@ -1193,6 +1215,9 @@ work to
           #'org-transclusion-content-filter-org-only-contents-function)
 
 (add-hook 'org-transclusion-content-filter-org-functions
+          #'org-transclusion-content-filter-org-no-first-heading-function)
+
+(add-hook 'org-transclusion-content-filter-org-functions
           #'org-transclusion-content-filter-org-expand-links-function)
 
 (make-obsolete 'org-transclusion-content-org-buffer-or-element
@@ -1311,6 +1336,17 @@ is non-nil."
   (if (eq (org-element-type data) 'headline)
       nil
     data))
+
+(defun 'org-transclusion-content-filter-org-no-first-heading-function (obj plist)
+  "Exclude the first headline in OBJ if PLIST has `:no-first-heading'."
+  (when (plist-get plist :no-first-heading)
+    (let ((first t))
+      (org-element-map obj org-element-all-elements
+        (lambda (data)
+          (if (and first (eq (org-element-type data) 'headline))
+              (setq first nil)
+            data))
+        nil nil 'section nil))))
 
 ;;;;---------------------------------------------------------------------------
 ;;;; Functions to support non-Org-mode link types
@@ -2032,7 +2068,9 @@ ensure the settings revert to the user's setting prior to
   (let* ((pos (next-property-change (point) nil (line-end-position)))
          (keyword-plist (get-text-property pos
                                            'org-transclusion-orig-keyword))
-         (level (car (org-heading-components))))
+         (level (if (equal "auto" (plist-get keyword-plist :level))
+                    "auto"
+                  (org-reduced-level (or (org-current-level) 0)))))
     ;; adjust keyword :level prop
     (setq keyword-plist (plist-put keyword-plist :level level))
     (put-text-property (point) (line-end-position)
