@@ -135,10 +135,8 @@ omitted (e.g. -10), it means from the beginning of the file to
 line 10. Likewise, when the second number is omitted (e.g. 10-),
 it means from line 10 to the end of file."
   (let* ((src-mkr (org-transclusion-add-target-marker link))
-         (path (org-element-property :path link))
          (search-option (org-element-property :search-option link))
          (type (org-element-property :type link))
-         (entry-pos)
          (buf (and src-mkr (marker-buffer src-mkr)))
          (lines (plist-get plist :lines))
          (end-search-op (plist-get plist :end))
@@ -146,27 +144,18 @@ it means from line 10 to the end of file."
          (thing-at-point (plist-get plist :thing-at-point))
          (thing-at-point (when thing-at-point
                            (make-symbol (cadr (split-string thing-at-point))))))
-    (if (not (string= type "id"))
-        buf
-      (let ((filename-pos (org-id-find path)))
-        (setq buf (find-file-noselect (car filename-pos)))
-        (setq entry-pos (cdr filename-pos))))
     (when buf
       (with-current-buffer buf
         (org-with-wide-buffer
          (let* ((start-pos (cond
-                            (entry-pos)
-                            ((when search-option
-                               (save-excursion
-                                 (if noweb-chunk
-                                     (org-transclusion--goto-noweb-chunk-beginning search-option)
-                                   (ignore-errors
-                                     ;; FIXME `org-link-search' does not
-                                     ;; return position when eithher
-                                     ;; ::/regex/ or ::number is used
-                                     (if (org-link-search search-option)
-                                       (line-beginning-position)))))))
-                            ((point-min))))
+                            ;; org-element only finds search-option only when
+                            ;; type=file. This condition is only for noweb now
+                            ((and (equal type "file") search-option noweb-chunk)
+                             (save-excursion
+                               (org-transclusion--goto-noweb-chunk-beginning search-option)))
+                            ;; for others, non-file types, assume that the
+                            ;; position in the marker is the intended point
+                            (t (marker-position src-mkr))))
                 (bounds (when thing-at-point
                           (let ((count (if end-search-op
                                            (string-to-number end-search-op) 1)))

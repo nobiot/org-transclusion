@@ -39,6 +39,12 @@ ID with "first section" [[id:2022-06-26T152831]]
 
 #+transclude: [[id:2022-06-26T152831]]
 
+** org-id with lines
+
+   [[id:2022-10-10T173507::*H2]]
+
+#+transclude: [[id:2022-10-10T173507::*H2]]  :lines 1-5
+
 ** test empty file
 #+transclude: [[file:empty.txt::2][empty text file]]
 
@@ -50,6 +56,10 @@ ID with "first section" [[id:2022-06-26T152831]]
    Below are tesing the new ~org-transclusion-fix-common-misspelling~ function.
 
    #+transclude: [[file:test.txt][text file]]
+
+   #+transclude: [[file:test.txt::3]]  :lines 1-1
+
+   #+transclude: [[file:test.txt::/Gab/]]  :lines 1-1
 
    #+transclude [[file:test.txt][text file]]
 
@@ -122,8 +132,8 @@ Temporarily set ~org-transclusion-include-first-section~ to nil
 * Orgit-file (link to git rev)
 
   [[orgit-file:~/src/org-transclusion/::main::org-transclusion.el::Last modified][Orgit-file link to main]]
-#+transclude: [[orgit-file:~/src/org-transclusion/::main::org-transclusion.el::Last modified][Orgit-file link to main]]  :lines 1- :src emacs-lisp :end "URL"
 
+#+transclude: [[orgit-file:~/src/org-transclusion/::main::org-transclusion.el::Last modified][Orgit-file link to main]]  :lines 1- :src emacs-lisp :end "URL"
 
 * Live-Sync
 ** center-block dynamic-block example-block export-block special-block verse-block
