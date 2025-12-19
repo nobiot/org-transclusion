@@ -119,6 +119,12 @@ Temporarily set ~org-transclusion-include-first-section~ to nil
 
 #+transclude: [[file:test-no-first-section-negative.org]]
 
+* Orgit-file (link to git rev)
+
+  [[orgit-file:~/src/org-transclusion/::main::org-transclusion.el::Last modified][Orgit-file link to main]]
+#+transclude: [[orgit-file:~/src/org-transclusion/::main::org-transclusion.el::Last modified][Orgit-file link to main]]  :lines 1- :src emacs-lisp :end "URL"
+
+
 * Live-Sync
 ** center-block dynamic-block example-block export-block special-block verse-block
 

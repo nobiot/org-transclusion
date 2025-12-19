@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 24 May 2021
-;; Last modified: 18 December 2025
+;; Last modified: 19 December 2025
 
 ;;; Commentary:
 ;;  This is an extension to `org-transclusion'.  When active, it adds features
@@ -134,17 +134,20 @@ One of the numbers can be omitted.  When the first number is
 omitted (e.g. -10), it means from the beginning of the file to
 line 10. Likewise, when the second number is omitted (e.g. 10-),
 it means from line 10 to the end of file."
-  (let* ((path (org-element-property :path link))
+  (let* ((src-mkr (org-transclusion-add-target-marker link))
+         (path (org-element-property :path link))
          (search-option (org-element-property :search-option link))
          (type (org-element-property :type link))
-         (entry-pos) (buf)
+         (entry-pos)
+         (buf (and src-mkr (marker-buffer src-mkr)))
          (lines (plist-get plist :lines))
          (end-search-op (plist-get plist :end))
          (noweb-chunk (plist-get plist :noweb-chunk))
          (thing-at-point (plist-get plist :thing-at-point))
          (thing-at-point (when thing-at-point
                            (make-symbol (cadr (split-string thing-at-point))))))
-    (if (not (string= type "id")) (setq buf (find-file-noselect path))
+    (if (not (string= type "id"))
+        buf
       (let ((filename-pos (org-id-find path)))
         (setq buf (find-file-noselect (car filename-pos)))
         (setq entry-pos (cdr filename-pos))))
