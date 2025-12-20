@@ -1,4 +1,5 @@
 #+title: Test file for Org-transclusion
+#+startup: content
 
 This is the first section before the first headline.
 
@@ -68,7 +69,7 @@ ID with "first section" [[id:2022-06-26T152831]]
    #+transclude: [[file:test.txt][text file]]
 
    ::number works now
-   #+transclude: [[file:test.txt::3]]  :lines 1-1
+   #+transclude: [[file:test.txt::5]]  :lines 1-2
 
    ::/regexp/ does not work as intended because it will open an occur buffer and
    does not move the point in the source buffer.
@@ -80,7 +81,6 @@ ID with "first section" [[id:2022-06-26T152831]]
 
 ** test t/nil
 t/nil will be dropped after remove-at-point
-
 
 #+transclude: [[file:test.txt][text file]]
 #+transclude: [[id:2022-05-30T203553][Bertrand Russell]]
