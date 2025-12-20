@@ -1600,19 +1600,19 @@ adds fringe-only prefix."
   "Remove fringe indicator from PREFIX string.
 Returns the cleaned prefix, or nil if prefix was only the fringe indicator."
   (when (stringp prefix)
-    (let ((cleaned prefix)
-          (pos 0))
+    (let* ((cleaned prefix)
+           (pos (length cleaned)))
       ;; Remove all fringe indicators (both graphical and terminal)
-      (while (setq pos (next-single-property-change pos nil cleaned))
+      (while (>= pos 0)
         (let ((display-prop (get-text-property pos 'display cleaned))
               (face-prop (get-text-property pos 'face cleaned)))
           (when (or (org-transclusion--fringe-spec-p display-prop)
                     (org-transclusion--fringe-spec-p face-prop))
             ;; Found a fringe indicator, remove it
             (setq cleaned (concat (substring cleaned 0 pos)
-                                  (substring cleaned (1+ pos))))
-            ;; Adjust position since we removed a character
-            (setq pos (max 0 (1- pos))))))
+                                  (substring cleaned (1+ pos)))))
+          ;; Adjust position since we removed a character
+          (setq pos (1- pos))))
       ;; Return nil if nothing left, otherwise return cleaned prefix
       (if (string-empty-p cleaned) nil cleaned))))
 
