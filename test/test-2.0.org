@@ -51,6 +51,9 @@ ID with "first section" [[id:2022-06-26T152831]]
 
    #+transclude: [[file:paragraph.org::* Other headline]]  :lines 1-5
 
+   [[file:paragraph.org::* Sub heading]]
+   #+transclude: [[file:paragraph.org::* Sub heading]]
+
 ** test empty file
 
    #+transclude: [[file:empty.txt::2][empty text file]]
