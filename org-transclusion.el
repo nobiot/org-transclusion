@@ -1181,6 +1181,8 @@ Return nil if not found."
         ;; `org-transclusion-keyword-remove' checks element at point is a
         ;; keyword or not
         (org-transclusion-keyword-remove)
+        ;; Fix indentation when `org-adapt-indentation' is non-nil
+        (org-indent-region beg end-mkr)
         (setq end (marker-position end-mkr))))
     ;; Assume beg and end are non-nil?
     (when (and beg end)
@@ -1267,7 +1269,6 @@ This function is the default for org-transclusion-type (TYPE)
     (with-temp-buffer
       ;; https://github.com/nobiot/org-transclusion/pull/282#issuecomment-3676553675
       ;; Advice by meedstrom:
-
       ;; First insert content, then enable Org-mode afterwards, so that
       ;; `org-set-regexps-and-options' can process "#+STARTUP: odd" and other things.
       ;; These let-bindings are safe methods of speeding it up.
@@ -1279,9 +1280,7 @@ This function is the default for org-transclusion-type (TYPE)
         ;; Adjust headline levels
         (org-transclusion-content-format-org-headlines
          type content keyword-values)
-
         ;; TODO The following two formatting operations should be in a function.
-
         ;; Fix table alignment
         (let ((point (point-min)))
           (while point
@@ -1290,9 +1289,6 @@ This function is the default for org-transclusion-type (TYPE)
               (org-table-align)
               (goto-char (org-table-end)))
             (setq point (search-forward "|" (point-max) t))))
-
-        ;; Fix indentation when `org-adapt-indentation' is non-nil
-        (org-indent-region (point-min) (point-max))
         ;; Return the temp-buffer's string
         (buffer-string)))))
 
