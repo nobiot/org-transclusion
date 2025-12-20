@@ -493,7 +493,7 @@ does not support all the elements.
 
 \\{org-transclusion-map}"
   (interactive "P")
-  (when (org-transclusion-check-add))
+  (when (org-transclusion-check-add)
     ;; Turn on the minor mode to load extensions before staring to add.
     (unless org-transclusion-mode
       (let ((org-transclusion-add-all-on-activate nil))
@@ -1778,8 +1778,7 @@ Case 2. #+transclude inside another transclusion"
     (user-error
      "Cannot transclude in another transclusion at point %d, line %d"
      (point) (org-current-line)))
-   (t
-    t)))
+   (t t)))
 
 (defun org-transclusion-at-point (&optional point)
   "Return plist representing the transclusion at point.
