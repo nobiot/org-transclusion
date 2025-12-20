@@ -598,7 +598,6 @@ When success, return the beginning point of the keyword re-inserted."
           beg
         (when (org-transclusion-within-live-sync-p)
           (org-transclusion-live-sync-exit))
-
         ;; Clean up source buffer fringe indicators before deleting overlay
         (when (overlay-buffer tc-pair-ov)
           (let ((src-buf (overlay-buffer tc-pair-ov))
@@ -609,19 +608,17 @@ When success, return the beginning point of the keyword re-inserted."
             ;; Run hooks for extensions to do additional cleanup
             (run-hook-with-args 'org-transclusion-after-remove-functions
                                 src-buf src-beg src-end)))
-
         (delete-overlay tc-pair-ov)
         (org-transclusion-with-inhibit-read-only
           (save-excursion
             (delete-region beg end)
-            (when (> indent 0) (indent-to indent)
-                  ;; Going back to beg is required as point has moved to
-                  ;; beg+indent; otherwise, there are cases where the remove
-                  ;; does not fully remove the read-only transclusion content,
-                  ;; leading to duplicating it.
-                  (goto-char beg))
-            (insert-before-markers keyword)))
-        (goto-char beg))
+            (when (> indent 0))
+            ;; Going back to beg is required as point has moved to
+            ;; beg+indent; otherwise, there are cases where the remove
+            ;; does not fully remove the read-only transclusion content,
+            ;; leading to duplicating it.
+            (goto-char beg) (insert-before-markers keyword)))
+        (goto-char beg) (when (> indent 0) (indent-to indent)))
     (message "Nothing done. No transclusion exists here.") nil))
 
 (defun org-transclusion-detach ()
