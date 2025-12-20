@@ -590,7 +590,9 @@ the rest of the buffer unchanged."
   "Remove transcluded text at point.
 When success, return the beginning point of the keyword re-inserted."
   (interactive)
-  (if-let*
+  (unless (org-transclusion-within-transclusion-p)
+    (user-error "Nothing done. No transclusion exists here."))
+  (when-let*
       ((beg-end (plist-get (org-transclusion-at-point) :location))
        (beg (car beg-end))
        (end (cdr beg-end))
@@ -599,8 +601,9 @@ When success, return the beginning point of the keyword re-inserted."
        (indent (plist-get keyword-plist :current-indentation))
        (keyword (org-transclusion-keyword-plist-to-string keyword-plist))
        (tc-pair-ov (get-char-property (point) 'org-transclusion-pair)))
-      (prog1
-          beg
+    (prog1
+        beg
+      (let ((buffer-modified-p (buffer-modified-p)))
         (when (org-transclusion-within-live-sync-p)
           (org-transclusion-live-sync-exit))
         ;; Clean up source buffer fringe indicators before deleting overlay
@@ -613,18 +616,19 @@ When success, return the beginning point of the keyword re-inserted."
             ;; Run hooks for extensions to do additional cleanup
             (run-hook-with-args 'org-transclusion-after-remove-functions
                                 src-buf src-beg src-end)))
-        (delete-overlay tc-pair-ov)
-        (org-transclusion-with-inhibit-read-only
-          (save-excursion
+          (delete-overlay tc-pair-ov)
+          ;; Careful with the point (beg and end). `save-excursion' may work but
+          ;; since we are removing a region and inserting the keyword back, it is
+          ;; safer to explicitly go back to beg with `goto-char'. Positions are
+          ;; especially important when two transclusions are present consecutively
+          ;; without space in-between.
+          (org-transclusion-with-inhibit-read-only
             (delete-region beg end)
-            (when (> indent 0))
-            ;; Going back to beg is required as point has moved to
-            ;; beg+indent; otherwise, there are cases where the remove
-            ;; does not fully remove the read-only transclusion content,
-            ;; leading to duplicating it.
-            (goto-char beg) (insert-before-markers keyword)))
-        (goto-char beg) (when (> indent 0) (indent-to indent)))
-    (message "Nothing done. No transclusion exists here.") nil))
+            (goto-char beg) (insert-before-markers keyword))
+          (goto-char beg) (when (> indent 0) (indent-to indent))
+          ;; Removing transclusion should not be considered buffer modification.
+          ;; Keep the buffer-modified-p flag as it was before removal.
+          (restore-buffer-modified-p buffer-modified-p)))))
 
 (defun org-transclusion-detach ()
   "Make the transcluded region normal copied text content."
