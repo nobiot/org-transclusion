@@ -1631,7 +1631,7 @@ entirely since they were added solely for fringe display."
         (let ((is-org-buffer (derived-mode-p 'org-mode)))
           (while (< (point) end)
             (let* ((line-beg (line-beginning-position))
-                   (line-end (min (1+ line-beg) end))
+                   (line-end (min (line-end-position 1) end))
                    (line-prefix (get-text-property line-beg 'line-prefix))
                    (wrap-prefix (get-text-property line-beg 'wrap-prefix)))
 
