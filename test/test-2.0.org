@@ -39,15 +39,15 @@ ID with "first section" [[id:2022-06-26T152831]]
 
 #+transclude: [[id:2022-06-26T152831]]
 
-** org-id with lines
+** org-id with lines, no first-heading etc
 
    [[id:2022-10-10T173507::*H2]]
 
    #+transclude: [[id:2022-10-10T173507::*H2]]  :lines 1-5
    #+transclude: [[id:2022-10-10T173507::*H2]]  :lines 1-5
 
-   #+transclude: [[id:2022-10-10T173507::*H2]] :level
-   #+transclude: [[id:2022-10-10T173507::*H2]]
+   #+transclude: [[id:2022-10-10T173507::*H2]] :no-first-heading
+   #+transclude: [[id:2022-10-10T173507::*H2]] :only-contents
 
    #+transclude: [[file:paragraph.org::* Other headline]]  :lines 1-5
 
