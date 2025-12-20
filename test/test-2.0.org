@@ -43,10 +43,17 @@ ID with "first section" [[id:2022-06-26T152831]]
 
    [[id:2022-10-10T173507::*H2]]
 
-#+transclude: [[id:2022-10-10T173507::*H2]]  :lines 1-5
+   #+transclude: [[id:2022-10-10T173507::*H2]]  :lines 1-5
+   #+transclude: [[id:2022-10-10T173507::*H2]]  :lines 1-5
+
+   #+transclude: [[id:2022-10-10T173507::*H2]] :level
+   #+transclude: [[id:2022-10-10T173507::*H2]]
+
+   #+transclude: [[file:paragraph.org::* Other headline]]  :lines 1-5
 
 ** test empty file
-#+transclude: [[file:empty.txt::2][empty text file]]
+
+   #+transclude: [[file:empty.txt::2][empty text file]]
 
 ** test text
 
@@ -57,8 +64,11 @@ ID with "first section" [[id:2022-06-26T152831]]
 
    #+transclude: [[file:test.txt][text file]]
 
+   ::number works now
    #+transclude: [[file:test.txt::3]]  :lines 1-1
 
+   ::/regexp/ does not work as intended because it will open an occur buffer and
+   does not move the point in the source buffer.
    #+transclude: [[file:test.txt::/Gab/]]  :lines 1-1
 
    #+transclude [[file:test.txt][text file]]

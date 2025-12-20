@@ -1265,9 +1265,17 @@ This function is the default for org-transclusion-type (TYPE)
 \"org-*\"."
   (when (org-transclusion-type-is-org type)
     (with-temp-buffer
-      (let ((org-inhibit-startup t))
-        (delay-mode-hooks (org-mode))
+      ;; https://github.com/nobiot/org-transclusion/pull/282#issuecomment-3676553675
+      ;; Advice by meedstrom:
+
+      ;; First insert content, then enable Org-mode afterwards, so that
+      ;; `org-set-regexps-and-options' can process "#+STARTUP: odd" and other things.
+      ;; These let-bindings are safe methods of speeding it up.
+      ;; Notably, very slow "#+STARTUP: indent" ignored thanks to `org-inhibit-startup'.
+      (let ((org-agenda-files nil)
+            (org-inhibit-startup t))
         (insert content)
+        (delay-mode-hooks (org-mode))
         ;; Adjust headline levels
         (org-transclusion-content-format-org-headlines
          type content keyword-values)
@@ -1316,7 +1324,6 @@ active."
               ((> diff 0) ; promote
                (org-map-entries (lambda ()
                                   (dotimes (_ diff) (org-do-promote))))))))))
-
 
 (defun org-transclusion-content-format (_type content keyword-values)
   "Format text CONTENT from source before transcluding.

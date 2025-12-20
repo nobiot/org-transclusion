@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 24 May 2021
-;; Last modified: 19 December 2025
+;; Last modified: 20 December 2025
 
 ;;; Commentary:
 ;;  This is an extension to `org-transclusion'.  When active, it adds features
@@ -109,8 +109,15 @@ Return nil if PLIST does not contain \":src\" or \":lines\" properties."
         ;; Link contains a search-option ::<string>
         ;; and NOT for an Org file
         (and (org-element-property :search-option link)
-            (not (org-transclusion-org-file-p (org-element-property :path link)))))
-    (append '(:tc-type "lines")
+             (not (org-transclusion-org-file-p (org-element-property :path link)))))
+    ;; FIXME :lines can be combined with ID links now, but cannot be with file
+    ;; links to org files. The original design for :lines was to be used only
+    ;; for non-Org files. But this design has not been enforced. We should
+    ;; re-consider :lines. The reason why :tc-type "org-lines" is required here
+    ;; is for `org-transclusion-content-format-functions'.
+    (append (if (string-equal "id" (org-element-property :type link))
+                '(:tc-type "org-lines")
+              '(:tc-type "lines"))
             (org-transclusion-content-range-of-lines link plist)))))
 
 (defun org-transclusion-content-range-of-lines (link plist)
