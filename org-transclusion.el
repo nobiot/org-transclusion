@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 19 December 2025
+;; Last modified: 20 December 2025
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -493,8 +493,7 @@ does not support all the elements.
 
 \\{org-transclusion-map}"
   (interactive "P")
-  (when (progn (org-transclusion-fix-common-misspelling)
-               (org-transclusion-check-add))
+  (when (org-transclusion-check-add))
     ;; Turn on the minor mode to load extensions before staring to add.
     (unless org-transclusion-mode
       (let ((org-transclusion-add-all-on-activate nil))
@@ -1781,37 +1780,6 @@ Case 2. #+transclude inside another transclusion"
      (point) (org-current-line)))
    (t
     t)))
-
-(defun org-transclusion-fix-common-misspelling ()
-  "Fix \"#+transclude\" by appending a colon \":\".
-
-When `org-element-at-point' is a paragraph and the first string
-of the line after spaces and tabs is \"transclude\", this
-function appends a colon \":\". This function does not change the
-case, so both \"#+TRANSCLUDE\" and \"#+transclude\" work and the
-case will be kept unchanged.
-
-It is a common mistake for users to omit the colon. It is a
-workaround to minimize the chance for users experience the known
-infinite issue. Refer to issue #177 on the GitHub repository:
-https://github.com/nobiot/org-transclusion/issues/177."
-  (let ((elm (org-element-at-point)))
-    (when (string-equal "paragraph" (org-element-type elm))
-      (save-excursion
-        (save-match-data
-          (let ((bol (line-beginning-position))
-                (eol (line-end-position))
-                (case-fold-search t))
-            (goto-char bol)
-            (when (and (re-search-forward "^[[:blank:]]*#\\+\\(\\S-*\\)" eol t)
-                       (string-equal-ignore-case
-                        "transclude" (match-string-no-properties 1)))
-              (replace-match
-               (concat (match-string-no-properties 1) ":")
-               t nil nil 1)
-              ;; return t when the string replaced
-              (message "A colon \":\" added to \"#+TRANSCLUDE\" keyword")
-              t)))))))
 
 (defun org-transclusion-at-point (&optional point)
   "Return plist representing the transclusion at point.
