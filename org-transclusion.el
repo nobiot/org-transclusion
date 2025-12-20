@@ -127,6 +127,13 @@ arguments (src-buf src-beg src-end), pointing to the source buffer
 and the region that was transcluded."
   :type '(repeat function))
 
+(defcustom org-transclusion-insert-link-functions '(org-insert-link)
+  "Functions for `org-transclusion-insert' to insert an Org link.
+It is expected that these functions prompt for user to choose / create a
+link, but as long as the function insert a valid org link in a buffer,
+it will work. Used in `org-transclusion-insert-org-link', which see."
+  :type '(repeat function))
+
 ;;;; Faces
 
 (defface org-transclusion-source-fringe
@@ -169,8 +176,6 @@ The default is no color specification (transparent).")
   "Face for element in the transcluding buffer in the edit mode.")
 
 ;;;; Variables
-
-(defvar org-transclusion-insert-link-functions '(org-insert-link))
 
 (defvar org-transclusion-extensions-loaded nil
   "Have the extensions been loaded already?")
@@ -1670,6 +1675,11 @@ dynamic updates."
 ;;;; Utility Functions
 
 (defun org-transclusion-insert-org-link ()
+  "Return org link string from another org link function.
+The function is an element in `org-transclusion-insert-link-functions'.
+It is expected that these functions prompt for user to choose / create a
+link, but as long as the function insert a valid org link in a buffer,
+it will work."
   (let ((function (if (length> org-transclusion-insert-link-functions 1)
                       (intern (completing-read
                                "Choose a function: "
