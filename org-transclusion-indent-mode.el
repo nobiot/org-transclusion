@@ -55,9 +55,9 @@ Either nil, t (initialized), or (TIMER ATTEMPT-COUNT).")
 ;;;; Forward Declarations
 
 ;; Silence byte-compiler warnings for functions defined in org-transclusion.el
-(declare-function org-transclusion-prefix-has-fringe-p "org-transclusion" (prefix))
-(declare-function org-transclusion-add-fringe-to-region "org-transclusion" (buffer beg end face))
-(declare-function org-transclusion-remove-fringe-from-region "org-transclusion" (buffer beg end))
+(declare-function org-transclusion--prefix-has-fringe-p "org-transclusion" (prefix))
+(declare-function org-transclusion-add-fringes "org-transclusion" (buffer beg end face))
+(declare-function org-transclusion-remove-fringes "org-transclusion" (buffer beg end))
 
 
 ;; Variable defined by define-minor-mode later in this file
@@ -100,12 +100,12 @@ org-indent may regenerate individual lines during typing."
                     (let* ((line-beg (line-beginning-position))
                            (line-prefix (get-text-property line-beg 'line-prefix)))
                       (when (and line-prefix
-                                 (not (org-transclusion-prefix-has-fringe-p line-prefix)))
-                        (org-transclusion-add-fringe-to-region
+                                 (not (org-transclusion--prefix-has-fringe-p line-prefix)))
+                        (org-transclusion-add-fringes
                          (current-buffer) ov-beg ov-end
                          'org-transclusion-source-fringe))))
                 ;; Terminal mode: always re-apply to all lines
-                (org-transclusion-add-fringe-to-region
+                (org-transclusion-add-fringes
                  (current-buffer) ov-beg ov-end
                  'org-transclusion-source-fringe)))))))))
 
@@ -208,7 +208,7 @@ by appending them to org-indent's indentation prefixes."
                   (actual-end (prop-match-end match)))
         ;; Apply org-indent properties and fringes to actual bounds
         (org-indent-add-properties actual-beg actual-end)
-        (org-transclusion-add-fringe-to-region
+        (org-transclusion-add-fringes
          (current-buffer) actual-beg actual-end 'org-transclusion-fringe)))))
 
 (defun org-transclusion-indent--refresh-source-region (src-buf src-beg src-end)
@@ -227,7 +227,7 @@ transclusion."
                      org-transclusion-indent-mode)
             (org-transclusion-indent--check-and-disable)))
       ;; Non-org buffer or org buffer without indent-mode: just remove fringes
-      (org-transclusion-remove-fringe-from-region src-buf src-beg src-end))))
+      (org-transclusion-remove-fringes src-buf src-beg src-end))))
 
 ;;;; Minor Mode Definition
 
