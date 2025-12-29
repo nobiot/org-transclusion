@@ -1081,7 +1081,11 @@ returned by hooks in `org-transclusion-add-functions'."
   "Return the marker of transclusion source by opening LINK.
 LINK must be Org's link object that `org-link-open' can act on. As long
 as `org-link-open' opens a buffer within Emacs, this function should
-return a marker."
+return a marker.
+
+When LINK has no search option (::*Heading, ::CUSTOM_ID, etc.), returns
+marker at `point-min' to ensure line-based transclusions calculate
+offsets from file beginning, not from cursor position."
   ;; Assume the point now is the transcluding buffer
   ;; Note 2025-12-18 `org-link-open' does not necessarily obey
   ;; `display-buffer-alist' and can open the target buffer in the currently
@@ -1100,6 +1104,11 @@ return a marker."
               (org-link-open link)
               ;; In the target buffer temporarily.
               (save-excursion
+                ;; When link has no search option, go to
+                ;; point-min so :lines offsets calculate from file start,
+                ;; not from wherever cursor happened to be in source buffer.
+                (when (not (org-element-property :search-option link))
+                  (goto-char (point-min)))
                 (move-marker (make-marker) (point))))
           (error (user-error
                   "Org-transclusion: `org-link-open' cannot open link, %s"
