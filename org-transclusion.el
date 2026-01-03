@@ -60,7 +60,7 @@ Intended for :set property for `customize'."
     (org-transclusion-load-extensions-maybe 'force)))
 
 (defcustom org-transclusion-extensions
-  '(org-transclusion-src-lines org-transclusion-font-lock)
+  '(org-transclusion-src-lines org-transclusion-font-lock org-transclusion-transient)
   "Extensions to be loaded with org-transclusion.el."
   :set #'org-transclusion-set-extensions
   :type
@@ -73,6 +73,8 @@ Intended for :set property for `customize'."
                org-transclusion-indent-mode)
         (const :tag "html: Transclude HTML converted to Org with Pandoc"
                org-transclusion-html)
+        (const :tag "transient: Transclude menu for easier command access"
+               org-transclusion-transient)
         (repeat :tag "Other packages" :inline t (symbol :tag "Package"))))
 
 (defcustom org-transclusion-add-all-on-activate t
