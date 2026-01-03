@@ -60,6 +60,7 @@
 (defun org-transclusion-font-lock-set ()
   "Add font-lock function to Org's hook.
 The hook is `org-font-lock-set-keywords-hook'."
+  (font-lock-remove-keywords nil org-font-lock-keywords)
   (font-lock-add-keywords nil '(org-transclusion-fontify-meta-lines-and-blocks)))
 
 (defun org-transclusion-fontify-meta-lines-and-blocks (limit)
