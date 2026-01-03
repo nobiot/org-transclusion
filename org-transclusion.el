@@ -1067,9 +1067,7 @@ returned by hooks in `org-transclusion-add-functions'."
         (org-transclusion-with-inhibit-read-only
           (when (save-excursion
                   (end-of-line) (insert-char ?\n)
-                  (org-transclusion-content-insert
-                   keyword-plist tc-type src-content
-                   src-buf src-beg src-end copy)
+                  (org-transclusion-content-insert src-content)
                   (unless (eobp) (delete-char 1))
                   (setq end (point))
                   t)
