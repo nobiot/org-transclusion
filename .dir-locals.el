@@ -10,4 +10,6 @@
   (fill-column . 80)
   (indent-tabs-mode . nil)
   (require-final-newline . t)
-  (sentence-end-double-space . nil)))
+  (sentence-end-double-space . nil))
+ (makefile-mode
+  (indent-tabs-mode . t)))
