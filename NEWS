@@ -74,8 +74,10 @@
       them easily removable and togglable. Setup hooks are now cleaner and
       reversible.
 
-    - fix: #237 `ID` links with search options (compatible with Org 9.7+).
-      Commits 4764739, c910289
+    - fix: #237 `ID` links with search options (compatible with Org 9.7+). You
+      can also use Org-link's `::number` search-option. `::/regex/` does not
+      fail but as it normally opens an "Occur" buffer which expects an user
+      interaction, and thus does not work as intended. Commits 4764739, c910289
 
     - Fix: removing transclusions would incorrectly flag the buffer as modified
       Commit 59fe5cc.

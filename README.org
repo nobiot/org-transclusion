@@ -110,8 +110,35 @@ After installation, you can start using Org-transclusion with no additional conf
 
 #+BEGIN_SRC elisp
   (define-key global-map (kbd "<f12>") #'org-transclusion-add)
-  (define-key global-map (kbd "C-n t") #'org-transclusion-mode)
-#+END_SRC
+  (define-key global-map (kbd "C-n t m") #'org-transclusion-transient-menu)
+  (define-key global-map (kbd "C-n t t") #'org-transclusion-mode)
+
+  ;; An alternative with `use-package':
+
+  (use-package org-transclusion
+    :bind (("S-<f12>" . org-transclusion-add)
+           ("C-c t m" . org-transclusion-transient-menu)
+           ("C-n t t") . org-transclusion-mode))
+#+end_src
+
+The ~#+transclusion~ keyword can be fontified via built-in ~font-lock-mode~ with
+feature ~org-tranclusion-font-lock~. It is an extension that is turned on by
+default, so you normally do not need any customizing. As an option for those who
+prefer to defer loading packages, you can do something like this below to
+activate ~org-transclusion-font-lock-mode~ without loading the entire
+~org-transclusion~ features.
+
+#+begin_src elisp
+  (with-eval-after-load 'org
+    (require `org-transclusion-font-lock)
+    (org-transclusion-font-lock-mode +1))
+
+  ;; An alternative with `use-package':
+
+  (use-package org-transclusion-font-lock
+    :after org
+    :config (org-transclusion-font-lock-mode +1))
+#+end_src
 
 For Doom users, you would need to do something like this below to install the package and configure the keybindings.
 
@@ -130,6 +157,8 @@ For Doom users, you would need to do something like this below to install the pa
      :leader
      :prefix "n"
      :desc "Org Transclusion Mode" "t" #'org-transclusion-mode))
+  ;; I'd appreciate if someone could advise how to add another command such as
+  ;; 'org-transclusion-transient-menu
 #+END_SRC
 
 * Contributing
