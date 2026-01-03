@@ -3,7 +3,7 @@
 <!-- Created by GNU Texinfo 7.1, https://www.gnu.org/software/texinfo/ -->
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<!-- Copyright (C) 2021-2025  Free Software Foundation, Inc.
+<!-- Copyright (C) 2021-2026  Free Software Foundation, Inc.
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.3 or
@@ -61,13 +61,15 @@ Next: <a href="#Example-Use-Cases-_0026-Main-Features" accesskey="n" rel="next">
 <h1 class="top" id="Org_002dtransclusion-User-Manual"><span>Org-transclusion User Manual<a class="copiable-link" href="#Org_002dtransclusion-User-Manual"> &para;</a></span></h1>
 
 
-<p>This manual is for Org-transclusion version 1.4.x.
+<p>This manual is for Org-transclusion version 2.0.0-rc. Version 2.0.0 has not
+been released to ELPA yet. Features available only with 2.0.0 onwards are
+specifically indicated.
 </p>
-<p>Last updated: 18 December 2025.
+<p>Last updated: 03 January 2026.
 </p>
 <p>Org-transclusion lets you insert a copy of text content via a file link or ID link within an Org file. It lets you have the same content present in different buffers at the same time without copy-and-pasting it. Edit the source of the content, and you can refresh the transcluded copies to the up-to-date state. Org-transclusion keeps your files clear of the transcluded copies, leaving only the links to the original content.<a class="anchor" id="whatis"></a></p>
 
-<p>Copyright (C) 2021-2025  Free Software Foundation, Inc.
+<p>Copyright (C) 2021-2026  Free Software Foundation, Inc.
 </p>
 <blockquote class="quotation">
 <p>Permission is granted to copy, distribute and/or modify this document
@@ -89,10 +91,11 @@ modify this GNU manual.”
 <li><a href="#Getting-Started" accesskey="3">Getting Started</a></li>
 <li><a href="#Usage" accesskey="4">Usage</a></li>
 <li><a href="#Customizing" accesskey="5">Customizing</a></li>
-<li><a href="#Known-Limitations" accesskey="6">Known Limitations</a></li>
-<li><a href="#Credits" accesskey="7">Credits</a></li>
-<li><a href="#Contributing" accesskey="8">Contributing</a></li>
-<li><a href="#Index-_002d-Features" accesskey="9">Index - Features</a></li>
+<li><a href="#g_t_005bVersion-200_0029-Making-Your-Own-Transcluding-Functions" accesskey="6">(Version 2.0.0) Making Your Own Transcluding Functions</a></li>
+<li><a href="#Known-Limitations" accesskey="7">Known Limitations</a></li>
+<li><a href="#Credits" accesskey="8">Credits</a></li>
+<li><a href="#Contributing" accesskey="9">Contributing</a></li>
+<li><a href="#Index-_002d-Features">Index - Features</a></li>
 <li><a href="#Index-_002d-Commands">Index - Commands</a></li>
 <li><a href="#Index-_002d-User-Options">Index - User Options</a></li>
 <li><a href="#GNU-Free-Documentation-License">GNU Free Documentation License</a></li>
@@ -176,7 +179,34 @@ Next: <a href="#Getting-Started" accesskey="n" rel="next">Getting Started</a>, P
 </p>
 <div class="example lisp">
 <pre class="lisp-preformatted">(define-key global-map (kbd &quot;&lt;f12&gt;&quot;) #'org-transclusion-add)
-(define-key global-map (kbd &quot;C-n t&quot;) #'org-transclusion-mode)
+(define-key global-map (kbd &quot;C-n t m&quot;) #'org-transclusion-transient-menu)
+(define-key global-map (kbd &quot;C-n t t&quot;) #'org-transclusion-mode)
+
+;; An alternative with `use-package':
+
+(use-package org-transclusion
+             :bind ((&quot;S-&lt;f12&gt;&quot; . org-transclusion-add)
+                    (&quot;C-c t m&quot; . org-transclusion-transient-menu)
+                    (&quot;C-n t t&quot;) . org-transclusion-mode))
+</pre></div>
+
+<p>The <code class="code">#+transclusion</code> keyword can be fontified via built-in <code class="code">font-lock-mode</code> with
+feature <code class="code">org-tranclusion-font-lock</code>. It is an extension that is turned on by
+default, so you normally do not need any customizing. As an option for those who
+prefer to defer loading packages, you can do something like this below to
+activate <code class="code">org-transclusion-font-lock-mode</code> without loading the entire
+<code class="code">org-transclusion</code> features.
+</p>
+<div class="example lisp">
+<pre class="lisp-preformatted">(with-eval-after-load 'org
+  (require `org-transclusion-font-lock)
+  (org-transclusion-font-lock-mode +1))
+
+;; An alternative with `use-package':
+
+(use-package org-transclusion-font-lock
+             :after org
+             :config (org-transclusion-font-lock-mode +1))
 </pre></div>
 
 <p>For Doom users, you would need to do something like this below to install the package and configure the keybindings.
@@ -196,6 +226,8 @@ Next: <a href="#Getting-Started" accesskey="n" rel="next">Getting Started</a>, P
                :leader
                :prefix &quot;n&quot;
                :desc &quot;Org Transclusion Mode&quot; &quot;t&quot; #'org-transclusion-mode))
+;; I'd appreciate if someone could advise how to add another command such as
+;; 'org-transclusion-transient-menu
 </pre></div>
 
 <hr>
@@ -206,6 +238,19 @@ Next: <a href="#Getting-Started" accesskey="n" rel="next">Getting Started</a>, P
 Next: <a href="#Usage" accesskey="n" rel="next">Usage</a>, Previous: <a href="#Installation" accesskey="p" rel="prev">Installation</a>, Up: <a href="#Top" accesskey="u" rel="up">Org-transclusion User Manual</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
 </div>
 <h2 class="chapter" id="Getting-Started-1"><span>3 Getting Started<a class="copiable-link" href="#Getting-Started-1"> &para;</a></span></h2>
+
+
+<ul class="mini-toc">
+<li><a href="#Basics" accesskey="1">Basics</a></li>
+<li><a href="#g_t_005bwith-version-200_0029-Transient-Menu" accesskey="2">(with version 2.0.0) Transient Menu</a></li>
+</ul>
+<hr>
+<div class="section-level-extent" id="Basics">
+<div class="nav-panel">
+<p>
+Next: <a href="#g_t_005bwith-version-200_0029-Transient-Menu" accesskey="n" rel="next">(with version 2.0.0) Transient Menu</a>, Up: <a href="#Getting-Started" accesskey="u" rel="up">Getting Started</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<h3 class="section" id="Basics-1"><span>3.1 Basics<a class="copiable-link" href="#Basics-1"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-org_002dtransclusion_002dadd"></a>
 <a class="index-entry-id" id="index-org_002dtransclusion_002dadd_002dall"></a>
@@ -274,6 +319,32 @@ o               org-transclusion-open-source
 <p>This should get you started with Org-transclusion. There are more options and customizing options available for you to fine-tune the text content you transclude. Explore the rest of the user manual and play with Org-transclusion to get familiar with it.
 </p>
 <hr>
+</div>
+<div class="section-level-extent" id="g_t_005bwith-version-200_0029-Transient-Menu">
+<div class="nav-panel">
+<p>
+Previous: <a href="#Basics" accesskey="p" rel="prev">Basics</a>, Up: <a href="#Getting-Started" accesskey="u" rel="up">Getting Started</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<h3 class="section" id="g_t_0028with-version-2_002e0_002e0_0029-Transient-Menu"><span>3.2 (with version 2.0.0) Transient Menu<a class="copiable-link" href="#g_t_0028with-version-2_002e0_002e0_0029-Transient-Menu"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-org_002dtransclusion_002dtransient_002dmenu"></a>
+
+<p>Version 2.0.0 has introduced a transient menu for Org-transclusion. You can
+open the menu with command <code class="code">org-transclusion-transient-menu</code>. There are two
+variations to the menu depending on the context where your cursor is. If it
+is within in a transclusion (with text already transcluded), you will see a
+menu to work with the transclusion at point. This menu is essentially the
+same as the &ldquo;single-letter-context-menu&rdquo; (<code class="code">org-transclusion-map)</code> described in
+the <a class="ref" href="#Basics">Basics</a> section above.
+</p>
+<p>When your cursor is outside an existing transclusion, the menu will let you
+insert a new transclusion keyword with a link and a variety of options. We
+add &ldquo;properties&rdquo; to the &lsquo;<samp class="samp">#+transclude</samp>&rsquo; line. More on this later in the <a class="ref" href="#Usage">Usage</a>
+section. It is designed to be a wizard to guide you so that you can easily
+construct your transclusion link.
+</p>
+<hr>
+</div>
 </div>
 <div class="chapter-level-extent" id="Usage">
 <div class="nav-panel">
@@ -344,13 +415,22 @@ Next: <a href="#Transclude-over-a-network-with-hyper_002f_002f-http_002f_002f-et
 <p>Transclusion has been tested to work for the following types of links:
 </p>
 <ul class="itemize mark-bullet">
-<li>File link for an entire org file/buffer; e.g. &lsquo;<samp class="samp">[[file:~/org/file.org][My Org Notes]]</samp>&rsquo;
+<li>File link for an entire org file/buffer; e.g. &lsquo;<samp class="samp">[[file:~/org/file.org][My Org
+  Notes]]</samp>&rsquo;
 </li><li>File link with &lsquo;<samp class="samp">::*heading</samp>&rsquo;
 </li><li>File link with &lsquo;<samp class="samp">::#custom-id</samp>&rsquo;
 </li><li>File link with &lsquo;<samp class="samp">::name</samp>&rsquo; for blocks (e.g. blocked quotations), tables, and links
-</li><li>File link with &lsquo;<samp class="samp">::dedicated-target</samp>&rsquo;; this is intended for linking to a paragraph. See below.
+</li><li>File link with &lsquo;<samp class="samp">::dedicated-target</samp>&rsquo;; this is intended for linking to a
+paragraph. See below.
+</li><li>(with version 2.0.0) &lsquo;<samp class="samp">::number</samp>&rsquo; also works. &lsquo;<samp class="samp">/regexp/</samp>&rsquo; does not fail but does not
+work as intended as it opens an &ldquo;Occur&rdquo; buffer, expecting a user interaction
+(Org-transclusion is designed to automatically bring the text from the link
+target, which is the source of the transclusion).
 </li><li>ID link &lsquo;<samp class="samp">id:uuid</samp>&rsquo;
-</li><li>File link for non-org files (tested with &lsquo;<samp class="samp">.txt</samp>&rsquo; and &lsquo;<samp class="samp">.md</samp>&rsquo;); for these, the whole buffer gets transcluded
+</li><li>(with version 2.0.0) ID link with a search option is also supported such as
+&lsquo;<samp class="samp">id:uuid::*heading</samp>&rsquo;
+</li><li>File link for non-org files (tested with &lsquo;<samp class="samp">.txt</samp>&rsquo; and &lsquo;<samp class="samp">.md</samp>&rsquo;); for these, the whole
+buffer gets transcluded
 </li></ul>
 
 <blockquote class="quotation">
@@ -420,15 +500,31 @@ Next: <a href="#Filter-Org-elements-per-transclusion" accesskey="n" rel="next">F
 
 <p>When you transclude Org contents, you can specify a different headline level than those of the source Org file.
 </p>
-<p>Use the &lsquo;<samp class="samp">:level</samp>&rsquo; property with a value of single digit number from 1 to 9 like this example below.
+<p>Use the &lsquo;<samp class="samp">:level</samp>&rsquo; property with a value of single digit number from 1 to 9 like
+this example below. Version 2.0.0 has introduced a new value you can use for
+&lsquo;<samp class="samp">:level</samp>&rsquo;. You can use &ldquo;auto&rdquo; or leave the value blank to automatically set the
+level of transcluded headlines to be one level deeper than the current headline.
 </p>
 <div class="example">
-<pre class="example-preformatted">#+transclude: [[file:path/to/file.org::*Headline]] :level 2
+<pre class="example-preformatted">
+
+1. Example of explicitly setting the headline level to be 2
+#+transclude: [[file:path/to/file.org::*Headline]] :level 2
+
+2. Example of &quot;auto&quot; setting of the transcluded headline
+#+transclude: [[file:path/to/file.org::*Headline]] :level
+
 </pre></div>
 
-<p>The top level of the transcluded headline will be set to the value of &lsquo;<samp class="samp">:level</samp>&rsquo; property &ndash; in this example, level 2 regardless of that in the source. When the headline contains sub-headlines, they will be all automatically promoted or demoted to align according to how many levels the top of the subtree will move.
+<p>When you specify a number, the top level of the transcluded headline will be set
+to the value of &lsquo;<samp class="samp">:level</samp>&rsquo; property &ndash; in this example, level 2 regardless of that
+in the source. When the headline contains sub-headlines, they will be all
+automatically promoted or demoted to align according to how many levels the top
+of the subtree will move.
 </p>
-<p>When you transclude an entire Org file, it may contain multiple subtrees. In such cases, the top-most level among the subtrees will be set according to the &lsquo;<samp class="samp">:level</samp>&rsquo; property; the rest of headlines in the buffer will align accordingly.
+<p>When you transclude an entire Org file, it may contain multiple subtrees. In
+such cases, the top-most level among the subtrees will be set according to the
+&lsquo;<samp class="samp">:level</samp>&rsquo; property; the rest of headlines in the buffer will align accordingly.
 </p>
 <p>Other ways to control include the following.
 </p>
@@ -459,6 +555,7 @@ Next: <a href="#Detach-transclusion-and-copy-source-buffer" accesskey="n" rel="n
 <a class="index-entry-id" id="index-org_002dtransclusion_002dexclude_002delements"></a>
 <a class="index-entry-id" id="index-org_002dtransclusion_002dinclude_002dfirst_002dsection"></a>
 <a class="index-entry-id" id="index-Property-_002d-_003aonly_002dcontents-1"></a>
+<a class="index-entry-id" id="index-Property-_002d-_003ano_002dfirst_002dheading"></a>
 
 <p>You can control what elements to include in many different ways with using various filters. The filters work in two layers: customizable variable and properties per transclude keyword.
 </p>
@@ -482,7 +579,9 @@ Next: <a href="#Detach-transclusion-and-copy-source-buffer" accesskey="n" rel="n
 </p>
 <dl class="table">
 <dt>&lsquo;<samp class="samp">:only-contents</samp>&rsquo;</dt>
-<dd><p>This property lets you exclude titles of headlines when you transclude a subtree (headline); you transclude only the contents. When the subtree contains sub-headlines, all the contents will be transcluded.
+<dd><p>This property lets you exclude titles of headlines when you transclude a
+subtree (headline); you transclude only the contents. When the subtree
+contains sub-headlines, all the contents will be transcluded.
 </p>
 <p>Add &lsquo;<samp class="samp">:only-contents</samp>&rsquo; without any value like this example:
 </p></dd>
@@ -493,10 +592,26 @@ Next: <a href="#Detach-transclusion-and-copy-source-buffer" accesskey="n" rel="n
 </pre></div>
 
 <dl class="table">
-<dt>&lsquo;<samp class="samp">:exclude-elements</samp>&rsquo;</dt>
-<dd><p>This property lets you <strong class="strong">add</strong> elements to exclude per transclusion on top of the variable <code class="code">org-transclusion-exclude-elements</code> defines. You cannot <strong class="strong">remove</strong> the ones defined by it; thus, it is intended that you use the customizable variable as your global default and fine-tune it by the property per transclusion.
+<dt>(New with version 2.0.0) <code class="code">:no-first-heading</code></dt>
+<dd><p>It will remove the first headline of a subtree. &lsquo;<samp class="samp">:only-contents</samp>&rsquo; above the
+headline titles from all the sutree. &lsquo;<samp class="samp">:no-first-heading</samp>&rsquo; removes only the first
+headline titles, leaving the rest of the subtree in tact. This is useful when
+you wish to merge a subtree into another headline.
 </p>
-<p>Add &lsquo;<samp class="samp">:exclude-elements</samp>&rsquo; with a list of elements (each one as defined by &lsquo;<samp class="samp">org-element-all-elements</samp>&rsquo;) separated by a space inside double quotation marks like this example:
+<div class="example">
+<pre class="example-preformatted">#+transclude: [[file:path/to/file.org]] :no-first-heading
+</pre></div>
+
+</dd>
+<dt>&lsquo;<samp class="samp">:exclude-elements</samp>&rsquo;</dt>
+<dd><p>This property lets you <strong class="strong">add</strong> elements to exclude per transclusion on top of the
+variable <code class="code">org-transclusion-exclude-elements</code> defines. You cannot <strong class="strong">remove</strong> the ones
+defined by it; thus, it is intended that you use the customizable variable as
+your global default and fine-tune it by the property per transclusion.
+</p>
+<p>Add &lsquo;<samp class="samp">:exclude-elements</samp>&rsquo; with a list of elements (each one as defined by
+&lsquo;<samp class="samp">org-element-all-elements</samp>&rsquo;) separated by a space inside double quotation marks
+like this example:
 </p></dd>
 </dl>
 
@@ -963,7 +1078,7 @@ snippet to your configuration:
 <div class="chapter-level-extent" id="Customizing">
 <div class="nav-panel">
 <p>
-Next: <a href="#Known-Limitations" accesskey="n" rel="next">Known Limitations</a>, Previous: <a href="#Usage" accesskey="p" rel="prev">Usage</a>, Up: <a href="#Top" accesskey="u" rel="up">Org-transclusion User Manual</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+Next: <a href="#g_t_005bVersion-200_0029-Making-Your-Own-Transcluding-Functions" accesskey="n" rel="next">(Version 2.0.0) Making Your Own Transcluding Functions</a>, Previous: <a href="#Usage" accesskey="p" rel="prev">Usage</a>, Up: <a href="#Top" accesskey="u" rel="up">Org-transclusion User Manual</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
 </div>
 <h2 class="chapter" id="Customizing-1"><span>5 Customizing<a class="copiable-link" href="#Customizing-1"> &para;</a></span></h2>
 
@@ -1208,46 +1323,117 @@ C-c C-c               org-transclusion-live-sync-exit
 <hr>
 </div>
 </div>
+<div class="chapter-level-extent" id="g_t_005bVersion-200_0029-Making-Your-Own-Transcluding-Functions">
+<div class="nav-panel">
+<p>
+Next: <a href="#Known-Limitations" accesskey="n" rel="next">Known Limitations</a>, Previous: <a href="#Customizing" accesskey="p" rel="prev">Customizing</a>, Up: <a href="#Top" accesskey="u" rel="up">Org-transclusion User Manual</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+</div>
+<h2 class="chapter" id="g_t_0028Version-2_002e0_002e0_0029-Making-Your-Own-Transcluding-Functions"><span>6 (Version 2.0.0) Making Your Own Transcluding Functions<a class="copiable-link" href="#g_t_0028Version-2_002e0_002e0_0029-Making-Your-Own-Transcluding-Functions"> &para;</a></span></h2>
+
+<p>Version 2.0.0 has introduced a new transclusion logic. This new design is
+meant to make it easier for users to create their own custom transclusions.
+Now transclusion should work as long as the Org link navigates to the
+link-target buffer. For example, the author has tested this with &lsquo;orgit-file&lsquo;
+link via &lsquo;orgit&lsquo; package (<a class="uref" href="https://github.com/magit/orgit">https://github.com/magit/orgit</a>) and &lsquo;notmuch:id:&lsquo;
+link via &lsquo;ol-notmuch&lsquo; (<a class="uref" href="https://github.com/tarsius/ol-notmuch">https://github.com/tarsius/ol-notmuch</a>), both packages
+by Jonas Bernoulli.
+</p>
+<p>Below is an example of <code class="code">orgit</code> package, which enables Org to link to files in a
+certain commit in a Git repository. The link target is composed of the
+following elements. As long as you have a working Orgit package in your Emacs,
+you do not need to do any extra configuration or create your own functions in
+order to enable Org-transclusion to transclude the special Org link type that
+Orgit enables.
+</p>
+<ul class="itemize mark-bullet">
+<li>Local Git repository: &lsquo;<samp class="samp">~/src/org-transcluson</samp>&rsquo;
+</li><li>Commit (revision): &lsquo;<samp class="samp">00737cfe</samp>&rsquo;
+</li><li>File name: &lsquo;<samp class="samp">org-transclusion.el</samp>&rsquo;
+</li><li>Search-option: It is meant to link to a function named
+&lsquo;<samp class="samp">org-transclusion-new-function</samp>&rsquo;
+</li></ul>
+
+<p>The properties are:
+</p>
+<ul class="itemize mark-bullet">
+<li>&lsquo;<samp class="samp">:src emacs-lisp</samp>&rsquo; so that the transcluded function gets included in a src
+block with &ldquo;emacs-lisp&rdquo; as the language
+
+</li><li>&lsquo;<samp class="samp">:thingatpt sexp</samp>&rsquo; so that it only gets the single &lsquo;<samp class="samp">defun</samp>&rsquo; (a symbolic
+expression = &ldquo;sexp&rdquo; as the &ldquo;thing&rdquo; at point).
+</li></ul>
+
+<div class="example">
+<pre class="example-preformatted">#+transclude: [[orgit-file:~/src/org-transclusion/::0737cfe::org-transclusion.el::org-transclusion-new-function][org-transclusion-new-function (00737cfe)]]  :src emacs-lisp :thingatpt sexp
+</pre></div>
+
+<p>Below is another example, this time from <code class="code">ol-notmuch</code> package. It is simply
+getting the entire buffer of the email identified by the ID in the author&rsquo;s
+local Maildir (via an email system named <code class="code">notmuch</code>: <a class="uref" href="https://notmuchmail.org/">https://notmuchmail.org/</a> and
+its Emacs interface <a class="uref" href="https://notmuchmail.org/notmuch-emacs/">https://notmuchmail.org/notmuch-emacs/</a>).
+</p>
+<div class="example">
+<pre class="example-preformatted">#+transclude: [[notmuch:id:E5208A8C-F56A-4931-9E9F-A1F5F78B8698@nobiot.com][notmuch email]]
+</pre></div>
+
+<hr>
+</div>
 <div class="chapter-level-extent" id="Known-Limitations">
 <div class="nav-panel">
 <p>
-Next: <a href="#Credits" accesskey="n" rel="next">Credits</a>, Previous: <a href="#Customizing" accesskey="p" rel="prev">Customizing</a>, Up: <a href="#Top" accesskey="u" rel="up">Org-transclusion User Manual</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
+Next: <a href="#Credits" accesskey="n" rel="next">Credits</a>, Previous: <a href="#g_t_005bVersion-200_0029-Making-Your-Own-Transcluding-Functions" accesskey="p" rel="prev">(Version 2.0.0) Making Your Own Transcluding Functions</a>, Up: <a href="#Top" accesskey="u" rel="up">Org-transclusion User Manual</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
 </div>
-<h2 class="chapter" id="Known-Limitations-1"><span>6 Known Limitations<a class="copiable-link" href="#Known-Limitations-1"> &para;</a></span></h2>
+<h2 class="chapter" id="Known-Limitations-1"><span>7 Known Limitations<a class="copiable-link" href="#Known-Limitations-1"> &para;</a></span></h2>
 
-<p>Note this section is still incomplete, not exhaustive for &ldquo;known&rdquo; limitations.
+<p>Note this list is incomplete and non-exhaustive.
 </p>
 <ul class="itemize mark-bullet">
-<li>Org link&rsquo;s search-options &lsquo;<samp class="samp">::/regex/</samp>&rsquo; and &lsquo;<samp class="samp">::number</samp>&rsquo; do not work as intended.
+<li>Deactivating <code class="code">org-transclusion-font-lock-mode</code> does not automatically re-fontify
+the Org buffers that you have already opened. Use <code class="code">revert-buffer</code> or re-activate
+<code class="code">org-mode</code> to enable the default Org fontification for keywords.
+
+</li><li>Org link&rsquo;s search-options &lsquo;<samp class="samp">::/regex/</samp>&rsquo; does not fail but as it normally opens an
+&ldquo;Occur&rdquo; buffer which expects an user interaction, and thus does not work as
+intended.
 
 </li><li><code class="code">org-transclusion-live-sync-start</code> does not support all Org elements
-For transclusions of Org elements or buffers, live-sync works only on the following elements:
-&lsquo;<samp class="samp">center-block</samp>&rsquo;, &lsquo;<samp class="samp">drawer</samp>&rsquo;, &lsquo;<samp class="samp">dynamic-block</samp>&rsquo;, &lsquo;<samp class="samp">latex-environment</samp>&rsquo;, &lsquo;<samp class="samp">paragraph</samp>&rsquo;, &lsquo;<samp class="samp">plain-list</samp>&rsquo;, &lsquo;<samp class="samp">quote-block</samp>&rsquo;, &lsquo;<samp class="samp">special-block</samp>&rsquo;, &lsquo;<samp class="samp">table</samp>&rsquo;, and &lsquo;<samp class="samp">verse-block</samp>&rsquo;.
+For transclusions of Org elements or buffers, live-sync works only on the
+following elements: &lsquo;<samp class="samp">center-block</samp>&rsquo;, &lsquo;<samp class="samp">drawer</samp>&rsquo;, &lsquo;<samp class="samp">dynamic-block</samp>&rsquo;, &lsquo;<samp class="samp">latex-environment</samp>&rsquo;,
+&lsquo;<samp class="samp">paragraph</samp>&rsquo;, &lsquo;<samp class="samp">plain-list</samp>&rsquo;, &lsquo;<samp class="samp">quote-block</samp>&rsquo;, &lsquo;<samp class="samp">special-block</samp>&rsquo;, &lsquo;<samp class="samp">table</samp>&rsquo;, and &lsquo;<samp class="samp">verse-block</samp>&rsquo;.
 
 <p>It is known that live-sync does not work for the other elements; namely:
-&lsquo;<samp class="samp">comment-block</samp>&rsquo;, &lsquo;<samp class="samp">export-block</samp>&rsquo;, &lsquo;<samp class="samp">example-block</samp>&rsquo;, &lsquo;<samp class="samp">fixed-width</samp>&rsquo;, &lsquo;<samp class="samp">keyword</samp>&rsquo;, &lsquo;<samp class="samp">src-block</samp>&rsquo;, and &lsquo;<samp class="samp">property-drawer</samp>&rsquo;.
+&lsquo;<samp class="samp">comment-block</samp>&rsquo;, &lsquo;<samp class="samp">export-block</samp>&rsquo;, &lsquo;<samp class="samp">example-block</samp>&rsquo;, &lsquo;<samp class="samp">fixed-width</samp>&rsquo;, &lsquo;<samp class="samp">keyword</samp>&rsquo;, &lsquo;<samp class="samp">src-block</samp>&rsquo;,
+and &lsquo;<samp class="samp">property-drawer</samp>&rsquo;.
 </p>
-<p>More technical reason for this limitation is documented in the docstring of function <code class="code">org-transclusion-live-sync-enclosing-element</code>.
+<p>More technical reason for this limitation is documented in the docstring of
+function <code class="code">org-transclusion-live-sync-enclosing-element</code>.
 </p>
-<p>Work is in progress to lift this limitation but I&rsquo;m still experimenting different ideas.
+<p>Work is in progress to lift this limitation but I&rsquo;m still experimenting
+different ideas.
 </p>
-</li><li><code class="code">org-indent-mode</code> may not work well with Org-transclusion
-A new extension has been added to support <code class="code">org-indent-mode</code> Refer to <a class="ref" href="#Extensions">this section</a>.
-
 </li><li>Doom&rsquo;s customization may interfere with Org-transclusion
-Refer to issue <a class="uref" href="https://github.com/nobiot/org-transclusion/issues/52">#52</a>. The symptom is that in Doom you get an error message that includes this: &ldquo;progn: ‘recenter’ing a window that does not display current-buffer.&rdquo; Adding this in your configuration has been reported to fix the issue:
+Refer to issue <a class="uref" href="https://github.com/nobiot/org-transclusion/issues/52">#52</a>. The symptom is that in Doom you get an error message that
+includes this: &ldquo;progn: ‘recenter’ing a window that does not display
+current-buffer.&rdquo; Adding this in your configuration has been reported to fix
+the issue:
 
 <p><code class="code">(advice-remove 'org-link-search '+org--recenter-after-follow-link-a)</code>
 </p>
-<p>It is probably rather drastic a measure. I will appreciate it if you find a less drastic way that works. Thank you.
+<p>It is probably rather drastic a measure. I will appreciate it if you find a
+less drastic way that works. Thank you.
 </p>
 </li><li>Org refile does not work &ldquo;properly&rdquo; on the transcluded headlines
-Refer to issue <a class="uref" href="https://github.com/nobiot/org-transclusion/issues/20">#20</a>. I don&rsquo;t intend to support this &ndash; refile the source, not the transcluded copy.
+Refer to issue <a class="uref" href="https://github.com/nobiot/org-transclusion/issues/20">#20</a>. I don&rsquo;t intend to support this &ndash; refile the source, not
+the transcluded copy.
 
 </li><li>Undo detach does not add the overlay back on the source
-This should not break any feature. You can safely refresh the transclusion and recover the source overlay. You can also safely open or moved to the source while the source overlay is not present.
+This should not break any feature. You can safely refresh the transclusion and
+recover the source overlay. You can also safely open or moved to the source
+while the source overlay is not present.
 
-</li><li>For &lsquo;<samp class="samp">:thing-at-point</samp>&rsquo; or &lsquo;<samp class="samp">:thingatpt</samp>&rsquo;, you cannot use them to specify the precise beginning of the thing within a line &ndash; it is always the beginning of the line.
+</li><li>For &lsquo;<samp class="samp">:thing-at-point</samp>&rsquo; or &lsquo;<samp class="samp">:thingatpt</samp>&rsquo;, you cannot use them to specify the precise
+beginning of the thing within a line &ndash; it is always the beginning of the
+line.
 </li></ul>
 
 <hr>
@@ -1257,7 +1443,7 @@ This should not break any feature. You can safely refresh the transclusion and r
 <p>
 Next: <a href="#Contributing" accesskey="n" rel="next">Contributing</a>, Previous: <a href="#Known-Limitations" accesskey="p" rel="prev">Known Limitations</a>, Up: <a href="#Top" accesskey="u" rel="up">Org-transclusion User Manual</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
 </div>
-<h2 class="chapter" id="Credits-1"><span>7 Credits<a class="copiable-link" href="#Credits-1"> &para;</a></span></h2>
+<h2 class="chapter" id="Credits-1"><span>8 Credits<a class="copiable-link" href="#Credits-1"> &para;</a></span></h2>
 
 
 <ul class="mini-toc">
@@ -1270,7 +1456,7 @@ Next: <a href="#Contributing" accesskey="n" rel="next">Contributing</a>, Previou
 <p>
 Next: <a href="#Text_002dClone" accesskey="n" rel="next">Text-Clone</a>, Up: <a href="#Credits" accesskey="u" rel="up">Credits</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
 </div>
-<h3 class="section" id="Original-idea-by-John-Kitchin-1"><span>7.1 Original idea by John Kitchin<a class="copiable-link" href="#Original-idea-by-John-Kitchin-1"> &para;</a></span></h3>
+<h3 class="section" id="Original-idea-by-John-Kitchin-1"><span>8.1 Original idea by John Kitchin<a class="copiable-link" href="#Original-idea-by-John-Kitchin-1"> &para;</a></span></h3>
 
 <p><a class="uref" href="https://github.com/alphapapa/transclusion-in-emacs#org-mode">https://github.com/alphapapa/transclusion-in-emacs#org-mode</a>
 </p>
@@ -1301,7 +1487,7 @@ Next: <a href="#Text_002dClone" accesskey="n" rel="next">Text-Clone</a>, Up: <a 
 <p>
 Previous: <a href="#Original-idea-by-John-Kitchin" accesskey="p" rel="prev">Original idea by John Kitchin</a>, Up: <a href="#Credits" accesskey="u" rel="up">Credits</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
 </div>
-<h3 class="section" id="Text_002dClone-1"><span>7.2 Text-Clone<a class="copiable-link" href="#Text_002dClone-1"> &para;</a></span></h3>
+<h3 class="section" id="Text_002dClone-1"><span>8.2 Text-Clone<a class="copiable-link" href="#Text_002dClone-1"> &para;</a></span></h3>
 
 <p>&lsquo;<samp class="samp">text-clone.el</samp>&rsquo; is an extension of text-clone functions written as part of GNU Emacs in &lsquo;<samp class="samp">subr.el</samp>&rsquo;.  The first adaption to extend text-clone functions to work across buffers was published in StackExchange by the user named Tobias in March 2020. It can be found at <a class="uref" href="https://emacs.stackexchange.com/questions/56201/is-there-an-emacs-package-which-can-mirror-a-region/56202#56202">https://emacs.stackexchange.com/questions/56201/is-there-an-emacs-package-which-can-mirror-a-region/56202#56202</a>. The text-clone library takes this line of work further.
 </p>
@@ -1313,7 +1499,7 @@ Previous: <a href="#Original-idea-by-John-Kitchin" accesskey="p" rel="prev">Orig
 <p>
 Next: <a href="#Index-_002d-Features" accesskey="n" rel="next">Index - Features</a>, Previous: <a href="#Credits" accesskey="p" rel="prev">Credits</a>, Up: <a href="#Top" accesskey="u" rel="up">Org-transclusion User Manual</a> &nbsp; [<a href="#Index-_002d-Features" title="Index" rel="index">Index</a>]</p>
 </div>
-<h2 class="chapter" id="Contributing-1"><span>8 Contributing<a class="copiable-link" href="#Contributing-1"> &para;</a></span></h2>
+<h2 class="chapter" id="Contributing-1"><span>9 Contributing<a class="copiable-link" href="#Contributing-1"> &para;</a></span></h2>
 
 <ul class="itemize mark-bullet">
 <li>Get involved in a discussion in <a class="uref" href="https://org-roam.discourse.group/t/prototype-transclusion-block-reference-with-emacs-org-mode/830">Org-roam forum</a> (the package is originally aimed for its users, the author included)
@@ -1394,6 +1580,7 @@ Next: <a href="#Index-_002d-Commands" accesskey="n" rel="next">Index - Commands<
 <tr><td></td><td class="printindex-index-entry"><a href="#index-Property-_002d-_003aend">Property - :end</a></td><td class="printindex-index-section"><a href="#end-property-to-specify-a-search-term-to-dynamically-look-for-the-end-of-a-range">&lsquo;<samp class="samp">end</samp>&rsquo; property to specify a search term to dynamically look for the end of a range</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-Property-_002d-_003alevel">Property - :level</a></td><td class="printindex-index-section"><a href="#Control-levels-of-headlines-per-transclusion">Control levels of headlines per transclusion</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-Property-_002d-_003alines">Property - :lines</a></td><td class="printindex-index-section"><a href="#lines-property-to-specify-a-range-of-lines">&lsquo;<samp class="samp">lines</samp>&rsquo; property to specify a range of lines</a></td></tr>
+<tr><td></td><td class="printindex-index-entry"><a href="#index-Property-_002d-_003ano_002dfirst_002dheading">Property - :no-first-heading</a></td><td class="printindex-index-section"><a href="#Filter-Org-elements-per-transclusion">Filter Org elements per transclusion</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-Property-_002d-_003anoweb_002dchunk">Property - :noweb-chunk</a></td><td class="printindex-index-section"><a href="#Chunks-of-noweb-files">Chunks of noweb files</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-Property-_002d-_003aonly_002dcontents">Property - :only-contents</a></td><td class="printindex-index-section"><a href="#Org-links-supported">Org links supported</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-Property-_002d-_003aonly_002dcontents-1">Property - :only-contents</a></td><td class="printindex-index-section"><a href="#Filter-Org-elements-per-transclusion">Filter Org elements per transclusion</a></td></tr>
@@ -1446,21 +1633,22 @@ Next: <a href="#Index-_002d-User-Options" accesskey="n" rel="next">Index - User 
 <tr><td colspan="3"><hr></td></tr>
 <tr><th id="Index-_002d-Commands_fn_letter-O">O</th></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dactivate"><code>org-transclusion-activate</code></a></td><td class="printindex-index-section"><a href="#Org_002dtransclusion-mode-activate-and-deactivate">Org-transclusion mode activate and deactivate</a></td></tr>
-<tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dadd"><code>org-transclusion-add</code></a></td><td class="printindex-index-section"><a href="#Getting-Started">Getting Started</a></td></tr>
-<tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dadd_002dall"><code>org-transclusion-add-all</code></a></td><td class="printindex-index-section"><a href="#Getting-Started">Getting Started</a></td></tr>
+<tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dadd"><code>org-transclusion-add</code></a></td><td class="printindex-index-section"><a href="#Basics">Basics</a></td></tr>
+<tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dadd_002dall"><code>org-transclusion-add-all</code></a></td><td class="printindex-index-section"><a href="#Basics">Basics</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002ddeactivate"><code>org-transclusion-deactivate</code></a></td><td class="printindex-index-section"><a href="#Org_002dtransclusion-mode-activate-and-deactivate">Org-transclusion mode activate and deactivate</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002ddemote_002dsubtree"><code>org-transclusion-demote-subtree</code></a></td><td class="printindex-index-section"><a href="#Control-levels-of-headlines-per-transclusion">Control levels of headlines per transclusion</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002ddetach"><code>org-transclusion-detach</code></a></td><td class="printindex-index-section"><a href="#Detach-transclusion-and-copy-source-buffer">Detach transclusion and copy source buffer</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dlive_002dsync_002dexit"><code>org-transclusion-live-sync-exit</code></a></td><td class="printindex-index-section"><a href="#Live_002dsync-edit">Live-sync edit</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dlive_002dsync_002dpaste"><code>org-transclusion-live-sync-paste</code></a></td><td class="printindex-index-section"><a href="#Live_002dsync-edit">Live-sync edit</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dlive_002dsync_002dstart"><code>org-transclusion-live-sync-start</code></a></td><td class="printindex-index-section"><a href="#Live_002dsync-edit">Live-sync edit</a></td></tr>
-<tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dmake_002dfrom_002dlink"><code>org-transclusion-make-from-link</code></a></td><td class="printindex-index-section"><a href="#Getting-Started">Getting Started</a></td></tr>
+<tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dmake_002dfrom_002dlink"><code>org-transclusion-make-from-link</code></a></td><td class="printindex-index-section"><a href="#Basics">Basics</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dmake_002dfrom_002dlink-1"><code>org-transclusion-make-from-link</code></a></td><td class="printindex-index-section"><a href="#Control-levels-of-headlines-per-transclusion">Control levels of headlines per transclusion</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dmode"><code>org-transclusion-mode</code></a></td><td class="printindex-index-section"><a href="#Org_002dtransclusion-mode-activate-and-deactivate">Org-transclusion mode activate and deactivate</a></td></tr>
-<tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dmove_002dto_002dsource"><code>org-transclusion-move-to-source</code></a></td><td class="printindex-index-section"><a href="#Getting-Started">Getting Started</a></td></tr>
-<tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dopen_002dsource"><code>org-transclusion-open-source</code></a></td><td class="printindex-index-section"><a href="#Getting-Started">Getting Started</a></td></tr>
+<tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dmove_002dto_002dsource"><code>org-transclusion-move-to-source</code></a></td><td class="printindex-index-section"><a href="#Basics">Basics</a></td></tr>
+<tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dopen_002dsource"><code>org-transclusion-open-source</code></a></td><td class="printindex-index-section"><a href="#Basics">Basics</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dpromote_002dsubtree"><code>org-transclusion-promote-subtree</code></a></td><td class="printindex-index-section"><a href="#Control-levels-of-headlines-per-transclusion">Control levels of headlines per transclusion</a></td></tr>
-<tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002drefresh"><code>org-transclusion-refresh</code></a></td><td class="printindex-index-section"><a href="#Getting-Started">Getting Started</a></td></tr>
+<tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002drefresh"><code>org-transclusion-refresh</code></a></td><td class="printindex-index-section"><a href="#Basics">Basics</a></td></tr>
+<tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dtransient_002dmenu"><code>org-transclusion-transient-menu</code></a></td><td class="printindex-index-section"><a href="#g_t_005bwith-version-200_0029-Transient-Menu">[with version 200) Transient Menu</a></td></tr>
 <tr><td colspan="3"><hr></td></tr>
 </table>
 </div>
@@ -1495,7 +1683,7 @@ Next: <a href="#GNU-Free-Documentation-License" accesskey="n" rel="next">GNU Fre
 <tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dkeyword"><code>org-transclusion-keyword</code></a></td><td class="printindex-index-section"><a href="#Faces-_0026-fringe-bitmap">Faces &amp; fringe bitmap</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dlive_002dsync_002dmap"><code>org-transclusion-live-sync-map</code></a></td><td class="printindex-index-section"><a href="#Live_002dsync-edit">Live-sync edit</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dlive_002dsync_002dmap-1"><code>org-transclusion-live-sync-map</code></a></td><td class="printindex-index-section"><a href="#Keybindings">Keybindings</a></td></tr>
-<tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dmap"><code>org-transclusion-map</code></a></td><td class="printindex-index-section"><a href="#Getting-Started">Getting Started</a></td></tr>
+<tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dmap"><code>org-transclusion-map</code></a></td><td class="printindex-index-section"><a href="#Basics">Basics</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dmap-1"><code>org-transclusion-map</code></a></td><td class="printindex-index-section"><a href="#Keybindings">Keybindings</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dmode_002dlighter"><code>org-transclusion-mode-lighter</code></a></td><td class="printindex-index-section"><a href="#Customizing">Customizing</a></td></tr>
 <tr><td></td><td class="printindex-index-entry"><a href="#index-org_002dtransclusion_002dopen_002dsource_002ddisplay_002daction_002dlist"><code>org-transclusion-open-source-display-action-list</code></a></td><td class="printindex-index-section"><a href="#Customizing">Customizing</a></td></tr>

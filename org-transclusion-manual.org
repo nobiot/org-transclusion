@@ -1,7 +1,7 @@
 #+title: Org-transclusion User Manual
 #+author: Noboru Ota <me@nobiot.com>
-#+macro: version 1.4.x
-#+macro: modified 18 December 2025
+#+macro: version 2.0.0-rc
+#+macro: modified 03 January 2026
 
 #+language: en
 #+export_file_name: org-transclusion.texi
@@ -17,7 +17,9 @@
 #+html: <a href="http://elpa.gnu.org/devel/org-transclusion.html"><img alt="GNU-devel ELPA" src="https://elpa.gnu.org/devel/org-transclusion.svg"/></a>
 #+html: <img alt="GPLv3" src="https://img.shields.io/badge/License-GPLv3-blue.svg">
 
-This manual is for Org-transclusion version {{{version}}}.
+This manual is for Org-transclusion version {{{version}}}. Version 2.0.0 has not
+been released to ELPA yet. Features available only with 2.0.0 onwards are
+specifically indicated.
 
 Last updated: {{{modified}}}.
 
@@ -30,7 +32,7 @@ Last updated: {{{modified}}}.
 :COPYING: t
 :END:
 
-Copyright (C) 2021-2025  Free Software Foundation, Inc.
+Copyright (C) 2021-2026  Free Software Foundation, Inc.
 
 #+begin_quote
 Permission is granted to copy, distribute and/or modify this document
@@ -58,13 +60,15 @@ modify this GNU manual.”
 :CUSTOM_ID: getting-started
 :END:
 
-#+findex: org-transclusion-add
-#+findex: org-transclusion-add-all
-#+findex: org-transclusion-make-from-link
-#+findex: org-transclusion-open-source
-#+findex: org-transclusion-move-to-source
-#+findex: org-transclusion-refresh
-#+vindex: org-transclusion-map
+** Basics
+
+   #+findex: org-transclusion-add
+   #+findex: org-transclusion-add-all
+   #+findex: org-transclusion-make-from-link
+   #+findex: org-transclusion-open-source
+   #+findex: org-transclusion-move-to-source
+   #+findex: org-transclusion-refresh
+   #+vindex: org-transclusion-map
 
 The basic idea of Org-transclusion is simple: insert a copy of text content via a file link or ID link within an Org file. This is an Org Mode version of transclusion.
 
@@ -124,6 +128,27 @@ o               org-transclusion-open-source
 
 This should get you started with Org-transclusion. There are more options and customizing options available for you to fine-tune the text content you transclude. Explore the rest of the user manual and play with Org-transclusion to get familiar with it.
 
+** (with version 2.0.0) Transient Menu
+
+   #+findex: org-transclusion-transient-menu
+
+   Version 2.0.0 has introduced a transient menu for Org-transclusion. You can
+   open the menu with command ~org-transclusion-transient-menu~. There are two
+   variations to the menu depending on the context where your cursor is. If it
+   is within in a transclusion (with text already transcluded), you will see a
+   menu to work with the transclusion at point. This menu is essentially the
+   same as the "single-letter-context-menu" (~org-transclusion-map)~ described in
+   the [[*Basics][Basics]] section above.
+
+   When your cursor is outside an existing transclusion, the menu will let you
+   insert a new transclusion keyword with a link and a variety of options. We
+   add "properties" to the =#+transclude= line. More on this later in the [[*Usage][Usage]]
+   section. It is designed to be a wizard to guide you so that you can easily
+   construct your transclusion link.
+
+#+name: org-transclusion-map
+#+caption: Default org-transclusion-map
+
 * Usage
 :PROPERTIES:
 :DESCRIPTION: Features in detail
@@ -167,13 +192,22 @@ You can override the =:disable-auto= property by manually calling ~org-transclus
 
 Transclusion has been tested to work for the following types of links:
 
-- File link for an entire org file/buffer; e.g. =[[file:~/org/file.org][My Org Notes]]=
+- File link for an entire org file/buffer; e.g. =[[file:~/org/file.org][My Org
+  Notes]]=
 - File link with =::*heading=
 - File link with =::#custom-id=
 - File link with =::name= for blocks (e.g. blocked quotations), tables, and links
-- File link with =::dedicated-target=; this is intended for linking to a paragraph. See below.
+- File link with =::dedicated-target=; this is intended for linking to a
+  paragraph. See below.
+- (with version 2.0.0) =::number= also works. =/regexp/= does not fail but does not
+  work as intended as it opens an "Occur" buffer, expecting a user interaction
+  (Org-transclusion is designed to automatically bring the text from the link
+  target, which is the source of the transclusion).
 - ID link =id:uuid=
-- File link for non-org files (tested with =.txt= and =.md=); for these, the whole buffer gets transcluded
+- (with version 2.0.0) ID link with a search option is also supported such as
+  =id:uuid::*heading=
+- File link for non-org files (tested with =.txt= and =.md=); for these, the whole
+  buffer gets transcluded
 
 #+ATTR_TEXINFO: :tag Note
 #+begin_quote
@@ -230,15 +264,30 @@ file inside the USHIN hyperdrive:
 
 When you transclude Org contents, you can specify a different headline level than those of the source Org file.
 
-Use the =:level= property with a value of single digit number from 1 to 9 like this example below.
+Use the =:level= property with a value of single digit number from 1 to 9 like
+this example below. Version 2.0.0 has introduced a new value you can use for
+=:level=. You can use "auto" or leave the value blank to automatically set the
+level of transcluded headlines to be one level deeper than the current headline.
 
 #+begin_example
+
+1. Example of explicitly setting the headline level to be 2
 #+transclude: [[file:path/to/file.org::*Headline]] :level 2
+
+2. Example of "auto" setting of the transcluded headline
+#+transclude: [[file:path/to/file.org::*Headline]] :level
+
 #+end_example
 
-The top level of the transcluded headline will be set to the value of =:level= property -- in this example, level 2 regardless of that in the source. When the headline contains sub-headlines, they will be all automatically promoted or demoted to align according to how many levels the top of the subtree will move.
+When you specify a number, the top level of the transcluded headline will be set
+to the value of =:level= property -- in this example, level 2 regardless of that
+in the source. When the headline contains sub-headlines, they will be all
+automatically promoted or demoted to align according to how many levels the top
+of the subtree will move.
 
-When you transclude an entire Org file, it may contain multiple subtrees. In such cases, the top-most level among the subtrees will be set according to the =:level= property; the rest of headlines in the buffer will align accordingly.
+When you transclude an entire Org file, it may contain multiple subtrees. In
+such cases, the top-most level among the subtrees will be set according to the
+=:level= property; the rest of headlines in the buffer will align accordingly.
 
 Other ways to control include the following.
 
@@ -260,6 +309,7 @@ Other ways to control include the following.
 #+vindex: org-transclusion-exclude-elements
 #+vindex: org-transclusion-include-first-section
 #+cindex: Property - :only-contents
+#+cindex: Property - :no-first-heading
 
 You can control what elements to include in many different ways with using various filters. The filters work in two layers: customizable variable and properties per transclude keyword.
 
@@ -280,7 +330,9 @@ The following two customizable variables are applicable to all transclusions glo
 In addition to the global user options above, you can fine-tune the default exclusion filter per transclusion. Add following properties to transclusions you wish to apply additional filters.
 
 - =:only-contents= ::
-  This property lets you exclude titles of headlines when you transclude a subtree (headline); you transclude only the contents. When the subtree contains sub-headlines, all the contents will be transcluded.
+  This property lets you exclude titles of headlines when you transclude a
+  subtree (headline); you transclude only the contents. When the subtree
+  contains sub-headlines, all the contents will be transcluded.
 
   Add =:only-contents= without any value like this example:
 
@@ -288,10 +340,25 @@ In addition to the global user options above, you can fine-tune the default excl
 #+transclude: [[file:path/to/file.org]] :only-contents
 #+end_example
 
-- =:exclude-elements= ::
-  This property lets you *add* elements to exclude per transclusion on top of the variable ~org-transclusion-exclude-elements~ defines. You cannot *remove* the ones defined by it; thus, it is intended that you use the customizable variable as your global default and fine-tune it by the property per transclusion.
+- (New with version 2.0.0) ~:no-first-heading~ ::
+  It will remove the first headline of a subtree. =:only-contents= above the
+  headline titles from all the sutree. =:no-first-heading= removes only the first
+  headline titles, leaving the rest of the subtree in tact. This is useful when
+  you wish to merge a subtree into another headline.
 
-  Add =:exclude-elements= with a list of elements (each one as defined by =org-element-all-elements=) separated by a space inside double quotation marks like this example:
+  #+begin_example
+#+transclude: [[file:path/to/file.org]] :no-first-heading
+#+end_example
+
+- =:exclude-elements= ::
+  This property lets you *add* elements to exclude per transclusion on top of the
+  variable ~org-transclusion-exclude-elements~ defines. You cannot *remove* the ones
+  defined by it; thus, it is intended that you use the customizable variable as
+  your global default and fine-tune it by the property per transclusion.
+
+  Add =:exclude-elements= with a list of elements (each one as defined by
+  =org-element-all-elements=) separated by a space inside double quotation marks
+  like this example:
 
 #+begin_example
 #+transclude: [[file:path/to/file.org]] :exclude-elements "drawer keyword"
@@ -805,46 +872,107 @@ The default for faces ~org-transclusion~ and ~org-transclusion-source~ is no col
 - ~org-transclusion-live-sync-map~
 #+transclude: [[./org-transclusion-manual.org::org-transclusion-live-sync-map]]
 
+
+* (Version 2.0.0) Making Your Own Transcluding Functions
+
+  Version 2.0.0 has introduced a new transclusion logic. This new design is
+  meant to make it easier for users to create their own custom transclusions.
+  Now transclusion should work as long as the Org link navigates to the
+  link-target buffer. For example, the author has tested this with `orgit-file`
+  link via `orgit` package (https://github.com/magit/orgit) and `notmuch:id:`
+  link via `ol-notmuch` (https://github.com/tarsius/ol-notmuch), both packages
+  by Jonas Bernoulli.
+
+  Below is an example of ~orgit~ package, which enables Org to link to files in a
+  certain commit in a Git repository. The link target is composed of the
+  following elements. As long as you have a working Orgit package in your Emacs,
+  you do not need to do any extra configuration or create your own functions in
+  order to enable Org-transclusion to transclude the special Org link type that
+  Orgit enables.
+
+  - Local Git repository: =~/src/org-transcluson=
+  - Commit (revision): =00737cfe=
+  - File name: =org-transclusion.el=
+  - Search-option: It is meant to link to a function named
+    =org-transclusion-new-function=
+
+  The properties are:
+
+  - =:src emacs-lisp= so that the transcluded function gets included in a src
+    block with "emacs-lisp" as the language
+
+  - =:thingatpt sexp= so that it only gets the single =defun= (a symbolic
+    expression = "sexp" as the "thing" at point).
+
+#+begin_example
+#+transclude: [[orgit-file:~/src/org-transclusion/::0737cfe::org-transclusion.el::org-transclusion-new-function][org-transclusion-new-function (00737cfe)]]  :src emacs-lisp :thingatpt sexp
+#+end_example
+
+  Below is another example, this time from ~ol-notmuch~ package. It is simply
+  getting the entire buffer of the email identified by the ID in the author's
+  local Maildir (via an email system named ~notmuch~: https://notmuchmail.org/ and
+  its Emacs interface https://notmuchmail.org/notmuch-emacs/).
+
+  #+begin_example
+#+transclude: [[notmuch:id:E5208A8C-F56A-4931-9E9F-A1F5F78B8698@nobiot.com][notmuch email]]
+  #+end_example
+
 * Known Limitations
 
-Note this section is still incomplete, not exhaustive for "known" limitations.
+  Note this list is incomplete and non-exhaustive.
 
-- Org link's search-options =::/regex/= and =::number= do not work as intended.
+- Deactivating ~org-transclusion-font-lock-mode~ does not automatically re-fontify
+  the Org buffers that you have already opened. Use ~revert-buffer~ or re-activate
+  ~org-mode~ to enable the default Org fontification for keywords.
+
+- Org link's search-options =::/regex/= does not fail but as it normally opens an
+  "Occur" buffer which expects an user interaction, and thus does not work as
+  intended.
 
 - ~org-transclusion-live-sync-start~ does not support all Org elements ::
-  For transclusions of Org elements or buffers, live-sync works only on the following elements:
-  =center-block=, =drawer=, =dynamic-block=, =latex-environment=, =paragraph=, =plain-list=, =quote-block=, =special-block=, =table=, and =verse-block=.
+  For transclusions of Org elements or buffers, live-sync works only on the
+  following elements: =center-block=, =drawer=, =dynamic-block=, =latex-environment=,
+  =paragraph=, =plain-list=, =quote-block=, =special-block=, =table=, and =verse-block=.
 
   It is known that live-sync does not work for the other elements; namely:
-  =comment-block=, =export-block=, =example-block=, =fixed-width=, =keyword=, =src-block=, and =property-drawer=.
+  =comment-block=, =export-block=, =example-block=, =fixed-width=, =keyword=, =src-block=,
+  and =property-drawer=.
 
-  More technical reason for this limitation is documented in the docstring of function ~org-transclusion-live-sync-enclosing-element~.
+  More technical reason for this limitation is documented in the docstring of
+  function ~org-transclusion-live-sync-enclosing-element~.
 
-  Work is in progress to lift this limitation but I'm still experimenting different ideas.
-
-- ~org-indent-mode~ may not work well with Org-transclusion ::
-  A new extension has been added to support ~org-indent-mode~ Refer to [[#extensions][this section]].
+  Work is in progress to lift this limitation but I'm still experimenting
+  different ideas.
 
 - Doom's customization may interfere with Org-transclusion ::
-  Refer to issue [[https://github.com/nobiot/org-transclusion/issues/52][#52]]. The symptom is that in Doom you get an error message that includes this: "progn: ‘recenter’ing a window that does not display current-buffer." Adding this in your configuration has been reported to fix the issue:
+  Refer to issue [[https://github.com/nobiot/org-transclusion/issues/52][#52]]. The symptom is that in Doom you get an error message that
+  includes this: "progn: ‘recenter’ing a window that does not display
+  current-buffer." Adding this in your configuration has been reported to fix
+  the issue:
 
   ~(advice-remove 'org-link-search '+org--recenter-after-follow-link-a)~
 
-  It is probably rather drastic a measure. I will appreciate it if you find a less drastic way that works. Thank you.
+  It is probably rather drastic a measure. I will appreciate it if you find a
+  less drastic way that works. Thank you.
 
 - Org refile does not work "properly" on the transcluded headlines ::
-  Refer to issue [[https://github.com/nobiot/org-transclusion/issues/20][#20]]. I don't intend to support this -- refile the source, not the transcluded copy.
+  Refer to issue [[https://github.com/nobiot/org-transclusion/issues/20][#20]]. I don't intend to support this -- refile the source, not
+  the transcluded copy.
 
 - Undo detach does not add the overlay back on the source ::
-  This should not break any feature. You can safely refresh the transclusion and recover the source overlay. You can also safely open or moved to the source while the source overlay is not present.
+  This should not break any feature. You can safely refresh the transclusion and
+  recover the source overlay. You can also safely open or moved to the source
+  while the source overlay is not present.
 
-- For =:thing-at-point= or =:thingatpt=, you cannot use them to specify the precise beginning of the thing within a line -- it is always the beginning of the line.
+- For =:thing-at-point= or =:thingatpt=, you cannot use them to specify the precise
+  beginning of the thing within a line -- it is always the beginning of the
+  line.
 
 * Credits
 ** Original idea by John Kitchin
-:PROPERTIES:
-:CUSTOM_ID: original-idea-by-john-kitchin
-:END:
+  :PROPERTIES:
+  :CUSTOM_ID: original-idea-by-john-kitchin
+  :END:
 
 https://github.com/alphapapa/transclusion-in-emacs#org-mode
 
