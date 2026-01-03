@@ -2216,7 +2216,8 @@ FORCE will let this function ignore
             (progn
               (require ext)
               (when (fboundp minor-mode) (funcall minor-mode +1)))
-          (error (message "Problems while trying to load feature `%s'" ext)))))
+          (error (message "Org-transclusion: \
+Problems while trying to load feature `%s'" ext)))))
     (setq org-transclusion-extensions-loaded t)))
 
 (defun org-transclusion-extension-set-a-hook-functions (add-or-remove list)

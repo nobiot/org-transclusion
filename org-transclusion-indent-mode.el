@@ -53,13 +53,17 @@ Used to prevent premature mode deactivation during buffer refresh.")
   "Initialization state for waiting on org-indent.
 Either nil, t (initialized), or (TIMER ATTEMPT-COUNT).")
 
-;;;; Forward Declarations
-
-;; Silence byte-compiler warnings for functions defined in org-transclusion.el
-(declare-function org-transclusion-prefix-has-fringe-p "org-transclusion" (prefix))
-(declare-function org-transclusion-add-fringe-to-region "org-transclusion" (buffer beg end face))
-(declare-function org-transclusion-remove-fringe-from-region "org-transclusion" (buffer beg end))
-
+(defvar org-transclusion-indent-extension-functions
+  (list
+   (cons 'org-transclusion-after-add-functions
+         #'org-transclusion-indent--add-properties-and-fringes)
+   (cons 'org-transclusion-after-remove-functions
+         #'org-transclusion-indent--refresh-source-region))
+  "Alist of functions to activate `org-transclusion-indent-mode'.
+CAR of each cons cell is a symbol name of an abnormal hook
+\(*-functions\). CDR is either a symbol or list of symbols, which
+are names of functions to be called in the corresponding abnormal
+hook.")
 
 ;; Variable defined by define-minor-mode later in this file
 (defvar org-transclusion-indent-mode)
@@ -297,18 +301,6 @@ Adds `post-command-hook' to detect when source overlays appear."
 
 ;; Auto-setup in org-mode buffers - add late to hook like org-modern-indent
 (add-hook 'org-mode-hook #'org-transclusion-indent-mode-setup 90)
-
-(defvar org-transclusion-indent-extension-functions
-  (list
-   (cons 'org-transclusion-after-add-functions
-         #'org-transclusion-indent--add-properties-and-fringes)
-   (cons 'org-transclusion-after-remove-functions
-         #'org-transclusion-indent--refresh-source-region))
-  "Alist of functions to activate `org-transclusion-indent-mode'.
-CAR of each cons cell is a symbol name of an abnormal hook
-\(*-functions\). CDR is either a symbol or list of symbols, which
-are names of functions to be called in the corresponding abnormal
-hook.")
 
 (provide 'org-transclusion-indent-mode)
 

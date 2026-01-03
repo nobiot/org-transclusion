@@ -25,7 +25,6 @@
 
 ;;; Code:
 
-(require 'org-transclusion)
 (require 'org-element)
 (declare-function text-clone-make-overlay "text-clone")
 (declare-function org-transclusion-live-sync-buffers-others-default
@@ -219,7 +218,7 @@ it means from line 10 to the end of file."
   "Go to the beginning of chunk CHUNK-NAME."
   (goto-char (point-min))
   (re-search-forward (format "<<%s>>=" chunk-name) nil t)
-  (next-line)
+  (forward-line 1)
   (line-beginning-position))
 
 (defun org-transclusion--goto-noweb-chunk-end ()

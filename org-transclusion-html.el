@@ -31,12 +31,21 @@
 
 ;;;; Requirements
 
-(require 'org-transclusion)
 (require 'org)
 (require 'org-element)
 (require 'cl-lib)
 (require 'pcase)
 (require 'dom)
+
+(declare-function org-transclusion-extension-functions-add-or-remove "org-transclusion.el")
+
+(defvar org-transclusion-html-extension-functions
+  (list (cons 'org-transclusion-add-functions #'org-transclusion-html-add-file))
+  "Alist of functions to activate `org-transclusion-html'.
+CAR of each cons cell is a symbol name of an abnormal hook
+\(*-functions\). CDR is either a symbol or list of symbols, which
+are names of functions to be called in the corresponding abnormal
+hook.")
 
 ;;;; Hook into org-transclusion
 
@@ -50,14 +59,6 @@
        org-transclusion-html-extension-functions)
     (org-transclusion-extension-functions-add-or-remove
      org-transclusion-html-extension-functions :remove)))
-
-(defvar org-transclusion-html-extension-functions
-  (list (cons 'org-transclusion-add-functions #'org-transclusion-html-add-file))
-  "Alist of functions to activate `org-transclusion-html'.
-CAR of each cons cell is a symbol name of an abnormal hook
-\(*-functions\). CDR is either a symbol or list of symbols, which
-are names of functions to be called in the corresponding abnormal
-hook.")
 
 ;;;; Functions
 

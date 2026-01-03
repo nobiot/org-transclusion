@@ -25,7 +25,6 @@
 ;;  `org-transclusion-transient-menu'. This command will call a different menu
 ;;  depending on whether the point is at a transcluded content.
 
-(require 'org-transclusion)
 (require 'transient) ; Need more recent than that comes with 29.4; tested on
                      ; transient-20241224.2234
 
@@ -148,10 +147,9 @@ transcluded content or not."
   (interactive)
   (unless (derived-mode-p 'org-mode)
     (user-error "`org-transclusion' works only in `org' buffer"))
-  (let ((org-transclusion-buffer (current-buffer)))
-    (if (org-transclusion-within-transclusion-p)
-        (org-transclusion-transient--at-point-menu)
-      (org-transclusion-transient--buffer-menu))))
+  (if (org-transclusion-within-transclusion-p)
+      (call-interactively 'org-transclusion-transient--at-point-menu)
+    (call-interactively 'org-transclusion-transient--buffer-menu)))
 
 ;; Private functions
 
@@ -174,7 +172,8 @@ See `org-transclusion-transient--setup'"
     (setq org-transclusion-transient-repeat-mode-was-active-p nil)))
 
 (defun org-transclusion-transient--read-level (&rest _)
-  "Read a string from the minibuffer, restricted to the range 1 to 9 or an empty value."
+  "Read a string from the minibuffer.
+The string is restricted to the range 1 to 9 or anempty value."
   (cl-loop for result =
            (read-string "Enter org-transclusion content headline\
 level (1-9) or leave empty: ")
@@ -202,7 +201,7 @@ level (1-9) or leave empty: ")
   :transient 'transient--do-stay
   (interactive)
   (org-transclusion-insert)
-  (org-transclusion-transient--buffer-menu))
+  (call-interactively 'org-transclusion-transient--buffer-menu))
 
 (transient-define-suffix org-transclusion-transient--level ()
   "Add :level property to transclude keyword.
@@ -329,7 +328,7 @@ for the transcluded content."
   :transient 'transient--do-stay
   (interactive)
   (org-transclusion-add)
-  (org-transclusion-transient--at-point-menu))
+  (call-interactively 'org-transclusion-transient--at-point-menu))
 
 (provide 'org-transclusion-transient)
 
