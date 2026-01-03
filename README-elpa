@@ -83,13 +83,11 @@ or user manual: [online] or Info node `(org-transclusion)Customizing'.
   • Work with any text file such as program source code, plain text,
     Markdown, or other Org files
 
-  • With version 1.4, a transclusion works with hyper:// links (see
-    [hyperdrive.el])
-  or <http://> links. Splitting the org-transclusion-add into two parts
-  enables functions in org-transclusion-add-functions to be
-  asynchronous. With this change, content can be transcluded over a
-  network, using <http://>, hyper://, or other protocols. For a
-  proof-of-concept integration with hyperdrive.el, see [this file].
+  • With version 1.4, transclude content over network protocols like
+    `http://' (with [org-transclusion-http]) and `hyper://' (with
+    [hyperdrive-org-transclusion]).  Splitting `org-transclusion-add'
+    into two parts enables functions in `org-transclusion-add-functions'
+    to be asynchronous.
 
   • Keep the file system clear of the copies of text content –
     Org-transclusion tries hard to save only the links to the file
@@ -98,8 +96,8 @@ or user manual: [online] or Info node `(org-transclusion)Customizing'.
   • For Org files, use different headline levels from the source Org
     file
 
-  • For Org files, use filters to include only relevant elements (e.g.
-    filter out properties in the transclusions)
+  • For Org files, use filters to include only relevant elements
+    (e.g. filter out properties in the transclusions)
 
   • For program source and plain text files, transclude a certain lines
     or dynamically specify the from/to lines to keep the transclusion
@@ -112,10 +110,10 @@ or user manual: [online] or Info node `(org-transclusion)Customizing'.
   • Extend Org-transclusion with its extension framework
 
 
-[hyperdrive.el] <https://git.sr.ht/~ushin/hyperdrive.el>
+[org-transclusion-http] <https://git.sr.ht/~ushin/org-transclusion-http>
 
-[this file]
-<https://git.sr.ht/~ushin/hyperdrive.el/tree/org-transclusion/item/hyperdrive-org-transclusion.el>
+[hyperdrive-org-transclusion]
+<https://git.sr.ht/~ushin/hyperdrive-org-transclusion>
 
 
 2 Installation
@@ -137,8 +135,8 @@ or user manual: [online] or Info node `(org-transclusion)Customizing'.
   └────
 
   Refresh the archive with `M-x package-refresh-contents RET' and you
-  can do `M-x package-install RET org-transclusion' to install it.
-  Alternatively, you can use `package-list-packages'.
+  can do `M-x package-install RET org-transclusion' to install
+  it. Alternatively, you can use `package-list-packages'.
 
   After installation, you can start using Org-transclusion with no
   additional configuration. Below are some example keybindings that can
@@ -146,7 +144,35 @@ or user manual: [online] or Info node `(org-transclusion)Customizing'.
 
   ┌────
   │ (define-key global-map (kbd "<f12>") #'org-transclusion-add)
-  │ (define-key global-map (kbd "C-n t") #'org-transclusion-mode)
+  │ (define-key global-map (kbd "C-n t m") #'org-transclusion-transient-menu)
+  │ (define-key global-map (kbd "C-n t t") #'org-transclusion-mode)
+  │ 
+  │ ;; An alternative with `use-package':
+  │ 
+  │ (use-package org-transclusion
+  │   :bind (("S-<f12>" . org-transclusion-add)
+  │          ("C-c t m" . org-transclusion-transient-menu)
+  │          ("C-n t t") . org-transclusion-mode))
+  └────
+
+  The `#+transclusion' keyword can be fontified via built-in
+  `font-lock-mode' with feature `org-tranclusion-font-lock'. It is an
+  extension that is turned on by default, so you normally do not need
+  any customizing. As an option for those who prefer to defer loading
+  packages, you can do something like this below to activate
+  `org-transclusion-font-lock-mode' without loading the entire
+  `org-transclusion' features.
+
+  ┌────
+  │ (with-eval-after-load 'org
+  │   (require `org-transclusion-font-lock)
+  │   (org-transclusion-font-lock-mode +1))
+  │ 
+  │ ;; An alternative with `use-package':
+  │ 
+  │ (use-package org-transclusion-font-lock
+  │   :after org
+  │   :config (org-transclusion-font-lock-mode +1))
   └────
 
   For Doom users, you would need to do something like this below to
@@ -167,6 +193,8 @@ or user manual: [online] or Info node `(org-transclusion)Customizing'.
   │    :leader
   │    :prefix "n"
   │    :desc "Org Transclusion Mode" "t" #'org-transclusion-mode))
+  │ ;; I'd appreciate if someone could advise how to add another command such as
+  │ ;; 'org-transclusion-transient-menu
   └────
 
 
