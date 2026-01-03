@@ -39,14 +39,21 @@
 
 (require 'org)
 
+(defvar org-transclusion-font-lock-keywords nil)
+
 ;;;###autoload
 (define-minor-mode org-transclusion-font-lock-mode ()
   :lighter nil
   :global t
   :group 'org-transclusion
   (if org-transclusion-font-lock-mode
-      (add-hook 'org-mode-hook #'org-transclusion-font-lock-set)
-    (remove-hook 'org-mode-hook #'org-transclusion-font-lock-set)))
+      (progn
+       (add-hook 'org-font-lock-set-keywords-hook
+                 #'org-transclusion-font-lock-extra-keywords-function)
+       (add-hook 'org-mode-hook #'org-transclusion-font-lock-set))
+    (remove-hook 'org-mode-hook #'org-transclusion-font-lock-set)
+    (remove-hook 'org-font-lock-set-keywords-hook
+                 #'org-transclusion-font-lock-extra-keywords-function)))
 
 (defface org-transclusion-keyword
   '((((class color) (min-colors 88) (background light))
@@ -57,10 +64,19 @@
   "Face for #+transclude keyword."
   :group 'org-transclusion)
 
+(defun org-transclusion-font-lock-extra-keywords-function ()
+  "Add font-lock function to Org's hook.
+The hook is `org-font-lock-set-keywords-hook'."
+  (add-to-list 'org-font-lock-extra-keywords
+               '(org-transclusion-fontify-meta-lines-and-blocks) 'append))
+
 (defun org-transclusion-font-lock-set ()
   "Add font-lock function to Org's hook.
 The hook is `org-font-lock-set-keywords-hook'."
-  (font-lock-remove-keywords nil org-font-lock-keywords)
+  ;; (setq org-transclusion-font-lock-keywords
+  ;;       (append (remove '(org-fontify-meta-lines-and-blocks) org-font-lock-keywords)))
+  ;; (font-lock-remove-keywords nil org-font-lock-keywords)
+  ;; (font-lock-add-keywords nil org-transclusion-font-lock-keywords)
   (font-lock-add-keywords nil '(org-transclusion-fontify-meta-lines-and-blocks)))
 
 (defun org-transclusion-fontify-meta-lines-and-blocks (limit)
