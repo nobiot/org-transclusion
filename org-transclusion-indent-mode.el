@@ -1,6 +1,6 @@
 ;;; org-transclusion-indent-mode.el --- support org-indent-mode -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021-2024  Free Software Foundation, Inc.
+;; Copyright (C) 2021-2026  Free Software Foundation, Inc.
 
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 22 August 2021
-;; Last modified: 21 January 2024
+;; Last modified: 03 January 2026
 
 ;;; Commentary:
 ;;  This file is part of Org-transclusion
@@ -34,6 +34,7 @@
 
 ;;; Code:
 
+(require 'org-transclusion)
 (require 'org-indent)
 
 ;;;; Variables
@@ -251,10 +252,11 @@ are removed."
   :group 'org-transclusion
   (if org-transclusion-indent-mode
       (progn
+        (org-transclusion-extension-functions-add-or-remove
+         org-transclusion-indent-extension-functions)
         ;; Install hooks for source buffer fringe preservation
         (add-hook 'after-change-functions
                   #'org-transclusion-indent--after-change nil t)
-
         ;; Register with org-indent or wait for it
         (cond
          ;; Already initialized before, just toggle
@@ -268,6 +270,8 @@ are removed."
          (t (org-transclusion-indent--wait-and-init (current-buffer)))))
 
     ;; Cleanup
+    (org-transclusion-extension-functions-add-or-remove
+     org-transclusion-indent-extension-functions :remove)
     (remove-hook 'after-change-functions
                  #'org-transclusion-indent--after-change t)
     (when (boundp 'org-indent-post-buffer-init-functions)
@@ -294,12 +298,17 @@ Adds `post-command-hook' to detect when source overlays appear."
 ;; Auto-setup in org-mode buffers - add late to hook like org-modern-indent
 (add-hook 'org-mode-hook #'org-transclusion-indent-mode-setup 90)
 
-;;;; Hook Registration
-
-(add-hook 'org-transclusion-after-add-functions
-          #'org-transclusion-indent--add-properties-and-fringes)
-(add-hook 'org-transclusion-after-remove-functions
-          #'org-transclusion-indent--refresh-source-region)
+(defvar org-transclusion-indent-extension-functions
+  (list
+   (cons 'org-transclusion-after-add-functions
+         #'org-transclusion-indent--add-properties-and-fringes)
+   (cons 'org-transclusion-after-remove-functions
+         #'org-transclusion-indent--refresh-source-region))
+  "Alist of functions to activate `org-transclusion-indent-mode'.
+CAR of each cons cell is a symbol name of an abnormal hook
+\(*-functions\). CDR is either a symbol or list of symbols, which
+are names of functions to be called in the corresponding abnormal
+hook.")
 
 (provide 'org-transclusion-indent-mode)
 

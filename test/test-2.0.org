@@ -1,26 +1,86 @@
+#+title: Test file for Org-transclusion
+#+startup: content
+
+This is the first section before the first headline.
+
 * Regression
-** make from link
+** notmuch
+
+   #+transclude: [[notmuch:id:E5208A8C-F56A-4931-9E9F-A1F5F78B8698@nobiot.com][notmuch email]]
+
+   [[notmuch:id:E5208A8C-F56A-4931-9E9F-A1F5F78B8698@nobiot.com]]
+
+** file search option
+
+   #+transclude: [[file:paragraph.org]]
+   => transclude entire buffer
+
+   #+transclude: [[file:paragraph.org::Sub heading][This is a description]]
+   => Sub heading only
+
+   #+transclude: [[file:paragraph.org::non-exisitent]]
+   => Should not transclude anything
+
+   #+transclude: [[paragraph.tx]]
+
+** make from link -- ID and ID with search option
 This is a link to a [[id:2022-05-30T203553][Bertrand Russell]] wikipedia excerpt
 #+transclude: [[id:2022-05-30T203553][Bertrand Russell]]
+
+#+transclude: [[id:2022-10-10T173507::*H2]]
+
+[[id:2022-10-10T173507::*H2]]
+
+ID with "first section" [[id:2022-06-26T152831]]
+
+#+begin_src emacs-lisp
+  (setq org-transclusion-include-first-section nil)
+  (setq org-transclusion-include-first-section t)
+#+end_src
+
+#+transclude: [[id:2022-06-26T152831]]
+
+** org-id with lines, no first-heading etc
+
+   [[id:2022-10-10T173507::*H2]]
+
+   #+transclude: [[id:2022-10-10T173507::*H2]]  :lines 1-5
+   #+transclude: [[id:2022-10-10T173507::*H2]]  :lines 1-5
+
+   #+transclude: [[id:2022-10-10T173507::*H2]] :no-first-heading
+   #+transclude: [[id:2022-10-10T173507::*H2]] :only-contents
+
+   #+transclude: [[file:paragraph.org::* Other headline]]  :lines 1-5
+
+   [[file:paragraph.org::* Sub heading]]
+   #+transclude: [[file:paragraph.org::* Sub heading]]
+
 ** test empty file
-#+transclude: [[file:empty.txt::2][empty text file]]
+
+   #+transclude: [[file:empty.txt::2][empty text file]]
 
 ** test text
 
-#+transclude: [[file:test.txt][text file]]
-#+transclude: [[file:test.txt][text file]]
+   #+transclude: [[file:test.txt][text file]]
+   #+transclude: [[file:test.txt][text file]]
 
-Below are tesing the new ~org-transclusion-fix-common-misspelling~ function.
+   Below are tesing the new ~org-transclusion-fix-common-misspelling~ function.
 
-    #+transclude: [[file:test.txt][text file]]
+   #+transclude: [[file:test.txt][text file]]
 
-    #+transclude [[file:test.txt][text file]]
+   ::number works now
+   #+transclude: [[file:test.txt::5]]  :lines 1-2
 
-#+trans [[file:test.txt][text file]]
+   ::/regexp/ does not work as intended because it will open an occur buffer and
+   does not move the point in the source buffer.
+   #+transclude: [[file:test.txt::/Gab/]]  :lines 1-1
+
+   #+transclude [[file:test.txt][text file]]
+
+   #+trans [[file:test.txt][text file]]
 
 ** test t/nil
 t/nil will be dropped after remove-at-point
-
 
 #+transclude: [[file:test.txt][text file]]
 #+transclude: [[id:2022-05-30T203553][Bertrand Russell]]
@@ -52,7 +112,8 @@ t/nil will be dropped after remove-at-point
 #+transclude: [[file:paragraph.org::quote][Link to a quote]]
 
 ** #Custom ID
-#+transclude: [[file:testpara.org::#custom-id-1][Custom ID]] :level 2
+
+   #+transclude: [[file:testpara.org::#custom-id-1][Custom ID]] :level 2
 
 ** *Hadline
 #+transclude: [[file:bertrand-russell.org::*Bertrand Russell - Wikipedia]] :level 2 :disable-auto
@@ -81,19 +142,25 @@ Temporarily set ~org-transclusion-include-first-section~ to nil
 
 #+transclude: [[file:test-no-first-section-negative.org]]
 
+* Orgit-file (link to git rev)
+
+  [[orgit-file:~/src/org-transclusion/::main::org-transclusion.el::Last modified][Orgit-file link to main]]
+
+#+transclude: [[orgit-file:~/src/org-transclusion/::main::org-transclusion.el::Last modified][Orgit-file link to main]]  :lines 1- :src emacs-lisp :end "URL"
+
 * Live-Sync
 ** center-block dynamic-block example-block export-block special-block verse-block
 
 ** drawer
-#+begin_example
-(setq org-transclusion-exclude-elements '())
-(setq org-transclusion-exclude-elements '(property-drawer))
-#+end_example
+
+   #+begin_example
+   (setq org-transclusion-exclude-elements '())
+   (setq org-transclusion-exclude-elements '(property-drawer))
+   #+end_example
 
 #+transclude: [[id:2022-05-30T203553][Bertrand Russell]]
 
 ** fixed-width
-
 
 ** latex-environment
 
@@ -181,10 +248,12 @@ Temporarily set ~org-transclusion-include-first-section~ to nil
 #+transclude: [[id:2022-06-26T141859]] :exclude-elements "paragraph"
 
 #+transclude: [[id:2022-06-26T141859]]
-* Test src
+* Test src and end
 
 #+transclude: [[file:./python-1.py]]
 #+transclude: [[file:./python-1.py]]  :src python
+
+#+transclude: [[file:./python-1.py::id-1234]]  :src python :end "id-1234 end here"
 
 #+begin_src python
   import matplotlib
@@ -199,4 +268,23 @@ Temporarily set ~org-transclusion-include-first-section~ to nil
   # id-1234 end here
   return fname # return this to org-mode
 #+end_src
+* Test "auto" level  and :no-first-heading
+  #+transclude: [[file:bertrand-russell.org::*On Denoting]] :level  :no-first-heading
 
+  #+transclude: [[file:bertrand-russell.org::*On Denoting]] :level
+
+*** A auto level
+
+  #+transclude: [[file:bertrand-russell.org::*On Denoting]] :level  :exclude-elements "headline drawer"
+
+
+    #+transclude: [[file:bertrand-russell.org::*On Denoting]] :level 3 :exclude-elements "headline drawer"
+
+*** First sectiona and "auto" level
+
+#+begin_src emacs-lisp
+  (setq org-transclusion-include-first-section nil)
+  (setq org-transclusion-include-first-section t)
+#+end_src
+
+  #+transclude: [[file:./test-no-first-section.org]] :level

@@ -1,47 +1,87 @@
-* Under development (as of 2024-12-31)
+* 2.0.0-rc (as of 2026-01-03)
+
+  - Breaking Change ::
+
+    We have done significant refactoring for the INTERNAL workings of
+    transclusion logic. The intent was two-fold:
+
+    1. Affect only internal workings. No user-facing commands and user options
+       should be affected.
+
+    2. Make custom/personal transclusion logic easy. Now transclusion should
+       work as long as the Org link navigates to the link-target buffer. For
+       example, the author has tested this with `orgit-file` link via `orgit`
+       package (https://github.com/magit/orgit) and `notmuch:id:` link via
+       `ol-notmuch` (https://github.com/tarsius/ol-notmuch), both packages by
+       Jonas Bernoulli.
+
+    No user-facing features should be affected, however, we are calling it out
+    as a breaking change because:
+
+    - The change is significant including dropping of a major function and
+      changes of function signature, and
+    - We are aware that some users have developed their own custom transclusion
+      functions.
+
+    We plan to increase the version nubmer to 2.0.0 to indicate this breaking
+    change included in this release.
+
+    The significant changes include the following:
+
+    - Deprecated (and removed from the main transclusion logic):
+      `org-transclusion-add-payload'
+
+    - `org-transclusion-content-insert` signature changed to `(content)`
+
+    - Refactored `org-transclusion-content-format-functions`.
+
+    - Fixed extension setup hooks (`org-transclusion-*-extension-functions`)
+
+    - All the extensions included in the package have been refactored to be
+      aligned with these changes.
+
+  - Features ::
+
+    - New `org-transclusion-transient' feature for easier command access via
+      `org-transclusion-transient-menu' command.
+
+    - New `org-transclusion-insert' command. The command lets you insert
+      #+TRANSCLUDE: from a link at point or new link to a blank line.
+
+    - New user option `org-transclusion-insert-link-functions`, allowing
+      customization of link insertion behavior for `org-transclusion-insert'
+      (Commit `47ff265`).
+
+    - Improved fringe & indentation (contribution by gggion). Significant
+      refactoring to improve how fringes are displayed, especially when working
+      with `org-indent-mode` and in terminal (`-nw`) environments.
+
+    - Noweb chunk support (contribution by Andreas Matthias). You can now
+      transclude specific chunks from noweb files. See the user manual for
+      detail.
+
+    - New translclusion `"auto"` value for `:level` property. Leaving the
+      property value blank also behaves as `"auto"` It sets the level of the
+      transcluded headlines to be one level deeper than the current headline.
+
+    - New transclusion property `no-first-heading`. It will remove the first
+      headline of a subtree. This is useful when you wish to merge a subtree
+      into another headline.
 
   - Fixes ::
 
-    fix: #177 Infinite loop when saving buffer with transclusions
+    - fix: #261 Extensions have been refactored into proper minor modes, making
+      them easily removable and togglable. Setup hooks are now cleaner and
+      reversible.
 
-         Fixing a long-lasting (issue open since March 2023, but it had been an
-         known issue before it) issue that was difficult to reproduce.
+    - fix: #237 `ID` links with search options (compatible with Org 9.7+).
+      Commits 4764739, c910289
 
-         The fix is to stop using the text-properties of the transclusion that
-         hold markers of beginning and ending points of itself, which is meant
-         to remember and indicate its own the location; or the range of "this"
-         transclusion at point. The text-properties are named
-         `org-transclusion-beg-mkr' and `org-transclusion-end-mkr'. They are
-         replaced with use of a new text-property `org-transclusion-id' and
-         function `org-transclusion-at-point'. This new function uses
-         `prop-match' with `org-transclusion-id' to identify the range of "this"
-         transclusion at point only when it is needed, thus eliminating the need
-         for memorizing it as a pair of markers.
+    - Fix: removing transclusions would incorrectly flag the buffer as modified
+      Commit 59fe5cc.
 
-         Stable reproduction was achieved and recorded in a comment to the GitHub
-         issue at
-         https://github.com/nobiot/org-transclusion/issues/177#issuecomment-2108453402.
-
-         A quick summary of the design hitherto and how the infinite loop occurs
-         is as follows:
-
-         [Fact / design of org-transclusion]
-
-         - Each transclusion has text-properties org-transclusion-beg-mkr and
-           org-transclusion-end-mkr.
-
-         - They hold markers to keep track of where the transclusion begins and
-           ends.
-
-         [Now what happens]
-
-         - In some combination of undo and buffer-save with transclusions, the
-           markers can temporarily point to non-existing locations in the
-           buffer.
-
-         - If the garbage collection happens to run at this moment, it will
-           sweep these pointers. Now they end up pointing to start of the buffer
-           (point 1).
+    - fix: #177 Infinite loop when saving buffer with transclusions. See commit
+      f6fd666 for detail.
 
 * 1.4.0 (2024-05-20)
 

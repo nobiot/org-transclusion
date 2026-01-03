@@ -1,6 +1,6 @@
 ;;; org-transclusion-font-lock.el --- font-lock for Org-transclusion -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021-2024  Free Software Foundation, Inc.
+;; Copyright (C) 2021-2026  Free Software Foundation, Inc.
 
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the
@@ -17,32 +17,50 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 22 August 2021
-;; Last modified: 21 January 2024
+;; Last modified: 03 January 2026
 
 ;;; Commentary:
 ;;  This file is part of Org-transclusion
 ;;  URL: https://github.com/nobiot/org-transclusion
+;;
+;;  By default, this library does not need to be explicitly configured as it
+;;  will be automatically activated via `org-transclusion-extensions' (part of
+;;  `org-transclusion') (`org-transclusion-font-lock' is set to be active by
+;;  default).
+;;
+;;  Alternatively, you can set it up without loading the whole
+;;  `org-transclusion' library.
+;;
+;;  (use-package org-transclusion-font-lock
+;;   :after org
+;;   :config (org-transclusion-font-lock-mode +1))
 
 ;;; Code:
 
 (require 'org)
-(add-hook 'org-font-lock-set-keywords-hook #'org-transclusion-font-lock-set)
+
+;;;###autoload
+(define-minor-mode org-transclusion-font-lock-mode ()
+  :lighter nil
+  :global t
+  :group 'org-transclusion
+  (if org-transclusion-font-lock-mode
+      (add-hook 'org-mode-hook #'org-transclusion-font-lock-set)
+    (remove-hook 'org-mode-hook #'org-transclusion-font-lock-set)))
 
 (defface org-transclusion-keyword
   '((((class color) (min-colors 88) (background light))
-     :foreground "#0030b4")
+     :inherit font-lock-keyword-face)
     (((class color) (min-colors 88) (background dark))
-     :foreground "#34cfff")
-    (t
-     :foreground "darkgray"))
+     :inherit font-lock-keyword-face)
+    (t :inherit font-lock-keyword-face))
   "Face for #+transclude keyword."
   :group 'org-transclusion)
 
 (defun org-transclusion-font-lock-set ()
   "Add font-lock function to Org's hook.
 The hook is `org-font-lock-set-keywords-hook'."
-  (add-to-list 'org-font-lock-extra-keywords
-               '(org-transclusion-fontify-meta-lines-and-blocks) 'append))
+  (font-lock-add-keywords nil '(org-transclusion-fontify-meta-lines-and-blocks)))
 
 (defun org-transclusion-fontify-meta-lines-and-blocks (limit)
   "Override Org's font-lock for #+transclude keyword.
