@@ -17,7 +17,7 @@ index.html: org-transclusion.texi
 org-transclusion.texi: org-transclusion-manual.org
 	@printf "\n\n### Generating manual .texi and .info files \n\n"
 	$(EMACS) --batch -L ../ --file $< \
-                 --eval="(progn (require 'org-transclusion)(org-transclusion-add-all)(org-texinfo-export-to-texinfo))"
+		 --eval="(progn (require 'org-transclusion)(org-transclusion-add-all)(org-texinfo-export-to-texinfo))"
 
 .PHONY: clean
 clean:
