@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 03 January 2026
+;; Last modified: 04 January 2026
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -1104,15 +1104,39 @@ offsets from file beginning, not from cursor position."
               (org-link-open link)
               ;; In the target buffer temporarily.
               (save-excursion
-                ;; When link has no search option, go to
-                ;; point-min so :lines offsets calculate from file start,
-                ;; not from wherever cursor happened to be in source buffer.
-                (when (not (org-element-property :search-option link))
-                  (goto-char (point-min)))
-                (move-marker (make-marker) (point))))
+                (move-marker
+                 (make-marker)
+                 (if (org-transclusion-source-point-beginning-of-buffer-p link)
+                     1 (point)))))
           (error (user-error
                   "Org-transclusion: `org-link-open' cannot open link, %s"
                   (org-element-property :raw-link link))))))))
+
+(defun org-transclusion-source-point-beginning-of-buffer-p (link)
+  "Return non-nil when point should be at the beginning of the buffer.
+LINK must be Org's link object that `org-link-open' can act on.
+
+This is meant to be used in`org-transclusion-add-source-marker', which
+should return a marker pointing to the beginning of the buffer (bob =
+point 1) when:
+
+  - Link type is file
+  - No search option
+
+This is so that :lines offsets calculate from file start, not from
+wherever cursor happened to be in source buffer. For other cases, leave
+the point where it is. We are assuming that the `org-link-open' moves
+the point in an appropriate location of the link target buffer, even
+though we cannot guarantee that this is the case. We are limiting the
+case for the marker pointing to the bob only to link type is file
+because:
+
+  - Search option is parsed only when the link type is file.
+  - For other file types, expecially ones from third-party packages such
+    as `orgit', we MUST NOT move the point to the beginning of the
+    buffer."
+  (and (string-equal "file" (org-element-property :type link))
+       (not (org-element-property :search-option link))))
 
 (defun org-transclusion-add-org-id (link plist)
   "Return a list for Org-ID LINK object and PLIST.

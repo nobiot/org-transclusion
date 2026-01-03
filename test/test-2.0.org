@@ -80,7 +80,7 @@ ID with "first section" [[id:2022-06-26T152831]]
 
    Below are tesing the new ~org-transclusion-fix-common-misspelling~ function.
 
-   #+transclude: [[file:test.txt][text file]]
+   #+transclude: [[file:test.txt][text file]]  :lines 1-2
 
    ::number works now
    #+transclude: [[file:test.txt::5]]  :lines 1-2
