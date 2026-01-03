@@ -9,7 +9,6 @@ This is the first section before the first headline.
    #+transclude: [[notmuch:id:E5208A8C-F56A-4931-9E9F-A1F5F78B8698@nobiot.com][notmuch email]]
 
    [[notmuch:id:E5208A8C-F56A-4931-9E9F-A1F5F78B8698@nobiot.com]]
-
 ** file search option
 
    #+transclude: [[file:paragraph.org]]
@@ -54,6 +53,20 @@ ID with "first section" [[id:2022-06-26T152831]]
 
    [[file:paragraph.org::* Sub heading]]
    #+transclude: [[file:paragraph.org::* Sub heading]]
+
+** defun / sexp (thingatpt)
+
+   #+transclude: [[file:~/src/org-transclusion/org-transclusion-font-lock.el::(defun org-transclusion-font-lock-set]]  :src emacs-lisp :thingatpt sexp
+
+   [[orgit-rev:~/src/org-transclusion/::0737cfeb0a51fe2143c9cbcbb8d7d0664e3d2a1e][~/src/org-transclusion/ (magit-rev 0737cfe)]]
+
+   [[orgit-file:~/src/org-transclusion/::0737cfe::org-transclusion.el::org-transclusion-new-function]]
+
+*** Example
+
+   #+transclude: [[orgit-file:~/src/org-transclusion/::0737cfe::org-transclusion.el::org-transclusion-new-function][org-transclusion-new-function (00737cfe)]]  :src emacs-lisp :thingatpt sexp
+
+   #+transclude: [[orgit-file:~/src/org-transclusion/::8ec0233::org-transclusion.el::org-transclusion-new-function][org-transclusion-new-function (83c0233)]]  :src emacs-lisp :thingatpt sexp
 
 ** test empty file
 
