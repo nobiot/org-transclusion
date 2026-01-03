@@ -1,6 +1,6 @@
 ;;; org-transclusion-src-lines.el --- Extension -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021-2025  Free Software Foundation, Inc.
+;; Copyright (C) 2021-2026  Free Software Foundation, Inc.
 
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 24 May 2021
-;; Last modified: 20 December 2025
+;; Last modified: 03 January 2026
 
 ;;; Commentary:
 ;;  This is an extension to `org-transclusion'.  When active, it adds features
