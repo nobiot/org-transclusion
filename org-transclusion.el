@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 20 December 2025
+;; Last modified: 03 January 2026
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -424,7 +424,7 @@ transclusion keyword."
         (when auto-transclude-p (org-transclusion-add))))))
 
 (defun org-transclusion-insert (&optional insert-above)
-  "Insert #+TRANSCLUDE: keyword from a link at point or to a blank line.
+  "Insert #+TRANSCLUDE: from a link at point or new link to a blank line.
 If the point is not at a link but has text, this command will try to
 find the first link in the current line. If the point is at a blank
 line, this command will call a function in set to variable

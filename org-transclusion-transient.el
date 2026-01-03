@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 1 January 2025
-;; Last modified: 19 December 2025
+;; Last modified: 03 January 2026
 
 ;;; Commentary:
 
@@ -245,7 +245,7 @@ you type a certain character (typically a comma). See `crm-separator'."
      (insert (format ":exclude-elements %S" elements-string)))))
 
 (transient-define-suffix org-transclusion-transient--no-first-heading ()
-  ":no-first-heading will remove the headline of a subtree.
+  ":no-first-heading will remove the first headline of a subtree.
 This is useful when you wish to merge a subtree into another headline."
   :transient 'transient--do-stay
   (interactive)
