@@ -60,6 +60,7 @@ ID with "first section" [[id:2022-06-26T152831]]
 
    [[orgit-rev:~/src/org-transclusion/::0737cfeb0a51fe2143c9cbcbb8d7d0664e3d2a1e][~/src/org-transclusion/ (magit-rev 0737cfe)]]
 
+[[file:~/src/org-transclusion/org-transclusion-font-lock.el::(defun org-transclusion-font-lock-set]]
    [[orgit-file:~/src/org-transclusion/::0737cfe::org-transclusion.el::org-transclusion-new-function]]
 
 *** Example
