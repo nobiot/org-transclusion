@@ -138,9 +138,14 @@ it will work. Used in `org-transclusion-insert-org-link', which see."
 
 (defcustom org-transclusion-src-tab-acts-natively t
   "Flag to control how transclusion deals with tabs for org-src.
-The default is t. Change it to nil if indentention is not transcluded
-correctly from the program source, especially for the languages where
-indentation is significant such as Python and YAML.")
+The default is t. When it is t, use `org-src-tab-acts-natively' as is.
+If set to nil, Org-transclusion temporarily sets
+`org-src-tab-acts-natively' to nil when transcluded content is being
+formated.
+
+Change it to nil if indentention is not transcluded correctly from the
+program source, especially for the languages where indentation is
+significant such as Python and YAML.")
 
 ;;;; Faces
 
@@ -545,7 +550,9 @@ does not support all the elements.
                 (point) (org-current-line))))
             ;; Normal case
             (t
-             (pcase-let* ((org-src-tab-acts-natively org-transclusion-src-tab-acts-natively)
+             (pcase-let* ((org-src-tab-acts-natively (if (not org-transclusion-src-tab-acts-natively)
+                                                         nil
+                                                       org-src-tab-acts-natively))
                           (buffer-modified-p (buffer-modified-p))
                           (`(,beg . ,end) (org-transclusion-content-insert content)))
                (when (and beg end)
