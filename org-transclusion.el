@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 15 January 2026
+;; Last modified: 06 March 2026
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -1114,7 +1114,8 @@ offsets from file beginning, not from cursor position."
       ;; t is a less surprising default than nil - fuzzy search.
       (let ((org-link-search-must-match-exact-headline t))
         (condition-case nil
-            (progn
+            (let ((display-buffer-alist '((".*" display-buffer-no-window
+                                           (allow-no-window t)))))
               (org-link-open link)
               ;; In the target buffer temporarily.
               (save-excursion
