@@ -1116,6 +1116,9 @@ offsets from file beginning, not from cursor position."
 
   ;; This `save-excursion' is needed for the case where the target and
   ;; source are the same buffer.
+  (when "info" (org-element-property :type link)
+        (user-error
+         "Org-transclusion: transcluding info node is currently unsupported."))
   (save-excursion
     (condition-case nil
         (let (
