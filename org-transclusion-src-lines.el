@@ -140,13 +140,13 @@ One of the numbers can be omitted.  When the first number is
 omitted (e.g. -10), it means from the beginning of the file to
 line 10. Likewise, when the second number is omitted (e.g. 10-),
 it means from line 10 to the end of file."
-  (let* ((src-mkr (org-transclusion-add-source-marker link))
+  (let* ((noweb-chunk (org-transclusion--update-noweb-chunk-search-option link plist))
+         (src-mkr (org-transclusion-add-source-marker link))
          (search-option (org-element-property :search-option link))
          (type (org-element-property :type link))
          (buf (and src-mkr (marker-buffer src-mkr)))
          (lines (plist-get plist :lines))
          (end-search-op (plist-get plist :end))
-         (noweb-chunk (plist-get plist :noweb-chunk))
          (thing-at-point (plist-get plist :thing-at-point))
          (thing-at-point (when thing-at-point
                            (make-symbol (cadr (split-string thing-at-point))))))
@@ -214,10 +214,20 @@ it means from line 10 to the end of file."
                  :src-beg beg
                  :src-end end)))))))
 
+(defun org-transclusion--update-noweb-chunk-search-option (link plist)
+  "Update property `:search-option' of LINK if transcluding a noweb-chunk.
+For example, the `:search-option' of a link like \"[[./file.nw::chunk]]\" will be
+updated from \"chunk\" to  \"<<chunk>>=\"."
+  (when (plist-get plist :noweb-chunk)
+    (org-element-put-property link :search-option
+                              (concat "<<"
+                                      (org-element-property :search-option link)
+                                      ">>="))))
+
 (defun org-transclusion--goto-noweb-chunk-beginning (chunk-name)
   "Go to the beginning of chunk CHUNK-NAME."
   (goto-char (point-min))
-  (re-search-forward (format "<<%s>>=" chunk-name) nil t)
+  (re-search-forward chunk-name nil t)
   (forward-line 1)
   (line-beginning-position))
 
