@@ -17,7 +17,7 @@
 
 ;; Author:        Noboru Ota <me@nobiot.com>
 ;; Created:       10 October 2020
-;; Last modified: 06 March 2026
+;; Last modified: 07 March 2026
 
 ;; URL: https://github.com/nobiot/org-transclusion
 ;; Keywords: org-mode, transclusion, writing
@@ -1098,34 +1098,45 @@ as `org-link-open' opens a buffer within Emacs, this function should
 return a marker.
 
 When LINK has no search option (::*Heading, ::CUSTOM_ID, etc.), returns
-marker at `point-min' to ensure line-based transclusions calculate
+marker at 1 to ensure line-based transclusions calculate
 offsets from file beginning, not from cursor position."
   ;; Assume the point now is the transcluding buffer
+
   ;; Note 2025-12-18 `org-link-open' does not necessarily obey
   ;; `display-buffer-alist' and can open the target buffer in the currently
   ;; selected window. This is disruptive for users. We want transclusions to
   ;; keep the current buffer in the current window. To do this, it seems
   ;; `save-window-excursion' is the only way.
-  (save-window-excursion
-    ;; This `save-excursion' is needed for the case where the target and
-    ;; source are the same buffer.
-    (save-excursion
-      ;; Don't ever prompt to create a headline when transcluding.
-      ;; t is a less surprising default than nil - fuzzy search.
-      (let ((org-link-search-must-match-exact-headline t))
-        (condition-case nil
-            (let ((display-buffer-alist '((".*" display-buffer-no-window
-                                           (allow-no-window t)))))
-              (org-link-open link)
-              ;; In the target buffer temporarily.
-              (save-excursion
-                (move-marker
-                 (make-marker)
-                 (if (org-transclusion-source-point-beginning-of-buffer-p link)
-                     1 (point)))))
-          (error (user-error
-                  "Org-transclusion: `org-link-open' cannot open link, %s"
-                  (org-element-property :raw-link link))))))))
+
+  ;; Note 2026-03-07 For `org-link-open', instead of relying on
+  ;; `save-window-excursion', we are now using display-buffer-alist with its
+  ;; ACTION `display-buffer-no-window' and allow-no-window being non-nil. This
+  ;; is originally conceived as a fix for GitHub issue #299, but it looks like
+  ;; it can be a good way to tame `org-link-open' for our purpose.
+
+  ;; This `save-excursion' is needed for the case where the target and
+  ;; source are the same buffer.
+  (save-excursion
+    (condition-case nil
+        (let (
+              ;; Don't ever prompt to create a headline when transcluding.
+              ;; t is a less surprising default than nil - fuzzy search.
+              (org-link-search-must-match-exact-headline t)
+              ;; Don't display or pop to the link's target buffer. Non-nil value
+              ;; for allow-no-window will cause `pop-to-buffer' to fall back to
+              ;; `set-buffer', which we want here.
+              (display-buffer-alist '((".*" display-buffer-no-window
+                                       (allow-no-window t)))))
+          (org-link-open link)
+          ;; In the target buffer temporarily.
+          (save-excursion
+            (move-marker
+             (make-marker)
+             (if (org-transclusion-source-point-beginning-of-buffer-p link)
+                 1 (point)))))
+      (error (user-error
+              "Org-transclusion: `org-link-open' cannot open link, %s"
+              (org-element-property :raw-link link))))))
 
 (defun org-transclusion-source-point-beginning-of-buffer-p (link)
   "Return non-nil when point should be at the beginning of the buffer.

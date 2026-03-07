@@ -4,11 +4,23 @@
 This is the first section before the first headline.
 
 * Regression
+** Translclude from same buffer
+
+   #+transclude: [[id:2026-03-07T124245]]
+
 ** notmuch
+#+transclude: [[:]]
 
    #+transclude: [[notmuch:id:E5208A8C-F56A-4931-9E9F-A1F5F78B8698@nobiot.com][notmuch email]]
 
    [[notmuch:id:E5208A8C-F56A-4931-9E9F-A1F5F78B8698@nobiot.com]]
+
+** info
+
+   [[info:elisp#Buffer Display Action Functions][(elisp) Buffer Display Action Functions]]
+
+
+
 ** file search option
 
    #+transclude: [[file:paragraph.org]]
@@ -20,7 +32,7 @@ This is the first section before the first headline.
    #+transclude: [[file:paragraph.org::non-exisitent]]
    => Should not transclude anything
 
-   #+transclude: [[paragraph.tx]]
+   #+transclude: [[paragraph.txt]]
 
 ** make from link -- ID and ID with search option
 This is a link to a [[id:2022-05-30T203553][Bertrand Russell]] wikipedia excerpt
@@ -102,8 +114,11 @@ t/nil will be dropped after remove-at-point
 (setq inhibit-read-only nil)
 
 ** test
+   :PROPERTIES:
+   :ID:       2026-03-07T124245
+   :END:
 
-#+transclude: [[id:2022-05-30T203553][Bertrand Russell]] :only-contents
+   #+transclude: [[id:2022-05-30T203553][Bertrand Russell]] :only-contents
 
 ** Paragraph
 
