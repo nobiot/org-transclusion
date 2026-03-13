@@ -149,7 +149,7 @@ it means from line 10 to the end of file."
          (end-search-op (plist-get plist :end))
          (thing-at-point (plist-get plist :thing-at-point))
          (thing-at-point (when thing-at-point
-                           (make-symbol (cadr (split-string thing-at-point))))))
+                           (intern (cadr (split-string thing-at-point))))))
     (when buf
       (with-current-buffer buf
         (org-with-wide-buffer

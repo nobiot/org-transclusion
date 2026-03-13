@@ -1,31 +1,185 @@
-    What are the allowed (intended?) or tested "things"?
+#+title: Thing-at-Point Interactive Tests
+#+property: header-args :results silent
 
-I've briefly tested these:
+Tests for ~:thing-at-point~ and ~:thingatpt~ keywords in org-transclusion.
 
-    word
-    symbol
-    line (redundant, since we already have :lines)
+Each test block documents:
+- SEARCH :: The =::target= used in the link
+- THING  :: The thing type requested
+- COUNT  :: The =:end= value if using multi-thing extraction
+- EXPECT :: What text should appear in the transclusion
 
-forward-thing is the function used for selecting multiple things. Some gotchas from some of the less common things could stem from this not handing them as expected.
+* [0/5] Elisp Things (functions.el)
+** TODO sexp: single top-level sexp
 
-I expect these will be more common:
+SEARCH =fixture-beta=, THING =sexp=, COUNT 1.
+EXPECT: The complete =(defun fixture-beta ...)= sexp.
+RESULTS: Form is captured but only from search string match onwards
 
-    sentence
-    paragraph
-    defun
-    sexp
-    list
+#+transclude: [[./things-at-point-dir/functions.el:: fixture-beta]]  :src elisp :thing-at-point sexp
+
+** TODO sexp: two consecutive top-level sexps
+
+SEARCH: =fixture-alpha=, THING =sexp=, COUNT 2.
+EXPECT: Two sexps: =(defun fixture-alpha ...)=, =(defun fixture-beta ...)=.
+RESULTS: Forms are captured but first one only contains from search string match onwards
+
+#+transclude: [[./things-at-point-dir/functions.el::fixture-alpha]]  :src elisp :end "2" :thing-at-point sexp
+
+** TODO list: list sexp at point
+
+SEARCH =fixture-epsilon=, THING =list=, COUNT 1.
+EXPECT: The complete =(defcustom fixture-epsilon ...)= form.
+RESULTS: Form is captured but only from search string match onwards
+
+#+transclude: [[file:./things-at-point-dir/functions.el::fixture-epsilon]]  :src elisp :thing-at-point list
+
+** TODO defun: single defun at search target
+
+SEARCH =fixture-beta=, THING =defun=, COUNT 1.
+EXPECT: The complete =fixture-beta= defun (4 lines).
+BUG: Everything from =fixture-beta= to end of file.
+AFTER FIX: Form is captured but only from search string match onwards 
+
+#+transclude: [[./things-at-point-dir/functions.el::fixture-beta]]  :src elisp :thing-at-point defun
+
+** TODO defun: two consecutive defuns
+
+SEARCH =fixture-alpha=, THING =defun=, COUNT 2.
+EXPECT: =fixture-alpha=, =fixture-beta=. 
+BUG: Everything from =fixture-alpha= to end of file (same as count 1).
+AFTER FIX: Forms are captured but first one only contains from search string match onwards
+
+#+transclude: [[./things-at-point-dir/functions.el::fixture-alpha]]  :src elisp :end "2" :thing-at-point sexp
+
+** TODO symbol: symbol at search target
+
+SEARCH =fixture-delta=, THING =symbol=, COUNT 1.
+EXPECT: The text =fixture-delta= (just the symbol name).
+
+#+transclude: [[./things-at-point-dir/functions.el::fixture-delta]]  :src elisp :thing-at-point symbol
 
 
-#+transclude: [[./things-at-point-dir/story.txt::Once upon a time][story]]  :end "2" :thing-at-point paragraph
+* [8/8] Prose Things (prose.txt)
+** DONE word: single word at search target
 
-#+transclude: [[./things-at-point-dir/story.txt::Once upon a time][story]]  :end "1" :thing-at-point sentence
+SEARCH =Standalone=, THING =word=, COUNT 1.
 
-#+transclude: [[./things-at-point-dir/story.txt::Once upon a time][story]]  :end "3" :thing-at-point sentence
+EXPECT: =Standalone=.
 
-#+transclude: [[./things-at-point-dir/baz.el::id:1234567890][barz-baz-fuzz]]  :src elisp
+WORKS: Yes, =forward-word= exists.
 
-#+transclude: [[./things-at-point-dir/baz.el::id:1234567890][barz-baz-fuzz]]  :src elisp :thing-at-point sexp
+#+transclude: [[./things-at-point-dir/prose.txt::Standalone]]  :thing-at-point word
 
-#+transclude: [[./things-at-point-dir/baz.el::foo][barz-baz-fuzz]]  :src elisp
+** DONE word: three consecutive words
+
+SEARCH =Second paragraph=, THING =word=, COUNT 3.
+
+EXPECT: =Second paragraph has= (three words from line start after =back-to-indentation=).
+
+WORKS: Yes.
+
+#+transclude: [[./things-at-point-dir/prose.txt::Second paragraph]]  :end "3" :thing-at-point word
+
+** DONE sentence: single sentence at search target
+
+SEARCH =Third paragraph=, THING =sentence=, COUNT 1.
+
+EXPECT: =Third paragraph is longer.= (first sentence only).
+
+WORKS: Yes, =forward-sentence= exists. Requires period-terminated sentences.
+
+#+transclude: [[./things-at-point-dir/prose.txt::Third paragraph]]  :thing-at-point sentence
+
+** DONE sentence: two sentences
+
+SEARCH =Third paragraph=, THING =sentence=, COUNT 2.
+
+EXPECT: =Third paragraph is longer.  It has three sentences.=
+
+WORKS: Yes.
+
+#+transclude: [[./things-at-point-dir/prose.txt::Third paragraph]]  :end "2" :thing-at-point sentence
+
+** DONE sentence: no period termination
+
+SEARCH =First paragraph=, THING =sentence=, COUNT 1.
+
+EXPECT: =First paragraph has exactly one sentence.= (has period, should work).
+
+WORKS: Yes.
+
+#+transclude: [[./things-at-point-dir/prose.txt::First paragraph]]  :thing-at-point sentence
+
+** DONE paragraph: single paragraph at search target
+
+SEARCH =Second paragraph=, THING =paragraph=, COUNT 1.
+
+EXPECT: The complete second paragraph (one text block separated by blank lines).
+
+WORKS: Yes, =forward-paragraph= exists.
+
+#+transclude: [[./things-at-point-dir/prose.txt::Second paragraph]]  :thing-at-point paragraph
+
+** DONE paragraph: two consecutive paragraphs
+
+SEARCH =Second paragraph=, THING =paragraph=, COUNT 2.
+
+EXPECT: Second and third paragraphs.
+
+WORKS: Yes.
+
+#+transclude: [[./things-at-point-dir/prose.txt::Second paragraph]]  :end "2" :thing-at-point paragraph
+
+** DONE line: single line at target
+
+SEARCH =Standalone=, THING =line=, COUNT 1.
+
+EXPECT: =Standalone= (the single line).
+
+WORKS: Yes, =forward-line= exists. Redundant with =:lines= but valid.
+
+#+transclude: [[./things-at-point-dir/prose.txt::Standalone]]  :thing-at-point line
+
+
+* [0/4] baz.el Tests
+** TODO defun at foo
+
+SEARCH =foo=, THING =defun=.
+EXPECT: The complete =(defun foo ...)= form.
+BUG: Everything from =foo= to end of file.
+
+#+transclude: [[./things-at-point-dir/baz.el::foo]]  :thing-at-point defun
+
+** TODO defun at foo with :src wrapping
+
+SEARCH =foo=, THING =defun=, with =:src elisp=.
+EXPECT: =(defun foo ...)= wrapped in =#+begin_src elisp= / =#+end_src=.
+BUG: Entire rest of file in src block.
+
+#+transclude: [[./things-at-point-dir/baz.el::foo]]  :src elisp :thing-at-point defun
+
+** TODO Two defuns starting at foo
+
+SEARCH =foo=, THING =defun=, COUNT 2.
+EXPECT: =(defun foo ...)= and =(defun quux ...)=.
+BUG: Get 2 lines for some reason.
+
+#+transclude: [[./things-at-point-dir/baz.el::foo]]  :end "2" :thing-at-point defun#+transclude: [[./things-at-point-dir/baz.el::foo]]  :end "2" :thing-at-point defun#+transclude:
+
+* Edge cases
+
+* Types not tested
+Too niche, couldn't think of way to test them.
+
+- email
+- url
+- number
+- filename
+- existing-filename
+- buffer
+- region
+- face
+- string
+- char
 
