@@ -1,5 +1,10 @@
-This is a story
+First paragraph has exactly one sentence.
 
-Once upon a time. This paragraph should be transcluded. This is a story. And if I have a hard line break, I believe this line is still part of the paragraph as defined by ... thing-at-point I think.
+Second paragraph has two sentences.  The period ends each one.
 
-This is a new paragraph and should not be included.
+Third paragraph is longer.  It has three sentences.  This is the last.
+
+Fourth paragraph is a single word:
+Standalone
+
+Fifth paragraph for multi-sentence extraction.  Testing :end count.  Third sentence here.  Fourth sentence present.
