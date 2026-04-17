@@ -17,7 +17,7 @@
 
 ;; Author: Noboru Ota <me@nobiot.com>
 ;; Created: 24 May 2021
-;; Last modified: 03 January 2026
+;; Last modified: 17 February 2026
 
 ;;; Commentary:
 ;;  This is an extension to `org-transclusion'.  When active, it adds features
@@ -161,7 +161,10 @@ it means from line 10 to the end of file."
                                (org-transclusion--goto-noweb-chunk-beginning search-option)))
                             ;; for others, non-file types, assume that the
                             ;; position in the marker is the intended point
-                            (t (marker-position src-mkr))))
+                            (t (save-excursion
+                                 ;; Fix #295
+                                 (goto-char (marker-position src-mkr))
+                                 (line-beginning-position)))))
                 (bounds (when thing-at-point
                           (let ((count (if end-search-op
                                            (string-to-number end-search-op) 1)))
