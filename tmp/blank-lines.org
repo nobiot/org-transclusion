@@ -1,0 +1,13 @@
+** org files
+-----
+#+transclude: [[./file.org]]
+-----
+
+** other files
+-----
+#+transclude: [[./file.el]]
+-----
+#+transclude: [[./file.el]]  :src emacs-lisp
+-----
+#+transclude: [[./file.el]]  :lines 2-3 :src emacs-lisp
+-----

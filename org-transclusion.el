@@ -819,6 +819,7 @@ the state before live-sync started."
   (interactive)
   (if (not (org-transclusion-within-live-sync-p))
       (user-error "Not within a transclusion in live-sync")
+    (org-transclusion--live-sync-trim-blank-lines)
     (text-clone-delete-overlays)
     (let* ((src-ov (car (org-transclusion-live-sync-buffers)))
            (src-buf (overlay-buffer src-ov)))
@@ -832,6 +833,23 @@ the state before live-sync started."
           (set-window-configuration org-transclusion-remember-window-config)
         (progn
           (setq org-transclusion-remember-window-config nil))))))
+
+(defun org-transclusion--live-sync-trim-blank-lines ()
+  (save-excursion
+    (org-transclusion--live-sync-goto-end-of-edit)
+    (when (looking-back "\n\\([[:space:]]*\n\\)*" 40 t)
+      (delete-region (match-beginning 0) (match-end 0)))))
+
+(defun org-transclusion--live-sync-goto-end-of-edit ()
+  (while (org-transclusion--live-sync-inside-edit-p)
+    (forward-char))
+  (backward-char))
+
+(defun org-transclusion--live-sync-inside-edit-p ()
+  (let ((ovs (overlays-at (point))))
+    (cl-find-if (lambda (ov)
+                  (eq (overlay-get ov 'face) 'org-transclusion-edit))
+                ovs)))
 
 (defun org-transclusion-live-sync-paste ()
   "Paste text content from `kill-ring' and inherit the text props.
@@ -1229,11 +1247,12 @@ Return nil if not found."
     ;; FIXME It's silly to revisit the buffer when it was already visited.
     (with-current-buffer buf
       (org-with-wide-buffer
-       (append '(:tc-type "others-default")
-               (list :src-content (buffer-string)
-                     :src-buf buf
-                     :src-beg (point-min)
-                     :src-end (point-max)))))))
+       (let ((content (org-transclusion--trim-blank-lines (buffer-string))))
+         (append '(:tc-type "others-default")
+                 (list :src-content content
+                       :src-buf buf
+                       :src-beg (point-min)
+                       :src-end (+ (point-min) (length content)))))))))
 
 ;;-----------------------------------------------------------------------------
 ;;;; Functions for inserting content
@@ -1372,7 +1391,7 @@ active."
     ;; If NO-FIRST-HEADING, delete the first level
     (and (org-at-heading-p)
          (plist-get keyword-values :no-first-heading)
-         (delete-line))
+         (org-transclusion--delete-headline))
     (let* ((raw-to-level (plist-get keyword-values :level))
            (to-level (if (and (stringp raw-to-level)
                               (string= raw-to-level "auto"))
@@ -1391,6 +1410,13 @@ active."
               ((> diff 0) ; promote
                (org-map-entries (lambda ()
                                   (dotimes (_ diff) (org-do-promote))))))))))
+
+(defun org-transclusion--delete-headline ()
+  "Delete headline and possibly following blank lines.
+Point shall be in the same line as the headline."
+  (delete-line)
+  (looking-at "\\([[:space:]]*\n\\)*")
+  (delete-region (match-beginning 0) (match-end 0)))
 
 (defun org-transclusion-content-format (_type content keyword-values)
   "Format text CONTENT from source before transcluding.
@@ -1447,15 +1473,20 @@ property controls the filter applied to the transclusion."
         (setq el (org-element-property :parent el)))
       (let ((beg (org-element-property :begin el))
             (end (org-element-property :end el))
-            obj)
+            obj content)
         (when only-element
           (narrow-to-region beg end))
+
         (setq obj (org-element-parse-buffer))
         (setq obj (org-transclusion-content-org-filter only-element obj plist))
-        (list :src-content (org-element-interpret-data obj)
+        (setq content (org-transclusion--trim-blank-lines (org-element-interpret-data obj)))
+        (list :src-content content
               :src-buf (current-buffer)
               :src-beg (point-min)
-              :src-end (point-max))))))
+              :src-end (+ (point-min) (length content)))))))
+
+(defun org-transclusion--trim-blank-lines (str)
+  (concat (string-trim-right str "\\([[:space:]]*\n\\)*") "\n"))
 
 (defun org-transclusion-content-org-filter (only-element obj plist)
   ;; Apply `org-transclusion-exclude-elements'
@@ -1974,8 +2005,8 @@ Return \"(src-beg-mkr . src-end-mkr)\"."
                                            'org-transclusion-pair))
                     (src-elem (org-transclusion-live-sync-enclosing-element
                                (overlay-start ov) (overlay-end ov)))
-                    (src-beg (org-element-property :begin src-elem))
-                    (src-end (org-element-property :end src-elem)))
+                    (src-beg (org-element-property :contents-begin src-elem))
+                    (src-end (org-element-property :contents-end src-elem)))
           (cons
            (move-marker (make-marker) src-beg)
            (move-marker (make-marker) src-end)))))))
@@ -2121,8 +2152,8 @@ links and IDs."
            (beg (car beg-end))
            (end (cdr beg-end))
            (tc-elem (org-transclusion-live-sync-enclosing-element beg end))
-           (tc-beg (org-element-property :begin tc-elem))
-           (tc-end (org-element-property :end tc-elem))
+           (tc-beg (org-element-property :contents-begin tc-elem))
+           (tc-end (org-element-property :contents-end tc-elem))
            (src-range-mkrs (org-transclusion-live-sync-source-range-markers
                             tc-beg tc-end))
            (src-beg-mkr (car src-range-mkrs))
