@@ -322,6 +322,12 @@ like this example:
    (insert ":noweb-chunk")))
 
 (transient-define-suffix org-transclusion-transient--add ()
+  (interactive)
+  (if org-transclusion-exit-transient-after-add
+      (org-transclusion-add)
+    (org-transclusion-transient--add-and-stay)))
+
+(transient-define-suffix org-transclusion-transient--add-and-stay ()
   "Call `org-transclusion-add'.
 This will not exit the transient menu. You will navigate to another menu
 for the transcluded content."
@@ -329,6 +335,11 @@ for the transcluded content."
   (interactive)
   (org-transclusion-add)
   (call-interactively 'org-transclusion-transient--at-point-menu))
+
+(defcustom org-transclusion-exit-transient-after-add nil
+  "Exist transient menu immediately after adding a transclusion."
+  :type 'boolean
+  :group 'org-transclusion)
 
 (provide 'org-transclusion-transient)
 
