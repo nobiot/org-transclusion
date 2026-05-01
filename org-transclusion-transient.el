@@ -129,7 +129,8 @@ which automatically calls the appropriate transient-prefix."
 In general, users should use command `org-transclusion-transient-menu',
 which automatically calls the appropriate transient-prefix."
   [:description "Operation on Transclusion at Point"
-    [:description "Remove"
+    [:description "Add/Remove"
+                  ("A" "Add all in buffer" org-transclusion-add-all)
                   ("d" "Remove at point"   org-transclusion-remove)
                   ("C" "Detach at point"   org-transclusion-detach)
                   ("R" "Remove all in buffer" org-transclusion-remove-all)]
