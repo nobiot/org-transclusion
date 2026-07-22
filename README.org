@@ -118,7 +118,7 @@ After installation, you can start using Org-transclusion with no additional conf
   (use-package org-transclusion
     :bind (("S-<f12>" . org-transclusion-add)
            ("C-c t m" . org-transclusion-transient-menu)
-           ("C-n t t") . org-transclusion-mode))
+           ("C-n t t" . org-transclusion-mode)))
 #+end_src
 
 The ~#+transclusion~ keyword can be fontified via built-in ~font-lock-mode~ with
