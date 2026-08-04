@@ -143,7 +143,7 @@ activate ~org-transclusion-font-lock-mode~ without loading the entire
 For Doom users, you would need to do something like this below to install the package and configure the keybindings.
 
 #+BEGIN_SRC elisp
-  ;; ~/.doom.d/package.el
+  ;; ~/.doom.d/packages.el
   (package! org-transclusion)
 #+END_SRC
 
@@ -155,12 +155,17 @@ For Doom users, you would need to do something like this below to install the pa
     (map!
      :map global-map "<f12>" #'org-transclusion-add
      :leader
-     :prefix "n"
-     :desc "Org Transclusion Mode" "t" #'org-transclusion-mode))
-  ;; I'd appreciate if someone could advise how to add another command such as
-  ;; 'org-transclusion-transient-menu
+     (:prefix ("n t" . "org-transclusion")
+      :desc "Transclusion mode" "t" #'org-transclusion-mode
+      :desc "Transient menu"    "m" #'org-transclusion-transient-menu)))
 #+END_SRC
-
+This mirrors the =C-n t t= / =C-n t m= bindings above: =SPC n t t= toggles the
+mode and =SPC n t m= opens the transient menu. To bind further commands, add
+more =:desc DESCRIPTION "KEY" #'COMMAND= triples inside the =(:prefix ...)= form.
+ 
+Note: Doom binds =SPC n t= to =org-todo-list= by default, so using =n t= as a
+prefix here overrides that. Choose a different prefix (e.g. =("n T" ...)=) if you
+want to keep the default binding.
 * Contributing
 
 - Get involved in a discussion in [[https://org-roam.discourse.group/t/prototype-transclusion-block-reference-with-emacs-org-mode/830][Org-roam forum]] (the package is originally aimed for its users, the author included)
